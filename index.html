@@ -1,1083 +1,1918 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <title>غرفة الدردشة العامة - سجاد (مدير)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@200;300;400;500;700&display=swap" rel="stylesheet">
-  <style>
-    * {
-      font-family: 'Tajawal', sans-serif;
-    }
-    
-    body {
-      background: linear-gradient(135deg, #1a2a6c, #2c3e50);
-      min-height: 100vh;
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
-    }
-    
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    
-    .admin-badge {
-      background: linear-gradient(135deg, #4A00E0, #8E2DE2);
-      color: white;
-      border-radius: 12px;
-      padding: 2px 8px;
-      font-size: 0.7rem;
-      display: inline-block;
-      margin-right: 5px;
-      animation: pulse 2s infinite;
-    }
-    
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-      100% { transform: scale(1); }
-    }
-    
-    .admin-panel {
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-    
-    .chat-bubble {
-      animation: fadeIn 0.3s ease-in-out;
-    }
-    
-    .user-bubble {
-      animation: slideInRight 0.3s ease-in-out;
-    }
-    
-    .typing-indicator span {
-      animation: bounce 1.5s infinite ease-in-out;
-    }
-    
-    .typing-indicator span:nth-child(2) {
-      animation-delay: 0.2s;
-    }
-    
-    .typing-indicator span:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-    
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-5px); }
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes slideInRight {
-      from { opacity: 0; transform: translateX(20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    
-    .emoji-btn {
-      transition: all 0.2s ease;
-    }
-    
-    .emoji-btn:hover {
-      transform: scale(1.1);
-    }
-    
-    .user-card {
-      animation: slideInLeft 0.3s ease-in-out;
-    }
-    
-    @keyframes slideInLeft {
-      from { opacity: 0; transform: translateX(-20px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-    
-    .emoji-panel {
-      animation: slideUp 0.3s ease-out;
-    }
-    
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .image-preview {
-      max-width: 300px;
-      border-radius: 10px;
-      margin-top: 5px;
-      cursor: pointer;
-      transition: transform 0.3s;
-    }
-    
-    .image-preview:hover {
-      transform: scale(1.03);
-    }
-    
-    .admin-controls {
-      display: none;
-    }
-    
-    .admin .admin-controls {
-      display: block;
-    }
-    
-    .guest-badge {
-      background: linear-gradient(135deg, #00b09b, #96c93d);
-      color: white;
-      border-radius: 12px;
-      padding: 2px 8px;
-      font-size: 0.7rem;
-      display: inline-block;
-      margin-right: 5px;
-    }
-    
-    .file-upload-btn {
-      position: relative;
-      overflow: hidden;
-      display: inline-block;
-      cursor: pointer;
-    }
-    
-    .file-upload-btn input[type="file"] {
-      position: absolute;
-      top: 0;
-      right: 0;
-      min-width: 100%;
-      min-height: 100%;
-      font-size: 100px;
-      text-align: right;
-      filter: alpha(opacity=0);
-      opacity: 0;
-      outline: none;
-      cursor: pointer;
-      display: block;
-    }
-    
-    .media-sent {
-      background: rgba(76, 175, 80, 0.1);
-      border: 1px solid rgba(76, 175, 80, 0.3);
-      border-radius: 10px;
-      padding: 8px;
-      margin-top: 5px;
-    }
-    
-    .header-gradient {
-      background: linear-gradient(135deg, #1a2a6c, #2c3e50);
-    }
-    
-    .quick-login-btn {
-      background: linear-gradient(135deg, #00b09b, #96c93d);
-      transition: all 0.3s ease;
-    }
-    
-    .quick-login-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-    
-    .user-presence {
-      display: flex;
-      align-items: center;
-      padding: 8px;
-      border-radius: 8px;
-      margin-bottom: 5px;
-      background: rgba(255, 255, 255, 0.1);
-      transition: all 0.3s ease;
-    }
-    
-    .user-presence:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateX(-5px);
-    }
-    
-    .presence-indicator {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-left: 10px;
-    }
-    
-    .presence-online {
-      background: #00C853;
-      box-shadow: 0 0 8px rgba(0, 200, 83, 0.5);
-    }
-    
-    .presence-idle {
-      background: #FFD600;
-      box-shadow: 0 0 8px rgba(255, 214, 0, 0.5);
-    }
-    
-    .presence-offline {
-      background: #B0BEC5;
-    }
-    
-    .message-time {
-      font-size: 0.75rem;
-      color: #78909C;
-    }
-    
-    .chat-container {
-      border-radius: 20px;
-      overflow: hidden;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-    }
-    
-    .message-input {
-      transition: all 0.3s ease;
-    }
-    
-    .message-input:focus {
-      box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.5);
-    }
-    
-    .send-btn {
-      transition: all 0.3s ease;
-    }
-    
-    .send-btn:hover {
-      transform: rotate(-5deg) scale(1.1);
-    }
-    
-    .quick-message-btn {
-      transition: all 0.2s ease;
-      background: rgba(236, 239, 241, 0.7);
-    }
-    
-    .quick-message-btn:hover {
-      background: rgba(207, 216, 220, 0.9);
-      transform: translateY(-2px);
-    }
-  </style>
-</head>
-<body class="py-8">
-  <div class="max-w-6xl mx-auto px-4">
-    <!-- شريط الرأس -->
-    <div class="flex flex-col md:flex-row justify-between items-center mb-6 p-4 rounded-xl header-gradient">
-      <div class="flex items-center mb-4 md:mb-0">
-        <div class="bg-white p-2 rounded-full mr-3">
-          <i class="fas fa-comments text-indigo-700 text-xl"></i>
-        </div>
-        <div>
-          <h1 class="text-2xl md:text-3xl font-bold text-white flex items-center">
-            غرفة الدردشة العامة
-            <span id="adminBadge" class="admin-badge hidden">مدير النظام</span>
-            <span id="guestBadge" class="guest-badge hidden">ضيف</span>
-          </h1>
-          <div class="flex items-center mt-1">
-            <div id="presenceCount" class="text-gray-200 flex items-center">
-              <i class="fas fa-users mr-1"></i>
-              <span>المتصلون: <span id="usersCount">0</span></span>
-            </div>
-            <div class="mx-3 text-gray-400">|</div>
-            <div id="currentDateTime" class="text-gray-200"></div>
-          </div>
-        </div>
-      </div>
-      <button onclick="goBack()" class="bg-white hover:bg-gray-200 text-indigo-800 px-4 py-2 rounded-lg flex items-center font-bold shadow-lg transition-all hover:scale-105">
-        <i class="fas fa-arrow-left mr-2"></i> رجوع
-      </button>
-    </div>
-    
-    <div class="flex flex-col lg:flex-row gap-6">
-      <!-- لوحة المستخدمين المتصلين -->
-      <div class="w-full lg:w-1/4 bg-white bg-opacity-90 rounded-2xl shadow-lg p-4">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800 flex items-center">
-            <i class="fas fa-user-clock mr-2 text-indigo-600"></i> المتصلون الآن
-          </h2>
-          <button onclick="refreshPresence()" class="text-sm bg-indigo-100 hover:bg-indigo-200 text-indigo-800 px-3 py-1 rounded flex items-center transition-all">
-            <i class="fas fa-sync-alt mr-1"></i> تحديث
-          </button>
-        </div>
-        <div id="onlineUsers" class="space-y-2 max-h-96 overflow-y-auto">
-          <!-- سيتم ملئها بالجافاسكريبت -->
-          <div class="text-center text-gray-500 py-4">
-            <i class="fas fa-user-slash text-2xl mb-2"></i>
-            <p>لا يوجد مستخدمين متصلين</p>
-          </div>
-        </div>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دردشة آمنة - ChatSecure</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
         
-        <!-- لوحة التحكم الإدارية (تظهر فقط للمدير) -->
-        <div id="adminPanel" class="admin-panel mt-6 rounded-xl p-4 hidden">
-          <h3 class="text-lg font-bold text-white mb-3">
-            <i class="fas fa-tools mr-2"></i> لوحة التحكم الإدارية
-          </h3>
-          <div class="space-y-3">
-            <button onclick="deleteAllMessages()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg flex items-center justify-center transition-all">
-              <i class="fas fa-trash mr-2"></i> حذف جميع الرسائل
-            </button>
-            <button onclick="sendSystemMessage()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg flex items-center justify-center transition-all">
-              <i class="fas fa-bullhorn mr-2"></i> إرسال إعلان عام
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- منطقة الدردشة الرئيسية -->
-      <div class="w-full lg:w-3/4">
-        <div class="chat-container bg-white bg-opacity-90 rounded-2xl shadow-lg overflow-hidden">
-          <!-- منطقة الرسائل -->
-          <div id="chatBox" class="h-96 overflow-y-auto p-4 bg-gray-50">
-            <div class="text-center text-gray-500 py-8">
-              <i class="fas fa-comment-dots text-4xl mb-2 text-indigo-400"></i>
-              <p>مرحباً! ابدأ المحادثة بإرسال رسالتك الأولى</p>
-              <p class="text-sm mt-2 text-gray-400">انضم للمحادثة وأرسل تحية لتبدأ المحادثة</p>
+        :root {
+            --primary: #5e35b1;
+            --primary-dark: #4527a0;
+            --secondary: #26a69a;
+            --light: #f5f5f5;
+            --dark: #212121;
+            --gray: #757575;
+            --success: #43a047;
+            --warning: #ff9800;
+            --error: #e53935;
+            --admin: #d32f2f;
+            --background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+        }
+        
+        /* إضافة متغيرات للسمات المختلفة */
+        body.theme-default {
+            --primary: #5e35b1;
+            --primary-dark: #4527a0;
+            --secondary: #26a69a;
+            --background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+        }
+        
+        body.theme-light {
+            --primary: #42a5f5;
+            --primary-dark: #1976d2;
+            --secondary: #66bb6a;
+            --background: linear-gradient(135deg, #e3f2fd, #bbdefb, #90caf9);
+        }
+        
+        body.theme-dark {
+            --primary: #7e57c2;
+            --primary-dark: #5e35b1;
+            --secondary: #26c6da;
+            --light: #37474f;
+            --dark: #e0e0e0;
+            --background: linear-gradient(135deg, #2c3e50, #4a148c, #6a1b9a);
+        }
+        
+        body.theme-blue {
+            --primary: #2196f3;
+            --primary-dark: #0d47a1;
+            --secondary: #4db6ac;
+            --background: linear-gradient(135deg, #0d47a1, #29b6f6, #81d4fa);
+        }
+        
+        body.theme-green {
+            --primary: #2e7d32;
+            --primary-dark: #1b5e20;
+            --secondary: #0097a7;
+            --background: linear-gradient(135deg, #1b5e20, #4caf50, #81c784);
+        }
+        
+        body {
+            background: var(--background);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.5s ease;
+        }
+        
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 90vh;
+            position: relative;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+            font-weight: bold;
+        }
+        
+        .logo i {
+            color: var(--secondary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.3s;
+            border: 2px solid white;
+        }
+        
+        .user-avatar:hover {
+            transform: scale(1.05);
+        }
+        
+        .admin-badge {
+            background: var(--admin);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            display: none;
+        }
+        
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .auth-section {
+            padding: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+            overflow-y: auto;
+        }
+        
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+        
+        .chat-header {
+            background: var(--light);
+            padding: 15px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .online-users {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--gray);
+        }
+        
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: blink 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: linear-gradient(to bottom, #f0f4f8, #e2e8f0);
+            position: relative;
+            min-height: 0;
+            /* إصلاح مشكلة التمرير */
+            flex-shrink: 1;
+        }
+        
+        .message {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+        }
+        
+        .message:hover {
+            transform: translateY(-2px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.sent {
+            align-self: flex-end;
+            background: var(--primary);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        
+        .message.received {
+            align-self: flex-start;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+        }
+        
+        .message-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+        
+        .message-actions {
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            display: none;
+            gap: 5px;
+        }
+        
+        .message:hover .message-actions {
+            display: flex;
+        }
+        
+        .action-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+        
+        .action-btn:hover {
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .message-input-area {
+            display: flex;
+            padding: 15px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            gap: 10px;
+            position: relative;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #e9ecef;
+            border-radius: 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s, box-shadow 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .message-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(94, 53, 177, 0.2);
+        }
+        
+        .send-button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .send-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .send-button:active {
+            transform: translateY(1px);
+        }
+        
+        .auth-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            width: 100%;
+            max-width: 450px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 20px;
+            z-index: 10;
+        }
+        
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+        }
+        
+        .auth-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            color: var(--primary);
+            text-align: center;
+            position: relative;
+        }
+        
+        .auth-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background: var(--secondary);
+            border-radius: 3px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ced4da;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border 0.3s;
+            background: #f8f9fa;
+        }
+        
+        .input-group input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .auth-button {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.2s;
+            margin-top: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .auth-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+        
+        .auth-button:active {
+            transform: translateY(1px);
+        }
+        
+        .button-secondary {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .button-secondary:hover {
+            background: #f8f9fa;
+        }
+        
+        .auth-footer {
+            margin-top: 25px;
+            text-align: center;
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .auth-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .auth-footer a:hover {
+            color: var(--primary-dark);
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: var(--error);
+            background: #ffebee;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+        }
+        
+        .welcome-message {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-message h1 {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-message p {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 600px;
+            line-height: 1.6;
+        }
+        
+        .brand-logo {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            align-self: flex-start;
+            margin-bottom: 10px;
+            font-style: italic;
+            color: var(--gray);
+            animation: pulse-light 1.5s infinite;
+        }
+        
+        @keyframes pulse-light {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        
+        .user-menu {
+            position: absolute;
+            top: 70px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 15px;
+            z-index: 100;
+            display: none;
+            width: 250px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .user-menu h3 {
+            margin-bottom: 10px;
+            color: var(--primary);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .user-menu-item {
+            padding: 10px 0;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.3s;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        
+        .user-menu-item:hover {
+            background: #f5f5f5;
+        }
+        
+        .admin-section {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .admin-section h4 {
+            margin-bottom: 10px;
+            color: var(--admin);
+        }
+        
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .admin-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 5px;
+            border: none;
+            background: var(--admin);
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .admin-btn:hover {
+            background: #b71c1c;
+        }
+        
+        .admin-panel {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 300px;
+            height: 100%;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 20px;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        
+        .admin-panel.active {
+            transform: translateX(0);
+        }
+        
+        .admin-panel h2 {
+            color: var(--admin);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .close-admin {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .admin-section-title {
+            margin: 15px 0 10px;
+            color: var(--admin);
+            font-size: 1.1rem;
+            position: relative;
+            padding-bottom: 5px;
+        }
+        
+        .admin-section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 50px;
+            height: 2px;
+            background: var(--admin);
+        }
+        
+        .admin-list {
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .admin-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-item:last-child {
+            border-bottom: none;
+        }
+        
+        .admin-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .admin-action-btn {
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+        
+        .admin-action-btn:hover {
+            background: #e9e9e9;
+        }
+        
+        .admin-action-btn.delete {
+            color: var(--error);
+            border-color: #ffcdd2;
+        }
+        
+        .admin-action-btn.block {
+            color: var(--warning);
+            border-color: #ffe0b2;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            display: none;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+        
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+        }
+        
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        .modal-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+        
+        .modal-btn.primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .modal-btn.primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .modal-btn.secondary {
+            background: #f5f5f5;
+            color: var(--dark);
+        }
+        
+        .modal-btn.secondary:hover {
+            background: #e9e9e9;
+        }
+        
+        .consent-checkbox {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .consent-checkbox input {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .privacy-highlight {
+            background: #e3f2fd;
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 0.9rem;
+        }
+        
+        .privacy-highlight i {
+            color: var(--primary);
+            margin-left: 5px;
+        }
+        
+        .empty-chat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--gray);
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .empty-chat i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .auth-form {
+            display: none;
+        }
+        
+        .auth-form.active {
+            display: block;
+        }
+        
+        /* أزرار التمرير */
+        .scroll-controls {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 50;
+        }
+        
+        .scroll-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        
+        .scroll-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.1);
+        }
+        
+        /* نافذة اختيار السمات */
+        .theme-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            display: none;
+        }
+        
+        .theme-content {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .theme-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .theme-item {
+            padding: 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-align: center;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .theme-item:hover {
+            transform: translateY(-5px);
+        }
+        
+        .theme-item.active::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(0,0,0,0.3);
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .theme-default-item {
+            background: linear-gradient(135deg, #3a1c71, #d76d77, #ffaf7b);
+        }
+        
+        .theme-light-item {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb, #90caf9);
+            color: #333;
+        }
+        
+        .theme-dark-item {
+            background: linear-gradient(135deg, #2c3e50, #4a148c, #6a1b9a);
+        }
+        
+        .theme-blue-item {
+            background: linear-gradient(135deg, #0d47a1, #29b6f6, #81d4fa);
+        }
+        
+        .theme-green-item {
+            background: linear-gradient(135deg, #1b5e20, #4caf50, #81c784);
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                height: 95vh;
+                border-radius: 15px;
+            }
+            
+            .auth-card {
+                padding: 25px 15px;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+            
+            .admin-panel {
+                width: 85%;
+            }
+            
+            .welcome-message h1 {
+                font-size: 1.8rem;
+            }
+            
+            .theme-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body class="theme-default">
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <span>دردشة آمنة</span>
             </div>
-          </div>
-          
-          <!-- مؤشر الكتابة -->
-          <div id="typingIndicator" class="bg-gray-100 px-4 py-2 hidden">
-            <div class="flex items-center text-gray-600">
-              <div class="typing-indicator mr-2">
-                <span>.</span>
-                <span>.</span>
-                <span>.</span>
-              </div>
-              <span id="typingUsers"></span> يكتب الآن
+            <div class="user-info">
+                <div class="admin-badge" id="admin-badge">
+                    <i class="fas fa-crown"></i> مدير
+                </div>
+                <div class="user-avatar" id="user-avatar" onclick="toggleUserMenu()">U</div>
             </div>
-          </div>
-          
-          <!-- منطقة إدخال الرسالة -->
-          <div class="p-4 border-t border-gray-200">
-            <div class="flex gap-2">
-              <div class="relative flex-1">
-                <div class="flex items-center border border-gray-300 rounded-lg bg-white message-input">
-                  <!-- زر إرفاق الوسائط -->
-                  <div class="file-upload-btn cursor-pointer px-3 py-2 text-gray-500 hover:text-indigo-600">
-                    <i class="fas fa-paperclip text-xl"></i>
-                    <input type="file" id="mediaUpload" accept="image/*" class="file-input">
-                  </div>
-                  
-                  <input 
-                    id="messageInput" 
-                    type="text" 
-                    placeholder="اكتب رسالتك..." 
-                    class="flex-1 p-2 focus:outline-none"
-                    onkeydown="handleKeyDown(event)"
-                  />
-                  
-                  <button onclick="sendMessage()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 send-btn">
-                    <i class="fas fa-paper-plane"></i>
-                  </button>
+            
+            <div class="user-menu" id="user-menu">
+                <h3 id="menu-username">المستخدم</h3>
+                <div class="user-menu-item" onclick="openProfileModal()">
+                    <i class="fas fa-user-edit"></i>
+                    <span>تعديل الملف الشخصي</span>
+                </div>
+                <div class="user-menu-item" onclick="openThemeModal()">
+                    <i class="fas fa-palette"></i>
+                    <span>تغيير الألوان</span>
+                </div>
+                <div class="user-menu-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>تسجيل الخروج</span>
                 </div>
                 
-                <!-- معاينة الصورة -->
-                <div id="imagePreviewContainer" class="mt-2 hidden">
-                  <div class="flex items-center justify-between bg-gray-100 p-2 rounded-lg">
-                    <span class="text-sm text-gray-600"><i class="fas fa-image mr-1"></i> صورة مرفقة</span>
-                    <button onclick="cancelImageUpload()" class="text-red-500 hover:text-red-700">
-                      <i class="fas fa-times"></i>
-                    </button>
-                  </div>
-                  <img id="imagePreview" class="image-preview" src="" alt="معاينة الصورة">
+                <div class="admin-section" id="admin-section">
+                    <h4>أدوات المدير</h4>
+                    <div class="admin-controls">
+                        <button class="admin-btn" onclick="openAdminPanel()">
+                            <i class="fas fa-users-cog"></i> لوحة التحكم
+                        </button>
+                        <button class="admin-btn" onclick="openUserManagement()">
+                            <i class="fas fa-user-lock"></i> إدارة المستخدمين
+                        </button>
+                    </div>
                 </div>
-              </div>
+            </div>
+        </header>
+        
+        <main>
+            <div class="auth-section" id="auth-section">
+                <div class="welcome-message">
+                    <div class="brand-logo">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h1>مرحبًا في دردشة آمنة</h1>
+                    <p>خصوصية تامة وتواصل آمن مع تشفير متكامل لحماية بياناتك</p>
+                </div>
+                
+                <div class="auth-card">
+                    <div class="tabs">
+                        <button class="tab active" onclick="switchTab('login')">تسجيل الدخول</button>
+                        <button class="tab" onclick="switchTab('signup')">إنشاء حساب</button>
+                    </div>
+                    
+                    <div class="auth-form active" id="login-form">
+                        <div class="privacy-highlight">
+                            <i class="fas fa-lock"></i>
+                            <span>نحن نحترم خصوصيتك. لا يتم تسجيل أي بيانات تلقائيًا قبل موافقتك</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="email">البريد الإلكتروني</label>
+                            <input type="email" id="email" placeholder="example@mail.com">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="password">كلمة المرور</label>
+                            <input type="password" id="password" placeholder="********">
+                        </div>
+                        
+                        <div class="consent-checkbox">
+                            <input type="checkbox" id="data-consent">
+                            <label for="data-consent">أوافق على تخزين بيانات المحادثة</label>
+                        </div>
+                        
+                        <div class="error-message" id="error-message"></div>
+                        
+                        <button class="auth-button" onclick="login()">تسجيل الدخول</button>
+                        
+                        <div class="auth-footer">
+                            <p>باستخدامك لهذا الموقع، فإنك توافق على <a href="#">سياسة الخصوصية</a> الخاصة بنا</p>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-form" id="signup-form">
+                        <div class="privacy-highlight">
+                            <i class="fas fa-user-shield"></i>
+                            <span>بياناتك الشخصية مشفرة وآمنة معنا</span>
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="signup-email">البريد الإلكتروني</label>
+                            <input type="email" id="signup-email" placeholder="example@mail.com">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="signup-password">كلمة المرور (6 أحرف على الأقل)</label>
+                            <input type="password" id="signup-password" placeholder="********">
+                        </div>
+                        
+                        <div class="input-group">
+                            <label for="confirm-password">تأكيد كلمة المرور</label>
+                            <input type="password" id="confirm-password" placeholder="********">
+                        </div>
+                        
+                        <div class="consent-checkbox">
+                            <input type="checkbox" id="signup-consent">
+                            <label for="signup-consent">أوافق على شروط الخدمة وسياسة الخصوصية</label>
+                        </div>
+                        
+                        <div class="error-message" id="signup-error-message"></div>
+                        
+                        <button class="auth-button" onclick="signup()">إنشاء حساب جديد</button>
+                        
+                        <div class="auth-footer">
+                            <p>لديك حساب بالفعل؟ <a href="#" onclick="switchTab('login')">سجل الدخول هنا</a></p>
+                        </div>
+                    </div>
+                </div>
             </div>
             
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button onclick="sendQuickMessage('مرحباً! كيف حالك؟')" class="text-xs quick-message-btn text-gray-700 px-2 py-1 rounded">
-                مرحباً! كيف حالك؟
-              </button>
-              <button onclick="sendQuickMessage('هل يمكنك مساعدتي؟')" class="text-xs quick-message-btn text-gray-700 px-2 py-1 rounded">
-                هل يمكنك مساعدتي؟
-              </button>
-              <button onclick="sendQuickMessage('أرسلت لك صورة 👇')" class="text-xs quick-message-btn text-gray-700 px-2 py-1 rounded">
-                أرسلت لك صورة 👇
-              </button>
-              <button onclick="sendQuickMessage('شكراً على المساعدة')" class="text-xs quick-message-btn text-gray-700 px-2 py-1 rounded">
-                شكراً على المساعدة
-              </button>
+            <div class="chat-section" id="chat-section">
+                <div class="chat-container">
+                    <div class="chat-header">
+                        <div class="chat-title">الدردشة العامة</div>
+                        <div class="online-users">
+                            <div class="online-dot"></div>
+                            <span id="online-count">1</span> متصل الآن
+                        </div>
+                    </div>
+                    
+                    <div class="chat-box" id="chat-box">
+                        <div class="empty-chat">
+                            <i class="fas fa-comment-dots"></i>
+                            <h3>لا توجد رسائل بعد</h3>
+                            <p>ابدأ المحادثة بإرسال أول رسالة لك</p>
+                        </div>
+                        <div class="typing-indicator" id="typing-indicator">
+                            <span id="typing-text">يكتب الآن...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="message-input-area">
+                        <input type="text" class="message-input" id="message-input" 
+                               placeholder="اكتب رسالتك هنا..." onkeypress="handleKeyPress(event)">
+                        <button class="send-button" onclick="sendMessage()">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- أزرار التمرير -->
+                <div class="scroll-controls">
+                    <div class="scroll-btn" onclick="scrollChat('up')">
+                        <i class="fas fa-arrow-up"></i>
+                    </div>
+                    <div class="scroll-btn" onclick="scrollChat('down')">
+                        <i class="fas fa-arrow-down"></i>
+                    </div>
+                    <div class="scroll-btn" onclick="scrollChat('top')">
+                        <i class="fas fa-angle-double-up"></i>
+                    </div>
+                    <div class="scroll-btn" onclick="scrollChat('bottom')">
+                        <i class="fas fa-angle-double-down"></i>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-      </div>
+        </main>
     </div>
     
-    <!-- نافذة منبثقة لإدخال الاسم -->
-    <div id="nameModal" class="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-      <div class="bg-gradient-to-br from-indigo-900 to-purple-800 p-6 md:p-8 rounded-2xl w-full max-w-md text-center shadow-2xl relative overflow-hidden">
-        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-red-500"></div>
-        <div class="relative z-10">
-          <div class="bg-white text-indigo-800 p-4 rounded-full w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-            <i class="fas fa-comments text-3xl"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-white mb-2">الدخول إلى غرفة الدردشة</h2>
-          <p class="text-gray-300 mb-6">اختر اسم المستخدم للبدء في المحادثة</p>
-          
-          <div class="bg-white rounded-xl p-5 mb-4">
-            <div class="mb-4">
-              <div class="flex justify-between items-center mb-1">
-                <label for="usernameInput" class="block text-gray-700 text-sm text-right">اسم المستخدم</label>
-                <button onclick="clearUsername()" class="text-xs text-red-500 hover:text-red-700">
-                  <i class="fas fa-trash mr-1"></i> حذف
-                </button>
-              </div>
-              <div class="relative">
-                <input 
-                  id="usernameInput" 
-                  type="text" 
-                  placeholder="أدخل اسم المستخدم" 
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-lg focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                  autofocus
-                />
-                <button onclick="generateRandomUsername()" class="absolute left-3 top-3 text-gray-500 hover:text-indigo-600">
-                  <i class="fas fa-random"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div id="passwordSection" class="mb-4">
-              <div class="flex justify-between items-center mb-1">
-                <label for="passwordInput" class="block text-gray-700 text-sm text-right">كلمة المرور</label>
-                <button onclick="clearPassword()" class="text-xs text-red-500 hover:text-red-700">
-                  <i class="fas fa-trash mr-1"></i> حذف
-                </button>
-              </div>
-              <div class="relative">
-                <input 
-                  id="passwordInput" 
-                  type="password" 
-                  placeholder="أدخل كلمة المرور" 
-                  class="w-full p-3 border-2 border-gray-300 rounded-lg text-lg focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200"
-                />
-                <button onclick="generateRandomPassword()" class="absolute left-3 top-3 text-gray-500 hover:text-indigo-600">
-                  <i class="fas fa-random"></i>
-                </button>
-              </div>
-            </div>
-            
-            <div id="adminMessage" class="text-sm text-gray-600 mb-3 hidden">
-              <i class="fas fa-info-circle mr-1"></i> أنت تحاول الدخول بحساب إداري
-            </div>
-          </div>
-          
-          <button onclick="checkLogin()" class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 px-6 py-3 rounded-lg w-full text-lg font-bold transition-all hover:from-yellow-500 hover:to-yellow-700">
-            دخول إلى المحادثة
-            <i class="fas fa-sign-in-alt ml-2"></i>
-          </button>
-          
-          <button onclick="quickLogin()" class="quick-login-btn text-white px-6 py-3 rounded-lg w-full mt-4 font-bold">
-            <i class="fas fa-bolt mr-2"></i> دخول سريع
-          </button>
-          
-          <div class="mt-4 text-sm text-gray-300">
-            <i class="fas fa-shield-alt mr-1"></i> جميع البيانات مشفرة ومحمية
-          </div>
+    <!-- لوحة تحكم المدير -->
+    <div class="admin-panel" id="admin-panel">
+        <h2>
+            لوحة التحكم
+            <button class="close-admin" onclick="closeAdminPanel()">
+                <i class="fas fa-times"></i>
+            </button>
+        </h2>
+        
+        <div class="admin-section-title">المستخدمون المتصلون</div>
+        <div class="admin-list" id="online-users-list">
+            <div class="admin-item">جارٍ التحميل...</div>
         </div>
-      </div>
+        
+        <div class="admin-section-title">آخر الرسائل</div>
+        <div class="admin-list" id="recent-messages">
+            <div class="admin-item">لا توجد رسائل حديثة</div>
+        </div>
+        
+        <div class="admin-section-title">الإحصائيات</div>
+        <div class="stats">
+            <div class="admin-item">المستخدمون المسجلون: <span id="total-users">0</span></div>
+            <div class="admin-item">الرسائل اليوم: <span id="today-messages">0</span></div>
+            <div class="admin-item">المستخدمون النشطون: <span id="active-users">0</span></div>
+        </div>
     </div>
-  </div>
-
-  <script>
-    // محاكاة قاعدة البيانات باستخدام localStorage
-    const chatDB = {
-      messages: [],
-      users: [],
-      media: [],
-      
-      init() {
-        if (!localStorage.getItem('chatMessages')) {
-          localStorage.setItem('chatMessages', JSON.stringify([]));
-        }
-        this.messages = JSON.parse(localStorage.getItem('chatMessages')) || [];
-        
-        if (!localStorage.getItem('chatUsers')) {
-          localStorage.setItem('chatUsers', JSON.stringify([]));
-        }
-        this.users = JSON.parse(localStorage.getItem('chatUsers')) || [];
-        
-        if (!localStorage.getItem('chatMedia')) {
-          localStorage.setItem('chatMedia', JSON.stringify([]));
-        }
-        this.media = JSON.parse(localStorage.getItem('chatMedia')) || [];
-      },
-      
-      addMessage(message) {
-        message.id = Date.now().toString(); // إضافة id فريد لكل رسالة
-        this.messages.push(message);
-        localStorage.setItem('chatMessages', JSON.stringify(this.messages));
-      },
-      
-      addUser(user) {
-        this.users.push(user);
-        localStorage.setItem('chatUsers', JSON.stringify(this.users));
-      },
-      
-      removeUser(userId) {
-        this.users = this.users.filter(u => u.id !== userId);
-        localStorage.setItem('chatUsers', JSON.stringify(this.users));
-      },
-      
-      clearMessages() {
-        this.messages = [];
-        localStorage.setItem('chatMessages', JSON.stringify([]));
-      },
-      
-      getMessages() {
-        return this.messages;
-      },
-      
-      getUsers() {
-        return this.users;
-      },
-      
-      addMedia(media) {
-        media.id = Date.now().toString();
-        this.media.push(media);
-        localStorage.setItem('chatMedia', JSON.stringify(this.media));
-      },
-      
-      getMedia() {
-        return this.media;
-      },
-      
-      deleteMessage(messageId) {
-        this.messages = this.messages.filter(m => m.id !== messageId);
-        localStorage.setItem('chatMessages', JSON.stringify(this.messages));
-      },
-      
-      updateUser(userId) {
-        const userIndex = this.users.findIndex(u => u.id === userId);
-        if (userIndex !== -1) {
-          this.users[userIndex].lastSeen = Date.now();
-          localStorage.setItem('chatUsers', JSON.stringify(this.users));
-        }
-      }
-    };
-
-    // تهيئة قاعدة البيانات
-    chatDB.init();
-
-    // متغيرات التطبيق
-    let username = "";
-    let isAdmin = false;
-    let isGuest = false;
-    const chatBox = document.getElementById("chatBox");
-    const usersCountEl = document.getElementById("usersCount");
-    const onlineUsersEl = document.getElementById("onlineUsers");
-    const typingIndicatorEl = document.getElementById("typingIndicator");
-    const typingUsersEl = document.getElementById("typingUsers");
-    const adminPanel = document.getElementById("adminPanel");
-    const adminBadge = document.getElementById("adminBadge");
-    const guestBadge = document.getElementById("guestBadge");
-    const adminMessage = document.getElementById("adminMessage");
-    const mediaUpload = document.getElementById("mediaUpload");
-    const currentDateTime = document.getElementById("currentDateTime");
-    let userId = Date.now().toString();
-    let uploadedImage = null;
-    let presenceInterval;
-
-    // تنسيق الوقت (ساعة:دقيقة)
-    function formatTime(date) {
-      const hours = date.getHours();
-      const minutes = date.getMinutes().toString().padStart(2, "0");
-      return hours + ':' + minutes;
-    }
-
-    // تحديث التاريخ والوقت
-    function updateDateTime() {
-      const now = new Date();
-      const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-      const day = days[now.getDay()];
-      currentDateTime.textContent = `${day} - ${formatTime(now)}`;
-    }
-
-    // التحقق من تسجيل الدخول
-    function checkLogin() {
-      const nameInput = document.getElementById("usernameInput").value.trim();
-      const passwordInput = document.getElementById("passwordInput").value;
-      
-      if (!nameInput) return alert("الرجاء إدخال اسم المستخدم");
-      
-      // إذا كان المستخدم هو "سجاد" نطلب كلمة المرور الصحيحة
-      if (nameInput === "سجاد") {
-        if (passwordInput !== "سجاد") {
-          alert("كلمة المرور غير صحيحة");
-          return;
-        }
-        isAdmin = true;
-        adminPanel.classList.remove("hidden");
-        adminBadge.classList.remove("hidden");
-        document.body.classList.add("admin");
-      } else {
-        // للمستخدمين العاديين
-        isGuest = true;
-        guestBadge.classList.remove("hidden");
-      }
-      
-      username = nameInput;
-      document.getElementById("nameModal").style.display = "none";
-      listenToMessages();
-      setupPresence();
-      
-      // إرسال رسالة ترحيبية
-      setTimeout(() => {
-        chatDB.addMessage({
-          name: "النظام",
-          text: `انضم ${username} ${isAdmin ? "(مدير النظام)" : "(ضيف)"} إلى المحادثة`,
-          time: formatTime(new Date()),
-          isSystem: true
-        });
-        updateChatUI();
-      }, 1000);
-    }
-
-    // الدخول السريع
-    function quickLogin() {
-      generateRandomUsername();
-      generateRandomPassword();
-      setTimeout(checkLogin, 300);
-    }
-
-    // إنشاء اسم مستخدم عشوائي
-    function generateRandomUsername() {
-      const adjectives = ["سريع", "هادئ", "مبتكر", "خلاق", "ذكي", "مرح", "لطيف", "صادق", "شجاع"];
-      const nouns = ["أسد", "نسر", "بحر", "جبل", "نجم", "قمر", "شمس", "سحاب", "وردة"];
-      const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-      const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-      const randomNum = Math.floor(1000 + Math.random() * 9000);
-      const randomUsername = `${randomAdj}_${randomNoun}_${randomNum}`;
-      document.getElementById("usernameInput").value = randomUsername;
-    }
-
-    // إنشاء كلمة مرور عشوائية
-    function generateRandomPassword() {
-      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-      let password = "";
-      for (let i = 0; i < 8; i++) {
-        password += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      document.getElementById("passwordInput").value = password;
-    }
-
-    // حذف اسم المستخدم
-    function clearUsername() {
-      document.getElementById("usernameInput").value = "";
-    }
-
-    // حذف كلمة المرور
-    function clearPassword() {
-      document.getElementById("passwordInput").value = "";
-    }
-
-    // إرسال رسالة
-    function sendMessage() {
-      const msgInput = document.getElementById("messageInput");
-      const msg = msgInput.value.trim();
-      
-      // إذا لم يكن هناك رسالة ولا صورة
-      if (!msg && !uploadedImage) return;
-      
-      const messageData = {
-        name: username,
-        text: msg,
-        time: formatTime(new Date()),
-        userId: userId,
-        isAdmin: isAdmin,
-        isGuest: isGuest
-      };
-      
-      // إذا كان هناك صورة مرفقة
-      if (uploadedImage) {
-        messageData.image = uploadedImage;
-        // حفظ الوسائط في قاعدة البيانات
-        chatDB.addMedia({
-          sender: username,
-          type: 'image',
-          url: uploadedImage,
-          time: formatTime(new Date())
-        });
-      }
-      
-      chatDB.addMessage(messageData);
-      updateChatUI();
-      
-      msgInput.value = "";
-      cancelImageUpload();
-    }
-
-    // معالجة رفع الصورة
-    function handleImageUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      
-      // التحقق من نوع الملف
-      if (!file.type.match('image.*')) {
-        alert('الرجاء اختيار ملف صورة فقط');
-        return;
-      }
-      
-      // التحقق من حجم الملف (5MB كحد أقصى)
-      if (file.size > 5 * 1024 * 1024) {
-        alert('حجم الصورة يجب أن يكون أقل من 5MB');
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        uploadedImage = e.target.result;
-        document.getElementById("imagePreview").src = uploadedImage;
-        document.getElementById("imagePreviewContainer").classList.remove("hidden");
-      };
-      reader.readAsDataURL(file);
-    }
-
-    // إلغاء رفع الصورة
-    function cancelImageUpload() {
-      uploadedImage = null;
-      document.getElementById("mediaUpload").value = "";
-      document.getElementById("imagePreviewContainer").classList.add("hidden");
-    }
-
-    // إرسال رسالة سريعة
-    function sendQuickMessage(msg) {
-      document.getElementById("messageInput").value = msg;
-      sendMessage();
-    }
-
-    // التعامل مع ضغط المفاتيح
-    function handleKeyDown(event) {
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
-      }
-    }
-
-    // تحديث واجهة الدردشة
-    function updateChatUI() {
-      chatBox.innerHTML = "";
-      const messages = chatDB.getMessages();
-      
-      if (messages.length === 0) {
-        chatBox.innerHTML = `
-          <div class="text-center text-gray-500 py-8">
-            <i class="fas fa-comment-dots text-4xl mb-2 text-indigo-400"></i>
-            <p>مرحباً! ابدأ المحادثة بإرسال رسالتك الأولى</p>
-            <p class="text-sm mt-2 text-gray-400">انضم للمحادثة وأرسل تحية لتبدأ المحادثة</p>
-          </div>
-        `;
-        return;
-      }
-      
-      messages.forEach(msg => {
-        const isCurrentUser = msg.userId === userId;
-        const isSystem = msg.isSystem;
-        
-        const el = document.createElement("div");
-        el.className = "mb-3 chat-bubble";
-        
-        if (isSystem) {
-          el.innerHTML = `
-            <div class="text-center text-gray-500 text-sm my-2">
-              ${msg.text}
-              <span class="message-time">${msg.time}</span>
+    
+    <!-- نافذة تعديل الملف الشخصي -->
+    <div class="modal" id="profile-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">تعديل الملف الشخصي</h3>
+            <input type="text" class="modal-input" id="username-input" placeholder="اسم المستخدم الجديد">
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('profile-modal')">إلغاء</button>
+                <button class="modal-btn primary" onclick="updateProfile()">حفظ التغييرات</button>
             </div>
-          `;
-        } else {
-          const adminBadge = msg.isAdmin ? '<span class="admin-badge">مدير</span>' : '';
-          const guestBadge = msg.isGuest ? '<span class="guest-badge">ضيف</span>' : '';
-          
-          el.innerHTML = `
-            <div class="${isCurrentUser ? 'user-bubble' : ''}">
-              <div class="flex ${isCurrentUser ? 'justify-end' : ''}">
-                <div class="flex items-end ${isCurrentUser ? 'flex-row-reverse' : ''} mb-1">
-                  <span class="font-bold text-sm ${isCurrentUser ? 'text-indigo-700' : 'text-gray-700'}">
-                    ${adminBadge}${guestBadge}${msg.name}
-                  </span>
-                  <span class="message-time mx-2">${msg.time}</span>
-                </div>
-              </div>
-              <div class="${isCurrentUser ? 'bg-indigo-100 border-indigo-200 text-right' : 'bg-gray-100 border-gray-200'} border rounded-2xl p-3 max-w-xs md:max-w-md inline-block">
-                ${msg.text || ''}
-                ${msg.image ? `
-                  <div class="media-sent mt-2">
-                    <img src="${msg.image}" class="image-preview cursor-pointer" onclick="openMediaModal('${msg.image}')">
-                  </div>
-                ` : ''}
-                <div class="admin-controls mt-2">
-                  <button onclick="deleteMessage('${msg.id}')" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">
-                    <i class="fas fa-trash"></i> حذف
-                  </button>
-                </div>
-              </div>
-            </div>
-          `;
-        }
-        
-        chatBox.appendChild(el);
-      });
-      
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // إعداد حضور المستخدم والعداد
-    function setupPresence() {
-      // أضف المستخدم للحضور
-      chatDB.addUser({
-        id: userId,
-        name: username,
-        joined: formatTime(new Date()),
-        isAdmin: isAdmin,
-        isGuest: isGuest,
-        lastSeen: Date.now()
-      });
-      
-      updatePresenceUI();
-      
-      // تحديث حضور المستخدم كل 5 ثوان
-      presenceInterval = setInterval(() => {
-        chatDB.updateUser(userId);
-        updatePresenceUI();
-      }, 5000);
-      
-      window.addEventListener("beforeunload", () => {
-        clearInterval(presenceInterval);
-        chatDB.removeUser(userId);
-        
-        // إرسال رسالة مغادرة
-        chatDB.addMessage({
-          name: "النظام",
-          text: `غادر ${username} ${isAdmin ? "(مدير النظام)" : isGuest ? "(ضيف)" : ""} المحادثة`,
-          time: formatTime(new Date()),
-          isSystem: true
-        });
-      });
-    }
-    
-    // تحديث واجهة المستخدمين المتصلين
-    function updatePresenceUI() {
-      const now = Date.now();
-      const users = chatDB.getUsers();
-      
-      // إزالة المستخدمين غير النشطين لأكثر من 15 ثانية
-      const activeUsers = users.filter(user => now - user.lastSeen < 15000);
-      activeUsers.forEach(user => chatDB.updateUser(user.id));
-      
-      const inactiveUsers = users.filter(user => now - user.lastSeen >= 15000);
-      inactiveUsers.forEach(user => {
-        chatDB.removeUser(user.id);
-        chatDB.addMessage({
-          name: "النظام",
-          text: `انقطع اتصال ${user.name} بسبب عدم النشاط`,
-          time: formatTime(new Date()),
-          isSystem: true
-        });
-      });
-      
-      const updatedUsers = chatDB.getUsers();
-      const count = updatedUsers.length;
-      usersCountEl.textContent = count;
-      
-      // تحديث قائمة المستخدمين المتصلين
-      onlineUsersEl.innerHTML = '';
-      
-      if (updatedUsers.length === 0) {
-        onlineUsersEl.innerHTML = '<div class="text-center text-gray-500 py-4">لا يوجد مستخدمين متصلين</div>';
-        return;
-      }
-      
-      updatedUsers.forEach(user => {
-        const isCurrent = user.id === userId;
-        const lastSeenDiff = now - user.lastSeen;
-        const isActive = lastSeenDiff < 5000; // نشط إذا كان آخر تحديث منذ أقل من 5 ثوان
-        const isIdle = lastSeenDiff >= 5000 && lastSeenDiff < 10000; // خامل إذا بين 5-10 ثوان
-        
-        const userEl = document.createElement('div');
-        userEl.className = `user-presence ${isCurrent ? 'bg-blue-50' : ''}`;
-        
-        const adminBadge = user.isAdmin ? '<span class="admin-badge">مدير</span>' : '';
-        const guestBadge = user.isGuest ? '<span class="guest-badge">ضيف</span>' : '';
-        
-        userEl.innerHTML = `
-          <div class="presence-indicator ${isActive ? 'presence-online' : isIdle ? 'presence-idle' : 'presence-offline'}"></div>
-          <div class="flex-1">
-            <div class="font-medium">${adminBadge}${guestBadge}${user.name}</div>
-            <div class="text-xs text-gray-500">متصل منذ ${user.joined}</div>
-          </div>
-          ${isCurrent ? '<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">أنت</span>' : ''}
-        `;
-        onlineUsersEl.appendChild(userEl);
-      });
-    }
-
-    // تحديث قائمة المتصلين
-    function refreshPresence() {
-      updatePresenceUI();
-      showNotification('تم تحديث قائمة المتصلين بنجاح');
-    }
-
-    // وظائف المدير
-    function deleteMessage(messageId) {
-      if (!isAdmin) return;
-      if (!confirm("هل تريد حذف هذه الرسالة؟")) return;
-      
-      chatDB.deleteMessage(messageId);
-      updateChatUI();
-      showNotification('تم حذف الرسالة بنجاح');
-    }
-    
-    function deleteAllMessages() {
-      if (!isAdmin) return;
-      if (!confirm("هل تريد حذف جميع الرسائل؟ لا يمكن التراجع عن هذا الإجراء.")) return;
-      
-      chatDB.clearMessages();
-      updateChatUI();
-      showNotification('تم حذف جميع الرسائل بنجاح');
-    }
-    
-    function sendSystemMessage() {
-      if (!isAdmin) return;
-      const message = prompt("أدخل نص الإعلان العام:");
-      if (!message) return;
-      
-      chatDB.addMessage({
-        name: "الإدارة",
-        text: `📢 إعلان: ${message}`,
-        time: formatTime(new Date()),
-        isSystem: true,
-        isAdmin: true
-      });
-      updateChatUI();
-      showNotification('تم إرسال الإعلان بنجاح');
-    }
-
-    // الاستماع للرسائل
-    function listenToMessages() {
-      updateChatUI();
-      // تحديث الرسائل كل 2 ثانية
-      setInterval(updateChatUI, 2000);
-    }
-
-    // زر الرجوع
-    function goBack() {
-      // إرسال رسالة مغادرة
-      chatDB.addMessage({
-        name: "النظام",
-        text: `غادر ${username} ${isAdmin ? "(مدير النظام)" : isGuest ? "(ضيف)" : ""} المحادثة`,
-        time: formatTime(new Date()),
-        isSystem: true
-      });
-      
-      // حذف حضور المستخدم
-      chatDB.removeUser(userId);
-      clearInterval(presenceInterval);
-      
-      // إعادة تعيين الحالة
-      username = "";
-      isAdmin = false;
-      isGuest = false;
-      adminPanel.classList.add("hidden");
-      adminBadge.classList.add("hidden");
-      guestBadge.classList.add("hidden");
-      document.body.classList.remove("admin");
-      
-      // إظهار نافذة الدخول
-      document.getElementById("nameModal").style.display = "flex";
-    }
-
-    // فتح نافذة الوسائط
-    function openMediaModal(mediaUrl = null) {
-      const mediaModal = document.getElementById('mediaModal');
-      const mediaList = document.getElementById('mediaList');
-      
-      mediaList.innerHTML = '';
-      
-      // عرض الوسائط المحفوظة
-      const mediaItems = chatDB.getMedia();
-      if (mediaItems.length === 0) {
-        mediaList.innerHTML = '<p class="text-gray-500 col-span-4 text-center py-8">لا توجد وسائط مرسلة بعد</p>';
-      } else {
-        mediaItems.forEach(media => {
-          const mediaEl = document.createElement('div');
-          mediaEl.className = 'bg-gray-100 rounded-lg overflow-hidden cursor-pointer';
-          mediaEl.innerHTML = `
-            <img src="${media.url}" class="w-full h-32 object-cover" onclick="showFullImage('${media.url}')">
-            <div class="p-2">
-              <div class="text-sm font-medium">${media.sender}</div>
-              <div class="text-xs text-gray-500">${media.time}</div>
-            </div>
-          `;
-          mediaList.appendChild(mediaEl);
-        });
-      }
-      
-      mediaModal.classList.remove('hidden');
-      
-      // إذا تم تمرير رابط وسائط، عرضها بالحجم الكامل
-      if (mediaUrl) {
-        showFullImage(mediaUrl);
-      }
-    }
-    
-    // عرض الصورة بالحجم الكامل
-    function showFullImage(imageUrl) {
-      const mediaModal = document.getElementById('mediaModal');
-      mediaModal.innerHTML = `
-        <div class="bg-black bg-opacity-90 fixed inset-0 flex items-center justify-center">
-          <button onclick="closeMediaModal()" class="absolute top-4 right-4 text-white text-2xl">
-            <i class="fas fa-times"></i>
-          </button>
-          <img src="${imageUrl}" class="max-h-screen max-w-screen p-4">
         </div>
-      `;
-    }
+    </div>
     
-    // إغلاق نافذة الوسائط
-    function closeMediaModal() {
-      document.getElementById('mediaModal').classList.add('hidden');
-    }
-    
-    // عرض إشعار
-    function showNotification(message) {
-      const notification = document.createElement('div');
-      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
-      notification.innerHTML = `
-        <div class="flex items-center">
-          <i class="fas fa-check-circle mr-2"></i>
-          <span>${message}</span>
+    <!-- نافذة إدارة المستخدمين -->
+    <div class="modal" id="users-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">إدارة المستخدمين</h3>
+            <div class="admin-list" id="users-list" style="height: 300px;">
+                <div class="admin-item">جارٍ تحميل المستخدمين...</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('users-modal')">إغلاق</button>
+            </div>
         </div>
-      `;
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.remove();
-      }, 3000);
-    }
+    </div>
+    
+    <!-- نافذة اختيار الألوان -->
+    <div class="theme-modal" id="theme-modal">
+        <div class="theme-content">
+            <h3 class="theme-title">اختر سمة التطبيق</h3>
+            <div class="theme-grid">
+                <div class="theme-item theme-default-item" onclick="setTheme('default')">
+                    الافتراضية
+                </div>
+                <div class="theme-item theme-light-item" onclick="setTheme('light')">
+                    فاتحة
+                </div>
+                <div class="theme-item theme-dark-item" onclick="setTheme('dark')">
+                    داكنة
+                </div>
+                <div class="theme-item theme-blue-item" onclick="setTheme('blue')">
+                    زرقاء
+                </div>
+                <div class="theme-item theme-green-item" onclick="setTheme('green')">
+                    خضراء
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal('theme-modal')">إغلاق</button>
+            </div>
+        </div>
+    </div>
 
-    // تهيئة الصفحة
-    document.addEventListener('DOMContentLoaded', function() {
-      // إظهار نافذة الدخول عند التحميل
-      document.getElementById('nameModal').style.display = 'flex';
-      
-      // تحديث التاريخ والوقت
-      updateDateTime();
-      setInterval(updateDateTime, 60000); // تحديث كل دقيقة
-      
-      // عند كتابة اسم المستخدم
-      document.getElementById('usernameInput').addEventListener('input', function() {
-        if (this.value === 'سجاد') {
-          adminMessage.classList.remove('hidden');
-        } else {
-          adminMessage.classList.add('hidden');
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBbwKLg6_hAADjH4itOD9qDwAQEoJMBOds",
+            authDomain: "gram-e6f72.firebaseapp.com",
+            databaseURL: "https://gram-e6f72-default-rtdb.firebaseio.com",
+            projectId: "gram-e6f72",
+            storageBucket: "gram-e6f72.firebasestorage.app",
+            messagingSenderId: "426955075285",
+            appId: "1:426955075285:web:ee07a5b56cd9b38da2fc5c",
+            measurementId: "G-3F6BV361SJ"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // State variables
+        let currentUser = null;
+        let isAdmin = false;
+        let username = "";
+        let messages = [];
+        
+        // DOM elements
+        const authSection = document.getElementById('auth-section');
+        const chatSection = document.getElementById('chat-section');
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const errorMessage = document.getElementById('error-message');
+        const signupErrorMessage = document.getElementById('signup-error-message');
+        const userAvatar = document.getElementById('user-avatar');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const typingText = document.getElementById('typing-text');
+        const onlineCount = document.getElementById('online-count');
+        const adminBadge = document.getElementById('admin-badge');
+        const userMenu = document.getElementById('user-menu');
+        const adminSection = document.getElementById('admin-section');
+        const adminPanel = document.getElementById('admin-panel');
+        const profileModal = document.getElementById('profile-modal');
+        const usersModal = document.getElementById('users-modal');
+        const usernameInput = document.getElementById('username-input');
+        const menuUsername = document.getElementById('menu-username');
+        const themeModal = document.getElementById('theme-modal');
+        
+        // Initialize the app
+        function init() {
+            // تحميل السمة المحفوظة
+            loadTheme();
+            
+            // Check if user is logged in
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // User is signed in
+                    currentUser = user;
+                    username = user.email.split('@')[0];
+                    menuUsername.textContent = username;
+                    userAvatar.textContent = username.charAt(0).toUpperCase();
+                    
+                    // Check if admin
+                    isAdmin = user.email === "admin@example.com";
+                    adminBadge.style.display = isAdmin ? "block" : "none";
+                    adminSection.style.display = isAdmin ? "block" : "none";
+                    
+                    // Show chat section
+                    showChatSection();
+                    
+                    // Setup database listeners
+                    setupDatabaseListeners();
+                } else {
+                    // No user is signed in
+                    showAuthSection();
+                }
+            });
         }
-      });
-      
-      // معالجة رفع الصورة
-      document.getElementById('mediaUpload').addEventListener('change', handleImageUpload);
-      
-      // إنشاء اسم وكلمة مرور عشوائية أولية
-      generateRandomUsername();
-      generateRandomPassword();
-    });
-  </script>
+        
+        // Setup database listeners
+        function setupDatabaseListeners() {
+            // Listen for new messages
+            const messagesRef = database.ref('messages');
+            messagesRef.limitToLast(20).on('child_added', snapshot => {
+                const message = snapshot.val();
+                addMessageToChat(message, message.userId === currentUser.uid);
+            });
+            
+            // Listen for typing indicators
+            const typingRef = database.ref('typing');
+            typingRef.on('value', snapshot => {
+                const typingData = snapshot.val() || {};
+                const typingUsers = Object.values(typingData).filter(user => 
+                    user.isTyping && user.userId !== currentUser.uid
+                );
+                
+                if (typingUsers.length > 0) {
+                    typingText.textContent = `${typingUsers[0].username} يكتب الآن...`;
+                    typingIndicator.style.display = 'block';
+                } else {
+                    typingIndicator.style.display = 'none';
+                }
+            });
+            
+            // Listen for online users
+            const onlineRef = database.ref('online');
+            onlineRef.on('value', snapshot => {
+                const onlineUsers = snapshot.val() || {};
+                const onlineCountVal = Object.keys(onlineUsers).length;
+                onlineCount.textContent = onlineCountVal;
+            });
+        }
+        
+        // Show authentication section
+        function showAuthSection() {
+            authSection.style.display = 'flex';
+            chatSection.style.display = 'none';
+            errorMessage.style.display = 'none';
+            signupErrorMessage.style.display = 'none';
+            userMenu.style.display = 'none';
+        }
+        
+        // Show chat section
+        function showChatSection() {
+            authSection.style.display = 'none';
+            chatSection.style.display = 'flex';
+            
+            // Set user as online
+            setOnlineStatus(true);
+            
+            // Clear chat
+            chatBox.innerHTML = '';
+            
+            // Add typing indicator
+            chatBox.appendChild(typingIndicator);
+            
+            // Load messages
+            loadMessages();
+        }
+        
+        // Set user online status
+        function setOnlineStatus(isOnline) {
+            if (!currentUser) return;
+            
+            const onlineRef = database.ref('online/' + currentUser.uid);
+            
+            if (isOnline) {
+                onlineRef.set({
+                    userId: currentUser.uid,
+                    username: username,
+                    lastActive: firebase.database.ServerValue.TIMESTAMP
+                });
+                
+                // Set user offline when they disconnect
+                onlineRef.onDisconnect().remove();
+            } else {
+                onlineRef.remove();
+            }
+        }
+        
+        // Sign up new user
+        function signup() {
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const consent = document.getElementById('signup-consent').checked;
+            
+            if (!validateSignupInput(email, password, confirmPassword)) return;
+            
+            if (!consent) {
+                showSignupError('يجب الموافقة على شروط الخدمة وسياسة الخصوصية');
+                return;
+            }
+            
+            showLoading('signup');
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    hideLoading('signup');
+                    showSignupSuccess('تم إنشاء الحساب بنجاح!');
+                    
+                    // Set default username
+                    username = email.split('@')[0];
+                    menuUsername.textContent = username;
+                })
+                .catch((error) => {
+                    hideLoading('signup');
+                    showSignupError(`خطأ: ${error.message}`);
+                });
+        }
+        
+        // Log in existing user
+        function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const consent = document.getElementById('data-consent').checked;
+            
+            if (!validateLoginInput(email, password)) return;
+            
+            if (!consent) {
+                showError('يجب الموافقة على تخزين بيانات المحادثة');
+                return;
+            }
+            
+            showLoading('login');
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => {
+                    hideLoading('login');
+                })
+                .catch((error) => {
+                    hideLoading('login');
+                    showError(`خطأ: ${error.message}`);
+                });
+        }
+        
+        // Send message
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            
+            if (!text) return;
+            
+            if (!currentUser) return;
+            
+            // Create message object
+            const message = {
+                text: text,
+                userId: currentUser.uid,
+                username: username,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            };
+            
+            // Save to database
+            database.ref('messages').push(message);
+            
+            // Clear input
+            messageInput.value = "";
+            
+            // Reset typing status
+            setTypingStatus(false);
+            
+            // Scroll to bottom after sending message
+            setTimeout(() => {
+                scrollChat('bottom');
+            }, 100);
+        }
+        
+        // Load messages
+        function loadMessages() {
+            // Clear existing messages
+            chatBox.innerHTML = '';
+            
+            // Add empty state if no messages
+            const emptyChat = document.createElement('div');
+            emptyChat.className = 'empty-chat';
+            emptyChat.innerHTML = `
+                <i class="fas fa-comment-dots"></i>
+                <h3>لا توجد رسائل بعد</h3>
+                <p>ابدأ المحادثة بإرسال أول رسالة لك</p>
+            `;
+            chatBox.appendChild(emptyChat);
+            
+            // Add typing indicator
+            chatBox.appendChild(typingIndicator);
+            
+            // Scroll to bottom
+            scrollChat('bottom');
+        }
+        
+        // Add message to chat UI
+        function addMessageToChat(msg, isCurrentUser) {
+            // Remove empty state if exists
+            const emptyChat = document.querySelector('.empty-chat');
+            if (emptyChat) emptyChat.remove();
+            
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.classList.add(isCurrentUser ? 'sent' : 'received');
+            
+            // Format timestamp
+            const date = new Date(msg.timestamp);
+            const timeString = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            messageElement.innerHTML = `
+                <div class="message-text">${msg.text}</div>
+                <div class="message-info">
+                    <span>${isCurrentUser ? 'أنت' : msg.username}</span>
+                    <span>${timeString}</span>
+                </div>
+            `;
+            
+            chatBox.appendChild(messageElement);
+            
+            // Scroll to bottom
+            scrollChat('bottom');
+        }
+        
+        // Set typing status
+        function setTypingStatus(isTyping) {
+            if (!currentUser) return;
+            
+            const typingRef = database.ref('typing/' + currentUser.uid);
+            
+            if (isTyping) {
+                typingRef.set({
+                    userId: currentUser.uid,
+                    username: username,
+                    isTyping: true
+                });
+            } else {
+                typingRef.remove();
+            }
+        }
+        
+        // Validate login input fields
+        function validateLoginInput(email, password) {
+            if (!email || !password) {
+                showError('يرجى ملء جميع الحقول');
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                return false;
+            }
+            
+            // Simple email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('البريد الإلكتروني غير صالح');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Validate signup input fields
+        function validateSignupInput(email, password, confirmPassword) {
+            if (!email || !password || !confirmPassword) {
+                showSignupError('يرجى ملء جميع الحقول');
+                return false;
+            }
+            
+            if (password.length < 6) {
+                showSignupError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                return false;
+            }
+            
+            if (password !== confirmPassword) {
+                showSignupError('كلمتا المرور غير متطابقتين');
+                return false;
+            }
+            
+            // Simple email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showSignupError('البريد الإلكتروني غير صالح');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // Show loading state
+        function showLoading(type) {
+            const button = type === 'login' ? 
+                document.querySelector('#login-form .auth-button') : 
+                document.querySelector('#signup-form .auth-button');
+                
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري المعالجة...';
+        }
+        
+        // Hide loading state
+        function hideLoading(type) {
+            const button = type === 'login' ? 
+                document.querySelector('#login-form .auth-button') : 
+                document.querySelector('#signup-form .auth-button');
+                
+            button.disabled = false;
+            button.textContent = type === 'login' ? 'تسجيل الدخول' : 'إنشاء حساب جديد';
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            errorMessage.style.backgroundColor = '#ffebee';
+            errorMessage.style.color = '#e53935';
+        }
+        
+        // Show success message
+        function showSuccess(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            errorMessage.style.backgroundColor = '#e6f7ee';
+            errorMessage.style.color = '#43a047';
+        }
+        
+        // Show signup error message
+        function showSignupError(message) {
+            signupErrorMessage.textContent = message;
+            signupErrorMessage.style.display = 'block';
+            signupErrorMessage.style.backgroundColor = '#ffebee';
+            signupErrorMessage.style.color = '#e53935';
+        }
+        
+        // Show signup success message
+        function showSignupSuccess(message) {
+            signupErrorMessage.textContent = message;
+            signupErrorMessage.style.display = 'block';
+            signupErrorMessage.style.backgroundColor = '#e6f7ee';
+            signupErrorMessage.style.color = '#43a047';
+        }
+        
+        // Handle Enter key press
+        function handleKeyPress(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            } else {
+                // Update typing status
+                setTypingStatus(true);
+                clearTimeout(window.typingTimeout);
+                window.typingTimeout = setTimeout(() => {
+                    setTypingStatus(false);
+                }, 2000);
+            }
+        }
+        
+        // Toggle user menu
+        function toggleUserMenu() {
+            if (userMenu.style.display === 'block') {
+                userMenu.style.display = 'none';
+            } else {
+                userMenu.style.display = 'block';
+            }
+        }
+        
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.user-menu') && !e.target.closest('.user-avatar')) {
+                userMenu.style.display = 'none';
+            }
+        });
+        
+        // Switch between login and signup tabs
+        function switchTab(tabName) {
+            // Hide all forms
+            document.querySelectorAll('.auth-form').forEach(form => {
+                form.style.display = 'none';
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected form
+            document.getElementById(`${tabName}-form`).style.display = 'block';
+            
+            // Add active class to selected tab
+            document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            
+            // Clear error messages
+            errorMessage.style.display = 'none';
+            signupErrorMessage.style.display = 'none';
+        }
+        
+        // Open admin panel
+        function openAdminPanel() {
+            adminPanel.classList.add('active');
+            userMenu.style.display = 'none';
+        }
+        
+        // Close admin panel
+        function closeAdminPanel() {
+            adminPanel.classList.remove('active');
+        }
+        
+        // Open user management modal
+        function openUserManagement() {
+            usersModal.style.display = 'flex';
+            userMenu.style.display = 'none';
+            loadUsersList();
+        }
+        
+        // Load users list
+        function loadUsersList() {
+            const usersList = document.getElementById('users-list');
+            usersList.innerHTML = '<div class="admin-item">جارٍ تحميل المستخدمين...</div>';
+            
+            // Simulate loading
+            setTimeout(() => {
+                const users = [
+                    { id: 1, name: "أحمد محمد", status: "نشط" },
+                    { id: 2, name: "سارة علي", status: "نشط" },
+                    { id: 3, name: "محمد خالد", status: "محظور" },
+                    { id: 4, name: "فاطمة عبدالله", status: "نشط" },
+                    { id: 5, name: "عمر حسن", status: "غير نشط" }
+                ];
+                
+                usersList.innerHTML = '';
+                
+                users.forEach(user => {
+                    const item = document.createElement('div');
+                    item.className = 'admin-item';
+                    item.innerHTML = `
+                        <div>
+                            <div>${user.name}</div>
+                            <div style="font-size: 0.8rem; color: ${user.status === 'نشط' ? '#43a047' : user.status === 'محظور' ? '#e53935' : '#757575'}">${user.status}</div>
+                        </div>
+                        <div class="admin-actions">
+                            <button class="admin-action-btn block" onclick="toggleBlockUser(${user.id})">
+                                ${user.status === 'محظور' ? 'فك الحظر' : 'حظر'}
+                            </button>
+                            <button class="admin-action-btn delete" onclick="deleteUser(${user.id})">
+                                حذف
+                            </button>
+                        </div>
+                    `;
+                    usersList.appendChild(item);
+                });
+            }, 800);
+        }
+        
+        // Open profile modal
+        function openProfileModal() {
+            profileModal.style.display = 'flex';
+            usernameInput.value = username || "مستخدم";
+            userMenu.style.display = 'none';
+        }
+        
+        // Open theme modal
+        function openThemeModal() {
+            themeModal.style.display = 'flex';
+            userMenu.style.display = 'none';
+            highlightCurrentTheme();
+        }
+        
+        // Highlight current theme
+        function highlightCurrentTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'default';
+            document.querySelectorAll('.theme-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.theme-${currentTheme}-item`).classList.add('active');
+        }
+        
+        // Set theme
+        function setTheme(themeName) {
+            document.body.className = `theme-${themeName}`;
+            localStorage.setItem('theme', themeName);
+            highlightCurrentTheme();
+        }
+        
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                document.body.className = `theme-${savedTheme}`;
+            }
+        }
+        
+        // Close modal
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Update user profile
+        function updateProfile() {
+            const newUsername = usernameInput.value.trim();
+            if (!newUsername) {
+                showError('يرجى إدخال اسم مستخدم صالح');
+                return;
+            }
+            
+            username = newUsername;
+            userAvatar.textContent = newUsername.charAt(0).toUpperCase();
+            menuUsername.textContent = newUsername;
+            
+            closeModal('profile-modal');
+            showSuccess('تم تحديث الملف الشخصي بنجاح!');
+        }
+        
+        // Logout user
+        function logout() {
+            // Set offline
+            setOnlineStatus(false);
+            
+            auth.signOut().then(() => {
+                showAuthSection();
+                document.getElementById('email').value = '';
+                document.getElementById('password').value = '';
+                document.getElementById('data-consent').checked = false;
+                showSuccess('تم تسجيل الخروج بنجاح!');
+            });
+        }
+        
+        // Toggle block user
+        function toggleBlockUser(userId) {
+            alert(`تم ${confirm('هل تريد حظر/فك حظر هذا المستخدم؟') ? 'تطبيق' : 'إلغاء'} العملية على المستخدم ${userId}`);
+        }
+        
+        // Delete user
+        function deleteUser(userId) {
+            if (confirm('هل أنت متأكد من حذف هذا المستخدم؟')) {
+                alert(`تم حذف المستخدم ${userId}`);
+            }
+        }
+        
+        // Scroll chat box
+        function scrollChat(direction) {
+            if (!chatBox) return;
+            
+            switch(direction) {
+                case 'up':
+                    chatBox.scrollTop -= 100;
+                    break;
+                case 'down':
+                    chatBox.scrollTop += 100;
+                    break;
+                case 'top':
+                    chatBox.scrollTop = 0;
+                    break;
+                case 'bottom':
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                    break;
+            }
+        }
+        
+        // Initialize the app when page loads
+        window.onload = init;
+    </script>
 </body>
 </html>
