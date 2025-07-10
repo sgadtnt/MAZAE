@@ -1,15 +1,517 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>تسجيل الدخول باستخدام Google</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام تسجيل الدخول مع Firebase</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script type="module">
-    // Firebase v9 - Modular SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics-compat.js"></script>
+  <style>
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body, html { height:100%; background:#f3f4f6; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    .page { display: none; min-height: 100vh; flex-direction: column; }
+    .active-page { display: flex; }
+    
+    .auth-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      padding: 20px;
+    }
+    
+    .auth-card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 450px;
+      padding: 40px 30px;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .logo {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: linear-gradient(to right, #10b981, #34d399);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto 20px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #1e293b;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .subtitle {
+      color: #64748b;
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+      text-align: right;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .input-label {
+      display: block;
+      text-align: right;
+      margin-bottom: 8px;
+      color: #1e293b;
+      font-weight: 500;
+    }
+    
+    .input-field {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 16px;
+      transition: all 0.3s;
+      background: rgba(255,255,255,0.9);
+    }
+    
+    .input-field:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .forgot-password {
+      display: block;
+      text-align: left;
+      margin-top: 5px;
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 0.9rem;
+    }
+    
+    .forgot-password:hover {
+      text-decoration: underline;
+    }
+    
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(to right, #3b82f6, #2563eb);
+      color: white;
+      box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(59, 130, 246, 0.4);
+    }
+    
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #334155;
+      margin-top: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .btn-secondary:hover {
+      background: #e2e8f0;
+    }
+    
+    .btn-tertiary {
+      background: linear-gradient(to right, #10b981, #34d399);
+      color: white;
+      box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-tertiary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 8px rgba(16, 185, 129, 0.4);
+    }
+    
+    .divider {
+      display: flex;
+      align-items: center;
+      margin: 25px 0;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .divider-line {
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+    
+    .divider-text {
+      padding: 0 15px;
+      color: #64748b;
+    }
+    
+    .footer-text {
+      color: #64748b;
+      margin-top: 30px;
+      font-size: 0.9rem;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .footer-text a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+    }
+    
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+    
+    .terms {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 20px;
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .terms a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+    
+    .terms a:hover {
+      text-decoration: underline;
+    }
+    
+    .error-message {
+      color: #ef4444;
+      background: #fee2e2;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-align: right;
+      display: none;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .success-message {
+      color: #047857;
+      background: #d1fae5;
+      padding: 10px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      text-align: right;
+      display: none;
+      position: relative;
+      z-index: 2;
+    }
+    
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 10px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: -50px;
+      right: -50px;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(30, 64, 175, 0.1));
+      z-index: 1;
+    }
+    
+    .auth-card::after {
+      content: '';
+      position: absolute;
+      bottom: -70px;
+      left: -70px;
+      width: 250px;
+      height: 250px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1));
+      z-index: 1;
+    }
+    
+    .google-btn {
+      background: white;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-weight: 600;
+      color: #5f6368;
+      transition: all 0.3s;
+    }
+    
+    .google-btn:hover {
+      background: #f8fafc;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      transform: translateY(-2px);
+    }
+    
+    .google-icon {
+      width: 20px;
+      height: 20px;
+      background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=') center no-repeat;
+    }
+    
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 30px 20px;
+      }
+      
+      .title {
+        font-size: 1.5rem;
+      }
+      
+      .logo {
+        width: 80px;
+        height: 80px;
+        font-size: 2rem;
+      }
+    }
+    
+    .floating-animation {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.3);
+      z-index: 0;
+      animation: float 15s infinite linear;
+    }
+    
+    @keyframes float {
+      0% { transform: translate(0, 0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translate(300px, 300px); opacity: 0; }
+    }
+    
+    .floating-animation:nth-child(1) {
+      top: 10%;
+      left: 20%;
+      width: 15px;
+      height: 15px;
+      animation-duration: 20s;
+      background: rgba(16, 185, 129, 0.3);
+    }
+    
+    .floating-animation:nth-child(2) {
+      top: 70%;
+      left: 80%;
+      width: 25px;
+      height: 25px;
+      animation-duration: 25s;
+      animation-delay: 2s;
+      background: rgba(245, 158, 11, 0.3);
+    }
+    
+    .floating-animation:nth-child(3) {
+      top: 40%;
+      left: 50%;
+      width: 20px;
+      height: 20px;
+      animation-duration: 18s;
+      animation-delay: 4s;
+      background: rgba(139, 92, 246, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <!-- إنشاء عناصر الرسوم المتحركة العائمة -->
+  <div class="floating-animation"></div>
+  <div class="floating-animation"></div>
+  <div class="floating-animation"></div>
+  
+  <!-- صفحة تسجيل الدخول -->
+  <div id="loginPage" class="page active-page auth-container">
+    <div class="auth-card">
+      <div class="logo">
+        <i class="fas fa-lock"></i>
+      </div>
+      <h1 class="title">تسجيل الدخول</h1>
+      <p class="subtitle">سجل دخولك للوصول إلى حسابك</p>
+      
+      <div id="loginError" class="error-message"></div>
+      
+      <form id="loginForm">
+        <div class="input-group">
+          <label class="input-label">البريد الإلكتروني</label>
+          <input type="email" id="loginEmail" class="input-field" placeholder="example@mail.com" required>
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label">كلمة المرور</label>
+          <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" required>
+          <a href="#" id="forgotPassword" class="forgot-password">نسيت كلمة المرور؟</a>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="loginButton">
+          تسجيل الدخول
+        </button>
+      </form>
+      
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">أو</div>
+        <div class="divider-line"></div>
+      </div>
+      
+      <button class="btn google-btn" id="googleLogin">
+        <div class="google-icon"></div>
+        تسجيل الدخول بحساب جوجل
+      </button>
+      
+      <p class="footer-text">
+        ليس لديك حساب؟ <a href="#" id="goToSignup">أنشئ حساب جديد</a>
+      </p>
+    </div>
+  </div>
+  
+  <!-- صفحة إنشاء حساب -->
+  <div id="signupPage" class="page auth-container">
+    <div class="auth-card">
+      <div class="logo">
+        <i class="fas fa-user-plus"></i>
+      </div>
+      <h1 class="title">إنشاء حساب جديد</h1>
+      <p class="subtitle">انضم إلينا وابدأ رحلتك</p>
+      
+      <div id="signupError" class="error-message"></div>
+      
+      <form id="signupForm">
+        <div class="input-group">
+          <label class="input-label">الاسم الكامل</label>
+          <input type="text" id="fullName" class="input-field" placeholder="أدخل اسمك الكامل" required>
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label">البريد الإلكتروني</label>
+          <input type="email" id="signupEmail" class="input-field" placeholder="example@mail.com" required>
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label">كلمة المرور</label>
+          <input type="password" id="signupPassword" class="input-field" placeholder="••••••••" required>
+          <a href="#" id="forgotPasswordSignup" class="forgot-password">نسيت كلمة المرور؟</a>
+        </div>
+        
+        <div class="input-group">
+          <label class="input-label">تأكيد كلمة المرور</label>
+          <input type="password" id="confirmPassword" class="input-field" placeholder="••••••••" required>
+        </div>
+        
+        <button type="submit" class="btn btn-tertiary" id="signupButton">
+          إنشاء حساب
+        </button>
+      </form>
+      
+      <div class="terms">
+        بإنشائك حساب فإنك توافق على <a href="#">شروط الخدمة</a> و <a href="#">سياسة الخصوصية</a>
+      </div>
+      
+      <div class="divider">
+        <div class="divider-line"></div>
+        <div class="divider-text">أو</div>
+        <div class="divider-line"></div>
+      </div>
+      
+      <button class="btn google-btn" id="googleSignup">
+        <div class="google-icon"></div>
+        التسجيل بحساب جوجل
+      </button>
+      
+      <p class="footer-text">
+        لديك حساب بالفعل؟ <a href="#" id="goToLogin">تسجيل الدخول</a>
+      </p>
+    </div>
+  </div>
+  
+  <!-- صفحة إعادة تعيين كلمة المرور -->
+  <div id="resetPasswordPage" class="page auth-container">
+    <div class="auth-card">
+      <div class="logo">
+        <i class="fas fa-key"></i>
+      </div>
+      <h1 class="title">إعادة تعيين كلمة المرور</h1>
+      <p class="subtitle">أدخل بريدك الإلكتروني لإعادة تعيين كلمة المرور</p>
+      
+      <div id="resetError" class="error-message"></div>
+      <div id="resetSuccess" class="success-message">
+        تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني
+      </div>
+      
+      <form id="resetPasswordForm">
+        <div class="input-group">
+          <label class="input-label">البريد الإلكتروني</label>
+          <input type="email" id="resetEmail" class="input-field" placeholder="example@mail.com" required>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="resetButton">
+          إرسال رابط التعيين
+        </button>
+      </form>
+      
+      <p class="footer-text">
+        <a href="#" id="backToLogin">العودة لتسجيل الدخول</a>
+      </p>
+    </div>
+  </div>
 
+  <script>
+    // التهيئة باستخدام قاعدة بيانات Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
       authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -17,42 +519,328 @@
       projectId: "zio3-8ffdd",
       storageBucket: "zio3-8ffdd.appspot.com",
       messagingSenderId: "560939348415",
-      appId: "1:560939348415:web:c854e9e214e498ad2d310a"
+      appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+      measurementId: "G-CVN2B2D0RD"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth();
-    const provider = new GoogleAuthProvider();
-
-    // تسجيل الدخول عبر Google
-    window.googleLogin = function () {
-      signInWithPopup(auth, provider)
-        .then((result) => {
-          const user = result.user;
-          alert("تم تسجيل الدخول بنجاح: " + user.displayName);
-          console.log("بيانات المستخدم:", user);
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const analytics = firebase.analytics;
+    
+    // متغيرات النظام
+    let currentUser = null;
+    
+    // عناصر DOM
+    const pages = {
+      login: document.getElementById('loginPage'),
+      signup: document.getElementById('signupPage'),
+      reset: document.getElementById('resetPasswordPage')
+    };
+    
+    // عناصر الأخطاء والرسائل
+    const loginError = document.getElementById('loginError');
+    const signupError = document.getElementById('signupError');
+    const resetError = document.getElementById('resetError');
+    const resetSuccess = document.getElementById('resetSuccess');
+    
+    // إخفاء رسائل الخطأ والنجاح في البداية
+    loginError.style.display = 'none';
+    signupError.style.display = 'none';
+    resetError.style.display = 'none';
+    resetSuccess.style.display = 'none';
+    
+    // وظائف التنقل بين الصفحات
+    function showPage(pageName) {
+      Object.values(pages).forEach(page => page.classList.remove('active-page'));
+      pages[pageName].classList.add('active-page');
+      
+      // إخفاء رسائل الخطأ عند تغيير الصفحات
+      loginError.style.display = 'none';
+      signupError.style.display = 'none';
+      resetError.style.display = 'none';
+      resetSuccess.style.display = 'none';
+    }
+    
+    // تهيئة الأحداث
+    function initEvents() {
+      // التنقل بين الصفحات
+      document.getElementById('goToSignup').addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage('signup');
+      });
+      
+      document.getElementById('goToLogin').addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage('login');
+      });
+      
+      document.getElementById('backToLogin').addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage('login');
+      });
+      
+      document.getElementById('forgotPassword').addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage('reset');
+      });
+      
+      document.getElementById('forgotPasswordSignup').addEventListener('click', (e) => {
+        e.preventDefault();
+        showPage('reset');
+      });
+      
+      // تسجيل الدخول
+      document.getElementById('loginForm').addEventListener('submit', loginUser);
+      
+      // إنشاء حساب
+      document.getElementById('signupForm').addEventListener('submit', signupUser);
+      
+      // إعادة تعيين كلمة المرور
+      document.getElementById('resetPasswordForm').addEventListener('submit', resetPassword);
+      
+      // تسجيل الدخول بحساب جوجل - تم إصلاحه
+      document.getElementById('googleLogin').addEventListener('click', handleGoogleLogin);
+      document.getElementById('googleSignup').addEventListener('click', handleGoogleLogin);
+    }
+    
+    // تسجيل الدخول باستخدام البريد الإلكتروني وكلمة المرور
+    function loginUser(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('loginEmail').value;
+      const password = document.getElementById('loginPassword').value;
+      
+      // إظهار حالة التحميل
+      const loginButton = document.getElementById('loginButton');
+      loginButton.innerHTML = '<div class="loading-spinner"></div> جاري تسجيل الدخول...';
+      loginButton.disabled = true;
+      
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          // تم تسجيل الدخول بنجاح
+          currentUser = userCredential.user;
+          loginError.style.display = 'none';
+          
+          if (analytics) {
+            analytics.logEvent('login_success');
+          }
+          
+          // في تطبيق حقيقي، هنا سيتم توجيه المستخدم للصفحة الرئيسية
+          showSuccessMessage('تم تسجيل الدخول بنجاح!<br>مرحباً بك ' + email);
+          
+          // إعادة تعيين حالة الزر
+          loginButton.innerHTML = 'تسجيل الدخول';
+          loginButton.disabled = false;
         })
         .catch((error) => {
-          console.error("خطأ:", error.code, error.message);
-          alert("فشل تسجيل الدخول. تأكد من السماح بالنوافذ المنبثقة.");
+          // معالجة الأخطاء
+          handleAuthError(error, loginError);
+          loginButton.innerHTML = 'تسجيل الدخول';
+          loginButton.disabled = false;
         });
     }
-  </script>
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-
-  <!-- نافذة منبثقة (Modal) -->
-  <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 text-center">
-      <h2 class="text-2xl font-bold mb-4 text-gray-800">تسجيل الدخول</h2>
+    
+    // إنشاء حساب جديد
+    function signupUser(e) {
+      e.preventDefault();
       
-      <button onclick="googleLogin()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2 rounded-lg font-semibold mb-4">
-        تسجيل الدخول باستخدام حساب Google
-      </button>
-
-      <button onclick="history.back()" class="text-gray-600 hover:text-black underline mt-2">رجوع</button>
-    </div>
-  </div>
-
+      const fullName = document.getElementById('fullName').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+      
+      // التحقق من تطابق كلمتي المرور
+      if (password !== confirmPassword) {
+        signupError.textContent = 'كلمة المرور وتأكيدها غير متطابقين';
+        signupError.style.display = 'block';
+        return;
+      }
+      
+      // إظهار حالة التحميل
+      const signupButton = document.getElementById('signupButton');
+      signupButton.innerHTML = '<div class="loading-spinner"></div> جاري إنشاء الحساب...';
+      signupButton.disabled = true;
+      
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          // تم إنشاء الحساب بنجاح
+          currentUser = userCredential.user;
+          signupError.style.display = 'none';
+          
+          if (analytics) {
+            analytics.logEvent('signup_success');
+          }
+          
+          // في تطبيق حقيقي، هنا سيتم تحديث ملف المستخدم
+          showSuccessMessage('تم إنشاء حسابك بنجاح!<br>مرحباً بك ' + fullName);
+          
+          // إعادة تعيين حالة الزر
+          signupButton.innerHTML = 'إنشاء حساب';
+          signupButton.disabled = false;
+          
+          // العودة لصفحة تسجيل الدخول
+          setTimeout(() => showPage('login'), 2000);
+        })
+        .catch((error) => {
+          // معالجة الأخطاء
+          handleAuthError(error, signupError);
+          signupButton.innerHTML = 'إنشاء حساب';
+          signupButton.disabled = false;
+        });
+    }
+    
+    // إعادة تعيين كلمة المرور
+    function resetPassword(e) {
+      e.preventDefault();
+      
+      const email = document.getElementById('resetEmail').value;
+      
+      // إظهار حالة التحميل
+      const resetButton = document.getElementById('resetButton');
+      resetButton.innerHTML = '<div class="loading-spinner"></div> جاري الإرسال...';
+      resetButton.disabled = true;
+      
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          // تم إرسال البريد بنجاح
+          resetError.style.display = 'none';
+          resetSuccess.style.display = 'block';
+          
+          if (analytics) {
+            analytics.logEvent('password_reset_sent');
+          }
+          
+          // إعادة تعيين حالة الزر
+          resetButton.innerHTML = 'إرسال رابط التعيين';
+          resetButton.disabled = false;
+          
+          // إخفاء الرسالة بعد 5 ثواني
+          setTimeout(() => {
+            resetSuccess.style.display = 'none';
+            showPage('login');
+          }, 5000);
+        })
+        .catch((error) => {
+          // معالجة الأخطاء
+          handleAuthError(error, resetError);
+          resetButton.innerHTML = 'إرسال رابط التعيين';
+          resetButton.disabled = false;
+        });
+    }
+    
+    // إصلاح مشكلة تسجيل الدخول بحساب جوجل
+    function handleGoogleLogin(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // عرض رسالة تحميل
+      const button = e.target.closest('button');
+      const originalText = button.innerHTML;
+      button.innerHTML = '<div class="loading-spinner"></div> جاري التحضير...';
+      button.disabled = true;
+      
+      // تسجيل الدخول بحساب جوجل
+      const provider = new firebase.auth.GoogleAuthProvider();
+      
+      setTimeout(() => {
+        auth.signInWithPopup(provider)
+          .then((result) => {
+            // تم تسجيل الدخول بنجاح
+            currentUser = result.user;
+            
+            if (analytics) {
+              analytics.logEvent('google_login_success');
+            }
+            
+            showSuccessMessage('تم تسجيل الدخول بحساب جوجل بنجاح!<br>مرحباً بك ' + currentUser.displayName);
+            
+            button.innerHTML = originalText;
+            button.disabled = false;
+          }).catch((error) => {
+            // معالجة الأخطاء
+            const errorMessage = error.message;
+            handleAuthError(error, loginError);
+            
+            button.innerHTML = originalText;
+            button.disabled = false;
+          });
+      }, 1000);
+    }
+    
+    // معالجة أخطاء المصادقة
+    function handleAuthError(error, errorElement) {
+      let errorMessage;
+      
+      switch (error.code) {
+        case 'auth/invalid-email':
+          errorMessage = 'بريد إلكتروني غير صحيح';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'هذا الحساب معطل';
+          break;
+        case 'auth/user-not-found':
+          errorMessage = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+          break;
+        case 'auth/wrong-password':
+          errorMessage = 'كلمة المرور غير صحيحة';
+          break;
+        case 'auth/email-already-in-use':
+          errorMessage = 'هذا البريد الإلكتروني مستخدم بالفعل';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'كلمة المرور ضعيفة، يجب أن تحتوي على 6 أحرف على الأقل';
+          break;
+        case 'auth/operation-not-allowed':
+          errorMessage = 'هذه العملية غير مسموح بها';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'لقد تجاوزت عدد المحاولات المسموح بها، حاول لاحقاً';
+          break;
+        case 'auth/popup-blocked':
+          errorMessage = 'تم حظر نافذة تسجيل الدخول. يرجى السماح بالنوافذ المنبثقة لهذا الموقع';
+          break;
+        case 'auth/popup-closed-by-user':
+          errorMessage = 'تم إغلاق نافذة تسجيل الدخول قبل إكمال العملية';
+          break;
+        default:
+          errorMessage = 'حدث خطأ غير متوقع، حاول مرة أخرى';
+      }
+      
+      errorElement.textContent = errorMessage;
+      errorElement.style.display = 'block';
+    }
+    
+    // عرض رسالة نجاح
+    function showSuccessMessage(message) {
+      const successDiv = document.createElement('div');
+      successDiv.className = 'success-message';
+      successDiv.style.display = 'block';
+      successDiv.innerHTML = message;
+      
+      const card = document.querySelector('.auth-card');
+      card.prepend(successDiv);
+      
+      // إخفاء الرسالة بعد 5 ثواني
+      setTimeout(() => {
+        successDiv.style.display = 'none';
+      }, 5000);
+    }
+    
+    // بدء التطبيق
+    window.addEventListener('DOMContentLoaded', () => {
+      // تحقق من حالة تسجيل الدخول
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          currentUser = user;
+          // يمكن توجيه المستخدم للصفحة الرئيسية هنا
+          console.log('المستخدم مسجل الدخول:', user.email);
+        }
+      });
+      
+      // تهيئة أحداث النظام
+      initEvents();
+    });
+  </script>
 </body>
-</html>
+  </html>
