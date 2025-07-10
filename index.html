@@ -303,7 +303,7 @@
     .google-icon {
       width: 20px;
       height: 20px;
-      background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=') center no-repeat;
+      background: url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgiIGhlaWdodD0iMTgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj48cGF0aCBkPSJNMTcuNiA5LjJsLS4xLTEuOEg5djMuNGg0LjhDMTMuNiAxMiAxMyAxMyAxMiAxMy42djIuMmgzYTguOCA4LjggMCAwIDAgMi42LTYuNnoiIGZpbGw9IiM0Mjg1RjQiIGZpbGwtcnVsZT0ibm9uemVybyIvPjxwYXRoIGQ9Ik05IDE4YzIuNCAwIDQuNS0uOCA2LTIuMmwtMy0yLjJhNS40IDUuNCAwIDAgMS04LTIuOUgxVjEzYTkgOSAwIDAgMCA4IDV6IiBmaWxsPSIjMzRBODUzIiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJNNCAxMC43YTUuNCA1LjQgMCAwIDEgMC0zLjRWNUgxYTkgOSAwIDAgMCAwIDhsMy0yLjN6IiBmaWxsPSIjRkJCQzA1IiBmaWxsLXJ1bGU9Im5vbnplcm8iLz48cGF0aCBkPSJOSAzLjZjMS4zIDAgMi41LjQgMy40IDEuM0wxNSAyLjNBOSA5IDAgMCAwIDEgNWwzIDIuNGE1LjQgNS40IDAgMCAxIDUtMy43eiIgZmlsbD0iI0VBNDMzNSIgZmlsbC1ydWxlPSJub256ZXJvIi8+PHBhdGggZD0iTTAgMGgxOHYxOEgweiIvPjwvZz48L3N2Zz4=') center no-repeat;
     }
     
     @media (max-width: 480px) {
@@ -526,7 +526,11 @@
     // Initialize Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const analytics = firebase.analytics;
+    // تهيئة التحليلات إذا كانت متوفرة
+    let analytics = null;
+    if (firebase.analytics) {
+        analytics = firebase.analytics(app);
+    }
     
     // متغيرات النظام
     let currentUser = null;
@@ -599,7 +603,7 @@
       // إعادة تعيين كلمة المرور
       document.getElementById('resetPasswordForm').addEventListener('submit', resetPassword);
       
-      // تسجيل الدخول بحساب جوجل - تم إصلاحه
+      // تسجيل الدخول بحساب جوجل
       document.getElementById('googleLogin').addEventListener('click', handleGoogleLogin);
       document.getElementById('googleSignup').addEventListener('click', handleGoogleLogin);
     }
@@ -729,7 +733,7 @@
         });
     }
     
-    // إصلاح مشكلة تسجيل الدخول بحساب جوجل
+    // تسجيل الدخول بحساب جوجل (تم التعديل)
     function handleGoogleLogin(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -743,32 +747,36 @@
       // تسجيل الدخول بحساب جوجل
       const provider = new firebase.auth.GoogleAuthProvider();
       
-      setTimeout(() => {
-        auth.signInWithPopup(provider)
-          .then((result) => {
-            // تم تسجيل الدخول بنجاح
-            currentUser = result.user;
-            
-            if (analytics) {
-              analytics.logEvent('google_login_success');
-            }
-            
-            showSuccessMessage('تم تسجيل الدخول بحساب جوجل بنجاح!<br>مرحباً بك ' + currentUser.displayName);
-            
-            button.innerHTML = originalText;
-            button.disabled = false;
-          }).catch((error) => {
-            // معالجة الأخطاء
-            const errorMessage = error.message;
-            handleAuthError(error, loginError);
-            
-            button.innerHTML = originalText;
-            button.disabled = false;
-          });
-      }, 1000);
+      auth.signInWithPopup(provider)
+        .then((result) => {
+          // تم تسجيل الدخول بنجاح
+          currentUser = result.user;
+          
+          if (analytics) {
+            analytics.logEvent('google_login_success');
+          }
+          
+          showSuccessMessage('تم تسجيل الدخول بحساب جوجل بنجاح!<br>مرحباً بك ' + (currentUser.displayName || currentUser.email));
+          
+          button.innerHTML = originalText;
+          button.disabled = false;
+        })
+        .catch((error) => {
+          // معالجة الأخطاء
+          let errorElement;
+          if (pages.login.classList.contains('active-page')) {
+            errorElement = loginError;
+          } else if (pages.signup.classList.contains('active-page')) {
+            errorElement = signupError;
+          }
+          
+          handleAuthError(error, errorElement);
+          button.innerHTML = originalText;
+          button.disabled = false;
+        });
     }
     
-    // معالجة أخطاء المصادقة
+    // معالجة أخطاء المصادقة (تمت إضافة أخطاء النوافذ المنبثقة)
     function handleAuthError(error, errorElement) {
       let errorMessage;
       
@@ -803,8 +811,11 @@
         case 'auth/popup-closed-by-user':
           errorMessage = 'تم إغلاق نافذة تسجيل الدخول قبل إكمال العملية';
           break;
+        case 'auth/cancelled-popup-request':
+          errorMessage = 'تم إلغاء عملية التسجيل بسبب فتح نافذة أخرى';
+          break;
         default:
-          errorMessage = 'حدث خطأ غير متوقع، حاول مرة أخرى';
+          errorMessage = 'حدث خطأ غير متوقع، حاول مرة أخرى: ' + error.message;
       }
       
       errorElement.textContent = errorMessage;
@@ -843,4 +854,4 @@
     });
   </script>
 </body>
-  </html>
+</html>
