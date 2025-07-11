@@ -36,6 +36,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      padding-bottom: 70px; /* إضافة مساحة للشريط السفلي */
     }
     
     /* Header Styles */
@@ -134,7 +135,6 @@
       color: var(--dark);
       cursor: pointer;
       transition: var(--transition);
-      /* Move cart icon down slightly */
       transform: translateY(5px);
     }
     
@@ -578,12 +578,6 @@
       margin-bottom: 1.5rem;
     }
     
-    .modal-description {
-      color: var(--dark);
-      line-height: 1.8;
-      margin-bottom: 1.5rem;
-    }
-    
     .modal-stock {
       display: flex;
       align-items: center;
@@ -592,24 +586,28 @@
       font-size: 1.1rem;
     }
     
+    .modal-description {
+      color: var(--dark);
+      line-height: 1.8;
+      margin-bottom: 1.5rem;
+    }
+    
     .modal-actions {
       display: flex;
       gap: 1rem;
     }
     
-    .modal-quantity {
+    /* تم تعديل هذا الجزء لعرض الكمية المتوفرة بدلاً من حقل الإدخال */
+    .modal-quantity-info {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-    }
-    
-    .modal-quantity input {
-      width: 70px;
-      padding: 0.75rem;
+      font-size: 1.1rem;
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      background-color: #f1f5f9;
       border-radius: 8px;
-      border: 1px solid var(--light-gray);
-      text-align: center;
-      font-size: 1rem;
+      width: fit-content;
     }
     
     /* Cart Modal */
@@ -932,6 +930,39 @@
       font-size: 0.9rem;
     }
     
+    /* Bottom Navigation Bar - جديد */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: space-around;
+      background: white;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      padding: 0.5rem 0;
+    }
+    
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-decoration: none;
+      color: var(--dark);
+      font-size: 0.8rem;
+      flex-grow: 1;
+    }
+    
+    .nav-item i {
+      font-size: 1.2rem;
+      margin-bottom: 0.25rem;
+    }
+    
+    .nav-item.active {
+      color: var(--primary);
+    }
+    
     /* Responsive Design */
     @media (max-width: 992px) {
       .header-container {
@@ -1128,11 +1159,14 @@
           <div class="modal-price" id="modalPrice"></div>
           <div class="modal-stock" id="modalStock"></div>
           <p class="modal-description" id="modalDescription"></p>
+          
+          <!-- تم تغيير هذا الجزء لعرض الكمية المتوفرة بدلاً من حقل الإدخال -->
+          <div class="modal-quantity-info">
+            <i class="fas fa-box"></i>
+            <span>الكمية المتوفرة: <span id="modalAvailableQty"></span></span>
+          </div>
+          
           <div class="modal-actions">
-            <div class="modal-quantity">
-              <label for="modalQty">الكمية:</label>
-              <input type="number" min="1" value="1" id="modalQty">
-            </div>
             <button class="btn btn-cart" id="modalAddToCart">
               <i class="fas fa-cart-plus"></i>
               أضف إلى السلة
@@ -1181,120 +1215,47 @@
     </div>
   </div>
   
-  <!-- Footer -->
-  <footer>
-    <div class="footer-content">
-      <div class="whatsapp-contact">
-        <i class="fab fa-whatsapp"></i>
-        <span>للتواصل والدعم: +96407823053419</span>
-      </div>
-      
-      <div class="social-icons">
-        <a href="#" class="social-icon">
-          <i class="fab fa-facebook-f"></i>
-        </a>
-        <a href="#" class="social-icon">
-          <i class="fab fa-instagram"></i>
-        </a>
-        <a href="#" class="social-icon">
-          <i class="fab fa-twitter"></i>
-        </a>
-        <a href="#" class="social-icon">
-          <i class="fab fa-youtube"></i>
-        </a>
-      </div>
-      
-      <div class="copyright">
-        © 2023 متجر مزار. جميع الحقوق محفوظة.
-      </div>
-    </div>
-  </footer>
+  <!-- Bottom Navigation Bar - جديد -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active">
+      <i class="fas fa-home"></i>
+      <span>الصفحة الرئيسية</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-star"></i>
+      <span>المنتجات الجديدة</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-percentage"></i>
+      <span>العروض</span>
+    </a>
+    <a href="#" class="nav-item">
+      <i class="fas fa-heart"></i>
+      <span>المفضلة</span>
+    </a>
+  </nav>
   
   <script>
-    // Product Data with stock information
-    const products = [
-      {
-        id: 1,
-        name: "جهاز قياس الضغط الرقمي",
-        price: 75000,
-        category: "medical",
-        image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: "عرض",
-        stock: 15,
-        description: "جهاز قياس ضغط الدم الرقمي الدقيق مع شاشة LCD كبيرة وعرض واضح للقراءات. يتميز هذا الجهاز بدقته العالية وسهولة استخدامه، حيث يمكنك قياس ضغطك في أي وقت دون الحاجة لمساعدة خارجية. يأتي مع حقيبة تخزين قابلة للحمل وبطارية تدوم طويلاً."
-      },
-      {
-        id: 2,
-        name: "سماعة طبية متطورة",
-        price: 45000,
-        category: "medical",
-        image: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: null,
-        stock: 8,
-        description: "سماعة طبية احترافية بتصميم مريح وجودة صوت عالية للفحوصات الدقيقة. تتميز بغطاء أذن مريح وخرطوم مقاوم للالتواء. مثالية للأطباء والممرضين وطلاب الطب. توفر جودة صوت استثنائية تمكنك من سماع أدق الأصوات."
-      },
-      {
-        id: 3,
-        name: "ميزان ديجيتال للجسم",
-        price: 120000,
-        category: "tools",
-        image: "https://images.unsplash.com/photo-1593079831268-3381b0db4a77?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: "جديد",
-        stock: 3,
-        description: "ميزان رقمي متطور لقياس الوزن ونسبة الدهون في الجسم بدقة عالية. يتميز بشاشة LCD كبيرة وإضاءة خلفية. يحسب كتلة الجسم (BMI) ونسبة الدهون والعضلات والماء. سهل الاستخدام مع تصميم عصري يلائم أي حمام."
-      },
-      {
-        id: 4,
-        name: "جهاز قياس السكر في الدم",
-        price: 85000,
-        category: "medical",
-        image: "https://images.unsplash.com/photo-1599045118108-bb9954c7289e?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: null,
-        stock: 22,
-        description: "جهاز قياس سكر الدم مع شاشة كبيرة وذاكرة لتخزين النتائج. يتميز بسرعة القياس (5 ثواني فقط) وتقنية بدون ترميز. يأتي مع 10 شفرات و10 شرائط اختبار. مثالي لمرضى السكري الذين يحتاجون لمتابعة يومية لمستويات السكر."
-      },
-      {
-        id: 5,
-        name: "عصا مشي قابلة للطي",
-        price: 35000,
-        category: "tools",
-        image: "https://images.unsplash.com/photo-1581595219318-8b0b2f4d2d4d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: null,
-        stock: 0,
-        description: "عصا مشي قابلة للطي بتصميم خفيف الوزن ومريح للإستخدام اليومي. مصنوعة من الألومنيوم المتين مع قبضة مريحة ومضادة للانزلاق. يمكن طيها بسهولة لتخزينها في الحقيبة أو السيارة. مثالية لكبار السن أو أثناء فترة النقاهة."
-      },
-      {
-        id: 6,
-        name: "كمادة كهربائية للظهر",
-        price: 65000,
-        category: "accessories",
-        image: "https://images.unsplash.com/photo-1581595219318-8b0b2f4d2d4d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: "عرض",
-        stock: 12,
-        description: "كمادة كهربائية للظهر مع 3 مستويات حرارة لعلاج الآلام والاسترخاء. تعمل بالطاقة الكهربائية مع مؤقت تلقائي لإيقاف التشغيل بعد 60 دقيقة. سهلة الاستخدام مع حزام قابل للتعديل لتناسب مختلف أحجام الجسم. مثالية لعلاج آلام الظهر والعضلات."
-      },
-      {
-        id: 7,
-        name: "جهاز بخار للوجه والجسم",
-        price: 95000,
-        category: "tools",
-        image: "https://images.unsplash.com/photo-1581595219318-8b0b2f4d2d4d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: null,
-        stock: 7,
-        description: "جهاز بخار للوجه والجسم لتنظيف البشرة وتنقية المسام. يعمل على ترطيب البشرة وتنشيط الدورة الدموية. مزود بفلتر ماء قابل للإزالة وإعدادات متعددة للبخار. سهل الاستخدام مع تصميم عصري وأمان تلقائي عند نقص الماء."
-      },
-      {
-        id: 8,
-        name: "أكسجين محمول صغير",
-        price: 250000,
-        category: "medical",
-        image: "https://images.unsplash.com/photo-1581595219318-8b0b2f4d2d4d?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80",
-        badge: "جديد",
-        stock: 5,
-        description: "جهاز أكسجين محمول صغير الحجم للمساعدة في التنفس أثناء التنقل. خفيف الوزن وسهل الحمل مع بطارية تدوم حتى 4 ساعات. مزود بعجلات ومقبض للسحب. مثالي للمرضى الذين يحتاجون للأكسجين أثناء السفر أو الخروج من المنزل."
-      }
-    ];
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+      authDomain: "zio3-8ffdd.firebaseapp.com",
+      databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+      projectId: "zio3-8ffdd",
+      storageBucket: "zio3-8ffdd.firebasestorage.app",
+      messagingSenderId: "560939348415",
+      appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+      measurementId: "G-CVN2B2D0RD"
+    };
 
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    const productsRef = database.ref('products');
+
+    // Product Data with stock information
+    let products = [];
+    
     // Cart items
     let cartItems = [];
     
@@ -1316,8 +1277,8 @@
     const modalPrice = document.getElementById('modalPrice');
     const modalStock = document.getElementById('modalStock');
     const modalDescription = document.getElementById('modalDescription');
+    const modalAvailableQty = document.getElementById('modalAvailableQty'); // العنصر الجديد
     const modalAddToCart = document.getElementById('modalAddToCart');
-    const modalQty = document.getElementById('modalQty');
     const checkoutBtn = document.getElementById('checkoutBtn');
     
     // Hero Slider Functionality
@@ -1373,19 +1334,16 @@
       }
     });
     
-    // Profile icon functionality
+    // Profile icon functionality - تم التعديل للتنقل مباشرة بدلاً من الإشعار
     profileIcon.addEventListener('click', () => {
-      // Navigate to profile page
-      alert("سيتم نقلك إلى صفحة الملف الشخصي");
-      // window.location.href = "profile.html";
+      window.location.href = "profile.html";
     });
     
     // Search functionality
     searchInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') {
         // Navigate to search page
-        alert("سيتم نقلك إلى صفحة نتائج البحث");
-        // window.location.href = "search.html?q=" + encodeURIComponent(searchInput.value);
+        window.location.href = "search.html?q=" + encodeURIComponent(searchInput.value);
       }
     });
     
@@ -1395,8 +1353,7 @@
     });
     
     modalAddToCart.addEventListener('click', () => {
-      const quantity = parseInt(modalQty.value) || 1;
-      addToCart(currentProduct, quantity);
+      addToCart(currentProduct, 1);
       productModal.classList.remove('active');
     });
     
@@ -1407,11 +1364,9 @@
       }
     });
     
-    // Checkout functionality
+    // Checkout functionality - تم التعديل للتنقل مباشرة
     checkoutBtn.addEventListener('click', () => {
-      // Navigate to checkout page
-      alert("سيتم نقلك إلى صفحة إتمام الطلب");
-      // window.location.href = "checkout.html";
+      window.location.href = "checkout.html";
     });
     
     // Render products
@@ -1535,6 +1490,7 @@
       modalPrice.textContent = product.price.toLocaleString('en') + ' د.ع';
       modalStock.innerHTML = `<div class="stock-indicator ${stockClass}"></div><span>${stockText}</span>`;
       modalDescription.textContent = product.description;
+      modalAvailableQty.textContent = product.stock; // تعيين الكمية المتوفرة
       
       // Show modal
       productModal.classList.add('active');
@@ -1743,8 +1699,33 @@
     });
     
     // Initialize the page
-    renderProducts(products);
-    updateCartUI();
+    function initializeApp() {
+      // Fetch products from Firebase
+      productsRef.on('value', (snapshot) => {
+        const productsData = snapshot.val();
+        if (productsData) {
+          products = Object.keys(productsData).map(key => {
+            return { id: key, ...productsData[key] };
+          });
+          renderProducts(products);
+        } else {
+          // Fallback if no data
+          renderProducts(products);
+        }
+      }, (error) => {
+        console.error("Error fetching products: ", error);
+        renderProducts(products);
+      });
+      
+      updateCartUI();
+    }
+    
+    // Initialize the app
+    initializeApp();
   </script>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 </body>
-  </html>
+    </html>
