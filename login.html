@@ -767,115 +767,31 @@
     </div>
     
     <script>
-        // ===== الإصلاحات الرئيسية =====
+        // ===== الإعدادات الرئيسية =====
+        // تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.appspot.com",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
         
-        // 1. كود لرصد الأخطاء
-        window.addEventListener('error', function(e) {
-            console.error('حدث خطأ:', e.message, 'في ملف:', e.filename, 'سطر:', e.lineno);
-        });
-        
-        // 2. التأكد من تحميل Firebase
-        function checkFirebase() {
-            if (typeof firebase === 'undefined') {
-                console.error('خطأ: لم يتم تحميل مكتبات Firebase!');
-                return false;
-            }
-            return true;
+        // التحقق مما إذا تم تهيئة Firebase مسبقًا
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            firebase.app();
         }
         
-        // 3. تهيئة Firebase مع التحقق من الأخطاء
-        function initializeFirebase() {
-            if (!checkFirebase()) return;
-            
-            try {
-                const firebaseConfig = {
-                    apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-                    authDomain: "zio3-8ffdd.firebaseapp.com",
-                    databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-                    projectId: "zio3-8ffdd",
-                    storageBucket: "zio3-8ffdd.firebasestorage.app",
-                    messagingSenderId: "560939348415",
-                    appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-                    measurementId: "G-CVN2B2D0RD"
-                };
-                
-                // التحقق مما إذا تم تهيئة Firebase مسبقًا
-                if (!firebase.apps.length) {
-                    firebase.initializeApp(firebaseConfig);
-                } else {
-                    firebase.app(); // استخدام التطبيق الموجود
-                }
-                
-                console.log("تم تهيئة Firebase بنجاح!");
-                return firebase;
-            } catch (error) {
-                console.error("خطأ في تهيئة Firebase:", error);
-                return null;
-            }
-        }
+        const auth = firebase.auth();
+        const database = firebase.database();
         
-        // وظيفة بدء عداد إعادة الإرسال
-        function startResendTimer(btnId, containerId) {
-            const resendBtn = document.getElementById(btnId);
-            const container = document.getElementById(containerId);
-            
-            if (!resendBtn || !container) return;
-            
-            container.style.display = 'flex';
-            resendBtn.disabled = true;
-            let seconds = 60;
-            resendBtn.textContent = `إعادة الإرسال (${seconds})`;
-            
-            const timer = setInterval(() => {
-                seconds--;
-                resendBtn.textContent = `إعادة الإرسال (${seconds})`;
-                
-                if (seconds <= 0) {
-                    clearInterval(timer);
-                    resendBtn.disabled = false;
-                    resendBtn.textContent = 'إعادة الإرسال';
-                }
-            }, 1000);
-        }
-        
-        // وظيفة التحقق من رمز التفعيل
-        function verifyEmailCode(code) {
-            const user = auth.currentUser;
-            
-            if (!user) {
-                alert('لم يتم العثور على مستخدم. الرجاء تسجيل الدخول مرة أخرى.');
-                return false;
-            }
-            
-            // في بيئة الإنتاج، سيتم التحقق من الرمز مع الخادم
-            // هنا نستخدم رمزًا افتراضيًا للتوضيح فقط
-            if (code === "123456") {
-                // تم التحقق بنجاح
-                database.ref('users/' + user.uid).update({
-                    emailVerified: true,
-                    verifiedAt: new Date().toISOString()
-                });
-                
-                return true;
-            } else {
-                alert('رمز التحقق غير صحيح. الرجاء المحاولة مرة أخرى.');
-                return false;
-            }
-        }
-        
-        // 4. تهيئة التطبيق بعد تحميل الصفحة
+        // تهيئة التطبيق بعد تحميل الصفحة
         document.addEventListener('DOMContentLoaded', function() {
-            // تهيئة Firebase
-            const firebaseApp = initializeFirebase();
-            if (!firebaseApp) {
-                alert('حدث خطأ في تهيئة Firebase. الرجاء التحقق من اتصال الإنترنت.');
-                return;
-            }
-            
-            // تهيئة كائنات Firebase
-            const auth = firebase.auth();
-            const database = firebase.database();
-            
             // عناصر DOM
             const registerModal = document.getElementById('registerModal');
             const showRegister = document.getElementById('showRegister');
@@ -1059,7 +975,7 @@
                     });
             });
             
-            // تسجيل الدخول بحساب Google - الإصلاح هنا
+            // تسجيل الدخول بحساب Google
             googleLogin.addEventListener('click', function() {
                 const provider = new firebase.auth.GoogleAuthProvider();
                 
@@ -1290,6 +1206,55 @@
                 startResendTimer('resendVerifyBtn', 'verifyResendContainer');
             });
         });
+        
+        // وظيفة بدء عداد إعادة الإرسال
+        function startResendTimer(btnId, containerId) {
+            const resendBtn = document.getElementById(btnId);
+            const container = document.getElementById(containerId);
+            
+            if (!resendBtn || !container) return;
+            
+            container.style.display = 'flex';
+            resendBtn.disabled = true;
+            let seconds = 60;
+            resendBtn.textContent = `إعادة الإرسال (${seconds})`;
+            
+            const timer = setInterval(() => {
+                seconds--;
+                resendBtn.textContent = `إعادة الإرسال (${seconds})`;
+                
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = 'إعادة الإرسال';
+                }
+            }, 1000);
+        }
+        
+        // وظيفة التحقق من رمز التفعيل
+        function verifyEmailCode(code) {
+            const user = auth.currentUser;
+            
+            if (!user) {
+                alert('لم يتم العثور على مستخدم. الرجاء تسجيل الدخول مرة أخرى.');
+                return false;
+            }
+            
+            // في بيئة الإنتاج، سيتم التحقق من الرمز مع الخادم
+            // هنا نستخدم رمزًا افتراضيًا للتوضيح فقط
+            if (code === "123456") {
+                // تم التحقق بنجاح
+                database.ref('users/' + user.uid).update({
+                    emailVerified: true,
+                    verifiedAt: new Date().toISOString()
+                });
+                
+                return true;
+            } else {
+                alert('رمز التحقق غير صحيح. الرجاء المحاولة مرة أخرى.');
+                return false;
+            }
+        }
     </script>
 </body>
-</html>
+    </html>
