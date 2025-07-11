@@ -1,66 +1,77 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<!DOCTYPE html><html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>تسجيل الدخول</title>
+  <title>تسجيل الدخول / إنشاء حساب</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">  <!-- Modal Container -->  <div id="authModal" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative"><!-- زر الرجوع -->
+<button onclick="window.history.back()" class="absolute top-2 left-2 text-sm text-gray-500 hover:underline">رجوع</button>
 
-  <!-- نافذة منبثقة -->
-  <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative">
+<!-- Nav Buttons -->
+<div class="flex justify-center mb-4 space-x-4 space-x-reverse">
+  <button id="showLogin" class="text-lg font-semibold border-b-2 border-blue-600">تسجيل الدخول</button>
+  <button id="showSignup" class="text-lg font-semibold text-gray-500 hover:text-gray-800">إنشاء حساب</button>
+</div>
 
-    <!-- زر الرجوع -->
-    <button onclick="window.history.back()" class="absolute top-2 left-2 text-sm text-gray-500 hover:underline">رجوع</button>
-
-    <h2 class="text-2xl font-bold mb-4 text-center">تسجيل الدخول</h2>
-
-    <!-- البريد وكلمة المرور -->
-    <form id="loginForm" class="space-y-4">
-      <div>
-        <label class="block mb-1">البريد الإلكتروني</label>
-        <input type="email" id="email" required class="w-full border rounded px-3 py-2" placeholder="أدخل بريدك">
-      </div>
-
-      <div>
-        <label class="block mb-1">كلمة المرور</label>
-        <div class="relative">
-          <input type="password" id="password" required class="w-full border rounded px-3 py-2 pr-10" placeholder="••••••••">
-          <button type="button" id="togglePassword" class="absolute inset-y-0 left-2 text-sm text-gray-500">عرض</button>
-        </div>
-      </div>
-
-      <div class="text-left">
-        <button type="button" id="resetPassword" class="text-sm text-blue-600 hover:underline">نسيت كلمة المرور؟</button>
-      </div>
-
-      <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">تسجيل الدخول</button>
-    </form>
-
-    <!-- أو -->
-    <div class="my-4 border-t pt-4 text-center text-sm text-gray-400">أو</div>
-
-    <!-- تسجيل عبر Google -->
-    <button id="googleSignInBtn" class="w-full border py-2 rounded text-gray-700 hover:bg-gray-50">تسجيل الدخول بحساب Google</button>
-
-    <!-- دخول كضيف -->
-    <button onclick="continueAsGuest()" class="w-full mt-3 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">دخول كضيف</button>
-
-    <!-- رابط إنشاء حساب -->
-    <div class="mt-4 text-center text-sm">
-      ليس لديك حساب؟ <a href="signup.html" class="text-blue-600 hover:underline">إنشاء حساب</a>
-    </div>
-
-    <!-- واتساب -->
-    <footer class="mt-6 text-center text-xs text-gray-400">
-      للتواصل عبر واتساب: +96407823053419
-    </footer>
+<!-- Login Form -->
+<form id="loginForm" class="space-y-4">
+  <div>
+    <label class="block mb-1">البريد الإلكتروني</label>
+    <input type="email" id="loginEmail" required class="w-full border rounded px-3 py-2" placeholder="أدخل بريدك">
   </div>
+  <div>
+    <label class="block mb-1">كلمة المرور</label>
+    <div class="relative">
+      <input type="password" id="loginPassword" required class="w-full border rounded px-3 py-2 pr-10" placeholder="••••••••">
+      <button type="button" id="toggleLoginPassword" class="absolute inset-y-0 left-2 text-sm text-gray-500">عرض</button>
+    </div>
+  </div>
+  <div class="text-left">
+    <button type="button" id="showReset" class="text-sm text-blue-600 hover:underline">نسيت كلمة المرور؟</button>
+  </div>
+  <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">تسجيل الدخول</button>
+</form>
 
-  <script>
-    // إعداد Firebase
+<!-- Separator -->
+<div class="my-4 border-t pt-4 text-center text-sm text-gray-400">أو</div>
+
+<!-- Google & Guest -->
+<button id="googleSignInBtn" class="w-full border py-2 rounded text-gray-700 hover:bg-gray-50">تسجيل الدخول بحساب Google</button>
+<button onclick="continueAsGuest()" class="w-full mt-3 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">دخول كضيف</button>
+
+<!-- Footer WhatsApp -->
+<footer class="mt-6 text-center text-xs text-gray-400">
+  للتواصل عبر واتساب: +96407823053419
+</footer>
+
+<!-- Password Reset Form (hidden) -->
+<form id="resetForm" class="space-y-4 hidden">
+  <div>
+    <label class="block mb-1">أدخل بريدك لإعادة تعيين كلمة المرور</label>
+    <input type="email" id="resetEmail" required class="w-full border rounded px-3 py-2" placeholder="بريدك الإلكتروني">
+  </div>
+  <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">إرسال رابط إعادة التعيين</button>
+  <button type="button" id="backToLoginFromReset" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">عودة لتسجيل الدخول</button>
+</form>
+
+<!-- Signup Form (hidden) -->
+<form id="signupForm" class="space-y-4 hidden">
+  <div>
+    <label class="block mb-1">البريد الإلكتروني</label>
+    <input type="email" id="signupEmail" required class="w-full border rounded px-3 py-2" placeholder="أدخل بريدك">
+  </div>
+  <div>
+    <label class="block mb-1">كلمة المرور</label>
+    <input type="password" id="signupPassword" required class="w-full border rounded px-3 py-2" placeholder="••••••••">
+  </div>
+  <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">إنشاء حساب</button>
+  <button type="button" id="backToLoginFromSignup" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">عودة لتسجيل الدخول</button>
+</form>
+
+  </div>  <script>
+    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
       authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -71,65 +82,82 @@
     };
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-
-    // عرض / إخفاء كلمة المرور
-    const passwordInput = document.getElementById("password");
-    const togglePassword = document.getElementById("togglePassword");
-    togglePassword.addEventListener("click", () => {
-      const type = passwordInput.type === "password" ? "text" : "password";
-      passwordInput.type = type;
-      togglePassword.textContent = type === "password" ? "عرض" : "إخفاء";
-    });
-
-    // تسجيل الدخول بالبريد وكلمة المرور
-    document.getElementById("loginForm").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          alert("تم تسجيل الدخول بنجاح");
-          window.location.href = "store.html"; // عدّل هذا إن أردت
-        })
-        .catch((error) => {
-          alert("فشل تسجيل الدخول: " + error.message);
-        });
-    });
-
-    // زر إعادة تعيين كلمة المرور
-    document.getElementById("resetPassword").addEventListener("click", () => {
-      const email = document.getElementById("email").value;
-      if (!email) {
-        alert("يرجى إدخال بريدك أولاً.");
-        return;
-      }
-      auth.sendPasswordResetEmail(email)
-        .then(() => {
-          alert("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.");
-        })
-        .catch((error) => {
-          alert("خطأ: " + error.message);
-        });
-    });
-
-    // تسجيل الدخول عبر Google
     const provider = new firebase.auth.GoogleAuthProvider();
-    document.getElementById("googleSignInBtn").addEventListener("click", () => {
-      auth.signInWithPopup(provider)
-        .then((result) => {
-          alert("تم تسجيل الدخول: " + result.user.email);
-          window.location.href = "store.html";
-        })
-        .catch((error) => {
-          alert("فشل تسجيل الدخول: " + error.message);
-        });
+
+    // Elements
+    const loginForm = document.getElementById('loginForm');
+    const resetForm = document.getElementById('resetForm');
+    const signupForm = document.getElementById('signupForm');
+    const showReset = document.getElementById('showReset');
+    const showSignup = document.getElementById('showSignup');
+    const showLogin = document.getElementById('showLogin');
+    const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+    const backToLoginFromSignup = document.getElementById('backToLoginFromSignup');
+
+    // Toggle password visibility (login)
+    document.getElementById('toggleLoginPassword').addEventListener('click', () => {
+      const pw = document.getElementById('loginPassword');
+      const type = pw.type === 'password' ? 'text' : 'password';
+      pw.type = type;
+      event.target.textContent = type === 'password' ? 'عرض' : 'إخفاء';
     });
 
-    // دخول كضيف
-    function continueAsGuest() {
-      window.location.href = "store.html";
-    }
-  </script>
+    // Navigation between forms
+    showReset.addEventListener('click', () => {
+      loginForm.classList.add('hidden'); resetForm.classList.remove('hidden');
+    });
+    backToLoginFromReset.addEventListener('click', () => {
+      resetForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+    });
+    showSignup.addEventListener('click', () => {
+      loginForm.classList.add('hidden'); signupForm.classList.remove('hidden');
+      showLogin.classList.remove('border-blue-600'); showLogin.classList.add('text-gray-500');
+      showSignup.classList.add('border-blue-600'); showSignup.classList.remove('text-gray-500');
+    });
+    backToLoginFromSignup.addEventListener('click', () => {
+      signupForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+      showSignup.classList.remove('border-blue-600'); showSignup.classList.add('text-gray-500');
+      showLogin.classList.add('border-blue-600'); showLogin.classList.remove('text-gray-500');
+    });
+    showLogin.addEventListener('click', () => window.location.reload());
 
-</body>
+    // Login
+    loginForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPassword').value;
+      auth.signInWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = 'store.html')
+        .catch(err => alert(err.message));
+    });
+
+    // Reset Password
+    resetForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('resetEmail').value;
+      auth.sendPasswordResetEmail(email)
+        .then(() => alert('أرسلنا رابط إعادة التعيين إلى بريدك.'))
+        .catch(err => alert(err.message));
+    });
+
+    // Signup
+    signupForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const email = document.getElementById('signupEmail').value;
+      const pass = document.getElementById('signupPassword').value;
+      auth.createUserWithEmailAndPassword(email, pass)
+        .then(() => window.location.href = 'store.html')
+        .catch(err => alert(err.message));
+    });
+
+    // Google Sign-In
+    document.getElementById('googleSignInBtn').addEventListener('click', () => {
+      auth.signInWithPopup(provider)
+        .then(() => window.location.href = 'store.html')
+        .catch(err => alert(err.message));
+    });
+
+    // Guest
+    function continueAsGuest() { window.location.href = 'store.html'; }
+  </script></body>
 </html>
