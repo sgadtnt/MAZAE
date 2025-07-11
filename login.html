@@ -5,18 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول - متجر مزار</title>
     
-    <!-- سياسة أمان محتوى محدثة لحل مشاكل CORS -->
+    <!-- سياسة أمان محتوى محدثة -->
     <meta http-equiv="Content-Security-Policy" content="
         default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com https://apis.google.com https://accounts.google.com; 
-        script-src 'self' 'unsafe-inline' https://*.gstatic.com https://apis.google.com; 
+        script-src 'self' 'unsafe-inline' https://*.gstatic.com https://apis.google.com https://www.gstatic.com; 
         style-src 'self' 'unsafe-inline' https://*.cloudflare.com; 
         font-src 'self' https://*.cloudflare.com;
-        connect-src 'self' https://*.googleapis.com https://*.firebaseio.com;
+        connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://accounts.google.com;
         frame-src https://accounts.google.com https://apis.google.com;">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- استخدام الإصدار الأحدث والأكثر استقراراً من Firebase -->
+    <!-- استخدام الإصدار الأحدث من Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -1004,7 +1004,15 @@
                             username: username,
                             email: user.email,
                             emailVerified: true, // حساب Google مفعل تلقائيًا
-                            verifiedAt: new Date().toISOString()
+                            verifiedAt: new Date().toISOString(),
+                            provider: 'google'
+                        }, (error) => {
+                            if (error) {
+                                console.error('خطأ في حفظ بيانات المستخدم:', error);
+                                alert('حدث خطأ في حفظ بيانات المستخدم. الرجاء المحاولة مرة أخرى.');
+                            } else {
+                                console.log('تم حفظ بيانات المستخدم بنجاح في قاعدة البيانات');
+                            }
                         });
                     })
                     .catch((error) => {
@@ -1021,6 +1029,8 @@
                             errorMessage = 'تم إلغاء طلب تسجيل الدخول';
                         } else if (error.code === 'auth/popup-blocked') {
                             errorMessage = 'تم حظر نافذة تسجيل الدخول. الرجاء السماح بالنوافذ المنبثقة لهذا الموقع';
+                        } else if (error.code === 'auth/operation-not-allowed') {
+                            errorMessage = 'تسجيل الدخول بحساب Google غير مفعل في هذا المشروع';
                         }
                         
                         alert(errorMessage);
@@ -1136,6 +1146,12 @@
                 if (user) {
                     // المستخدم مسجل الدخول
                     console.log('المستخدم مسجل الدخول:', user);
+                    
+                    // إذا كان المستخدم مسجلًا بحساب Google
+                    if (user.providerData.some(provider => provider.providerId === 'google.com')) {
+                        // توجيه المستخدم مباشرة إلى المتجر
+                        window.location.href = 'store.html';
+                    }
                 } else {
                     // المستخدم غير مسجل الدخول
                     console.log('المستخدم غير مسجل الدخول');
@@ -1144,4 +1160,4 @@
         });
     </script>
 </body>
-  </html>
+</html>
