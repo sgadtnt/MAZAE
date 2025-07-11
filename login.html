@@ -33,7 +33,7 @@
       </div>
 
       <div class="text-left">
-        <a href="#" class="text-sm text-blue-600 hover:underline">نسيت كلمة المرور؟</a>
+        <button type="button" id="resetPassword" class="text-sm text-blue-600 hover:underline">نسيت كلمة المرور؟</button>
       </div>
 
       <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">تسجيل الدخول</button>
@@ -81,7 +81,7 @@
       togglePassword.textContent = type === "password" ? "عرض" : "إخفاء";
     });
 
-    // تسجيل الدخول بالبريد
+    // تسجيل الدخول بالبريد وكلمة المرور
     document.getElementById("loginForm").addEventListener("submit", (e) => {
       e.preventDefault();
       const email = document.getElementById("email").value;
@@ -89,14 +89,30 @@
       auth.signInWithEmailAndPassword(email, password)
         .then(() => {
           alert("تم تسجيل الدخول بنجاح");
-          window.location.href = "store.html";
+          window.location.href = "store.html"; // عدّل هذا إن أردت
+        })
+        .catch((error) => {
+          alert("فشل تسجيل الدخول: " + error.message);
+        });
+    });
+
+    // زر إعادة تعيين كلمة المرور
+    document.getElementById("resetPassword").addEventListener("click", () => {
+      const email = document.getElementById("email").value;
+      if (!email) {
+        alert("يرجى إدخال بريدك أولاً.");
+        return;
+      }
+      auth.sendPasswordResetEmail(email)
+        .then(() => {
+          alert("تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك.");
         })
         .catch((error) => {
           alert("خطأ: " + error.message);
         });
     });
 
-    // تسجيل الدخول بحساب Google
+    // تسجيل الدخول عبر Google
     const provider = new firebase.auth.GoogleAuthProvider();
     document.getElementById("googleSignInBtn").addEventListener("click", () => {
       auth.signInWithPopup(provider)
@@ -109,7 +125,7 @@
         });
     });
 
-    // الدخول كضيف
+    // دخول كضيف
     function continueAsGuest() {
       window.location.href = "store.html";
     }
