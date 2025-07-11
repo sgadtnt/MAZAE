@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>تسجيل الدخول / إنشاء حساب</title>
+  <title>تسجيل الدخول / إنشاء حساب | متجر مزار</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -106,6 +106,12 @@
       width: 100%;
       max-width: 420px;
       padding: 24px;
+      transition: all 0.3s ease;
+    }
+    
+    .auth-card.loading {
+      opacity: 0.7;
+      pointer-events: none;
     }
     
     .auth-card::before {
@@ -153,6 +159,106 @@
       100% { transform: rotate(360deg); }
     }
     
+    .global-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .global-loader.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .global-loader .spinner {
+      width: 60px;
+      height: 60px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3B82F6;
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    .global-loader .dots {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .global-loader .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3B82F6;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    
+    .global-loader .dot:nth-child(1) { animation-delay: 0s; }
+    .global-loader .dot:nth-child(2) { animation-delay: 0.3s; }
+    .global-loader .dot:nth-child(3) { animation-delay: 0.6s; }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.5); opacity: 0.7; }
+    }
+    
+    /* تصميم شعار المتجر */
+    .store-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-top: 10px;
+    }
+    
+    .store-logo {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #3B82F6, #10B981);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      margin-bottom: 15px;
+    }
+    
+    .store-logo i {
+      font-size: 40px;
+      color: white;
+    }
+    
+    .store-name {
+      font-size: 26px;
+      font-weight: 700;
+      color: #1e293b;
+      text-align: center;
+      letter-spacing: -0.5px;
+      background: linear-gradient(90deg, #2563EB, #10B981);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .store-slogan {
+      color: #64748b;
+      font-size: 14px;
+      text-align: center;
+      margin-top: 4px;
+      font-weight: 500;
+    }
+    
     @media (max-width: 480px) {
       .auth-card {
         padding: 20px 16px;
@@ -171,10 +277,31 @@
       .form-input {
         padding: 12px 14px;
       }
+      
+      .store-logo {
+        width: 70px;
+        height: 70px;
+      }
+      
+      .store-name {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- شاشة التحميل العامة -->
+  <div class="global-loader" id="globalLoader">
+    <div class="spinner"></div>
+    <div class="text-xl font-bold text-gray-700 mb-4">جاري تسجيل الدخول...</div>
+    <div class="dots">
+      <div class="dot"></div>
+      <div class="dot"></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+  
+  <!-- الإشعارات المنبثقة -->
   <div class="notification" id="notification">
     <div class="flex items-start p-4 rounded-lg shadow-lg text-white">
       <div class="mr-3 mt-1">
@@ -193,10 +320,20 @@
     </div>
   </div>
 
+  <!-- بطاقة تسجيل الدخول -->
   <div id="authModal" class="auth-card">
     <button onclick="window.history.back()" class="absolute top-3 left-3 text-gray-500 hover:text-gray-700">
       <i class="fas fa-arrow-left"></i>
     </button>
+
+    <!-- شعار واسم المتجر -->
+    <div class="store-header">
+      <div class="store-logo">
+        <i class="fas fa-store"></i>
+      </div>
+      <h1 class="store-name">متجر مزار</h1>
+      <p class="store-slogan">أفضل المنتجات بأفضل الأسعار</p>
+    </div>
 
     <div class="flex justify-center mb-6 space-x-4 space-x-reverse">
       <button id="showLogin" class="text-lg font-semibold border-b-2 border-primary pb-2 px-4">تسجيل الدخول</button>
@@ -231,10 +368,13 @@
     </div>
 
     <button id="googleSignInBtn" class="w-full border border-gray-300 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium flex items-center justify-center shadow-sm">
-      <i class="fab fa-google text-red-500 mr-2"></i> تسجيل الدخول بحساب Google
+      <i class="fab fa-google text-red-500 mr-2"></i> 
+      <span id="googleBtnText">تسجيل الدخول بحساب Google</span>
+      <div class="loader ml-2" id="googleLoader" style="display: none;"></div>
     </button>
-    <button onclick="continueAsGuest()" class="guest-btn w-full mt-3 text-gray-800 py-3 rounded-lg font-medium text-lg shadow-sm">
-      دخول كضيف
+    <button onclick="continueAsGuest()" class="guest-btn w-full mt-3 text-gray-800 py-3 rounded-lg font-medium text-lg shadow-sm flex items-center justify-center">
+      <span id="guestBtnText">دخول كضيف</span>
+      <div class="loader ml-2" id="guestLoader" style="display: none;"></div>
     </button>
 
     <form id="resetForm" class="space-y-4 hidden">
@@ -353,6 +493,18 @@
       }
     }
 
+    // إظهار وإخفاء شاشة التحميل العامة
+    function showGlobalLoader(message = "جاري تسجيل الدخول...") {
+      const loader = document.getElementById('globalLoader');
+      const loaderText = loader.querySelector('.text-xl');
+      loaderText.textContent = message;
+      loader.classList.add('active');
+    }
+    
+    function hideGlobalLoader() {
+      document.getElementById('globalLoader').classList.remove('active');
+    }
+
     // وظائف إظهار/إخفاء كلمة المرور
     function setupPasswordToggle(buttonId, inputId) {
       document.getElementById(buttonId).addEventListener('click', () => {
@@ -402,7 +554,7 @@
       window.location.reload();
     });
 
-    // تسجيل الدخول
+    // تسجيل الدخول - مع معالجة التأخير
     loginForm.addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
@@ -419,27 +571,37 @@
       const loginBtn = document.querySelector('#loginForm .btn-primary');
       loginBtn.disabled = true;
       
-      auth.signInWithEmailAndPassword(email, pass)
-        .then(() => {
-          showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى المتجر...', 1500);
-          setTimeout(() => window.location.href = 'store.html', 2000);
-        })
-        .catch(err => {
-          let message = 'حدث خطأ أثناء تسجيل الدخول';
-          if (err.code === 'auth/wrong-password') {
-            message = 'كلمة المرور غير صحيحة';
-          } else if (err.code === 'auth/user-not-found') {
-            message = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
-          } else if (err.code === 'auth/too-many-requests') {
-            message = 'تم تعطيل الحساب مؤقتًا بسبب محاولات متعددة خاطئة';
-          }
-          showNotification('error', 'خطأ في تسجيل الدخول', message);
-        })
-        .finally(() => {
-          document.getElementById('loginLoader').style.display = 'none';
-          document.getElementById('loginBtnText').textContent = 'تسجيل الدخول';
-          loginBtn.disabled = false;
-        });
+      // إظهار شاشة التحميل العامة
+      showGlobalLoader();
+      
+      // إضافة تأخير محاكاة للتحميل (يمكن إزالته في الإنتاج)
+      setTimeout(() => {
+        auth.signInWithEmailAndPassword(email, pass)
+          .then(() => {
+            showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
+            setTimeout(() => {
+              hideGlobalLoader();
+              window.location.href = 'store.html';
+            }, 2000);
+          })
+          .catch(err => {
+            hideGlobalLoader();
+            let message = 'حدث خطأ أثناء تسجيل الدخول';
+            if (err.code === 'auth/wrong-password') {
+              message = 'كلمة المرور غير صحيحة';
+            } else if (err.code === 'auth/user-not-found') {
+              message = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+            } else if (err.code === 'auth/too-many-requests') {
+              message = 'تم تعطيل الحساب مؤقتًا بسبب محاولات متعددة خاطئة';
+            }
+            showNotification('error', 'خطأ في تسجيل الدخول', message);
+          })
+          .finally(() => {
+            document.getElementById('loginLoader').style.display = 'none';
+            document.getElementById('loginBtnText').textContent = 'تسجيل الدخول';
+            loginBtn.disabled = false;
+          });
+      }, 800); // تأخير محاكاة للتحميل (800 مللي ثانية)
     });
 
     // إعادة تعيين كلمة المرور - محسّن للأداء
@@ -514,15 +676,22 @@
       const signupBtn = document.querySelector('#signupForm .btn-primary');
       signupBtn.disabled = true;
       
+      // إظهار شاشة التحميل العامة
+      showGlobalLoader("جاري إنشاء الحساب...");
+      
       auth.createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
           return userCredential.user.updateProfile({ displayName: username });
         })
         .then(() => {
-          showNotification('success', 'تم إنشاء الحساب بنجاح', 'جاري تحويلك إلى المتجر...', 1500);
-          setTimeout(() => window.location.href = 'store.html', 2000);
+          showNotification('success', 'تم إنشاء الحساب بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
+          setTimeout(() => {
+            hideGlobalLoader();
+            window.location.href = 'store.html';
+          }, 2000);
         })
         .catch(err => {
+          hideGlobalLoader();
           let message = 'حدث خطأ أثناء إنشاء الحساب';
           if (err.code === 'auth/email-already-in-use') {
             message = 'البريد الإلكتروني مستخدم بالفعل';
@@ -542,12 +711,29 @@
 
     // تسجيل الدخول بحساب Google
     document.getElementById('googleSignInBtn').addEventListener('click', () => {
+      // إظهار مؤشر التحميل
+      document.getElementById('googleLoader').style.display = 'block';
+      document.getElementById('googleBtnText').textContent = 'جاري المعالجة...';
+      const googleBtn = document.getElementById('googleSignInBtn');
+      googleBtn.disabled = true;
+      
+      // إظهار شاشة التحميل العامة
+      showGlobalLoader("جاري تسجيل الدخول بحساب Google...");
+      
       auth.signInWithPopup(provider)
         .then(() => {
-          showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى المتجر...', 1500);
-          setTimeout(() => window.location.href = 'store.html', 2000);
+          showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
+          setTimeout(() => {
+            hideGlobalLoader();
+            window.location.href = 'store.html';
+          }, 2000);
         })
         .catch(err => {
+          hideGlobalLoader();
+          document.getElementById('googleLoader').style.display = 'none';
+          document.getElementById('googleBtnText').textContent = 'تسجيل الدخول بحساب Google';
+          googleBtn.disabled = false;
+          
           let message = 'حدث خطأ أثناء تسجيل الدخول بحساب Google';
           if (err.code === 'auth/popup-closed-by-user') {
             message = 'تم إغلاق نافذة تسجيل الدخول';
@@ -560,30 +746,24 @@
 
     // الدخول كضيف
     function continueAsGuest() { 
-      showNotification('info', 'الدخول كضيف', 'جاري تحويلك إلى المتجر...', 1500);
-      setTimeout(() => window.location.href = 'store.html', 2000);
+      // إظهار مؤشر التحميل
+      document.getElementById('guestLoader').style.display = 'block';
+      document.getElementById('guestBtnText').textContent = 'جاري الدخول...';
+      const guestBtn = document.querySelector('.guest-btn');
+      guestBtn.disabled = true;
+      
+      showGlobalLoader("جاري الدخول كضيف...");
+      
+      setTimeout(() => {
+        hideGlobalLoader();
+        document.getElementById('guestLoader').style.display = 'none';
+        document.getElementById('guestBtnText').textContent = 'دخول كضيف';
+        guestBtn.disabled = false;
+        
+        showNotification('info', 'الدخول كضيف', 'جاري تحويلك إلى متجر مزار...', 1500);
+        setTimeout(() => window.location.href = 'store.html', 2000);
+      }, 1000);
     }
-    
-    // تحسين تجربة المستخدم على الهواتف
-    window.addEventListener('resize', function() {
-      if (window.innerWidth < 480) {
-        document.querySelectorAll('.form-input').forEach(input => {
-          input.style.padding = '12px 14px';
-        });
-        document.querySelectorAll('.btn-primary').forEach(btn => {
-          btn.style.padding = '12px';
-          btn.style.fontSize = '16px';
-        });
-      } else {
-        document.querySelectorAll('.form-input').forEach(input => {
-          input.style.padding = '';
-        });
-        document.querySelectorAll('.btn-primary').forEach(btn => {
-          btn.style.padding = '';
-          btn.style.fontSize = '';
-        });
-      }
-    });
   </script>
 </body>
 </html>
