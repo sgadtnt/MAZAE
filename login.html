@@ -192,6 +192,7 @@
             transition: all 0.3s ease;
             box-shadow: 0 8px 20px rgba(26, 86, 219, 0.3);
             margin: 30px 0 20px;
+            position: relative;
         }
         
         .login-btn:hover {
@@ -257,6 +258,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: relative;
         }
         
         .google-btn:hover {
@@ -526,6 +528,33 @@
             cursor: not-allowed;
         }
         
+        /* مؤشر التحميل */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+            display: none;
+            position: absolute;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+        }
+        
+        @keyframes spin {
+            to { transform: translateY(-50%) rotate(360deg); }
+        }
+        
+        /* رسائل الأخطاء */
+        .error-message {
+            color: #dc2626;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+        
         @media (max-width: 600px) {
             .header {
                 padding: 30px 20px 25px;
@@ -585,6 +614,7 @@
                 <div class="input-container">
                     <input type="email" id="email" class="form-input" placeholder="ادخل بريدك الإلكتروني">
                 </div>
+                <div class="error-message" id="emailError"></div>
             </div>
             
             <div class="form-group">
@@ -595,10 +625,12 @@
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
+                <div class="error-message" id="passwordError"></div>
             </div>
             
             <button class="login-btn" id="loginBtn">
                 تسجيل الدخول
+                <div class="spinner" id="loginSpinner"></div>
             </button>
             
             <button class="guest-btn" id="guestBtn">
@@ -614,6 +646,7 @@
             <button class="google-btn" id="googleLogin">
                 <span>تسجيل الدخول بحساب Google</span>
                 <i class="fab fa-google google-icon"></i>
+                <div class="spinner" id="googleSpinner"></div>
             </button>
             
             <div class="create-account">
@@ -645,11 +678,13 @@
             <div class="form-group">
                 <label class="form-label" for="reg-username">اسم المستخدم</label>
                 <input type="text" id="reg-username" class="form-input" placeholder="اختر اسمًا فريدًا لك">
+                <div class="error-message" id="usernameError"></div>
             </div>
             
             <div class="form-group">
                 <label class="form-label" for="reg-email">البريد الإلكتروني</label>
                 <input type="email" id="reg-email" class="form-input" placeholder="ادخل بريدك الإلكتروني">
+                <div class="error-message" id="regEmailError"></div>
             </div>
             
             <div class="form-group">
@@ -660,6 +695,7 @@
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
+                <div class="error-message" id="regPasswordError"></div>
             </div>
             
             <div class="form-group">
@@ -670,10 +706,12 @@
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
+                <div class="error-message" id="confirmPasswordError"></div>
             </div>
             
             <button class="register-btn" id="registerBtn">
                 تسجيل الحساب
+                <div class="spinner" id="registerSpinner"></div>
             </button>
             
             <button class="cancel-btn" id="cancelRegister">
@@ -695,10 +733,12 @@
             <div class="form-group">
                 <label class="form-label" for="verificationCode">رمز التحقق</label>
                 <input type="text" id="verificationCode" class="form-input" placeholder="ادخل الرمز الذي استلمته في البريد">
+                <div class="error-message" id="codeError"></div>
             </div>
             
             <button class="register-btn" id="verifyCodeBtn">
                 تفعيل الحساب
+                <div class="spinner" id="verifySpinner"></div>
             </button>
             
             <div class="resend-container" id="verifyResendContainer">
@@ -719,6 +759,9 @@
                 <i class="fas fa-check-circle"></i>
             </div>
             <h3 class="popup-text" id="welcomeMessage">مرحبا بك يا مستخدم</h3>
+            <p class="popup-text" id="welcomeSubtext" style="font-size: 1.2rem; font-weight: 500; margin-top: -20px; margin-bottom: 30px;">
+                تم تسجيل دخولك بنجاح!
+            </p>
             <button class="popup-btn" id="goToStore">المتابعة إلى المتجر</button>
         </div>
     </div>
@@ -845,8 +888,13 @@
             const registerBtn = document.getElementById('registerBtn');
             const welcomePopup = document.getElementById('welcomePopup');
             const welcomeMessage = document.getElementById('welcomeMessage');
+            const welcomeSubtext = document.getElementById('welcomeSubtext');
             const goToStore = document.getElementById('goToStore');
             const guestBtn = document.getElementById('guestBtn');
+            const loginSpinner = document.getElementById('loginSpinner');
+            const googleSpinner = document.getElementById('googleSpinner');
+            const registerSpinner = document.getElementById('registerSpinner');
+            const verifySpinner = document.getElementById('verifySpinner');
             
             // نافذة التحقق
             const verifyModal = document.getElementById('verifyModal');
@@ -931,10 +979,25 @@
                 const email = document.getElementById('email').value;
                 const password = document.getElementById('password').value;
                 
-                if (!email || !password) {
-                    alert('الرجاء ملء جميع الحقول المطلوبة');
+                // إخفاء رسائل الأخطاء السابقة
+                document.getElementById('emailError').style.display = 'none';
+                document.getElementById('passwordError').style.display = 'none';
+                
+                if (!email) {
+                    document.getElementById('emailError').textContent = 'يرجى إدخال البريد الإلكتروني';
+                    document.getElementById('emailError').style.display = 'block';
                     return;
                 }
+                
+                if (!password) {
+                    document.getElementById('passwordError').textContent = 'يرجى إدخال كلمة المرور';
+                    document.getElementById('passwordError').style.display = 'block';
+                    return;
+                }
+                
+                // إظهار مؤشر التحميل
+                loginSpinner.style.display = 'block';
+                loginBtn.disabled = true;
                 
                 auth.signInWithEmailAndPassword(email, password)
                     .then((userCredential) => {
@@ -946,10 +1009,15 @@
                                 const userData = snapshot.val();
                                 const username = userData ? userData.username : email.split('@')[0];
                                 
+                                // إخفاء مؤشر التحميل
+                                loginSpinner.style.display = 'none';
+                                loginBtn.disabled = false;
+                                
                                 // التحقق من أن البريد مفعل
                                 if (userData && userData.emailVerified) {
                                     // عرض رسالة الترحيب
                                     welcomeMessage.textContent = `مرحبا بك يا ${username}`;
+                                    welcomeSubtext.textContent = `تم تسجيل دخولك بنجاح!`;
                                     welcomePopup.style.display = 'flex';
                                 } else {
                                     // إذا لم يتم التحقق بعد، عرض نافذة التحقق
@@ -958,13 +1026,22 @@
                                 }
                             })
                             .catch(() => {
+                                // إخفاء مؤشر التحميل
+                                loginSpinner.style.display = 'none';
+                                loginBtn.disabled = false;
+                                
                                 // في حالة وجود خطأ، استخدام جزء من البريد
                                 const username = email.split('@')[0];
                                 welcomeMessage.textContent = `مرحبا بك يا ${username}`;
+                                welcomeSubtext.textContent = `تم تسجيل دخولك بنجاح!`;
                                 welcomePopup.style.display = 'flex';
                             });
                     })
                     .catch((error) => {
+                        // إخفاء مؤشر التحميل
+                        loginSpinner.style.display = 'none';
+                        loginBtn.disabled = false;
+                        
                         const errorCode = error.code;
                         let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
                         
@@ -986,8 +1063,9 @@
             googleLogin.addEventListener('click', function() {
                 const provider = new firebase.auth.GoogleAuthProvider();
                 
-                // حل مشكلة اختيار الحساب
-                provider.setCustomParameters({ prompt: 'select_account' });
+                // إظهار مؤشر التحميل
+                googleSpinner.style.display = 'block';
+                googleLogin.disabled = true;
                 
                 auth.signInWithPopup(provider)
                     .then((result) => {
@@ -995,8 +1073,13 @@
                         const user = result.user;
                         const username = user.displayName || user.email.split('@')[0];
                         
+                        // إخفاء مؤشر التحميل
+                        googleSpinner.style.display = 'none';
+                        googleLogin.disabled = false;
+                        
                         // عرض رسالة الترحيب
                         welcomeMessage.textContent = `مرحبا بك يا ${username}`;
+                        welcomeSubtext.textContent = `تم تسجيل دخولك بحساب Google بنجاح!`;
                         welcomePopup.style.display = 'flex';
                         
                         // حفظ معلومات المستخدم في قاعدة البيانات
@@ -1009,13 +1092,16 @@
                         }, (error) => {
                             if (error) {
                                 console.error('خطأ في حفظ بيانات المستخدم:', error);
-                                alert('حدث خطأ في حفظ بيانات المستخدم. الرجاء المحاولة مرة أخرى.');
                             } else {
                                 console.log('تم حفظ بيانات المستخدم بنجاح في قاعدة البيانات');
                             }
                         });
                     })
                     .catch((error) => {
+                        // إخفاء مؤشر التحميل
+                        googleSpinner.style.display = 'none';
+                        googleLogin.disabled = false;
+                        
                         console.error('خطأ في تسجيل الدخول بحساب Google:', error);
                         
                         // رسالة خطأ أكثر تفصيلاً
@@ -1044,30 +1130,66 @@
                 const password = document.getElementById('reg-password').value;
                 const confirmPassword = document.getElementById('confirm-password').value;
                 
-                if (!username || !email || !password || !confirmPassword) {
-                    alert('الرجاء ملء جميع الحقول المطلوبة');
+                // إخفاء رسائل الأخطاء السابقة
+                document.getElementById('usernameError').style.display = 'none';
+                document.getElementById('regEmailError').style.display = 'none';
+                document.getElementById('regPasswordError').style.display = 'none';
+                document.getElementById('confirmPasswordError').style.display = 'none';
+                
+                if (!username) {
+                    document.getElementById('usernameError').textContent = 'يرجى إدخال اسم المستخدم';
+                    document.getElementById('usernameError').style.display = 'block';
+                    return;
+                }
+                
+                if (!email) {
+                    document.getElementById('regEmailError').textContent = 'يرجى إدخال البريد الإلكتروني';
+                    document.getElementById('regEmailError').style.display = 'block';
+                    return;
+                }
+                
+                if (!password) {
+                    document.getElementById('regPasswordError').textContent = 'يرجى إدخال كلمة المرور';
+                    document.getElementById('regPasswordError').style.display = 'block';
+                    return;
+                }
+                
+                if (!confirmPassword) {
+                    document.getElementById('confirmPasswordError').textContent = 'يرجى تأكيد كلمة المرور';
+                    document.getElementById('confirmPasswordError').style.display = 'block';
                     return;
                 }
                 
                 if (password !== confirmPassword) {
-                    alert('كلمتا المرور غير متطابقتين');
+                    document.getElementById('confirmPasswordError').textContent = 'كلمتا المرور غير متطابقتين';
+                    document.getElementById('confirmPasswordError').style.display = 'block';
                     return;
                 }
                 
                 if (password.length < 6) {
-                    alert('كلمة المرور يجب أن تكون على الأقل 6 أحرف');
+                    document.getElementById('regPasswordError').textContent = 'كلمة المرور يجب أن تكون على الأقل 6 أحرف';
+                    document.getElementById('regPasswordError').style.display = 'block';
                     return;
                 }
                 
                 if (username.length < 3) {
-                    alert('اسم المستخدم يجب أن يكون على الأقل 3 أحرف');
+                    document.getElementById('usernameError').textContent = 'اسم المستخدم يجب أن يكون على الأقل 3 أحرف';
+                    document.getElementById('usernameError').style.display = 'block';
                     return;
                 }
+                
+                // إظهار مؤشر التحميل
+                registerSpinner.style.display = 'block';
+                registerBtn.disabled = true;
                 
                 auth.createUserWithEmailAndPassword(email, password)
                     .then((userCredential) => {
                         // تم إنشاء الحساب بنجاح
                         const user = userCredential.user;
+                        
+                        // إخفاء مؤشر التحميل
+                        registerSpinner.style.display = 'none';
+                        registerBtn.disabled = false;
                         
                         // حفظ معلومات المستخدم في قاعدة البيانات
                         database.ref('users/' + user.uid).set({
@@ -1088,15 +1210,25 @@
                         startResendTimer('resendVerifyBtn', 'verifyResendContainer');
                     })
                     .catch((error) => {
+                        // إخفاء مؤشر التحميل
+                        registerSpinner.style.display = 'none';
+                        registerBtn.disabled = false;
+                        
                         const errorCode = error.code;
                         let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
                         
                         if (errorCode === 'auth/email-already-in-use') {
-                            errorMessage = 'هذا البريد الإلكتروني مستخدم بالفعل';
+                            document.getElementById('regEmailError').textContent = 'هذا البريد الإلكتروني مستخدم بالفعل';
+                            document.getElementById('regEmailError').style.display = 'block';
+                            return;
                         } else if (errorCode === 'auth/invalid-email') {
-                            errorMessage = 'بريد إلكتروني غير صالح';
+                            document.getElementById('regEmailError').textContent = 'بريد إلكتروني غير صالح';
+                            document.getElementById('regEmailError').style.display = 'block';
+                            return;
                         } else if (errorCode === 'auth/weak-password') {
-                            errorMessage = 'كلمة المرور ضعيفة جدًا';
+                            document.getElementById('regPasswordError').textContent = 'كلمة المرور ضعيفة جدًا';
+                            document.getElementById('regPasswordError').style.display = 'block';
+                            return;
                         }
                         
                         alert(errorMessage);
@@ -1108,27 +1240,44 @@
                 const code = verificationCodeInput.value;
                 
                 if (!code) {
-                    alert('الرجاء إدخال رمز التحقق');
+                    document.getElementById('codeError').textContent = 'يرجى إدخال رمز التحقق';
+                    document.getElementById('codeError').style.display = 'block';
                     return;
                 }
                 
-                if (verifyEmailCode(code)) {
-                    // تم التحقق بنجاح
-                    verifyModal.style.display = 'none';
-                    
-                    // عرض رسالة الترحيب
-                    const user = auth.currentUser;
-                    if (user) {
-                        database.ref('users/' + user.uid).once('value')
-                            .then((snapshot) => {
-                                const userData = snapshot.val();
-                                const username = userData.username || user.email.split('@')[0];
-                                
-                                welcomeMessage.textContent = `مرحبا بك يا ${username}`;
-                                welcomePopup.style.display = 'flex';
-                            });
+                // إظهار مؤشر التحميل
+                verifySpinner.style.display = 'block';
+                verifyCodeBtn.disabled = true;
+                
+                // محاكاة عملية التحقق (في الإنتاج سيتم استدعاء API حقيقي)
+                setTimeout(() => {
+                    if (verifyEmailCode(code)) {
+                        // تم التحقق بنجاح
+                        verifyModal.style.display = 'none';
+                        
+                        // إخفاء مؤشر التحميل
+                        verifySpinner.style.display = 'none';
+                        verifyCodeBtn.disabled = false;
+                        
+                        // عرض رسالة الترحيب
+                        const user = auth.currentUser;
+                        if (user) {
+                            database.ref('users/' + user.uid).once('value')
+                                .then((snapshot) => {
+                                    const userData = snapshot.val();
+                                    const username = userData.username || user.email.split('@')[0];
+                                    
+                                    welcomeMessage.textContent = `مرحبا بك يا ${username}`;
+                                    welcomeSubtext.textContent = `تم تفعيل حسابك بنجاح!`;
+                                    welcomePopup.style.display = 'flex';
+                                });
+                        }
+                    } else {
+                        // إخفاء مؤشر التحميل
+                        verifySpinner.style.display = 'none';
+                        verifyCodeBtn.disabled = false;
                     }
-                }
+                }, 1000);
             });
             
             // إعادة إرسال رمز التحقق
@@ -1139,23 +1288,6 @@
                 // إعادة تعطيل الزر وبدء العداد من جديد
                 this.disabled = true;
                 startResendTimer('resendVerifyBtn', 'verifyResendContainer');
-            });
-            
-            // تتبع حالة تسجيل الدخول
-            auth.onAuthStateChanged((user) => {
-                if (user) {
-                    // المستخدم مسجل الدخول
-                    console.log('المستخدم مسجل الدخول:', user);
-                    
-                    // إذا كان المستخدم مسجلًا بحساب Google
-                    if (user.providerData.some(provider => provider.providerId === 'google.com')) {
-                        // توجيه المستخدم مباشرة إلى المتجر
-                        window.location.href = 'store.html';
-                    }
-                } else {
-                    // المستخدم غير مسجل الدخول
-                    console.log('المستخدم غير مسجل الدخول');
-                }
             });
         });
     </script>
