@@ -6,16 +6,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">  <!-- Modal Container -->  <div id="authModal" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative"><!-- زر الرجوع -->
-<button onclick="window.history.back()" class="absolute top-2 left-2 text-sm text-gray-500 hover:underline">رجوع</button>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">  <div id="authModal" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative"><button onclick="window.history.back()" class="absolute top-2 left-2 text-sm text-gray-500 hover:underline">رجوع</button>
 
-<!-- Nav Buttons -->
 <div class="flex justify-center mb-4 space-x-4 space-x-reverse">
   <button id="showLogin" class="text-lg font-semibold border-b-2 border-blue-600">تسجيل الدخول</button>
   <button id="showSignup" class="text-lg font-semibold text-gray-500 hover:text-gray-800">إنشاء حساب</button>
 </div>
 
-<!-- Login Form -->
 <form id="loginForm" class="space-y-4">
   <div>
     <label class="block mb-1">البريد الإلكتروني</label>
@@ -34,19 +31,15 @@
   <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">تسجيل الدخول</button>
 </form>
 
-<!-- Separator -->
 <div class="my-4 border-t pt-4 text-center text-sm text-gray-400">أو</div>
 
-<!-- Google & Guest -->
 <button id="googleSignInBtn" class="w-full border py-2 rounded text-gray-700 hover:bg-gray-50">تسجيل الدخول بحساب Google</button>
 <button onclick="continueAsGuest()" class="w-full mt-3 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">دخول كضيف</button>
 
-<!-- Footer WhatsApp -->
 <footer class="mt-6 text-center text-xs text-gray-400">
   للتواصل عبر واتساب: +96407823053419
 </footer>
 
-<!-- Password Reset Form (hidden) -->
 <form id="resetForm" class="space-y-4 hidden">
   <div>
     <label class="block mb-1">أدخل بريدك لإعادة تعيين كلمة المرور</label>
@@ -56,22 +49,34 @@
   <button type="button" id="backToLoginFromReset" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">عودة لتسجيل الدخول</button>
 </form>
 
-<!-- Signup Form (hidden) -->
 <form id="signupForm" class="space-y-4 hidden">
+  <div>
+    <label class="block mb-1">اسم المستخدم</label>
+    <input type="text" id="signupUsername" required class="w-full border rounded px-3 py-2" placeholder="مثلاً: سجاد">
+  </div>
   <div>
     <label class="block mb-1">البريد الإلكتروني</label>
     <input type="email" id="signupEmail" required class="w-full border rounded px-3 py-2" placeholder="أدخل بريدك">
   </div>
   <div>
     <label class="block mb-1">كلمة المرور</label>
-    <input type="password" id="signupPassword" required class="w-full border rounded px-3 py-2" placeholder="••••••••">
+    <div class="relative">
+      <input type="password" id="signupPassword" required class="w-full border rounded px-3 py-2 pr-10" placeholder="••••••••">
+      <button type="button" id="toggleSignupPassword" class="absolute inset-y-0 left-2 text-sm text-gray-500">عرض</button>
+    </div>
+  </div>
+  <div>
+    <label class="block mb-1">تأكيد كلمة المرور</label>
+    <div class="relative">
+      <input type="password" id="confirmPassword" required class="w-full border rounded px-3 py-2 pr-10" placeholder="••••••••">
+      <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 left-2 text-sm text-gray-500">عرض</button>
+    </div>
   </div>
   <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">إنشاء حساب</button>
   <button type="button" id="backToLoginFromSignup" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">عودة لتسجيل الدخول</button>
 </form>
 
   </div>  <script>
-    // Firebase Config
     const firebaseConfig = {
       apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
       authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -84,17 +89,6 @@
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    // Elements
-    const loginForm = document.getElementById('loginForm');
-    const resetForm = document.getElementById('resetForm');
-    const signupForm = document.getElementById('signupForm');
-    const showReset = document.getElementById('showReset');
-    const showSignup = document.getElementById('showSignup');
-    const showLogin = document.getElementById('showLogin');
-    const backToLoginFromReset = document.getElementById('backToLoginFromReset');
-    const backToLoginFromSignup = document.getElementById('backToLoginFromSignup');
-
-    // Toggle password visibility (login)
     document.getElementById('toggleLoginPassword').addEventListener('click', () => {
       const pw = document.getElementById('loginPassword');
       const type = pw.type === 'password' ? 'text' : 'password';
@@ -102,26 +96,38 @@
       event.target.textContent = type === 'password' ? 'عرض' : 'إخفاء';
     });
 
-    // Navigation between forms
-    showReset.addEventListener('click', () => {
+    document.getElementById('toggleSignupPassword').addEventListener('click', () => {
+      const pw = document.getElementById('signupPassword');
+      const type = pw.type === 'password' ? 'text' : 'password';
+      pw.type = type;
+      event.target.textContent = type === 'password' ? 'عرض' : 'إخفاء';
+    });
+
+    document.getElementById('toggleConfirmPassword').addEventListener('click', () => {
+      const pw = document.getElementById('confirmPassword');
+      const type = pw.type === 'password' ? 'text' : 'password';
+      pw.type = type;
+      event.target.textContent = type === 'password' ? 'عرض' : 'إخفاء';
+    });
+
+    document.getElementById('showReset').addEventListener('click', () => {
       loginForm.classList.add('hidden'); resetForm.classList.remove('hidden');
     });
-    backToLoginFromReset.addEventListener('click', () => {
+    document.getElementById('backToLoginFromReset').addEventListener('click', () => {
       resetForm.classList.add('hidden'); loginForm.classList.remove('hidden');
     });
-    showSignup.addEventListener('click', () => {
+    document.getElementById('showSignup').addEventListener('click', () => {
       loginForm.classList.add('hidden'); signupForm.classList.remove('hidden');
       showLogin.classList.remove('border-blue-600'); showLogin.classList.add('text-gray-500');
       showSignup.classList.add('border-blue-600'); showSignup.classList.remove('text-gray-500');
     });
-    backToLoginFromSignup.addEventListener('click', () => {
+    document.getElementById('backToLoginFromSignup').addEventListener('click', () => {
       signupForm.classList.add('hidden'); loginForm.classList.remove('hidden');
       showSignup.classList.remove('border-blue-600'); showSignup.classList.add('text-gray-500');
       showLogin.classList.add('border-blue-600'); showLogin.classList.remove('text-gray-500');
     });
-    showLogin.addEventListener('click', () => window.location.reload());
+    document.getElementById('showLogin').addEventListener('click', () => window.location.reload());
 
-    // Login
     loginForm.addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
@@ -131,7 +137,6 @@
         .catch(err => alert(err.message));
     });
 
-    // Reset Password
     resetForm.addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('resetEmail').value;
@@ -140,24 +145,27 @@
         .catch(err => alert(err.message));
     });
 
-    // Signup
     signupForm.addEventListener('submit', e => {
       e.preventDefault();
+      const username = document.getElementById('signupUsername').value;
       const email = document.getElementById('signupEmail').value;
       const pass = document.getElementById('signupPassword').value;
+      const confirm = document.getElementById('confirmPassword').value;
+      if (pass !== confirm) return alert('كلمتا المرور غير متطابقتين.');
       auth.createUserWithEmailAndPassword(email, pass)
+        .then((userCredential) => {
+          return userCredential.user.updateProfile({ displayName: username });
+        })
         .then(() => window.location.href = 'store.html')
         .catch(err => alert(err.message));
     });
 
-    // Google Sign-In
     document.getElementById('googleSignInBtn').addEventListener('click', () => {
       auth.signInWithPopup(provider)
         .then(() => window.location.href = 'store.html')
         .catch(err => alert(err.message));
     });
 
-    // Guest
     function continueAsGuest() { window.location.href = 'store.html'; }
   </script></body>
 </html>
