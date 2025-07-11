@@ -1,82 +1,245 @@
-<!DOCTYPE html><html lang="ar" dir="rtl">
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
   <title>تسجيل الدخول / إنشاء حساب</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#2563EB',
+            success: '#10B981',
+            error: '#EF4444',
+            warning: '#F59E0B',
+            info: '#3B82F6'
+          }
+        }
+      }
+    }
+  </script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+    
+    body {
+      font-family: 'Tajawal', sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      max-width: 350px;
+      width: 100%;
+      z-index: 1000;
+      transition: all 0.3s ease;
+      transform: translateX(calc(100% + 20px));
+    }
+    
+    .notification.active {
+      transform: translateX(0);
+    }
+    
+    .notification.success {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    }
+    
+    .notification.error {
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+    }
+    
+    .notification.warning {
+      background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+    }
+    
+    .notification.info {
+      background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+    }
+    
+    .progress-bar {
+      height: 4px;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.3);
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      border-radius: 0 0 4px 4px;
+    }
+    
+    .progress {
+      height: 100%;
+      width: 100%;
+      background: white;
+      animation: progress 3s linear forwards;
+      border-radius: 0 0 4px 4px;
+    }
+    
+    @keyframes progress {
+      100% {
+        width: 0;
+      }
+    }
+    
+    .auth-card {
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      background: white;
+    }
+    
+    .auth-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #3B82F6, #10B981, #F59E0B);
+    }
+    
+    .toggle-password {
+      transition: all 0.3s ease;
+    }
+    
+    .toggle-password:hover {
+      color: #3B82F6;
+      transform: scale(1.1);
+    }
+    
+    .guest-btn {
+      transition: all 0.3s ease;
+      background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    }
+    
+    .guest-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">  <div id="authModal" class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md relative"><button onclick="window.history.back()" class="absolute top-2 left-2 text-sm text-gray-500 hover:underline">رجوع</button>
-
-<div class="flex justify-center mb-4 space-x-4 space-x-reverse">
-  <button id="showLogin" class="text-lg font-semibold border-b-2 border-blue-600">تسجيل الدخول</button>
-  <button id="showSignup" class="text-lg font-semibold text-gray-500 hover:text-gray-800">إنشاء حساب</button>
-</div>
-
-<form id="loginForm" class="space-y-4">
-  <div>
-    <label class="block mb-1">البريد الإلكتروني</label>
-    <input type="email" id="loginEmail" required class="w-full border rounded px-3 py-2" placeholder="أدخل بريدك">
-  </div>
-  <div>
-    <label class="block mb-1">كلمة المرور</label>
-    <div class="relative">
-      <input type="password" id="loginPassword" required class="w-full border rounded px-3 py-2 pr-10" placeholder="••••••••">
-      <button type="button" id="toggleLoginPassword" class="absolute inset-y-0 left-2 text-sm text-gray-500">عرض</button>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+  <div class="notification" id="notification">
+    <div class="flex items-start p-4 rounded-lg shadow-lg text-white">
+      <div class="mr-3 mt-1">
+        <i class="text-xl" id="notification-icon"></i>
+      </div>
+      <div class="flex-1">
+        <div class="font-bold text-lg" id="notification-title"></div>
+        <div class="mt-1 text-sm" id="notification-message"></div>
+      </div>
+      <button class="ml-4 text-white opacity-70 hover:opacity-100 transition-opacity" id="notification-close">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="progress-bar">
+      <div class="progress"></div>
     </div>
   </div>
-  <div class="text-left">
-    <button type="button" id="showReset" class="text-sm text-blue-600 hover:underline">نسيت كلمة المرور؟</button>
-  </div>
-  <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">تسجيل الدخول</button>
-</form>
 
-<div class="my-4 border-t pt-4 text-center text-sm text-gray-400">أو</div>
+  <div id="authModal" class="auth-card p-6 w-full max-w-md relative">
+    <button onclick="window.history.back()" class="absolute top-2 left-2 text-sm text-gray-500 hover:underline flex items-center">
+      <i class="fas fa-arrow-left mr-1"></i> رجوع
+    </button>
 
-<button id="googleSignInBtn" class="w-full border py-2 rounded text-gray-700 hover:bg-gray-50">تسجيل الدخول بحساب Google</button>
-<button onclick="continueAsGuest()" class="w-full mt-3 bg-gray-200 text-gray-800 py-2 rounded hover:bg-gray-300">دخول كضيف</button>
-
-<footer class="mt-6 text-center text-xs text-gray-400">
-  للتواصل عبر واتساب: +96407823053419
-</footer>
-
-<form id="resetForm" class="space-y-4 hidden">
-  <div>
-    <label class="block mb-1">أدخل بريدك لإعادة تعيين كلمة المرور</label>
-    <input type="email" id="resetEmail" required class="w-full border rounded px-3 py-2" placeholder="بريدك الإلكتروني">
-  </div>
-  <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">إرسال رابط إعادة التعيين</button>
-  <button type="button" id="backToLoginFromReset" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">عودة لتسجيل الدخول</button>
-</form>
-
-<form id="signupForm" class="space-y-4 hidden">
-  <div>
-    <label class="block mb-1">اسم المستخدم</label>
-    <input type="text" id="signupUsername" required class="w-full border rounded px-3 py-2" placeholder="مثلاً: سجاد">
-  </div>
-  <div>
-    <label class="block mb-1">البريد الإلكتروني</label>
-    <input type="email" id="signupEmail" required class="w-full border rounded px-3 py-2" placeholder="أدخل بريدك">
-  </div>
-  <div>
-    <label class="block mb-1">كلمة المرور</label>
-    <div class="relative">
-      <input type="password" id="signupPassword" required class="w-full border rounded px-3 py-2 pr-10" placeholder="••••••••">
-      <button type="button" id="toggleSignupPassword" class="absolute inset-y-0 left-2 text-sm text-gray-500">عرض</button>
+    <div class="flex justify-center mb-6 space-x-4 space-x-reverse">
+      <button id="showLogin" class="text-lg font-semibold border-b-2 border-primary pb-2 px-4">تسجيل الدخول</button>
+      <button id="showSignup" class="text-lg font-semibold text-gray-500 hover:text-gray-800 pb-2 px-4">إنشاء حساب</button>
     </div>
-  </div>
-  <div>
-    <label class="block mb-1">تأكيد كلمة المرور</label>
-    <div class="relative">
-      <input type="password" id="confirmPassword" required class="w-full border rounded px-3 py-2 pr-10" placeholder="••••••••">
-      <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 left-2 text-sm text-gray-500">عرض</button>
-    </div>
-  </div>
-  <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">إنشاء حساب</button>
-  <button type="button" id="backToLoginFromSignup" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">عودة لتسجيل الدخول</button>
-</form>
 
-  </div>  <script>
+    <form id="loginForm" class="space-y-4">
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">البريد الإلكتروني</label>
+        <input type="email" id="loginEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="أدخل بريدك الإلكتروني">
+      </div>
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">كلمة المرور</label>
+        <div class="relative">
+          <input type="password" id="loginPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12" placeholder="••••••••">
+          <button type="button" id="toggleLoginPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <div class="text-left">
+        <button type="button" id="showReset" class="text-sm text-primary hover:underline">نسيت كلمة المرور؟</button>
+      </div>
+      <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-md hover:shadow-lg">
+        تسجيل الدخول
+      </button>
+    </form>
+
+    <div class="my-6 border-t pt-4 text-center text-sm text-gray-500 relative">
+      <span class="px-3 bg-white relative">أو</span>
+    </div>
+
+    <button id="googleSignInBtn" class="w-full border border-gray-300 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium flex items-center justify-center shadow-sm">
+      <i class="fab fa-google text-red-500 mr-2"></i> تسجيل الدخول بحساب Google
+    </button>
+    <button onclick="continueAsGuest()" class="guest-btn w-full mt-3 text-gray-800 py-3 rounded-lg font-medium text-lg shadow-sm">
+      دخول كضيف
+    </button>
+
+    <footer class="mt-8 text-center text-xs text-gray-500 border-t pt-4">
+      للتواصل عبر واتساب: <span class="font-medium">+96407823053419</span>
+    </footer>
+
+    <form id="resetForm" class="space-y-4 hidden">
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">أدخل بريدك لإعادة تعيين كلمة المرور</label>
+        <input type="email" id="resetEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="بريدك الإلكتروني">
+      </div>
+      <button type="submit" class="w-full bg-info text-white py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg">
+        إرسال رابط إعادة التعيين
+      </button>
+      <button type="button" id="backToLoginFromReset" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">
+        عودة لتسجيل الدخول
+      </button>
+    </form>
+
+    <form id="signupForm" class="space-y-4 hidden">
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">اسم المستخدم</label>
+        <input type="text" id="signupUsername" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="مثلاً: سجاد">
+      </div>
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">البريد الإلكتروني</label>
+        <input type="email" id="signupEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="أدخل بريدك">
+      </div>
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">كلمة المرور</label>
+        <div class="relative">
+          <input type="password" id="signupPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12" placeholder="••••••••">
+          <button type="button" id="toggleSignupPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <div>
+        <label class="block mb-2 font-medium text-gray-700">تأكيد كلمة المرور</label>
+        <div class="relative">
+          <input type="password" id="confirmPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12" placeholder="••••••••">
+          <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="w-full bg-success text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg">
+        إنشاء حساب
+      </button>
+      <button type="button" id="backToLoginFromSignup" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">
+        عودة لتسجيل الدخول
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // تهيئة Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
       authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -89,83 +252,231 @@
     const auth = firebase.auth();
     const provider = new firebase.auth.GoogleAuthProvider();
 
-    document.getElementById('toggleLoginPassword').addEventListener('click', () => {
-      const pw = document.getElementById('loginPassword');
-      const type = pw.type === 'password' ? 'text' : 'password';
-      pw.type = type;
-      event.target.textContent = type === 'password' ? 'عرض' : 'إخفاء';
-    });
+    // نظام الإشعارات الجديد
+    function showNotification(type, title, message, duration = 3000) {
+      const notification = document.getElementById('notification');
+      const notificationIcon = document.getElementById('notification-icon');
+      const notificationTitle = document.getElementById('notification-title');
+      const notificationMessage = document.getElementById('notification-message');
+      const notificationClose = document.getElementById('notification-close');
+      
+      // تنظيف الفئات السابقة
+      notification.className = 'notification';
+      
+      // إعداد الإشعار حسب النوع
+      switch(type) {
+        case 'success':
+          notification.classList.add('success');
+          notificationIcon.className = 'fas fa-check-circle';
+          break;
+        case 'error':
+          notification.classList.add('error');
+          notificationIcon.className = 'fas fa-exclamation-circle';
+          break;
+        case 'warning':
+          notification.classList.add('warning');
+          notificationIcon.className = 'fas fa-exclamation-triangle';
+          break;
+        case 'info':
+          notification.classList.add('info');
+          notificationIcon.className = 'fas fa-info-circle';
+          break;
+      }
+      
+      // تعيين النص
+      notificationTitle.textContent = title;
+      notificationMessage.textContent = message;
+      
+      // إظهار الإشعار
+      notification.classList.add('active');
+      
+      // إغلاق الإشعار يدويًا
+      notificationClose.onclick = function() {
+        notification.classList.remove('active');
+      };
+      
+      // إغلاق الإشعار تلقائيًا بعد المدة المحددة
+      if (duration > 0) {
+        setTimeout(() => {
+          notification.classList.remove('active');
+        }, duration);
+      }
+    }
 
-    document.getElementById('toggleSignupPassword').addEventListener('click', () => {
-      const pw = document.getElementById('signupPassword');
-      const type = pw.type === 'password' ? 'text' : 'password';
-      pw.type = type;
-      event.target.textContent = type === 'password' ? 'عرض' : 'إخفاء';
-    });
+    // وظائف إظهار/إخفاء كلمة المرور
+    function setupPasswordToggle(buttonId, inputId) {
+      document.getElementById(buttonId).addEventListener('click', () => {
+        const pw = document.getElementById(inputId);
+        const type = pw.type === 'password' ? 'text' : 'password';
+        pw.type = type;
+        const icon = event.target.querySelector('i') || event.target;
+        icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+      });
+    }
 
-    document.getElementById('toggleConfirmPassword').addEventListener('click', () => {
-      const pw = document.getElementById('confirmPassword');
-      const type = pw.type === 'password' ? 'text' : 'password';
-      pw.type = type;
-      event.target.textContent = type === 'password' ? 'عرض' : 'إخفاء';
-    });
+    // تهيئة وظائف إظهار/إخفاء كلمة المرور
+    setupPasswordToggle('toggleLoginPassword', 'loginPassword');
+    setupPasswordToggle('toggleSignupPassword', 'signupPassword');
+    setupPasswordToggle('toggleConfirmPassword', 'confirmPassword');
 
+    // وظائف التبديل بين النماذج
     document.getElementById('showReset').addEventListener('click', () => {
-      loginForm.classList.add('hidden'); resetForm.classList.remove('hidden');
+      loginForm.classList.add('hidden'); 
+      resetForm.classList.remove('hidden');
     });
+    
     document.getElementById('backToLoginFromReset').addEventListener('click', () => {
-      resetForm.classList.add('hidden'); loginForm.classList.remove('hidden');
+      resetForm.classList.add('hidden'); 
+      loginForm.classList.remove('hidden');
     });
+    
     document.getElementById('showSignup').addEventListener('click', () => {
-      loginForm.classList.add('hidden'); signupForm.classList.remove('hidden');
-      showLogin.classList.remove('border-blue-600'); showLogin.classList.add('text-gray-500');
-      showSignup.classList.add('border-blue-600'); showSignup.classList.remove('text-gray-500');
+      loginForm.classList.add('hidden'); 
+      signupForm.classList.remove('hidden');
+      showLogin.classList.remove('border-primary', 'text-gray-900'); 
+      showLogin.classList.add('text-gray-500');
+      showSignup.classList.add('border-primary', 'text-gray-900'); 
+      showSignup.classList.remove('text-gray-500');
     });
+    
     document.getElementById('backToLoginFromSignup').addEventListener('click', () => {
-      signupForm.classList.add('hidden'); loginForm.classList.remove('hidden');
-      showSignup.classList.remove('border-blue-600'); showSignup.classList.add('text-gray-500');
-      showLogin.classList.add('border-blue-600'); showLogin.classList.remove('text-gray-500');
+      signupForm.classList.add('hidden'); 
+      loginForm.classList.remove('hidden');
+      showSignup.classList.remove('border-primary', 'text-gray-900'); 
+      showSignup.classList.add('text-gray-500');
+      showLogin.classList.add('border-primary', 'text-gray-900'); 
+      showLogin.classList.remove('text-gray-500');
     });
-    document.getElementById('showLogin').addEventListener('click', () => window.location.reload());
+    
+    document.getElementById('showLogin').addEventListener('click', () => {
+      window.location.reload();
+    });
 
+    // تسجيل الدخول
     loginForm.addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('loginEmail').value;
       const pass = document.getElementById('loginPassword').value;
+      
+      if (!email || !pass) {
+        showNotification('error', 'خطأ في الإدخال', 'يرجى ملء جميع الحقول المطلوبة');
+        return;
+      }
+      
       auth.signInWithEmailAndPassword(email, pass)
-        .then(() => window.location.href = 'store.html')
-        .catch(err => alert(err.message));
+        .then(() => {
+          showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى المتجر...', 1500);
+          setTimeout(() => window.location.href = 'store.html', 2000);
+        })
+        .catch(err => {
+          let message = 'حدث خطأ أثناء تسجيل الدخول';
+          if (err.code === 'auth/wrong-password') {
+            message = 'كلمة المرور غير صحيحة';
+          } else if (err.code === 'auth/user-not-found') {
+            message = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+          } else if (err.code === 'auth/too-many-requests') {
+            message = 'تم تعطيل الحساب مؤقتًا بسبب محاولات متعددة خاطئة';
+          }
+          showNotification('error', 'خطأ في تسجيل الدخول', message);
+        });
     });
 
+    // إعادة تعيين كلمة المرور
     resetForm.addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('resetEmail').value;
+      
+      if (!email) {
+        showNotification('error', 'خطأ في الإدخال', 'يرجى إدخال البريد الإلكتروني');
+        return;
+      }
+      
       auth.sendPasswordResetEmail(email)
-        .then(() => alert('أرسلنا رابط إعادة التعيين إلى بريدك.'))
-        .catch(err => alert(err.message));
+        .then(() => {
+          showNotification('success', 'تم الإرسال بنجاح', 'أرسلنا رابط إعادة التعيين إلى بريدك الإلكتروني');
+          setTimeout(() => {
+            resetForm.classList.add('hidden'); 
+            loginForm.classList.remove('hidden');
+          }, 3000);
+        })
+        .catch(err => {
+          let message = 'حدث خطأ أثناء إرسال رابط إعادة التعيين';
+          if (err.code === 'auth/user-not-found') {
+            message = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
+          } else if (err.code === 'auth/invalid-email') {
+            message = 'بريد إلكتروني غير صالح';
+          }
+          showNotification('error', 'خطأ في الإرسال', message);
+        });
     });
 
+    // إنشاء حساب
     signupForm.addEventListener('submit', e => {
       e.preventDefault();
       const username = document.getElementById('signupUsername').value;
       const email = document.getElementById('signupEmail').value;
       const pass = document.getElementById('signupPassword').value;
       const confirm = document.getElementById('confirmPassword').value;
-      if (pass !== confirm) return alert('كلمتا المرور غير متطابقتين.');
+      
+      if (!username || !email || !pass || !confirm) {
+        showNotification('error', 'خطأ في الإدخال', 'يرجى ملء جميع الحقول المطلوبة');
+        return;
+      }
+      
+      if (pass !== confirm) {
+        showNotification('error', 'كلمات المرور غير متطابقة', 'يرجى التأكد من تطابق كلمتي المرور');
+        return;
+      }
+      
+      if (pass.length < 6) {
+        showNotification('error', 'كلمة مرور ضعيفة', 'يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل');
+        return;
+      }
+      
       auth.createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
           return userCredential.user.updateProfile({ displayName: username });
         })
-        .then(() => window.location.href = 'store.html')
-        .catch(err => alert(err.message));
+        .then(() => {
+          showNotification('success', 'تم إنشاء الحساب بنجاح', 'جاري تحويلك إلى المتجر...', 1500);
+          setTimeout(() => window.location.href = 'store.html', 2000);
+        })
+        .catch(err => {
+          let message = 'حدث خطأ أثناء إنشاء الحساب';
+          if (err.code === 'auth/email-already-in-use') {
+            message = 'البريد الإلكتروني مستخدم بالفعل';
+          } else if (err.code === 'auth/weak-password') {
+            message = 'كلمة المرور ضعيفة جدًا';
+          } else if (err.code === 'auth/invalid-email') {
+            message = 'بريد إلكتروني غير صالح';
+          }
+          showNotification('error', 'خطأ في إنشاء الحساب', message);
+        });
     });
 
+    // تسجيل الدخول بحساب Google
     document.getElementById('googleSignInBtn').addEventListener('click', () => {
       auth.signInWithPopup(provider)
-        .then(() => window.location.href = 'store.html')
-        .catch(err => alert(err.message));
+        .then(() => {
+          showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى المتجر...', 1500);
+          setTimeout(() => window.location.href = 'store.html', 2000);
+        })
+        .catch(err => {
+          let message = 'حدث خطأ أثناء تسجيل الدخول بحساب Google';
+          if (err.code === 'auth/popup-closed-by-user') {
+            message = 'تم إغلاق نافذة تسجيل الدخول';
+          } else if (err.code === 'auth/cancelled-popup-request') {
+            message = 'تم إلغاء عملية تسجيل الدخول';
+          }
+          showNotification('error', 'خطأ في تسجيل الدخول', message);
+        });
     });
 
-    function continueAsGuest() { window.location.href = 'store.html'; }
-  </script></body>
+    // الدخول كضيف
+    function continueAsGuest() { 
+      showNotification('info', 'الدخول كضيف', 'جاري تحويلك إلى المتجر...', 1500);
+      setTimeout(() => window.location.href = 'store.html', 2000);
+    }
+  </script>
+</body>
 </html>
