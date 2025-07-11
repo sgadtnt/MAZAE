@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول - متجر مزار</title>
+    
+    <!-- سياسة أمان محتوى لحل مشاكل CORS -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://*.cloudflare.com; font-src 'self' https://*.cloudflare.com;">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    
+    <!-- استخدام الإصدار الأحدث والأكثر استقراراً من Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -562,9 +570,8 @@
         </div>
         
         <div class="content">
-            <!-- تم تغيير أيقونة الرجوع إلى أيقونة المنزل -->
-            <button class="back-btn" onclick="location.href='welcome.html'">
-                <i class="fas fa-home"></i>
+            <button class="back-btn" onclick="window.history.back()">
+                <i class="fas fa-arrow-right"></i>
             </button>
             
             <div class="form-group">
@@ -588,7 +595,6 @@
                 تسجيل الدخول
             </button>
             
-            <!-- زر الضيف يدخل مباشرة إلى المتجر -->
             <button class="guest-btn" id="guestBtn">
                 الدخول كضيف
             </button>
@@ -631,25 +637,39 @@
             </div>
             
             <div class="form-group">
+                <label class="form-label" for="reg-username">اسم المستخدم</label>
+                <input type="text" id="reg-username" class="form-input" placeholder="اختر اسمًا فريدًا لك">
+            </div>
+            
+            <div class="form-group">
                 <label class="form-label" for="reg-email">البريد الإلكتروني</label>
                 <input type="email" id="reg-email" class="form-input" placeholder="ادخل بريدك الإلكتروني">
             </div>
             
             <div class="form-group">
                 <label class="form-label" for="reg-password">كلمة المرور</label>
-                <input type="password" id="reg-password" class="form-input" placeholder="اختر كلمة مرور قوية">
+                <div class="input-container">
+                    <input type="password" id="reg-password" class="form-input" placeholder="اختر كلمة مرور قوية">
+                    <button class="password-toggle" id="toggleRegPassword">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <div class="form-group">
                 <label class="form-label" for="confirm-password">تأكيد كلمة المرور</label>
-                <input type="password" id="confirm-password" class="form-input" placeholder="أعد إدخال كلمة المرور">
+                <div class="input-container">
+                    <input type="password" id="confirm-password" class="form-input" placeholder="أعد إدخال كلمة المرور">
+                    <button class="password-toggle" id="toggleConfirmPassword">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
             </div>
             
             <button class="register-btn" id="registerBtn">
                 تسجيل الحساب
             </button>
             
-            <!-- زر إعادة إرسال الرمز -->
             <div class="resend-container" id="resendContainer" style="display: none;">
                 <span class="resend-text">لم يصلك الرمز؟</span>
                 <button class="resend-btn" id="resendBtn" disabled>إعادة الإرسال (60)</button>
@@ -673,242 +693,327 @@
     </div>
     
     <script>
-        // تهيئة Firebase - استبدل هذه القيم بتفاصيل مشروعك
-        const firebaseConfig = {
-            apiKey: "AIzaSyDf5l2pJ7hZ2m1XqXy7v8w9g0z1aBcDeFg",
-            authDomain: "mazar-store-12345.firebaseapp.com",
-            projectId: "mazar-store-12345",
-            storageBucket: "mazar-store-12345.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef1234567890abcdef"
-        };
+        // ===== بداية الإصلاحات =====
         
-        // تهيئة Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        
-        // عناصر DOM
-        const registerModal = document.getElementById('registerModal');
-        const showRegister = document.getElementById('showRegister');
-        const closeModal = document.getElementById('closeModal');
-        const cancelRegister = document.getElementById('cancelRegister');
-        const togglePassword = document.getElementById('togglePassword');
-        const passwordInput = document.getElementById('password');
-        const loginBtn = document.getElementById('loginBtn');
-        const googleLogin = document.getElementById('googleLogin');
-        const registerBtn = document.getElementById('registerBtn');
-        const welcomePopup = document.getElementById('welcomePopup');
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        const goToStore = document.getElementById('goToStore');
-        const guestBtn = document.getElementById('guestBtn');
-        const resendBtn = document.getElementById('resendBtn');
-        const resendContainer = document.getElementById('resendContainer');
-        
-        // التحكم في إظهار/إخفاء كلمة المرور
-        togglePassword.addEventListener('click', function() {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+        // 1. كود لرصد الأخطاء
+        window.addEventListener('error', function(e) {
+            console.error('حدث خطأ:', e.message, 'في ملف:', e.filename, 'سطر:', e.lineno);
         });
         
-        // إظهار نافذة إنشاء حساب
-        showRegister.addEventListener('click', function() {
-            registerModal.style.display = 'flex';
-        });
+        // 2. التأكد من تحميل Firebase
+        function checkFirebase() {
+            if (typeof firebase === 'undefined') {
+                console.error('خطأ: لم يتم تحميل مكتبات Firebase!');
+                return false;
+            }
+            return true;
+        }
         
-        // إغلاق نافذة إنشاء حساب
-        closeModal.addEventListener('click', function() {
-            registerModal.style.display = 'none';
-        });
+        // 3. تهيئة Firebase مع التحقق من الأخطاء
+        function initializeFirebase() {
+            if (!checkFirebase()) return;
+            
+            try {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+                    authDomain: "zio3-8ffdd.firebaseapp.com",
+                    databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+                    projectId: "zio3-8ffdd",
+                    storageBucket: "zio3-8ffdd.firebasestorage.app",
+                    messagingSenderId: "560939348415",
+                    appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+                    measurementId: "G-CVN2B2D0RD"
+                };
+                
+                firebase.initializeApp(firebaseConfig);
+                console.log("تم تهيئة Firebase بنجاح!");
+                return firebase;
+            } catch (error) {
+                console.error("خطأ في تهيئة Firebase:", error);
+                return null;
+            }
+        }
         
-        cancelRegister.addEventListener('click', function() {
-            registerModal.style.display = 'none';
-        });
-        
-        // إغلاق النافذة عند النقر خارجها
-        window.addEventListener('click', function(event) {
-            if (event.target === registerModal) {
+        // 4. تهيئة التطبيق بعد تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // تهيئة Firebase
+            const firebaseApp = initializeFirebase();
+            if (!firebaseApp) {
+                alert('حدث خطأ في تهيئة Firebase. الرجاء التحقق من اتصال الإنترنت.');
+                return;
+            }
+            
+            // تهيئة كائنات Firebase
+            const auth = firebase.auth();
+            const database = firebase.database();
+            
+            // عناصر DOM
+            const registerModal = document.getElementById('registerModal');
+            const showRegister = document.getElementById('showRegister');
+            const closeModal = document.getElementById('closeModal');
+            const cancelRegister = document.getElementById('cancelRegister');
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('loginBtn');
+            const googleLogin = document.getElementById('googleLogin');
+            const registerBtn = document.getElementById('registerBtn');
+            const welcomePopup = document.getElementById('welcomePopup');
+            const welcomeMessage = document.getElementById('welcomeMessage');
+            const goToStore = document.getElementById('goToStore');
+            const guestBtn = document.getElementById('guestBtn');
+            const resendBtn = document.getElementById('resendBtn');
+            const resendContainer = document.getElementById('resendContainer');
+            
+            // إظهار/إخفاء كلمة المرور لتسجيل الدخول
+            togglePassword.addEventListener('click', function() {
+                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordInput.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+            
+            // إظهار/إخفاء كلمة المرور لإنشاء الحساب
+            document.getElementById('toggleRegPassword').addEventListener('click', function() {
+                const input = document.getElementById('reg-password');
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+            
+            // إظهار/إخفاء تأكيد كلمة المرور لإنشاء الحساب
+            document.getElementById('toggleConfirmPassword').addEventListener('click', function() {
+                const input = document.getElementById('confirm-password');
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+            
+            // إظهار نافذة إنشاء حساب
+            showRegister.addEventListener('click', function() {
+                registerModal.style.display = 'flex';
+            });
+            
+            // إغلاق نافذة إنشاء حساب
+            closeModal.addEventListener('click', function() {
                 registerModal.style.display = 'none';
-            }
-            if (event.target === welcomePopup) {
+            });
+            
+            cancelRegister.addEventListener('click', function() {
+                registerModal.style.display = 'none';
+            });
+            
+            // إغلاق النافذة عند النقر خارجها
+            window.addEventListener('click', function(event) {
+                if (event.target === registerModal) {
+                    registerModal.style.display = 'none';
+                }
+                if (event.target === welcomePopup) {
+                    welcomePopup.style.display = 'none';
+                }
+            });
+            
+            // زر الضيف يدخل مباشرة إلى المتجر
+            guestBtn.addEventListener('click', function() {
+                window.location.href = 'store.html';
+            });
+            
+            // زر المتابعة إلى المتجر في رسالة الترحيب
+            goToStore.addEventListener('click', function() {
                 welcomePopup.style.display = 'none';
-            }
-        });
-        
-        // زر الضيف يدخل مباشرة إلى المتجر
-        guestBtn.addEventListener('click', function() {
-            window.location.href = 'store.html';
-        });
-        
-        // زر المتابعة إلى المتجر في رسالة الترحيب
-        goToStore.addEventListener('click', function() {
-            welcomePopup.style.display = 'none';
-            window.location.href = 'store.html';
-        });
-        
-        // تسجيل الدخول بالبريد وكلمة المرور
-        loginBtn.addEventListener('click', function() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
+                window.location.href = 'store.html';
+            });
             
-            if (!email || !password) {
-                alert('الرجاء ملء جميع الحقول المطلوبة');
-                return;
-            }
+            // تسجيل الدخول بالبريد وكلمة المرور
+            loginBtn.addEventListener('click', function() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    alert('الرجاء ملء جميع الحقول المطلوبة');
+                    return;
+                }
+                
+                auth.signInWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        const user = userCredential.user;
+                        
+                        // الحصول على اسم المستخدم من قاعدة البيانات
+                        database.ref('users/' + user.uid).once('value')
+                            .then((snapshot) => {
+                                const userData = snapshot.val();
+                                const username = userData ? userData.username : email.split('@')[0];
+                                
+                                // عرض رسالة الترحيب
+                                welcomeMessage.textContent = `مرحبا بك يا ${username}`;
+                                welcomePopup.style.display = 'flex';
+                            })
+                            .catch(() => {
+                                // في حالة وجود خطأ، استخدام جزء من البريد
+                                const username = email.split('@')[0];
+                                welcomeMessage.textContent = `مرحبا بك يا ${username}`;
+                                welcomePopup.style.display = 'flex';
+                            });
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
+                        
+                        if (errorCode === 'auth/user-not-found') {
+                            errorMessage = 'المستخدم غير موجود';
+                        } else if (errorCode === 'auth/wrong-password') {
+                            errorMessage = 'كلمة المرور غير صحيحة';
+                        } else if (errorCode === 'auth/invalid-email') {
+                            errorMessage = 'بريد إلكتروني غير صالح';
+                        }
+                        
+                        alert(errorMessage);
+                    });
+            });
             
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    const user = userCredential.user;
+            // تسجيل الدخول بحساب Google
+            googleLogin.addEventListener('click', function() {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        // تم تسجيل الدخول بنجاح
+                        const user = result.user;
+                        const username = user.displayName || user.email.split('@')[0];
+                        
+                        // عرض رسالة الترحيب
+                        welcomeMessage.textContent = `مرحبا بك يا ${username}`;
+                        welcomePopup.style.display = 'flex';
+                        
+                        // حفظ معلومات المستخدم في قاعدة البيانات
+                        database.ref('users/' + user.uid).set({
+                            username: username,
+                            email: user.email
+                        });
+                    })
+                    .catch((error) => {
+                        console.error('خطأ في تسجيل الدخول بحساب Google:', error);
+                        alert('حدث خطأ أثناء تسجيل الدخول بحساب Google. الرجاء المحاولة مرة أخرى.');
+                    });
+            });
+            
+            // إنشاء حساب جديد
+            registerBtn.addEventListener('click', function() {
+                const username = document.getElementById('reg-username').value;
+                const email = document.getElementById('reg-email').value;
+                const password = document.getElementById('reg-password').value;
+                const confirmPassword = document.getElementById('confirm-password').value;
+                
+                if (!username || !email || !password || !confirmPassword) {
+                    alert('الرجاء ملء جميع الحقول المطلوبة');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    alert('كلمتا المرور غير متطابقتين');
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    alert('كلمة المرور يجب أن تكون على الأقل 6 أحرف');
+                    return;
+                }
+                
+                if (username.length < 3) {
+                    alert('اسم المستخدم يجب أن يكون على الأقل 3 أحرف');
+                    return;
+                }
+                
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        // تم إنشاء الحساب بنجاح
+                        const user = userCredential.user;
+                        
+                        // حفظ معلومات المستخدم في قاعدة البيانات
+                        database.ref('users/' + user.uid).set({
+                            username: username,
+                            email: user.email
+                        });
+                        
+                        // إرسال رمز التحقق
+                        user.sendEmailVerification()
+                            .then(() => {
+                                alert('تم إرسال رمز التحقق إلى بريدك الإلكتروني. الرجاء التحقق من بريدك.');
+                                
+                                // إظهار زر إعادة الإرسال
+                                resendContainer.style.display = 'flex';
+                                
+                                // بدء عداد إعادة الإرسال
+                                startResendTimer();
+                            })
+                            .catch((error) => {
+                                console.error('خطأ في إرسال رمز التحقق:', error);
+                                alert('حدث خطأ أثناء إرسال رمز التحقق. الرجاء المحاولة مرة أخرى.');
+                            });
+                    })
+                    .catch((error) => {
+                        const errorCode = error.code;
+                        let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+                        
+                        if (errorCode === 'auth/email-already-in-use') {
+                            errorMessage = 'هذا البريد الإلكتروني مستخدم بالفعل';
+                        } else if (errorCode === 'auth/invalid-email') {
+                            errorMessage = 'بريد إلكتروني غير صالح';
+                        } else if (errorCode === 'auth/weak-password') {
+                            errorMessage = 'كلمة المرور ضعيفة جدًا';
+                        }
+                        
+                        alert(errorMessage);
+                    });
+            });
+            
+            // وظيفة بدء عداد إعادة الإرسال
+            function startResendTimer() {
+                resendBtn.disabled = true;
+                let seconds = 60;
+                resendBtn.textContent = `إعادة الإرسال (${seconds})`;
+                
+                const timer = setInterval(() => {
+                    seconds--;
+                    resendBtn.textContent = `إعادة الإرسال (${seconds})`;
                     
-                    // الحصول على اسم المستخدم من البريد الإلكتروني
-                    const username = email.split('@')[0];
-                    
-                    // عرض رسالة الترحيب
-                    welcomeMessage.textContent = `مرحبا بك يا ${username}`;
-                    welcomePopup.style.display = 'flex';
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
-                    
-                    if (errorCode === 'auth/user-not-found') {
-                        errorMessage = 'المستخدم غير موجود';
-                    } else if (errorCode === 'auth/wrong-password') {
-                        errorMessage = 'كلمة المرور غير صحيحة';
-                    } else if (errorCode === 'auth/invalid-email') {
-                        errorMessage = 'بريد إلكتروني غير صالح';
+                    if (seconds <= 0) {
+                        clearInterval(timer);
+                        resendBtn.disabled = false;
+                        resendBtn.textContent = 'إعادة الإرسال';
                     }
-                    
-                    alert(errorMessage);
-                });
-        });
-        
-        // تسجيل الدخول بحساب Google
-        googleLogin.addEventListener('click', function() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    // تم تسجيل الدخول بنجاح
-                    const user = result.user;
-                    const username = user.displayName || user.email.split('@')[0];
-                    
-                    // عرض رسالة الترحيب
-                    welcomeMessage.textContent = `مرحبا بك يا ${username}`;
-                    welcomePopup.style.display = 'flex';
-                })
-                .catch((error) => {
-                    console.error('خطأ في تسجيل الدخول بحساب Google:', error);
-                    alert('حدث خطأ أثناء تسجيل الدخول بحساب Google. الرجاء المحاولة مرة أخرى.');
-                });
-        });
-        
-        // إنشاء حساب جديد
-        registerBtn.addEventListener('click', function() {
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const confirmPassword = document.getElementById('confirm-password').value;
-            
-            if (!email || !password || !confirmPassword) {
-                alert('الرجاء ملء جميع الحقول المطلوبة');
-                return;
+                }, 1000);
             }
             
-            if (password !== confirmPassword) {
-                alert('كلمتا المرور غير متطابقتين');
-                return;
-            }
-            
-            if (password.length < 6) {
-                alert('كلمة المرور يجب أن تكون على الأقل 6 أحرف');
-                return;
-            }
-            
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    // تم إنشاء الحساب بنجاح
-                    const user = userCredential.user;
-                    
-                    // إرسال رمز التحقق
+            // إعادة إرسال رمز التحقق
+            resendBtn.addEventListener('click', function() {
+                const user = auth.currentUser;
+                
+                if (user) {
                     user.sendEmailVerification()
                         .then(() => {
-                            alert('تم إرسال رمز التحقق إلى بريدك الإلكتروني. الرجاء التحقق من بريدك.');
+                            alert('تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني.');
                             
-                            // إظهار زر إعادة الإرسال
-                            resendContainer.style.display = 'flex';
-                            
-                            // بدء عداد إعادة الإرسال
+                            // إعادة تعطيل الزر وبدء العداد من جديد
+                            resendBtn.disabled = true;
                             startResendTimer();
                         })
                         .catch((error) => {
-                            console.error('خطأ في إرسال رمز التحقق:', error);
-                            alert('حدث خطأ أثناء إرسال رمز التحقق. الرجاء المحاولة مرة أخرى.');
+                            console.error('خطأ في إعادة إرسال رمز التحقق:', error);
+                            alert('حدث خطأ أثناء إعادة إرسال رمز التحقق. الرجاء المحاولة مرة أخرى.');
                         });
-                })
-                .catch((error) => {
-                    const errorCode = error.code;
-                    let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
-                    
-                    if (errorCode === 'auth/email-already-in-use') {
-                        errorMessage = 'هذا البريد الإلكتروني مستخدم بالفعل';
-                    } else if (errorCode === 'auth/invalid-email') {
-                        errorMessage = 'بريد إلكتروني غير صالح';
-                    } else if (errorCode === 'auth/weak-password') {
-                        errorMessage = 'كلمة المرور ضعيفة جدًا';
-                    }
-                    
-                    alert(errorMessage);
-                });
-        });
-        
-        // وظيفة بدء عداد إعادة الإرسال
-        function startResendTimer() {
-            resendBtn.disabled = true;
-            let seconds = 60;
-            resendBtn.textContent = `إعادة الإرسال (${seconds})`;
-            
-            const timer = setInterval(() => {
-                seconds--;
-                resendBtn.textContent = `إعادة الإرسال (${seconds})`;
-                
-                if (seconds <= 0) {
-                    clearInterval(timer);
-                    resendBtn.disabled = false;
-                    resendBtn.textContent = 'إعادة الإرسال';
                 }
-            }, 1000);
-        }
-        
-        // إعادة إرسال رمز التحقق
-        resendBtn.addEventListener('click', function() {
-            const user = auth.currentUser;
+            });
             
-            if (user) {
-                user.sendEmailVerification()
-                    .then(() => {
-                        alert('تم إعادة إرسال رمز التحقق إلى بريدك الإلكتروني.');
-                        
-                        // إعادة تعطيل الزر وبدء العداد من جديد
-                        resendBtn.disabled = true;
-                        startResendTimer();
-                    })
-                    .catch((error) => {
-                        console.error('خطأ في إعادة إرسال رمز التحقق:', error);
-                        alert('حدث خطأ أثناء إعادة إرسال رمز التحقق. الرجاء المحاولة مرة أخرى.');
-                    });
-            }
-        });
-        
-        // تتبع حالة تسجيل الدخول
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                // المستخدم مسجل الدخول
-                console.log('المستخدم مسجل الدخول:', user);
-            } else {
-                // المستخدم غير مسجل الدخول
-                console.log('المستخدم غير مسجل الدخول');
-            }
+            // تتبع حالة تسجيل الدخول
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // المستخدم مسجل الدخول
+                    console.log('المستخدم مسجل الدخول:', user);
+                } else {
+                    // المستخدم غير مسجل الدخول
+                    console.log('المستخدم غير مسجل الدخول');
+                }
+            });
         });
     </script>
 </body>
-  </html>
+                        </html>
