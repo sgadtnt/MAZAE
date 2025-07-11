@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>تسجيل الدخول / إنشاء حساب</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -25,9 +26,20 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
     
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
     body {
       font-family: 'Tajawal', sans-serif;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4e7eb 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
     }
     
     .notification {
@@ -35,7 +47,7 @@
       top: 20px;
       right: 20px;
       max-width: 350px;
-      width: 100%;
+      width: calc(100% - 40px);
       z-index: 1000;
       transition: all 0.3s ease;
       transform: translateX(calc(100% + 20px));
@@ -91,6 +103,9 @@
       overflow: hidden;
       position: relative;
       background: white;
+      width: 100%;
+      max-width: 420px;
+      padding: 24px;
     }
     
     .auth-card::before {
@@ -105,6 +120,7 @@
     
     .toggle-password {
       transition: all 0.3s ease;
+      cursor: pointer;
     }
     
     .toggle-password:hover {
@@ -121,9 +137,44 @@
       transform: translateY(-2px);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
+    
+    .loader {
+      border: 2px solid #f3f3f3;
+      border-top: 2px solid #3B82F6;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 480px) {
+      .auth-card {
+        padding: 20px 16px;
+        border-radius: 12px;
+      }
+      
+      .auth-card::before {
+        height: 4px;
+      }
+      
+      .btn-primary {
+        font-size: 16px;
+        padding: 12px;
+      }
+      
+      .form-input {
+        padding: 12px 14px;
+      }
+    }
   </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+<body>
   <div class="notification" id="notification">
     <div class="flex items-start p-4 rounded-lg shadow-lg text-white">
       <div class="mr-3 mt-1">
@@ -142,9 +193,9 @@
     </div>
   </div>
 
-  <div id="authModal" class="auth-card p-6 w-full max-w-md relative">
-    <button onclick="window.history.back()" class="absolute top-2 left-2 text-sm text-gray-500 hover:underline flex items-center">
-      <i class="fas fa-arrow-left mr-1"></i> رجوع
+  <div id="authModal" class="auth-card">
+    <button onclick="window.history.back()" class="absolute top-3 left-3 text-gray-500 hover:text-gray-700">
+      <i class="fas fa-arrow-left"></i>
     </button>
 
     <div class="flex justify-center mb-6 space-x-4 space-x-reverse">
@@ -155,12 +206,12 @@
     <form id="loginForm" class="space-y-4">
       <div>
         <label class="block mb-2 font-medium text-gray-700">البريد الإلكتروني</label>
-        <input type="email" id="loginEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="أدخل بريدك الإلكتروني">
+        <input type="email" id="loginEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="أدخل بريدك الإلكتروني">
       </div>
       <div>
         <label class="block mb-2 font-medium text-gray-700">كلمة المرور</label>
         <div class="relative">
-          <input type="password" id="loginPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12" placeholder="••••••••">
+          <input type="password" id="loginPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12 form-input" placeholder="••••••••">
           <button type="button" id="toggleLoginPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
             <i class="fas fa-eye"></i>
           </button>
@@ -169,8 +220,9 @@
       <div class="text-left">
         <button type="button" id="showReset" class="text-sm text-primary hover:underline">نسيت كلمة المرور؟</button>
       </div>
-      <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-md hover:shadow-lg">
-        تسجيل الدخول
+      <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-md hover:shadow-lg btn-primary flex items-center justify-center">
+        <span id="loginBtnText">تسجيل الدخول</span>
+        <div class="loader ml-2" id="loginLoader"></div>
       </button>
     </form>
 
@@ -185,17 +237,14 @@
       دخول كضيف
     </button>
 
-    <footer class="mt-8 text-center text-xs text-gray-500 border-t pt-4">
-      للتواصل عبر واتساب: <span class="font-medium">+96407823053419</span>
-    </footer>
-
     <form id="resetForm" class="space-y-4 hidden">
       <div>
         <label class="block mb-2 font-medium text-gray-700">أدخل بريدك لإعادة تعيين كلمة المرور</label>
-        <input type="email" id="resetEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="بريدك الإلكتروني">
+        <input type="email" id="resetEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="بريدك الإلكتروني">
       </div>
-      <button type="submit" class="w-full bg-info text-white py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg">
-        إرسال رابط إعادة التعيين
+      <button type="submit" class="w-full bg-info text-white py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg btn-primary flex items-center justify-center">
+        <span id="resetBtnText">إرسال رابط إعادة التعيين</span>
+        <div class="loader ml-2" id="resetLoader"></div>
       </button>
       <button type="button" id="backToLoginFromReset" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">
         عودة لتسجيل الدخول
@@ -205,16 +254,16 @@
     <form id="signupForm" class="space-y-4 hidden">
       <div>
         <label class="block mb-2 font-medium text-gray-700">اسم المستخدم</label>
-        <input type="text" id="signupUsername" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="مثلاً: سجاد">
+        <input type="text" id="signupUsername" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="مثلاً: سجاد">
       </div>
       <div>
         <label class="block mb-2 font-medium text-gray-700">البريد الإلكتروني</label>
-        <input type="email" id="signupEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="أدخل بريدك">
+        <input type="email" id="signupEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="أدخل بريدك">
       </div>
       <div>
         <label class="block mb-2 font-medium text-gray-700">كلمة المرور</label>
         <div class="relative">
-          <input type="password" id="signupPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12" placeholder="••••••••">
+          <input type="password" id="signupPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12 form-input" placeholder="••••••••">
           <button type="button" id="toggleSignupPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
             <i class="fas fa-eye"></i>
           </button>
@@ -223,14 +272,15 @@
       <div>
         <label class="block mb-2 font-medium text-gray-700">تأكيد كلمة المرور</label>
         <div class="relative">
-          <input type="password" id="confirmPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12" placeholder="••••••••">
+          <input type="password" id="confirmPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12 form-input" placeholder="••••••••">
           <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
             <i class="fas fa-eye"></i>
           </button>
         </div>
       </div>
-      <button type="submit" class="w-full bg-success text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg">
-        إنشاء حساب
+      <button type="submit" class="w-full bg-success text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg btn-primary flex items-center justify-center">
+        <span id="signupBtnText">إنشاء حساب</span>
+        <div class="loader ml-2" id="signupLoader"></div>
       </button>
       <button type="button" id="backToLoginFromSignup" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">
         عودة لتسجيل الدخول
@@ -363,6 +413,12 @@
         return;
       }
       
+      // إظهار مؤشر التحميل
+      document.getElementById('loginLoader').style.display = 'block';
+      document.getElementById('loginBtnText').textContent = 'جاري المعالجة...';
+      const loginBtn = document.querySelector('#loginForm .btn-primary');
+      loginBtn.disabled = true;
+      
       auth.signInWithEmailAndPassword(email, pass)
         .then(() => {
           showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى المتجر...', 1500);
@@ -378,10 +434,15 @@
             message = 'تم تعطيل الحساب مؤقتًا بسبب محاولات متعددة خاطئة';
           }
           showNotification('error', 'خطأ في تسجيل الدخول', message);
+        })
+        .finally(() => {
+          document.getElementById('loginLoader').style.display = 'none';
+          document.getElementById('loginBtnText').textContent = 'تسجيل الدخول';
+          loginBtn.disabled = false;
         });
     });
 
-    // إعادة تعيين كلمة المرور
+    // إعادة تعيين كلمة المرور - محسّن للأداء
     resetForm.addEventListener('submit', e => {
       e.preventDefault();
       const email = document.getElementById('resetEmail').value;
@@ -391,6 +452,13 @@
         return;
       }
       
+      // إظهار مؤشر التحميل
+      document.getElementById('resetLoader').style.display = 'block';
+      document.getElementById('resetBtnText').textContent = 'جاري الإرسال...';
+      const resetBtn = document.querySelector('#resetForm .btn-primary');
+      resetBtn.disabled = true;
+      
+      // إرسال الطلب بشكل متزامن
       auth.sendPasswordResetEmail(email)
         .then(() => {
           showNotification('success', 'تم الإرسال بنجاح', 'أرسلنا رابط إعادة التعيين إلى بريدك الإلكتروني');
@@ -405,8 +473,15 @@
             message = 'لا يوجد حساب مرتبط بهذا البريد الإلكتروني';
           } else if (err.code === 'auth/invalid-email') {
             message = 'بريد إلكتروني غير صالح';
+          } else if (err.code === 'auth/network-request-failed') {
+            message = 'فشل في الاتصال بالشبكة، يرجى المحاولة لاحقاً';
           }
           showNotification('error', 'خطأ في الإرسال', message);
+        })
+        .finally(() => {
+          document.getElementById('resetLoader').style.display = 'none';
+          document.getElementById('resetBtnText').textContent = 'إرسال رابط إعادة التعيين';
+          resetBtn.disabled = false;
         });
     });
 
@@ -433,6 +508,12 @@
         return;
       }
       
+      // إظهار مؤشر التحميل
+      document.getElementById('signupLoader').style.display = 'block';
+      document.getElementById('signupBtnText').textContent = 'جاري الإنشاء...';
+      const signupBtn = document.querySelector('#signupForm .btn-primary');
+      signupBtn.disabled = true;
+      
       auth.createUserWithEmailAndPassword(email, pass)
         .then((userCredential) => {
           return userCredential.user.updateProfile({ displayName: username });
@@ -451,6 +532,11 @@
             message = 'بريد إلكتروني غير صالح';
           }
           showNotification('error', 'خطأ في إنشاء الحساب', message);
+        })
+        .finally(() => {
+          document.getElementById('signupLoader').style.display = 'none';
+          document.getElementById('signupBtnText').textContent = 'إنشاء حساب';
+          signupBtn.disabled = false;
         });
     });
 
@@ -477,6 +563,27 @@
       showNotification('info', 'الدخول كضيف', 'جاري تحويلك إلى المتجر...', 1500);
       setTimeout(() => window.location.href = 'store.html', 2000);
     }
+    
+    // تحسين تجربة المستخدم على الهواتف
+    window.addEventListener('resize', function() {
+      if (window.innerWidth < 480) {
+        document.querySelectorAll('.form-input').forEach(input => {
+          input.style.padding = '12px 14px';
+        });
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+          btn.style.padding = '12px';
+          btn.style.fontSize = '16px';
+        });
+      } else {
+        document.querySelectorAll('.form-input').forEach(input => {
+          input.style.padding = '';
+        });
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+          btn.style.padding = '';
+          btn.style.fontSize = '';
+        });
+      }
+    });
   </script>
 </body>
 </html>
