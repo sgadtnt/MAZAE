@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>لوحة التحكم - الصفحة الرئيسية</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- رأس الصفحة مع زر الرجوع -->
+  <header class="bg-white shadow p-4 flex items-center justify-between">
+    <h1 class="text-xl font-bold text-gray-800">لوحة التحكم</h1>
+    <a href="index.html" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition">رجوع</a>
+  </header>
+
+  <!-- محتوى اللوحة -->
+  <main class="flex-grow container mx-auto p-6">
+
+    <h2 class="text-2xl font-semibold mb-6 text-gray-700">مرحبًا بك في لوحة التحكم</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+
+      <div class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition cursor-pointer">
+        <h3 class="text-lg font-bold mb-2">إدارة المنتجات</h3>
+        <p class="text-gray-600">أضف، عدل، واحذف المنتجات بسهولة.</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition cursor-pointer">
+        <h3 class="text-lg font-bold mb-2">إدارة الطلبات</h3>
+        <p class="text-gray-600">راجع الطلبات وقم بتأكيدها أو حذفها.</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition cursor-pointer">
+        <h3 class="text-lg font-bold mb-2">العروض والتخفيضات</h3>
+        <p class="text-gray-600">أضف أو عدل العروض والتخفيضات الخاصة بك.</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition cursor-pointer">
+        <h3 class="text-lg font-bold mb-2">محتوى الموقع</h3>
+        <p class="text-gray-600">تحكم في الأقسام، النصوص، والصور.</p>
+      </div>
+
+      <div class="bg-white rounded-lg shadow p-5 hover:shadow-lg transition cursor-pointer">
+        <h3 class="text-lg font-bold mb-2">التخفيضات</h3>
+        <p class="text-gray-600">إدارة التخفيضات والتحكم بها.</p>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>
