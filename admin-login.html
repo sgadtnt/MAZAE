@@ -40,6 +40,7 @@
       const input = document.getElementById("adminPassword").value;
       const errorMsg = document.getElementById("errorMsg");
       if (input === correctPassword) {
+        sessionStorage.setItem("isAdminLoggedIn", "true");
         window.location.href = "admin-dashboard.html";
       } else {
         errorMsg.classList.remove("hidden");
