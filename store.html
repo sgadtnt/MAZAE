@@ -444,6 +444,15 @@
             border-radius: 8px; /* Increased border-radius */
         }
 
+        /* Profile picture styling */
+        .profile-picture {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #4f46e5;
+            margin-bottom: 1rem;
+        }
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
@@ -645,6 +654,11 @@
             </div>
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
                 <h3 class="font-bold text-xl text-gray-800 mb-4">معلومات شخصية</h3>
+                <div class="flex flex-col items-center mb-4">
+                    <img id="profile-picture" class="profile-picture" src="https://placehold.co/100x100/E0E7FF/4F46E5?text=User" alt="صورة المستخدم">
+                    <p id="profile-display-name" class="font-semibold text-lg text-gray-800"></p>
+                    <p id="profile-display-email" class="text-gray-600 text-sm"></p>
+                </div>
                 <form id="profile-form" onsubmit="event.preventDefault(); saveUserProfile()">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
@@ -666,6 +680,14 @@
                         </button>
                     </div>
                 </form>
+                <div class="mt-6 border-t pt-4 flex flex-col sm:flex-row justify-between gap-3">
+                    <button id="google-sign-in-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center justify-center w-full sm:w-auto">
+                        <i class="fab fa-google ml-2"></i> تسجيل الدخول باستخدام Google
+                    </button>
+                    <button id="sign-out-btn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg flex items-center justify-center w-full sm:w-auto">
+                        <i class="fas fa-sign-out-alt ml-2"></i> تسجيل الخروج
+                    </button>
+                </div>
             </div>
 
             <div class="bg-white p-6 rounded-lg shadow-md mb-6">
@@ -969,11 +991,11 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
         // Firebase Auth and Firestore imports
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        import { getFirestore, doc, collection, onSnapshot, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 
         // Your web app's Firebase configuration
@@ -994,13 +1016,15 @@
 
 
         const db = getDatabase(app); // Realtime Database
-        const firestoreDb = getFirestore(app); // Firestore Database
+        const firestoreDb = getFirestore(app); // Firestore Database (still used for addresses)
         const auth = getAuth(app); // Firebase Authentication
+        const googleProvider = new GoogleAuthProvider(); // Google Auth Provider
 
         const productsRef = ref(db, "products");
         const categoriesRef = ref(db, "categories");
         const settingsRef = ref(db, "settings");
         const ordersRef = ref(db, "orders"); // Realtime Database for orders
+        const usersProfileRef = ref(db, "users"); // Realtime Database for user profiles
 
         // Global data storage for the store
         window.storeData = {
@@ -1009,7 +1033,7 @@
             settings: {},
             cart: [], // Initialize cart array
             favorites: [], // Initialize favorites array
-            userProfile: null, // Stores user profile data from Firestore
+            userProfile: null, // Stores user profile data from Realtime Database
             userAddresses: [], // Stores user shipping addresses from Firestore
             userOrders: [] // Stores user-specific orders from Realtime DB
         };
@@ -1048,7 +1072,7 @@
                 console.log("Firebase User ID set:", window.currentUserId);
 
                 // Load/listen when a user is authenticated
-                loadUserProfile();
+                loadUserProfile(user); // Pass the user object to loadUserProfile
                 loadUserAddresses();
                 loadUserOrders();
             } else {
@@ -1059,7 +1083,7 @@
                     console.log("Signed in anonymously. User ID set:", window.currentUserId);
 
                     // Load/listen for anonymous user
-                    loadUserProfile();
+                    loadUserProfile(anonymousUserCredential.user); // Pass the user object
                     loadUserAddresses();
                     loadUserOrders();
                 } catch (error) {
@@ -1068,6 +1092,42 @@
                 }
             }
         });
+
+        /**
+         * Initiates Google Sign-in.
+         */
+        window.signInWithGoogle = async function() {
+            try {
+                const result = await signInWithPopup(auth, googleProvider);
+                const user = result.user;
+                console.log("Google Sign-in successful:", user);
+                showNotification("تم تسجيل الدخول بنجاح باستخدام Google!", "success");
+                // onAuthStateChanged will handle loading profile and updating UI
+            } catch (error) {
+                console.error("Error during Google Sign-in:", error);
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                showNotification(`فشل تسجيل الدخول باستخدام Google: ${errorMessage}`, "error");
+            }
+        };
+
+        /**
+         * Signs out the current user.
+         */
+        window.signOutUser = async function() {
+            try {
+                await signOut(auth);
+                console.log("User signed out.");
+                showNotification("تم تسجيل الخروج بنجاح.", "success");
+                // Clear profile data and reset UI
+                window.storeData.userProfile = null;
+                renderProfileDetails(); // Clear profile display
+                // onAuthStateChanged will handle signing in anonymously
+            } catch (error) {
+                console.error("Error signing out:", error);
+                showNotification("فشل تسجيل الخروج.", "error");
+            }
+        };
 
         // --- Utility Functions ---
         /**
@@ -1548,7 +1608,7 @@
                         <button class="favorite-toggle-btn ${isFavorited ? 'active' : ''}" data-product-id="${product.id}">
                             <i class="${favoriteIconClass}"></i>
                         </button>
-                        <div class="product-image" data-product-id="${product.id}"> <!-- Added data-product-id here -->
+                        <div class="product-image" data-product-id="${product.id}">
                             <img src="${product.image || 'https://placehold.co/400x400/E0E7FF/4F46E5?text=Product'}" alt="${product.name || 'Product Image'}" onerror="this.onerror=null; this.src='https://placehold.co/400x400/E0E7FF/4F46E5?text=Image+Not+Found';">
                         </div>
                         <div class="product-info" data-product-id="${product.id}">
@@ -1913,73 +1973,152 @@
         }
 
         // --- Profile Page Functions ---
-        function loadUserProfile() {
-            if (!window.currentUserId) {
-                console.log("Skipping loadUserProfile: No user ID.");
+        /**
+         * Loads user profile from Firebase Realtime Database.
+         * @param {object} currentUser - The Firebase Auth user object.
+         */
+        function loadUserProfile(currentUser) {
+            if (!currentUser || !currentUser.uid) {
+                console.log("Skipping loadUserProfile: No current user or UID.");
+                window.storeData.userProfile = null; // Clear profile if no user
+                renderProfileDetails();
                 return;
             }
-            const userDocRef = doc(firestoreDb, "users", window.currentUserId);
+            
+            const userProfileNodeRef = ref(db, `users/${currentUser.uid}`);
 
-            unsubscribeUserProfile = onSnapshot(userDocRef, (docSnap) => {
-                if (docSnap.exists()) {
-                    window.storeData.userProfile = docSnap.data();
-                    console.log("User profile loaded (real-time):", window.storeData.userProfile);
-                } else {
-                    console.log("No user profile found, creating default.");
+            unsubscribeUserProfile = onValue(userProfileNodeRef, (snapshot) => {
+                let profileData = snapshot.val();
+                if (profileData) {
+                    // Merge Realtime DB data with Auth data (displayName, email, photoURL)
                     window.storeData.userProfile = {
-                        name: "",
-                        email: "",
-                        phone: ""
+                        uid: currentUser.uid,
+                        name: profileData.name || currentUser.displayName || '',
+                        email: profileData.email || currentUser.email || '',
+                        phone: profileData.phone || '',
+                        photoURL: currentUser.photoURL || 'https://placehold.co/100x100/E0E7FF/4F46E5?text=User'
                     };
-                    // Only set if it doesn't exist to avoid infinite loops with onSnapshot
-                    setDoc(userDocRef, window.storeData.userProfile, { merge: true })
-                        .catch(e => console.error("Error creating default user profile:", e));
+                    console.log("User profile loaded (Realtime DB & Auth):", window.storeData.userProfile);
+                } else {
+                    console.log("No user profile found in Realtime DB, creating default based on Auth data.");
+                    // Create a default profile using Auth data if no data exists in Realtime DB
+                    window.storeData.userProfile = {
+                        uid: currentUser.uid,
+                        name: currentUser.displayName || '',
+                        email: currentUser.email || '',
+                        phone: '',
+                        photoURL: currentUser.photoURL || 'https://placehold.co/100x100/E0E7FF/4F46E5?text=User'
+                    };
+                    // Set this initial profile in Realtime DB
+                    set(userProfileNodeRef, { 
+                        name: window.storeData.userProfile.name,
+                        email: window.storeData.userProfile.email,
+                        phone: window.storeData.userProfile.phone
+                    }).catch(e => console.error("Error setting default user profile in Realtime DB:", e));
                 }
                 renderProfileDetails();
             }, (error) => {
-                console.error("Error loading user profile (real-time):", error);
-                if (error.code === 'unavailable') {
-                    console.warn("Firestore: Client is offline. User profile will be loaded from cache if available.");
-                    showNotification("لا يوجد اتصال بالإنترنت. سيتم تحميل معلومات الحساب من الذاكرة المؤقتة.", "warning");
-                } else {
-                    showNotification("خطأ في تحميل معلومات الحساب.", "error");
-                }
+                console.error("Error loading user profile (Realtime DB):", error);
+                showNotification("خطأ في تحميل معلومات الحساب.", "error");
             });
         }
 
         function renderProfileDetails() {
             const profile = window.storeData.userProfile;
+            const profileNameInput = document.getElementById('profile-name');
+            const profileEmailInput = document.getElementById('profile-email');
+            const profilePhoneInput = document.getElementById('profile-phone');
+            const profilePictureElem = document.getElementById('profile-picture');
+            const profileDisplayNameElem = document.getElementById('profile-display-name');
+            const profileDisplayEmailElem = document.getElementById('profile-display-email');
+            const googleSignInBtn = document.getElementById('google-sign-in-btn');
+            const signOutBtn = document.getElementById('sign-out-btn');
+            const profileForm = document.getElementById('profile-form');
+
+
             if (profile) {
-                document.getElementById('profile-name').value = profile.name || '';
-                document.getElementById('profile-email').value = profile.email || '';
-                document.getElementById('profile-phone').value = profile.phone || '';
+                profileNameInput.value = profile.name || '';
+                profileEmailInput.value = profile.email || '';
+                profilePhoneInput.value = profile.phone || '';
+
+                profilePictureElem.src = profile.photoURL || 'https://placehold.co/100x100/E0E7FF/4F46E5?text=User';
+                profilePictureElem.onerror = function() { this.onerror=null; this.src='https://placehold.co/100x100/E0E7FF/4F46E5?text=User'; };
+
+                profileDisplayNameElem.textContent = profile.name || 'مستخدم غير معروف';
+                profileDisplayEmailElem.textContent = profile.email || '';
+
+                // Hide Google Sign-in if already logged in with Google
+                if (auth.currentUser && auth.currentUser.providerData.some(p => p.providerId === 'google.com')) {
+                    googleSignInBtn.classList.add('hidden');
+                    // Make email and name fields read-only if from Google
+                    profileEmailInput.readOnly = true;
+                    profileNameInput.readOnly = true;
+                } else {
+                    googleSignInBtn.classList.remove('hidden');
+                    profileEmailInput.readOnly = false;
+                    profileNameInput.readOnly = false;
+                }
+                signOutBtn.classList.remove('hidden');
+                profileForm.classList.remove('hidden'); // Show form if user is logged in
+            } else {
+                // No user logged in or profile cleared
+                profileNameInput.value = '';
+                profileEmailInput.value = '';
+                profilePhoneInput.value = '';
+                profilePictureElem.src = 'https://placehold.co/100x100/E0E7FF/4F46E5?text=User';
+                profileDisplayNameElem.textContent = 'الرجاء تسجيل الدخول';
+                profileDisplayEmailElem.textContent = '';
+
+                googleSignInBtn.classList.remove('hidden');
+                signOutBtn.classList.add('hidden');
+                profileForm.classList.add('hidden'); // Hide form if no user logged in
             }
         }
 
         window.saveUserProfile = async function() {
             if (!window.currentUserId) {
                 showNotification("يرجى تسجيل الدخول لحفظ ملفك الشخصي.", "warning");
-                console.log("SaveUserProfile: No currentUserId, returning."); // Added log
+                console.log("SaveUserProfile: No currentUserId, returning.");
                 return;
             }
             const name = document.getElementById('profile-name').value.trim();
             const email = document.getElementById('profile-email').value.trim();
             const phone = document.getElementById('profile-phone').value.trim();
 
-            console.log("SaveUserProfile: Attempting to save data for userId:", window.currentUserId); // Added log
-            console.log("Data to save:", { name, email, phone }); // Added log
+            console.log("SaveUserProfile: Attempting to save data for userId:", window.currentUserId);
+            console.log("Data to save:", { name, email, phone });
 
-            const userDocRef = doc(firestoreDb, "users", window.currentUserId);
+            const userProfileNodeRef = ref(db, `users/${window.currentUserId}`);
             try {
-                await setDoc(userDocRef, { name, email, phone }, { merge: true });
-                window.storeData.userProfile = { name, email, phone }; // Update local state
+                // Only update fields that are editable by the user
+                const updateData = {};
+                if (!document.getElementById('profile-name').readOnly) {
+                    updateData.name = name;
+                }
+                if (!document.getElementById('profile-email').readOnly) {
+                    updateData.email = email;
+                }
+                updateData.phone = phone; // Phone is always editable
+
+                await set(userProfileNodeRef, updateData); // Use set to overwrite/create the node
+                
+                // Update local storeData.userProfile with the saved data
+                // This is important because loadUserProfile merges Auth data,
+                // so we only update the fields that were actually saved to RTDB.
+                if (window.storeData.userProfile) {
+                    if (updateData.name !== undefined) window.storeData.userProfile.name = updateData.name;
+                    if (updateData.email !== undefined) window.storeData.userProfile.email = updateData.email;
+                    window.storeData.userProfile.phone = updateData.phone;
+                }
+                
                 showNotification("تم حفظ معلومات الحساب بنجاح!", "success");
-                console.log("SaveUserProfile: Profile saved successfully."); // Added log
+                console.log("SaveUserProfile: Profile saved successfully.");
             } catch (error) {
                 console.error("Error saving user profile:", error);
                 showNotification("خطأ في حفظ معلومات الحساب.", "error");
             }
         };
+
 
         function loadUserAddresses() {
             if (!window.currentUserId) {
@@ -2414,6 +2553,10 @@
 
             // Event listener for sort by select
             document.getElementById('sort-by-select').addEventListener('change', applySortAndRender);
+
+            // Event listeners for new Google Sign-in and Sign Out buttons
+            document.getElementById('google-sign-in-btn').addEventListener('click', window.signInWithGoogle);
+            document.getElementById('sign-out-btn').addEventListener('click', window.signOutUser);
         });
     </script>
 </body>
