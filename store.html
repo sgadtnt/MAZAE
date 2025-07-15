@@ -16,56 +16,170 @@
             min-height: 100vh; /* Ensure body takes full viewport height */
             display: flex;
             flex-direction: column;
-            padding-top: 55px; /* Adjusted to prevent content from being hidden behind the fixed header */
+            padding-top: 60px; /* Adjusted to prevent content from being hidden behind the fixed header */
+            font-size: 1.05rem; /* Increased base font size */
         }
+        body.dark-mode {
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        body.dark-mode .container {
+            background-color: #1a202c;
+        }
+        body.dark-mode .header,
+        body.dark-mode .footer-nav {
+            background-color: #2d3748; /* Darker indigo for dark mode header/footer */
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        body.dark-mode .header h1,
+        body.dark-mode .header-nav-links a,
+        body.dark-mode .cart-icon-container {
+            color: #e2e8f0;
+        }
+        body.dark-mode .product-card,
+        body.dark-mode .bg-white,
+        body.dark-mode .modal-content,
+        body.dark-mode .bg-gray-50,
+        body.dark-mode .bg-gray-100 {
+            background-color: #2d3748; /* Darker background for cards/modals */
+            color: #e2e8f0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        body.dark-mode .product-card:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+        body.dark-mode .product-name,
+        body.dark-mode .modal-content h3,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4 {
+            color: #e2e8f0;
+        }
+        body.dark-mode .product-price,
+        body.dark-mode #modal-product-price,
+        body.dark-mode #cart-total,
+        body.dark-mode #checkout-total,
+        body.dark-mode #modal-order-total {
+            color: #81e6d9; /* Teal for prices in dark mode */
+        }
+        body.dark-mode .product-original-price,
+        body.dark-mode .text-gray-500,
+        body.dark-mode .text-gray-600,
+        body.dark-mode .text-gray-700,
+        body.dark-mode .text-gray-800 {
+            color: #cbd5e0; /* Lighter gray for general text */
+        }
+        body.dark-mode .border-b,
+        body.dark-mode .border-t,
+        body.dark-mode .border-gray-300 {
+            border-color: #4a5568; /* Darker borders */
+        }
+        body.dark-mode .category-button-page {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        body.dark-mode .category-button-page:hover,
+        body.dark-mode .category-button-page.active {
+            background-color: #6366f1; /* Indigo 500 for active/hover */
+            color: white;
+        }
+        body.dark-mode input,
+        body.dark-mode select,
+        body.dark-mode textarea {
+            background-color: #4a5568;
+            border-color: #6366f1;
+            color: #e2e8f0;
+        }
+        body.dark-mode #search-suggestions {
+            background-color: #2d3748;
+            border-color: #4a5568;
+        }
+        body.dark-mode #search-suggestions div:hover {
+            background-color: #4a5568;
+        }
+        body.dark-mode .favorite-toggle-btn {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #a0aec0;
+        }
+        body.dark-mode .favorite-toggle-btn.active {
+            color: #ef4444;
+        }
+        body.dark-mode .favorite-toggle-btn:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+        body.dark-mode .back-to-home-btn {
+            color: #6366f1;
+        }
+        body.dark-mode .back-to-home-btn:hover {
+            color: #818cf8;
+        }
+        body.dark-mode .bg-gray-200 {
+            background-color: #4a5568;
+            color: #e2e8f0;
+        }
+        body.dark-mode .bg-gray-200:hover {
+            background-color: #6366f1;
+        }
+        body.dark-mode .cart-icon-container:hover,
+        body.dark-mode .nav-link-store:hover {
+            background-color: #6366f1;
+        }
+        body.dark-mode .nav-link-store.active {
+            background-color: #6366f1;
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 15px; /* Slightly reduced padding */
-            flex-grow: 1; /* Allow container to grow and push footer down */
-            padding-bottom: 70px; /* Adjusted padding for footer height */
+            padding: 15px;
+            flex-grow: 1;
+            padding-bottom: 70px;
         }
 
         .header {
             background-color: #4f46e5; /* Indigo 600 */
             color: white;
-            padding: 8px 12px; /* Reduced padding */
-            border-radius: 10px; /* Slightly reduced border-radius */
-            display: flex; /* Use flexbox for header */
+            padding: 5px 15px; /* Smaller padding */
+            border-radius: 10px;
+            display: flex;
             align-items: center;
-            justify-content: space-between; /* Pushes first item (h1) to right, last (nav) to left in RTL */
-            box-shadow: 0 3px 8px rgba(0,0,0,0.1); /* Slightly reduced shadow */
-            position: fixed; /* Make it fixed */
+            justify-content: space-between; /* Ensures space between nav and h1 */
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
-            z-index: 999; /* Ensure it's above other content */
-            width: 100%; /* Ensure it spans full width when fixed */
+            z-index: 999;
+            width: 100%;
         }
         .header h1 {
-            flex-grow: 0; /* Prevent it from growing and pushing nav */
-            font-size: 1.75rem; /* Reduced font size */
+            font-size: 1.5rem; /* Smaller font size */
+            flex-grow: 0;
+            display: flex;
+            align-items: center;
+            /* No margin-right or ml-auto here, it will be pushed by nav's ml-auto */
         }
         .header h1 i {
-            font-size: 1.5rem; /* Reduced icon size */
-            margin-left: 10px; /* Adjusted margin */
+            font-size: 1.3rem; /* Smaller icon size */
+            margin-left: 8px;
         }
         .header-nav-links {
             display: flex;
             align-items: center;
+            /* No ml-auto here, it will be the first item and naturally align right in RTL */
         }
         .footer-nav {
             background-color: #4f46e5; /* Indigo 600 */
             color: white;
-            padding: 8px 0; /* Reduced padding */
-            position: fixed; /* Make it fixed */
+            padding: 8px 0;
+            position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            z-index: 999; /* Ensure it's above other content */
-            box-shadow: 0 -3px 8px rgba(0,0,0,0.1); /* Slightly reduced shadow */
+            z-index: 999;
+            box-shadow: 0 -3px 8px rgba(0,0,0,0.1);
             display: flex;
-            flex-direction: column; /* Stack main links and categories vertically */
+            flex-direction: column;
             align-items: center;
         }
         .footer-main-links {
@@ -74,25 +188,25 @@
             width: 100%;
             flex-wrap: wrap;
         }
-        .nav-link-store, .cart-icon-container {
+        .nav-link-store, .cart-icon-container { /* Removed #dark-mode-toggle from here */
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 5px 7px; /* Reduced padding */
-            border-radius: 6px; /* Reduced border-radius */
+            padding: 5px 7px;
+            border-radius: 6px;
             transition: background-color 0.2s ease;
-            color: white; /* Ensure text color is white */
-            text-decoration: none; /* Remove underline */
-            font-size: 0.8rem; /* Reduced font size */
-            min-width: 60px; /* Reduced min-width */
+            color: white;
+            text-decoration: none;
+            font-size: 0.9rem; /* Increased font size */
+            min-width: 65px; /* Slightly increased min-width */
         }
-        .nav-link-store i, .cart-icon-container i {
-            margin-bottom: 4px; /* Reduced space between icon and text */
-            font-size: 1rem; /* Reduced icon size */
-            margin-left: 0; /* Remove right-to-left margin */
+        .nav-link-store i, .cart-icon-container i { /* Removed #dark-mode-toggle i from here */
+            margin-bottom: 4px;
+            font-size: 1.1rem; /* Increased icon size */
+            margin-left: 0;
         }
-        .nav-link-store:hover, .cart-icon-container:hover {
+        .nav-link-store:hover, .cart-icon-container:hover { /* Removed #dark-mode-toggle:hover from here */
             background-color: #4338ca; /* Indigo 700 */
         }
         .nav-link-store.active {
@@ -103,94 +217,103 @@
         }
         .cart-count {
             position: absolute;
-            top: -4px; /* Adjusted position */
-            right: 4px; /* Adjusted position */
+            top: -4px;
+            right: 4px;
             background-color: #ef4444; /* Red 500 */
             color: white;
             border-radius: 50%;
-            padding: 1px 5px; /* Reduced padding */
-            font-size: 0.65rem; /* Reduced font size */
+            padding: 1px 5px;
+            font-size: 0.7rem; /* Increased font size */
             font-weight: bold;
             line-height: 1;
         }
         .product-card {
             background-color: white;
-            border-radius: 8px; /* Reduced border-radius */
-            box-shadow: 0 3px 8px rgba(0,0,0,0.05); /* Reduced shadow */
+            border-radius: 8px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
             overflow: hidden;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
             flex-direction: column;
-            height: 100%; /* Ensure cards in a row have equal height */
-            position: relative; /* For favorite icon positioning */
+            height: 100%;
+            position: relative;
         }
         .product-card:hover {
-            transform: translateY(-3px); /* Reduced transform */
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1); /* Reduced shadow */
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
         }
         .product-image {
             width: 100%;
-            height: 160px; /* Reduced height */
-            object-fit: cover;
+            padding-top: 100%; /* Makes the height equal to the width for a square aspect ratio */
+            position: relative;
+            overflow: hidden; /* Hide overflow if image is larger than container */
             border-bottom: 1px solid #eee;
-            cursor: pointer; /* Make image clickable for modal */
+            cursor: pointer;
+        }
+        .product-image img { /* Style for the actual image inside the square container */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures the image covers the area without distortion */
         }
         .product-info {
-            padding: 10px; /* Reduced padding */
-            flex-grow: 1; /* Allow info section to expand */
+            padding: 12px; /* Increased padding */
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            cursor: pointer; /* Make info area clickable for modal */
+            cursor: pointer;
         }
         .product-name {
             font-weight: 700;
-            font-size: 0.95rem; /* Reduced font size */
+            font-size: 1.05rem; /* Increased font size */
             color: #333;
-            margin-bottom: 6px; /* Reduced margin */
+            margin-bottom: 8px; /* Increased margin */
         }
         .product-price {
-            font-size: 1rem; /* Reduced font size */
+            font-size: 1.1rem; /* Increased font size */
             font-weight: 700;
             color: #4f46e5; /* Indigo 600 */
         }
         .product-original-price {
             text-decoration: line-through;
             color: #999;
-            font-size: 0.75rem; /* Reduced font size */
-            margin-right: 6px; /* Reduced margin */
+            font-size: 0.85rem; /* Increased font size */
+            margin-right: 8px; /* Increased margin */
         }
         .product-description {
-            font-size: 0.85rem; /* Reduced font size */
+            font-size: 0.95rem; /* Increased font size */
             color: #666;
-            margin-top: 4px; /* Reduced margin */
-            line-height: 1.4; /* Slightly tighter line height */
+            margin-top: 6px; /* Increased margin */
+            line-height: 1.5;
             flex-grow: 1;
         }
-        .category-button-page { /* Class for category buttons on the new categories page */
+        .category-button-page {
             background-color: #e0e7ff; /* Indigo 100 */
             color: #4f46e5; /* Indigo 600 */
-            padding: 10px 14px; /* Reduced padding */
-            border-radius: 8px; /* Reduced border-radius */
+            padding: 12px 16px; /* Increased padding */
+            border-radius: 8px;
             font-weight: 600;
             transition: background-color 0.2s ease, color 0.2s ease;
             cursor: pointer;
             white-space: nowrap;
-            font-size: 0.85rem; /* Reduced font size */
+            font-size: 0.95rem; /* Increased font size */
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 90px; /* Reduced height for category cards */
+            height: 100px; /* Increased height for category cards */
         }
         .category-button-page:hover, .category-button-page.active {
             background-color: #4f46e5; /* Indigo 600 */
             color: white;
         }
         .category-button-page i {
-            font-size: 1.6rem; /* Reduced font size */
-            margin-bottom: 8px; /* Reduced margin */
+            font-size: 1.8rem; /* Increased font size */
+            margin-bottom: 10px; /* Increased margin */
         }
 
         .modal-overlay {
@@ -208,13 +331,13 @@
         }
         .modal-content {
             background-color: white;
-            padding: 20px; /* Reduced padding */
-            border-radius: 10px; /* Reduced border-radius */
-            box-shadow: 0 6px 16px rgba(0,0,0,0.2); /* Reduced shadow */
+            padding: 25px; /* Increased padding */
+            border-radius: 12px; /* Increased border-radius */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2); /* Increased shadow */
             width: 90%;
-            max-width: 650px; /* Slightly reduced max-width */
+            max-width: 700px; /* Increased max-width */
             animation: slideIn 0.3s ease-out;
-            max-height: 85vh; /* Reduced max-height */
+            max-height: 90vh; /* Increased max-height */
             overflow-y: auto;
         }
         @keyframes fadeIn {
@@ -222,25 +345,25 @@
             to { opacity: 1; }
         }
         @keyframes slideIn {
-            from { transform: translateY(-20px); opacity: 0; } /* Reduced transform */
+            from { transform: translateY(-30px); opacity: 0; } /* Increased transform */
             to { transform: translateY(0); opacity: 1; }
         }
         .notification {
             position: fixed;
-            top: 15px; /* Adjusted position */
-            right: 15px; /* Adjusted position */
-            padding: 10px 15px; /* Reduced padding */
-            border-radius: 6px; /* Reduced border-radius */
+            top: 20px; /* Increased position */
+            right: 20px; /* Increased position */
+            padding: 12px 18px; /* Increased padding */
+            border-radius: 8px; /* Increased border-radius */
             color: white;
             font-weight: bold;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.15); /* Reduced shadow */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18); /* Increased shadow */
             z-index: 1000;
             animation: slideInNotification 0.3s, fadeOutNotification 0.5s 2.5s forwards;
-            font-size: 0.85rem; /* Reduced font size */
+            font-size: 0.95rem; /* Increased font size */
         }
         @keyframes slideInNotification {
-            from { right: -250px; opacity: 0; } /* Adjusted position */
-            to { right: 15px; opacity: 1; }
+            from { right: -300px; opacity: 0; } /* Adjusted position */
+            to { right: 20px; opacity: 1; }
         }
         @keyframes fadeOutNotification {
             from { opacity: 1; }
@@ -253,16 +376,16 @@
 
         .favorite-toggle-btn {
             position: absolute;
-            top: 8px; /* Adjusted position */
-            left: 8px; /* Adjusted position */
+            top: 10px; /* Increased position */
+            left: 10px; /* Increased position */
             background-color: rgba(255, 255, 255, 0.7);
             border-radius: 50%;
-            width: 28px; /* Reduced size */
-            height: 28px; /* Reduced size */
+            width: 32px; /* Increased size */
+            height: 32px; /* Increased size */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem; /* Reduced font size */
+            font-size: 1.1rem; /* Increased font size */
             color: #ccc;
             transition: color 0.2s ease, background-color 0.2s ease;
             z-index: 10;
@@ -280,7 +403,7 @@
             border: none;
             cursor: pointer;
             padding: 0;
-            margin-left: 8px; /* Reduced margin */
+            margin-left: 10px; /* Increased margin */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -291,15 +414,15 @@
             color: #4338ca; /* Indigo 700 */
         }
         .back-to-home-btn i {
-            font-size: 1.3rem; /* Reduced icon size */
+            font-size: 1.5rem; /* Increased icon size */
         }
 
         /* Search suggestions styling */
         #search-suggestions div {
-            padding: 6px 9px; /* Reduced padding */
+            padding: 8px 12px; /* Increased padding */
             cursor: pointer;
             border-bottom: 1px solid #eee;
-            font-size: 0.85rem; /* Reduced font size */
+            font-size: 0.95rem; /* Increased font size */
         }
         #search-suggestions div:last-child {
             border-bottom: none;
@@ -310,75 +433,84 @@
 
         /* Search and Sort Controls */
         .search-sort-controls {
-            padding: 10px; /* Reduced padding */
-            border-radius: 8px; /* Reduced border-radius */
-            margin-bottom: 15px; /* Reduced margin */
+            padding: 12px; /* Increased padding */
+            border-radius: 10px; /* Increased border-radius */
+            margin-bottom: 20px; /* Increased margin */
         }
         .search-sort-controls input,
         .search-sort-controls select {
-            padding: 7px 10px; /* Reduced padding */
-            font-size: 0.85rem; /* Reduced font size */
-            border-radius: 6px; /* Reduced border-radius */
+            padding: 9px 12px; /* Increased padding */
+            font-size: 0.95rem; /* Increased font size */
+            border-radius: 8px; /* Increased border-radius */
         }
 
 
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            body {
+                font-size: 1rem; /* Adjusted base font size for mobile */
+            }
             .header {
-                flex-direction: column; /* Stack items vertically on small screens */
-                padding: 8px; /* Further reduced padding for mobile */
-                align-items: flex-end; /* Align all items to the right in column layout (RTL) */
+                flex-direction: column;
+                padding: 8px;
+                align-items: flex-end;
             }
             .header h1 {
-                font-size: 1.6rem; /* Further reduced font size for mobile */
+                font-size: 1.4rem;
             }
             .header h1 i {
-                font-size: 1.4rem; /* Further reduced icon size for mobile */
+                font-size: 1.2rem;
             }
             .header-nav-links {
                 width: 100%;
-                justify-content: flex-end; /* Align nav links to the right */
+                justify-content: flex-end;
             }
-            /* Adjust search and sort layout for small screens */
             .search-sort-controls {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 10px; /* Reduced gap */
+                gap: 10px;
             }
             .search-sort-controls > div {
                 width: 100%;
             }
             .product-image {
-                height: 130px; /* Further reduced height for mobile */
+                height: 120px; /* Adjusted height for mobile */
             }
             .product-name {
-                font-size: 0.9rem; /* Adjusted font size for mobile */
+                font-size: 0.9rem;
             }
             .product-price {
-                font-size: 1rem; /* Adjusted font size for mobile */
+                font-size: 1rem;
             }
             .add-to-cart-btn-card {
-                font-size: 0.7rem; /* Adjusted font size for mobile */
-                padding: 5px 8px; /* Adjusted padding for mobile */
+                font-size: 0.75rem;
+                padding: 6px 10px;
             }
             .modal-content {
-                padding: 15px; /* Further reduced padding for mobile */
+                padding: 18px;
             }
             .modal-content h3 {
-                font-size: 1rem; /* Adjusted font size for mobile */
+                font-size: 1.1rem;
             }
             .modal-content p {
-                font-size: 0.8rem; /* Adjusted font size for mobile */
+                font-size: 0.9rem;
             }
             #modal-product-price {
-                font-size: 1.6rem; /* Adjusted font size for mobile */
+                font-size: 1.8rem;
             }
             #add-to-cart-btn, #toggle-favorite-modal-btn {
-                font-size: 0.8rem; /* Adjusted font size for mobile */
-                padding: 8px 12px; /* Adjusted padding for mobile */
+                font-size: 0.9rem;
+                padding: 10px 14px;
             }
             .footer-main-links {
-                gap: 5px; /* Add a small gap between footer items on mobile */
+                gap: 8px; /* Adjusted gap between footer items on mobile */
+            }
+            .nav-link-store, .cart-icon-container { /* Removed #dark-mode-toggle from here */
+                font-size: 0.8rem;
+                min-width: 55px;
+            }
+            .nav-link-store i, .cart-icon-container i { /* Removed #dark-mode-toggle i from here */
+                font-size: 1rem;
             }
         }
     </style>
@@ -387,23 +519,23 @@
     <div class="container">
         <!-- Header -->
         <header class="header">
-            <!-- Store Name and Icon -->
-            <h1 id="store-name" class="text-3xl font-bold flex items-center">
+            <!-- Store Name and Icon - Positioned to the right (start in RTL) -->
+            <h1 id="store-name" class="font-bold flex items-center">
                 <i class="fas fa-store ml-3"></i> متجرنا الإلكتروني
             </h1>
-            <!-- Navigation Links -->
-            <nav class="header-nav-links">
-                <a href="#" id="contact-us-link" class="nav-link-store text-white hover:bg-indigo-700 ml-4"><i class="fas fa-info-circle ml-2"></i> اتصل بنا</a>
-                <div id="cart-icon-container" class="cart-icon-container text-white hover:bg-indigo-700 ml-4" onclick="openCartModal()">
+            <!-- Navigation Links (Cart and Contact Us) - Pushed to the left (end in RTL) -->
+            <nav class="header-nav-links ml-auto">
+                <div id="cart-icon-container" class="cart-icon-container text-white hover:bg-indigo-700" onclick="openCartModal()">
                     <i class="fas fa-shopping-cart ml-2"></i>
                     <span>السلة</span>
                     <span id="cart-count" class="cart-count">0</span>
                 </div>
+                <a href="#" id="contact-us-link" class="nav-link-store text-white hover:bg-indigo-700 mr-4"><i class="fas fa-info-circle ml-2"></i> اتصل بنا</a>
             </nav>
         </header>
 
         <!-- Search and Sort Controls -->
-        <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 search-sort-controls">
+        <div id="search-sort-container" class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 search-sort-controls">
             <div class="relative w-full sm:w-2/3">
                 <input type="text" id="search-input" placeholder="ابحث عن منتجات..." class="w-full border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <div id="search-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 hidden">
@@ -527,13 +659,6 @@
                             <label for="profile-phone" class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
                             <input type="tel" id="profile-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                         </div>
-                        <!-- Profile Image Placeholder -->
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-1">صورة شخصية (غير مدعومة حالياً)</label>
-                            <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-3xl">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                        </div>
                     </div>
                     <div class="flex justify-end">
                         <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg">
@@ -553,19 +678,13 @@
                     <i class="fas fa-plus ml-2"></i> إضافة عنوان جديد
                 </button>
             </div>
-
-            <div class="bg-white p-6 rounded-lg shadow-md">
-                <h3 class="font-bold text-xl text-gray-800 mb-4">إعدادات الحساب</h3>
-                <div class="space-y-3">
-                    <p class="text-gray-700">
-                        <i class="fas fa-lock ml-2 text-indigo-600"></i>
-                        تغيير كلمة المرور: (غير متاح في هذا الإصدار)
-                    </p>
-                    <p class="text-gray-700">
-                        <i class="fas fa-id-badge ml-2 text-indigo-600"></i>
-                        معرف المستخدم (للتصحيح): <span id="current-user-id" class="font-mono text-sm">جاري التحميل...</span>
-                    </p>
-                </div>
+            
+            <!-- Dark Mode Toggle moved here -->
+            <div class="bg-white p-6 rounded-lg shadow-md mt-6">
+                <h3 class="font-bold text-xl text-gray-800 mb-4">الوضع الليلي</h3>
+                <button id="dark-mode-toggle" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg w-full flex items-center justify-center">
+                    <i class="fas fa-moon ml-2"></i> <span>الوضع الليلي</span>
+                </button>
             </div>
         </section>
 
@@ -595,8 +714,10 @@
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <img id="modal-product-image" src="" alt="Product Image" class="w-full h-auto object-cover rounded-md mb-4">
-                        <div class="flex items-baseline mb-2">
+                        <div class="product-image">
+                            <img id="modal-product-image" src="" alt="Product Image" onerror="this.onerror=null; this.src='https://placehold.co/400x400/E0E7FF/4F46E5?text=Image+Not+Found';">
+                        </div>
+                        <div class="flex items-baseline mb-2 mt-4">
                             <p id="modal-product-price" class="text-3xl font-bold text-indigo-600 ml-2">0 د.ع</p>
                             <p id="modal-product-original-price" class="text-lg text-gray-500 line-through hidden">0 د.ع</p>
                         </div>
@@ -820,7 +941,7 @@
                     </div>
                 </div>
                 <div class="flex justify-end space-x-3">
-                    <button onclick="showNotification('يرجى التواصل عبر الواتساب أو الهاتف.', 'info')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
+                    <button id="order-details-contact-support-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg">
                         <i class="fas fa-headset ml-2"></i> التواصل مع الدعم
                     </button>
                     <button class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg">
@@ -836,12 +957,13 @@
     <footer class="footer-nav">
         <div class="footer-main-links">
             <a href="#" data-section="home-section" class="nav-link-store active"><i class="fas fa-home"></i> <span>الرئيسية</span></a>
+            <a href="#" data-section="categories-page-section" class="nav-link-store"><i class="fas fa-list"></i> <span>الأقسام</span></a>
             <a href="#" data-section="sales-section" class="nav-link-store"><i class="fas fa-fire"></i> <span>العروض</span></a>
             <a href="#" data-section="new-arrivals-section" class="nav-link-store"><i class="fas fa-box-open"></i> <span>الجديد</span></a>
             <a href="#" data-section="favorites-section" class="nav-link-store"><i class="fas fa-heart"></i> <span>المفضلة</span></a>
-            <a href="#" id="toggle-categories-btn" class="nav-link-store"><i class="fas fa-list"></i> <span>الأقسام</span></a>
             <a href="#" data-section="my-orders-section" class="nav-link-store"><i class="fas fa-receipt"></i> <span>طلباتي</span></a>
             <a href="#" data-section="my-account-section" class="nav-link-store"><i class="fas fa-user"></i> <span>حسابي</span></a>
+            <!-- Dark mode toggle moved to My Account section -->
         </div>
     </footer>
 
@@ -900,42 +1022,49 @@
         const TELEGRAM_BOT_TOKEN = '7912718787:AAH7QxTF2XMH4O3carYa5yGSqyjGz3n89Tc';
         const TELEGRAM_CHAT_ID = '708957775';
 
-        // Global variable to track auth state readiness
-        let isAuthInitialized = false;
+        // Global unsubscribe variables for Firebase listeners
+        let unsubscribeUserProfile = null;
+        let unsubscribeUserAddresses = null;
+        let unsubscribeUserOrders = null;
 
         // Firebase Authentication Setup
         onAuthStateChanged(auth, async (user) => {
+            // Unsubscribe all previous listeners when auth state changes
+            if (unsubscribeUserProfile) {
+                unsubscribeUserProfile();
+                unsubscribeUserProfile = null;
+            }
+            if (unsubscribeUserAddresses) {
+                unsubscribeUserAddresses();
+                unsubscribeUserAddresses = null;
+            }
+            if (unsubscribeUserOrders) {
+                unsubscribeUserOrders();
+                unsubscribeUserOrders = null;
+            }
+
             if (user) {
                 window.currentUserId = user.uid;
-                document.getElementById('current-user-id').textContent = window.currentUserId;
                 console.log("Firebase User ID set:", window.currentUserId);
 
-                if (!isAuthInitialized) { // Only load data on initial auth state determination
-                    isAuthInitialized = true;
-                    console.log("Auth initialized. Loading user data...");
-                    await loadUserProfile();
-                    await loadUserAddresses();
-                    await loadUserOrders();
-                }
+                // Load/listen when a user is authenticated
+                loadUserProfile();
+                loadUserAddresses();
+                loadUserOrders();
             } else {
                 // User is signed out, sign in anonymously
                 try {
                     const anonymousUserCredential = await signInAnonymously(auth);
                     window.currentUserId = anonymousUserCredential.user.uid;
-                    document.getElementById('current-user-id').textContent = window.currentUserId;
                     console.log("Signed in anonymously. User ID set:", window.currentUserId);
 
-                    if (!isAuthInitialized) { // Only load data on initial auth state determination
-                        isAuthInitialized = true;
-                        console.log("Auth initialized (anonymous). Loading user data...");
-                        await loadUserProfile();
-                        await loadUserAddresses();
-                        await loadUserOrders();
-                    }
+                    // Load/listen for anonymous user
+                    loadUserProfile();
+                    loadUserAddresses();
+                    loadUserOrders();
                 } catch (error) {
                     console.error("Error signing in anonymously:", error);
                     showNotification("فشل تسجيل الدخول المجهول. قد لا يتم حفظ بياناتك.", "error");
-                    isAuthInitialized = true; // Still set to true to avoid infinite loading, even if failed
                 }
             }
         });
@@ -995,7 +1124,7 @@
                 }
             } catch (error) {
                 console.error('Error sending Telegram message:', error);
-                showNotification('خطأ في الاتصال بـ Telegram.', 'error');
+                showNotification('خطأ في الاتصال بـ Telegram.', "error");
             }
         }
 
@@ -1174,8 +1303,8 @@
             document.getElementById('modal-product-name').textContent = product.name || 'اسم المنتج';
             
             const modalImage = document.getElementById('modal-product-image');
-            modalImage.src = product.image || 'https://placehold.co/400x300/E0E7FF/4F46E5?text=Product';
-            modalImage.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x300/E0E7FF/4F46E5?text=Image+Not+Found'; };
+            modalImage.src = product.image || 'https://placehold.co/400x400/E0E7FF/4F46E5?text=Product';
+            modalImage.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x400/E0E7FF/4F46E5?text=Image+Not+Found'; };
 
             document.getElementById('modal-product-price').textContent = `${(product.price || 0).toLocaleString('ar-EG')} د.ع`;
             
@@ -1205,7 +1334,7 @@
             // Update favorite button state
             updateModalFavoriteButton(product.id);
 
-            document.getElementById('product-details-modal').classList.remove('hidden'); // Changed to remove 'hidden'
+            document.getElementById('product-details-modal').classList.remove('hidden');
         };
 
 
@@ -1419,11 +1548,14 @@
                         <button class="favorite-toggle-btn ${isFavorited ? 'active' : ''}" data-product-id="${product.id}">
                             <i class="${favoriteIconClass}"></i>
                         </button>
-                        <img src="${product.image || 'https://placehold.co/400x300/E0E7FF/4F46E5?text=Product'}" alt="${product.name || 'Product Image'}" class="product-image" onerror="this.onerror=null; this.src='https://placehold.co/400x300/E0E7FF/4F46E5?text=Image+Not+Found';" data-product-id="${product.id}">
+                        <div class="product-image" data-product-id="${product.id}"> <!-- Added data-product-id here -->
+                            <img src="${product.image || 'https://placehold.co/400x400/E0E7FF/4F46E5?text=Product'}" alt="${product.name || 'Product Image'}" onerror="this.onerror=null; this.src='https://placehold.co/400x400/E0E7FF/4F46E5?text=Image+Not+Found';">
+                        </div>
                         <div class="product-info" data-product-id="${product.id}">
                             <div>
                                 <h3 class="product-name">${product.name || 'منتج غير معروف'}</h3>
                                 <p class="text-sm text-gray-500 mb-2">${product.category || 'عام'}</p>
+                                <p class="text-sm text-gray-600">الكمية: ${product.inventory != null ? product.inventory : 'غير متوفر'}</p> <!-- Added quantity -->
                             </div>
                             <div class="flex items-baseline justify-end mt-auto">
                                 ${originalPriceHtml}
@@ -1451,6 +1583,7 @@
                 });
             });
 
+            // Ensure both image and info click open the modal
             productsGrid.querySelectorAll('.product-image, .product-info').forEach(element => {
                 element.addEventListener('click', function() {
                     const productId = this.dataset.productId;
@@ -1511,7 +1644,7 @@
                 mainNavLink.classList.add('active');
             } else if (sectionId === 'categories-page-section') {
                 // If categories page is active, ensure "الأقسام" button is active
-                document.getElementById('toggle-categories-btn')?.classList.add('active');
+                document.querySelector('.nav-link-store[data-section="categories-page-section"]')?.classList.add('active');
             } else if (sectionId === 'my-account-section') {
                 document.querySelector('.footer-main-links .nav-link-store[data-section="my-account-section"]')?.classList.add('active');
                 renderUserProfile(); // Render profile when showing account section
@@ -1534,6 +1667,15 @@
                 homeSectionTitle.textContent = 'منتجاتنا';
                 currentCategoryName.classList.add('hidden');
                 backToCategoriesBtn.classList.add('hidden');
+            }
+
+            // Handle visibility of search and sort controls
+            const searchSortContainer = document.getElementById('search-sort-container');
+            const sectionsWithoutSearchSort = ['categories-page-section', 'my-account-section', 'my-orders-section', 'sales-section', 'new-arrivals-section', 'favorites-section'];
+            if (sectionsWithoutSearchSort.includes(sectionId)) {
+                searchSortContainer.classList.add('hidden');
+            } else {
+                searchSortContainer.classList.remove('hidden');
             }
 
 
@@ -1771,17 +1913,17 @@
         }
 
         // --- Profile Page Functions ---
-        async function loadUserProfile() {
-            if (!isAuthInitialized || !window.currentUserId) {
-                console.log("Skipping loadUserProfile: Auth not ready or no user ID.");
+        function loadUserProfile() {
+            if (!window.currentUserId) {
+                console.log("Skipping loadUserProfile: No user ID.");
                 return;
             }
             const userDocRef = doc(firestoreDb, "users", window.currentUserId);
-            try {
-                const docSnap = await getDoc(userDocRef);
+
+            unsubscribeUserProfile = onSnapshot(userDocRef, (docSnap) => {
                 if (docSnap.exists()) {
                     window.storeData.userProfile = docSnap.data();
-                    console.log("User profile loaded:", window.storeData.userProfile);
+                    console.log("User profile loaded (real-time):", window.storeData.userProfile);
                 } else {
                     console.log("No user profile found, creating default.");
                     window.storeData.userProfile = {
@@ -1789,17 +1931,20 @@
                         email: "",
                         phone: ""
                     };
-                    // Set initial profile data. Use setDoc with merge:true to avoid overwriting if doc exists
-                    await setDoc(userDocRef, window.storeData.userProfile, { merge: true });
+                    // Only set if it doesn't exist to avoid infinite loops with onSnapshot
+                    setDoc(userDocRef, window.storeData.userProfile, { merge: true })
+                        .catch(e => console.error("Error creating default user profile:", e));
                 }
                 renderProfileDetails();
-            } catch (error) {
-                console.error("Error loading user profile:", error);
-                // Only show notification if it's not the "offline" error during initial connection
-                if (error.code !== 'unavailable') {
+            }, (error) => {
+                console.error("Error loading user profile (real-time):", error);
+                if (error.code === 'unavailable') {
+                    console.warn("Firestore: Client is offline. User profile will be loaded from cache if available.");
+                    showNotification("لا يوجد اتصال بالإنترنت. سيتم تحميل معلومات الحساب من الذاكرة المؤقتة.", "warning");
+                } else {
                     showNotification("خطأ في تحميل معلومات الحساب.", "error");
                 }
-            }
+            });
         }
 
         function renderProfileDetails() {
@@ -1814,33 +1959,35 @@
         window.saveUserProfile = async function() {
             if (!window.currentUserId) {
                 showNotification("يرجى تسجيل الدخول لحفظ ملفك الشخصي.", "warning");
+                console.log("SaveUserProfile: No currentUserId, returning."); // Added log
                 return;
             }
             const name = document.getElementById('profile-name').value.trim();
             const email = document.getElementById('profile-email').value.trim();
             const phone = document.getElementById('profile-phone').value.trim();
 
+            console.log("SaveUserProfile: Attempting to save data for userId:", window.currentUserId); // Added log
+            console.log("Data to save:", { name, email, phone }); // Added log
+
             const userDocRef = doc(firestoreDb, "users", window.currentUserId);
             try {
                 await setDoc(userDocRef, { name, email, phone }, { merge: true });
                 window.storeData.userProfile = { name, email, phone }; // Update local state
                 showNotification("تم حفظ معلومات الحساب بنجاح!", "success");
+                console.log("SaveUserProfile: Profile saved successfully."); // Added log
             } catch (error) {
                 console.error("Error saving user profile:", error);
                 showNotification("خطأ في حفظ معلومات الحساب.", "error");
             }
         };
 
-        async function loadUserAddresses() {
-            if (!isAuthInitialized || !window.currentUserId) {
-                console.log("Skipping loadUserAddresses: Auth not ready or no user ID.");
+        function loadUserAddresses() {
+            if (!window.currentUserId) {
+                console.log("Skipping loadUserAddresses: No user ID.");
                 return;
             }
             const addressesCollectionRef = collection(firestoreDb, "users", window.currentUserId, "addresses");
-            // Use onSnapshot for real-time updates, but ensure it's only attached once per user
-            // and only when auth is ready.
-            // The onSnapshot listener itself handles network connectivity, so no explicit check needed here.
-            onSnapshot(addressesCollectionRef, (snapshot) => {
+            unsubscribeUserAddresses = onSnapshot(addressesCollectionRef, (snapshot) => {
                 const addresses = [];
                 snapshot.forEach(doc => {
                     addresses.push({ id: doc.id, ...doc.data() });
@@ -1850,7 +1997,10 @@
                 renderAddresses();
             }, (error) => {
                 console.error("Error loading user addresses:", error);
-                if (error.code !== 'unavailable') {
+                if (error.code === 'unavailable') {
+                    console.warn("Firestore: Client is offline. User addresses will be loaded from cache if available.");
+                    showNotification("لا يوجد اتصال بالإنترنت. سيتم تحميل العناوين من الذاكرة المؤقتة.", "warning");
+                } else {
                     showNotification("خطأ في تحميل العناوين.", "error");
                 }
             });
@@ -1963,14 +2113,13 @@
 
         // --- My Orders Functions ---
         function loadUserOrders() {
-            if (!isAuthInitialized || !window.currentUserId) {
-                console.log("Skipping loadUserOrders: Auth not ready or no user ID.");
+            if (!window.currentUserId) {
+                console.log("Skipping loadUserOrders: No user ID.");
                 document.getElementById('orders-list').innerHTML = `<p class="text-center text-gray-500 py-10">يرجى تسجيل الدخول لعرض طلباتك.</p>`;
                 return;
             }
-            const userOrdersRef = ref(db, 'orders');
-            // Realtime Database's onValue also handles connectivity.
-            onValue(userOrdersRef, (snapshot) => {
+            const userOrdersRef = ref(db, 'orders'); // Realtime Database reference
+            unsubscribeUserOrders = onValue(userOrdersRef, (snapshot) => {
                 const orders = [];
                 snapshot.forEach((childSnapshot) => {
                     const order = childSnapshot.val();
@@ -2054,6 +2203,12 @@
             document.getElementById('modal-order-products-list').innerHTML = productsListHtml || '<p class="text-center text-gray-500">لا توجد منتجات في هذا الطلب.</p>';
 
             document.getElementById('order-details-modal').classList.remove('hidden');
+            
+            // Set up the contact support button to open the contact us modal
+            document.getElementById('order-details-contact-support-btn').onclick = () => {
+                document.getElementById('order-details-modal').classList.add('hidden'); // Close order details modal
+                document.getElementById('contact-us-modal').classList.remove('hidden'); // Open contact us modal
+            };
         };
 
         /**
@@ -2171,9 +2326,48 @@
             }
         });
 
+        /**
+         * Toggles dark mode on/off and saves preference to localStorage.
+         */
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateDarkModeToggleIcon(isDarkMode);
+        }
+
+        /**
+         * Updates the dark mode toggle icon based on current mode.
+         * @param {boolean} isDarkMode - True if dark mode is active, false otherwise.
+         */
+        function updateDarkModeToggleIcon(isDarkMode) {
+            const toggleButton = document.getElementById('dark-mode-toggle');
+            if (toggleButton) {
+                const icon = toggleButton.querySelector('i');
+                const text = toggleButton.querySelector('span');
+                if (isDarkMode) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                    text.textContent = 'الوضع النهاري';
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                    text.textContent = 'الوضع الليلي';
+                }
+            }
+        }
 
         // --- Event Listeners and Initial Load ---
         document.addEventListener("DOMContentLoaded", function() {
+            // Load dark mode preference
+            const savedDarkMode = localStorage.getItem('darkMode');
+            if (savedDarkMode === 'true') {
+                document.body.classList.add('dark-mode');
+                updateDarkModeToggleIcon(true);
+            } else {
+                updateDarkModeToggleIcon(false);
+            }
+
             // Load all data
             loadSettings();
             loadCategories();
@@ -2192,11 +2386,8 @@
                 });
             });
 
-            // Toggle categories button listener
-            document.getElementById('toggle-categories-btn').addEventListener('click', function(e) {
-                e.preventDefault();
-                showStoreSection('categories-page-section'); // Show the dedicated categories page
-            });
+            // Dark mode toggle listener
+            document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
 
             // Close modals
             document.querySelectorAll('.close-modal').forEach(button => {
