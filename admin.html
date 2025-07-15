@@ -267,6 +267,13 @@
                     <h1 class="text-3xl font-bold text-gray-800">إدارة الطلبات</h1>
                 </div>
                 <div class="admin-card">
+                    <div class="relative mb-4">
+                        <input type="text" id="orders-search-input" placeholder="بحث في الطلبات..." class="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" dir="rtl">
+                        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <button type="button" id="orders-clear-search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none hidden">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
                     <div class="table-container">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -298,6 +305,13 @@
                     </button>
                 </div>
                 <div class="admin-card">
+                    <div class="relative mb-4">
+                        <input type="text" id="products-search-input" placeholder="بحث في المنتجات..." class="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" dir="rtl">
+                        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <button type="button" id="products-clear-search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none hidden">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
                     <div class="table-container">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -330,6 +344,13 @@
                     </button>
                 </div>
                 <div class="admin-card">
+                    <div class="relative mb-4">
+                        <input type="text" id="categories-search-input" placeholder="بحث في الأقسام..." class="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" dir="rtl">
+                        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <button type="button" id="categories-clear-search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none hidden">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
                     <div class="table-container">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -704,7 +725,7 @@
                     });
                 });
                 window.adminData.categories = categories;
-                renderCategoriesTable();
+                renderCategoriesTable(); // Call with no search query initially
                 // If the add/edit product modal is open, re-render category dropdown
                 if (!document.getElementById('product-modal').classList.contains('hidden')) {
                     populateCategoryDropdown('product-category');
@@ -729,7 +750,7 @@
                     });
                 });
                 window.adminData.products = products;
-                renderProductsTable();
+                renderProductsTable(); // Call with no search query initially
                 showNotification("تم تحميل المنتجات", "info");
             }, (error) => {
                 console.error("Error loading products:", error);
@@ -750,7 +771,7 @@
                     });
                 });
                 window.adminData.orders = orders.reverse(); // Show newest first
-                renderOrdersTable();
+                renderOrdersTable(); // Call with no search query initially
                 showNotification("تم تحميل الطلبات", "info");
             }, (error) => {
                 console.error("Error loading orders:", error);
@@ -761,17 +782,28 @@
         // --- Rendering Functions ---
 
         /**
-         * Renders the orders data into the orders table.
+         * Renders the orders data into the orders table, optionally filtered by a search query.
+         * @param {string} searchQuery - The text to filter orders by.
          */
-        function renderOrdersTable() {
+        function renderOrdersTable(searchQuery = '') {
             const tableBody = document.getElementById("orders-table-body");
             if (!tableBody) return;
 
+            const lowerCaseQuery = searchQuery.toLowerCase();
+            const filteredOrders = window.adminData.orders.filter(order => {
+                // Ensure properties are strings before calling toLowerCase()
+                const nameMatch = String(order.name || '').toLowerCase().includes(lowerCaseQuery);
+                const invoiceMatch = String(order.invoiceNumber || '').toLowerCase().includes(lowerCaseQuery);
+                const phoneMatch = String(order.phone || '').includes(lowerCaseQuery); // Phone numbers might not need toLowerCase if purely numeric
+
+                return nameMatch || invoiceMatch || phoneMatch;
+            });
+
             let html = '';
-            if (window.adminData.orders.length === 0) {
-                html = `<tr><td colspan="7" class="text-center py-4 text-gray-500">لا توجد طلبات حالياً.</td></tr>`;
+            if (filteredOrders.length === 0) {
+                html = `<tr><td colspan="7" class="text-center py-4 text-gray-500">لا توجد طلبات مطابقة لبحثك.</td></tr>`;
             } else {
-                window.adminData.orders.forEach(order => {
+                filteredOrders.forEach(order => {
                     const statusClass = getOrderStatusClass(order.status);
                     html += `
                     <tr class="bg-white border-b hover:bg-gray-50">
@@ -894,19 +926,28 @@
         };
 
         /**
-         * Renders the products data into the products table.
+         * Renders the products data into the products table, optionally filtered by a search query.
+         * @param {string} searchQuery - The text to filter products by.
          */
-        function renderProductsTable() {
+        function renderProductsTable(searchQuery = '') {
             const tableBody = document.getElementById("products-table-body");
             if (!tableBody) return;
 
-            let html = '';
-            const allProducts = window.adminData.products;
+            const lowerCaseQuery = searchQuery.toLowerCase();
+            const filteredProducts = window.adminData.products.filter(product => {
+                // Ensure properties are strings before calling toLowerCase()
+                const nameMatch = String(product.name || '').toLowerCase().includes(lowerCaseQuery);
+                const descriptionMatch = String(product.description || '').toLowerCase().includes(lowerCaseQuery);
+                const categoryMatch = String(product.category || '').toLowerCase().includes(lowerCaseQuery);
 
-            if (allProducts.length === 0) {
-                html = `<tr><td colspan="8" class="text-center py-4 text-gray-500">لا توجد منتجات حالياً.</td></tr>`;
+                return nameMatch || descriptionMatch || categoryMatch;
+            });
+
+            let html = '';
+            if (filteredProducts.length === 0) {
+                html = `<tr><td colspan="8" class="text-center py-4 text-gray-500">لا توجد منتجات مطابقة لبحثك.</td></tr>`;
             } else {
-                allProducts.forEach(product => {
+                filteredProducts.forEach(product => {
                     const originalPrice = (product.price || 0).toLocaleString('ar-EG');
                     let salePriceHtml = 'N/A';
                     if (product.isSale && product.discountPercentage != null) {
@@ -1109,17 +1150,27 @@
         };
 
         /**
-         * Renders the categories data into the categories table.
+         * Renders the categories data into the categories table, optionally filtered by a search query.
+         * @param {string} searchQuery - The text to filter categories by.
          */
-        function renderCategoriesTable() {
+        function renderCategoriesTable(searchQuery = '') {
             const tableBody = document.getElementById("categories-table-body");
             if (!tableBody) return;
 
+            const lowerCaseQuery = searchQuery.toLowerCase();
+            const filteredCategories = window.adminData.categories.filter(category => {
+                // Ensure properties are strings before calling toLowerCase()
+                const nameMatch = String(category.name || '').toLowerCase().includes(lowerCaseQuery);
+                const descriptionMatch = String(category.description || '').toLowerCase().includes(lowerCaseQuery);
+
+                return nameMatch || descriptionMatch;
+            });
+
             let html = '';
-            if (window.adminData.categories.length === 0) {
-                html = `<tr><td colspan="4" class="text-center py-4 text-gray-500">لا توجد أقسام حالياً.</td></tr>`;
+            if (filteredCategories.length === 0) {
+                html = `<tr><td colspan="4" class="text-center py-4 text-gray-500">لا توجد أقسام مطابقة لبحثك.</td></tr>`;
             } else {
-                window.adminData.categories.forEach(category => {
+                filteredCategories.forEach(category => {
                     html += `
                     <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4" data-label="صورة">
@@ -1305,6 +1356,15 @@
             const loginError = document.getElementById("login-error");
             const togglePasswordButton = document.getElementById("toggle-password");
 
+            // Search inputs and clear buttons
+            const ordersSearchInput = document.getElementById("orders-search-input");
+            const ordersClearSearchButton = document.getElementById("orders-clear-search");
+            const productsSearchInput = document.getElementById("products-search-input");
+            const productsClearSearchButton = document.getElementById("products-clear-search");
+            const categoriesSearchInput = document.getElementById("categories-search-input");
+            const categoriesClearSearchButton = document.getElementById("categories-clear-search");
+
+
             function attemptLogin() {
                 if (passwordInput.value === correctPassword) {
                     loginPage.classList.add("hidden");
@@ -1372,6 +1432,53 @@
                     document.getElementById("product-sale-start-date").value = '';
                     document.getElementById("product-sale-end-date").value = '';
                 }
+            });
+
+            // --- Search Functionality Event Listeners ---
+
+            // Orders Search
+            ordersSearchInput.addEventListener('input', function() {
+                renderOrdersTable(this.value);
+                if (this.value.length > 0) {
+                    ordersClearSearchButton.classList.remove('hidden');
+                } else {
+                    ordersClearSearchButton.classList.add('hidden');
+                }
+            });
+            ordersClearSearchButton.addEventListener('click', function() {
+                ordersSearchInput.value = '';
+                renderOrdersTable('');
+                this.classList.add('hidden');
+            });
+
+            // Products Search
+            productsSearchInput.addEventListener('input', function() {
+                renderProductsTable(this.value);
+                if (this.value.length > 0) {
+                    productsClearSearchButton.classList.remove('hidden');
+                } else {
+                    productsClearSearchButton.classList.add('hidden');
+                }
+            });
+            productsClearSearchButton.addEventListener('click', function() {
+                productsSearchInput.value = '';
+                renderProductsTable('');
+                this.classList.add('hidden');
+            });
+
+            // Categories Search
+            categoriesSearchInput.addEventListener('input', function() {
+                renderCategoriesTable(this.value);
+                if (this.value.length > 0) {
+                    categoriesClearSearchButton.classList.remove('hidden');
+                } else {
+                    categoriesClearSearchButton.classList.add('hidden');
+                }
+            });
+            categoriesClearSearchButton.addEventListener('click', function() {
+                categoriesSearchInput.value = '';
+                renderCategoriesTable('');
+                this.classList.add('hidden');
             });
         });
     </script>
