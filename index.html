@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرحبًا بك في متجر مزار الإلكتروني</title>
+    <title>مرحبًا بكم في متجر مزار</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Global Reset & Base Styles */
         * {
             margin: 0;
             padding: 0;
@@ -14,40 +15,51 @@
         }
         
         body {
-            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+            /* Solid white background */
+            background-color: white; 
+            
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
             font-family: 'Tajawal', sans-serif;
+            color: #343a40; /* Dark text color for white background */
+            overflow: hidden; /* Hide scrollbars if any */
         }
-        
+
+        /* Main Container Styling */
         .container {
             width: 100%;
             max-width: 520px;
-            background: white;
+            background: white; /* Solid white background */
             border-radius: 28px;
-            box-shadow: 0 20px 60px rgba(0, 46, 109, 0.2);
+            /* Softer, more modern shadow */
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
             overflow: hidden;
             position: relative;
-            z-index: 1;
+            z-index: 1; /* Ensure it's above the canvas */
             animation: fadeIn 0.8s ease-out forwards;
+            color: #343a40; /* Dark text for container content */
         }
         
+        /* Fade-in Animation for Container */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
+        /* Header Section Styling */
         .header {
+            /* Vibrant blue gradient */
             background: linear-gradient(to right, #1a56db, #3b82f6);
             padding: 55px 35px 40px;
             text-align: center;
             position: relative;
-            clip-path: ellipse(140% 100% at 50% 0%);
+            clip-path: ellipse(140% 100% at 50% 0%); /* Creates the curved bottom effect */
         }
         
+        /* Logo and Text Container */
         .logo-container {
             display: flex;
             align-items: center;
@@ -56,17 +68,18 @@
             gap: 18px;
         }
         
+        /* Logo Icon Styling */
         .logo-icon {
             width: 85px;
             height: 85px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.15); /* Slightly transparent white */
             border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(6px);
-            border: 2px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+            border: 2px solid rgba(255, 255, 255, 0.25); /* Softer border */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Softer shadow */
         }
         
         .logo-icon i {
@@ -74,208 +87,315 @@
             color: white;
         }
         
+        /* Store Name Text Styling */
         .logo-text {
             font-size: 3.4rem;
             font-weight: 800;
             color: white;
             letter-spacing: -1px;
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Softer text shadow */
+            position: relative;
+            top: 3px;
         }
         
+        /* Welcome Text Styling */
         .welcome-text {
-            font-size: 2.4rem;
+            font-size: 2.1rem;
             font-weight: 800;
             color: white;
             line-height: 1.35;
             margin-bottom: 15px;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); /* Softer text shadow */
         }
         
+        /* Sub-text Styling */
         .sub-text {
-            color: rgba(255, 255, 255, 0.92);
-            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9); /* Slightly darker for better contrast */
+            font-size: 1.05rem;
             line-height: 1.7;
             max-width: 420px;
             margin: 0 auto;
             font-weight: 500;
         }
         
+        /* Content Section Styling */
         .content {
             padding: 45px 45px 35px;
             text-align: center;
         }
         
-        .login-btn {
+        /* Action Buttons Styling */
+        .action-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(to left, #1a56db, #3b82f6);
             color: white;
             padding: 22px 55px;
             font-size: 1.4rem;
             font-weight: 800;
             border-radius: 18px;
-            box-shadow: 0 12px 30px rgba(26, 86, 219, 0.35);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
             border: none;
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            margin: 25px 0;
+            margin: 15px 0;
             width: 100%;
             max-width: 320px;
+            text-decoration: none;
+        }
+
+        .action-btn.green {
+            /* Vibrant green gradient */
+            background: linear-gradient(to right, #28a745, #218838);
+            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.25);
+        }
+
+        .action-btn.blue {
+            /* Vibrant blue gradient */
+            background: linear-gradient(to right, #007bff, #0056b3);
+            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.25);
         }
         
-        .login-btn:hover {
-            transform: translateY(-4px) scale(1.03);
-            box-shadow: 0 18px 35px rgba(26, 86, 219, 0.45);
+        .action-btn:hover {
+            transform: translateY(-5px); /* More pronounced lift */
+        }
+        .action-btn.green:hover {
+            box-shadow: 0 12px 25px rgba(40, 167, 69, 0.35);
+        }
+        .action-btn.blue:hover {
+            box-shadow: 0 12px 25px rgba(0, 123, 255, 0.35);
         }
         
-        .login-btn:active {
-            transform: translateY(1px);
+        .action-btn:active {
+            transform: translateY(-1px); /* Slight push down */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Reset shadow to smaller on active */
         }
         
-        .login-btn i {
+        .action-btn i {
             margin-left: 15px;
             transition: transform 0.3s ease;
             font-size: 1.2em;
         }
         
-        .login-btn:hover i {
+        .action-btn:hover i {
             transform: translateX(-8px);
         }
         
-        .features-container {
-            display: flex;
-            justify-content: space-around;
-            margin: 40px 0 30px;
-            padding: 0 20px;
-        }
-        
-        .feature {
-            text-align: center;
-            max-width: 140px;
-        }
-        
-        .feature i {
-            font-size: 2.2rem;
-            color: #1a56db;
-            margin-bottom: 15px;
-            background: #dbeafe;
-            width: 70px;
-            height: 70px;
-            border-radius: 20px;
+        /* Modal Overlay Styling */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5); /* Standard overlay opacity */
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 18px;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
-        
-        .feature-text {
-            font-size: 1.05rem;
-            color: #1e293b;
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Modal Content Styling */
+        .modal-content {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+            width: 90%;
+            max-width: 450px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            text-align: right; /* RTL alignment */
+            position: relative;
+            color: #343a40; /* Dark text for modal content */
+        }
+
+        .modal-overlay.visible .modal-content {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        /* Modal Close Button */
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: #6c757d; /* Standard gray */
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+        .modal-close-btn:hover {
+            color: #495057;
+        }
+
+        /* Modal Title Styling */
+        .modal-content h3 {
+            font-size: 2rem;
             font-weight: 800;
-            line-height: 1.5;
+            color: #28a745; /* Vibrant green for modal title */
+            margin-bottom: 25px;
+            text-align: center;
+            position: relative;
+        }
+        .modal-content h3::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 4px;
+            background: #28a745; /* Vibrant green underline */
+            margin: 10px auto 0;
+            border-radius: 2px;
+        }
+
+        /* Modal Contact Item Styling */
+        .modal-contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #495057; /* Darker gray for contact info */
+        }
+        /* Make the whole link area clickable including icon */
+        .modal-contact-item a {
+            display: flex; /* Use flex to align icon and text within the link */
+            align-items: center;
+            color: #007bff; /* Vibrant blue for links */
+            text-decoration: none;
+            transition: color 0.3s ease;
+            text-align: left; /* Align contact details left */
+            flex-grow: 1;
+            flex-direction: row-reverse; /* Place icon on the right of text */
+            justify-content: flex-end; /* Align content to the right */
+            gap: 15px; /* Space between icon and text */
+        }
+        .modal-contact-item a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        .modal-contact-item a.whatsapp-link {
+            color: #25D366;
+        }
+        .modal-contact-item a.whatsapp-link:hover {
+            color: #1DA851;
+        }
+
+        .modal-contact-item a i { /* Style for icon *inside* the link */
+            font-size: 1.6rem;
+            color: #007bff; /* Vibrant blue for modal icons */
+            width: 40px; /* Fixed width for icon */
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .modal-contact-item a.whatsapp-link i {
+            color: #25D366; /* WhatsApp green for WhatsApp icon */
+        }
+
+        .modal-contact-item a span { /* Style for the text part of the link */
+            direction: ltr; /* Ensure numbers are LTR */
+            flex-grow: 1;
+            text-align: right; /* Align text right (next to icon) */
         }
         
+        /* Footer Styling */
         .footer {
             text-align: center;
             padding: 30px 0 25px;
-            color: #64748b;
+            color: #6c757d;
             font-size: 1rem;
-            background: #f8fafc;
-            border-top: 1px solid #e2e8f0;
+            background: white;
+            border-top: 1px solid #e9ecef;
             font-weight: 700;
         }
         
         .copyright {
             font-weight: 800;
-            margin-bottom: 20px;
-            color: #334155;
+            color: #343a40;
             font-size: 1.1rem;
         }
         
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 18px;
-            margin-top: 15px;
-        }
-        
-        .social-links a {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: #e2e8f0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #475569;
-            transition: all 0.3s ease;
-            font-size: 1.2rem;
-        }
-        
-        .social-links a:hover {
-            background: #3b82f6;
-            color: white;
-            transform: translateY(-4px);
-            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
-        }
-        
-        .contact-info {
-            margin-top: 20px;
-            font-weight: 700;
-            color: #475569;
-        }
-        
-        .contact-info a {
-            color: #1a56db;
-            text-decoration: none;
-            font-weight: 800;
-            transition: all 0.3s ease;
-        }
-        
-        .contact-info a:hover {
-            text-decoration: underline;
-        }
-        
+        /* Responsive Adjustments for Mobile */
         @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
             .header {
-                padding: 40px 25px 35px;
+                padding: 35px 20px 30px;
             }
             
             .logo-icon {
-                width: 75px;
-                height: 75px;
+                width: 65px;
+                height: 65px;
+                border-radius: 20px;
             }
             
             .logo-icon i {
-                font-size: 38px;
+                font-size: 34px;
             }
             
             .logo-text {
-                font-size: 2.8rem;
+                font-size: 2.4rem;
+                top: 2px;
             }
             
             .welcome-text {
-                font-size: 2rem;
+                font-size: 1.5rem;
+            }
+            
+            .sub-text {
+                font-size: 0.85rem;
             }
             
             .content {
-                padding: 35px 30px 30px;
+                padding: 30px 25px 25px;
             }
             
-            .login-btn {
-                padding: 20px 45px;
-                font-size: 1.25rem;
-                max-width: 280px;
+            .action-btn { 
+                padding: 18px 40px;
+                font-size: 1.15rem;
+                max-width: 260px;
             }
             
-            .features-container {
-                flex-direction: column;
-                align-items: center;
-                gap: 30px;
-                margin: 35px 0 25px;
+            .action-btn i {
+                margin-left: 10px;
+                font-size: 1.1em;
+            }
+            
+            .modal-content {
+                padding: 25px;
+                border-radius: 15px;
+            }
+            .modal-content h3 {
+                font-size: 1.8rem;
+                margin-bottom: 20px;
+            }
+            .modal-contact-item {
+                font-size: 1rem;
+                margin-bottom: 15px;
+            }
+            .modal-contact-item a i { /* Adjusted selector for icon inside link */
+                font-size: 1.4rem;
+                /* Removed margin, using gap */
+            }
+
+            .footer {
+                padding: 25px 0 20px;
+            }
+            .copyright {
+                font-size: 1rem;
             }
         }
     </style>
@@ -287,79 +407,190 @@
                 <div class="logo-icon">
                     <i class="fas fa-store"></i>
                 </div>
-                <h1 class="logo-text">مزار</h1>
+                <h1 class="logo-text" id="store-name-header">مزار</h1>
             </div>
             
-            <h2 class="welcome-text">مرحبًا بك في متجر مزار الإلكتروني</h2>
+            <h2 class="welcome-text">مرحبًا بكم</h2>
             <p class="sub-text">اكتشف تجربة تسوق استثنائية مع آلاف المنتجات المميزة بأسعار تنافسية وخدمة توصيل سريعة</p>
         </div>
         
         <div class="content">
-            <!-- زر تسجيل الدخول -->
-            <button class="login-btn" onclick="location.href='login.html'">
-                تسجيل الدخول
-                <i class="fas fa-sign-in-alt"></i>
-            </button>
+            <!-- زر الانتقال إلى صفحة تسجيل الدخول -->
+            <a href="login.html" class="action-btn green">
+                انتقل إلى صفحة تسجيل الدخول
+                <i class="fas fa-arrow-left"></i>
+            </a>
             
-            <!-- مميزات المتجر -->
-            <div class="features-container">
-                <div class="feature">
-                    <i class="fas fa-truck"></i>
-                    <div class="feature-text">توصيل سريع</div>
-                </div>
-                
-                <div class="feature">
-                    <i class="fas fa-shield-alt"></i>
-                    <div class="feature-text">دفوعات آمنة</div>
-                </div>
-                
-                <div class="feature">
-                    <i class="fas fa-headset"></i>
-                    <div class="feature-text">دعم فني</div>
-                </div>
-            </div>
+            <!-- زر فتح نافذة التواصل -->
+            <button id="open-contact-modal-btn" class="action-btn blue">
+                تواصل معنا
+                <i class="fas fa-headset"></i>
+            </button>
         </div>
         
         <div class="footer">
-            <div class="copyright">جميع الحقوق محفوظة © 2023 متجر مزار</div>
-            
-            <div class="social-links">
-                <a href="#"><i class="fab fa-facebook-f"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-whatsapp"></i></a>
-            </div>
-            
-            <div class="contact-info">
-                للتواصل: <a href="tel:+964771234567">+964 771 234 567</a> | 
-                <a href="mailto:info@mazar-store.com">info@mazar-store.com</a>
+            <div class="copyright">جميع الحقوق محفوظة © 2025 <span id="footer-store-name">متجر مزار</span></div>
+        </div>
+    </div>
+
+    <!-- Contact Info Modal -->
+    <div id="contact-info-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-btn" onclick="window.closeModal('contact-info-modal')">
+                <i class="fas fa-times"></i>
+            </button>
+            <h3>تواصل معنا</h3>
+            <div class="contact-details">
+                <div class="modal-contact-item">
+                    <a id="modal-contact-phone-link" href="#">
+                        <i class="fas fa-phone"></i>
+                        <span>+964771234567</span>
+                    </a>
+                </div>
+                <div class="modal-contact-item">
+                    <a id="modal-contact-whatsapp-link" href="#" target="_blank" class="whatsapp-link">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>+964771234567</span>
+                    </a>
+                </div>
+                <div class="modal-contact-item">
+                    <a id="modal-contact-email-link" href="#">
+                        <i class="fas fa-envelope"></i>
+                        <span>info@mazar-store.com</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
     
-    <script>
-        // إضافة تأثيرات تفاعلية إضافية
-        document.querySelector('.login-btn').addEventListener('mouseenter', function() {
-            this.style.background = 'linear-gradient(to left, #0d47a1, #1a56db)';
-        });
-        
-        document.querySelector('.login-btn').addEventListener('mouseleave', function() {
-            this.style.background = 'linear-gradient(to left, #1a56db, #3b82f6)';
-        });
-        
-        // تأثير للأيقونات
-        const features = document.querySelectorAll('.feature');
-        features.forEach(feature => {
-            feature.addEventListener('mouseenter', function() {
-                this.querySelector('i').style.transform = 'scale(1.15)';
-                this.querySelector('i').style.background = '#bfdbfe';
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+        // Your web app's Firebase configuration (replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebaseapp.com",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app); // Realtime Database
+        const settingsRef = ref(db, "settings");
+
+        // Global data storage for settings
+        window.storeData = {
+            settings: {}
+        };
+
+        /**
+         * Loads store settings from Firebase and updates the UI.
+         */
+        function loadSettings() {
+            onValue(settingsRef, (snapshot) => {
+                const settings = snapshot.val();
+                if (settings) {
+                    window.storeData.settings = settings;
+                    console.log("Store settings loaded:", window.storeData.settings);
+
+                    // Update store names
+                    document.getElementById('store-name-header').textContent = settings.storeName || 'مزار';
+                    document.getElementById('footer-store-name').textContent = settings.storeName || 'متجر مزار';
+
+                    // Helper function to format phone numbers for display (starts with +)
+                    const formatNumberForDisplay = (num) => {
+                        if (!num) return 'N/A';
+                        // Remove all non-digit characters and any existing '+'
+                        let cleanNum = num.replace(/[^\d]/g, '');
+                        // Add '+' at the beginning
+                        return `+${cleanNum}`;
+                    };
+
+                    // Helper function to format phone numbers for href (starts with +)
+                    const formatNumberForHref = (num) => {
+                        if (!num) return '';
+                        // Remove all non-digit characters
+                        let cleanNum = num.replace(/[^\d]/g, '');
+                        // Ensure it starts with '+' for tel: and wa.me links
+                        return cleanNum.startsWith('+') ? cleanNum : `+${cleanNum}`;
+                    };
+
+                    // Update contact info in the modal
+                    const modalContactPhoneLink = document.getElementById('modal-contact-phone-link');
+                    modalContactPhoneLink.querySelector('span').textContent = formatNumberForDisplay(settings.contactPhone);
+                    modalContactPhoneLink.href = `tel:${formatNumberForHref(settings.contactPhone)}`;
+
+                    const modalContactWhatsappLink = document.getElementById('modal-contact-whatsapp-link');
+                    modalContactWhatsappLink.querySelector('span').textContent = formatNumberForDisplay(settings.contactWhatsapp);
+                    modalContactWhatsappLink.href = `https://wa.me/${formatNumberForHref(settings.contactWhatsapp).replace(/\+/g, '')}`; // wa.me does not need the + prefix
+
+                    const modalContactEmailLink = document.getElementById('modal-contact-email-link');
+                    modalContactEmailLink.querySelector('span').textContent = settings.contactEmail || 'info@mazar-store.com';
+                    modalContactEmailLink.href = `mailto:${settings.contactEmail || 'info@mazar-store.com'}`;
+
+                } else {
+                    // Default settings if none exist
+                    window.storeData.settings = {
+                        storeName: "مزار",
+                        contactPhone: "964771234567", 
+                        contactWhatsapp: "964771234567",
+                        contactEmail: "info@mazar-store.com",
+                        deliveryPrice: 5000,
+                        thankYouMessage: "شكراً لثقتك بنا! سيتواصل معك فريقنا قريباً لتأكيد طلبك."
+                    };
+                    // Apply default settings to UI
+                    document.getElementById('store-name-header').textContent = "مزار";
+                    document.getElementById('footer-store-name').textContent = "متجر مزار";
+                    document.getElementById('modal-contact-phone-link').querySelector('span').textContent = "+964771234567";
+                    document.getElementById('modal-contact-phone-link').href = "tel:+964771234567";
+                    document.getElementById('modal-contact-whatsapp-link').querySelector('span').textContent = "+964771234567";
+                    document.getElementById('modal-contact-whatsapp-link').href = "https://wa.me/964771234567";
+                    document.getElementById('modal-contact-email-link').querySelector('span').textContent = "info@mazar-store.com";
+                    document.getElementById('modal-contact-email-link').href = "mailto:info@mazar-store.com";
+                }
+            }, (error) => {
+                console.error("Error loading settings:", error);
+                // Optionally show a notification to the user
             });
-            
-            feature.addEventListener('mouseleave', function() {
-                this.querySelector('i').style.transform = 'scale(1)';
-                this.querySelector('i').style.background = '#dbeafe';
+        }
+
+        /**
+         * Opens a modal by adding 'visible' class.
+         * @param {string} modalId - The ID of the modal to open.
+         */
+        window.openModal = function(modalId) {
+            document.getElementById(modalId).classList.add('visible');
+        }
+
+        /**
+         * Closes a modal by removing 'visible' class.
+         * @param {string} modalId - The ID of the modal to close.
+         */
+        window.closeModal = function(modalId) {
+            document.getElementById(modalId).classList.remove('visible');
+        }
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            loadSettings(); // Load settings on page load
+
+            // Event listener for "تواصل معنا" button
+            document.getElementById('open-contact-modal-btn').addEventListener('click', function() {
+                window.openModal('contact-info-modal');
+            });
+
+            // Close modal when clicking outside its content
+            document.getElementById('contact-info-modal').addEventListener('click', function(event) {
+                if (event.target === this) { // Only close if clicked directly on the overlay
+                    window.closeModal('contact-info-modal');
+                }
             });
         });
     </script>
 </body>
-  </html>
+</html>
