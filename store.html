@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
+        html {
+            scroll-behavior: smooth; /* Smooth scrolling for better UX */
+        }
         body {
             font-family: 'Tajawal', sans-serif;
             background-color: #f5f7fa; /* Light background */
@@ -302,31 +305,117 @@
             line-height: 1.5;
             flex-grow: 1;
         }
+        
+        /* New Styles for Category Cards */
         .category-button-page {
             background-color: #e0e7ff; /* Indigo 100 */
             color: #4f46e5; /* Indigo 600 */
-            padding: 12px 16px; /* Increased padding */
             border-radius: 8px;
             font-weight: 600;
-            transition: background-color 0.2s ease, color 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
             cursor: pointer;
-            white-space: nowrap;
-            font-size: 0.95rem; /* Increased font size */
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100px; /* Increased height for category cards */
+            height: 125px; /* Adjusted height for wider appearance (100px * 1.25) */
+            position: relative; /* For positioning the overlay strip */
+            overflow: hidden;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05);
         }
-        .category-button-page:hover, .category-button-page.active {
-            background-color: #4f46e5; /* Indigo 600 */
+        .category-button-page:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        .dark-mode .category-button-page {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        .dark-mode .category-button-page:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .category-main-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures the image covers the area */
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 8px; /* Match card border-radius */
+            z-index: 1; /* Below the overlay strip */
+        }
+
+        .category-icon-fallback { /* Style for icon fallback when no image */
+            font-size: 3.5rem; /* Large icon */
+            color: #4f46e5;
+            margin-bottom: 10px;
+            z-index: 2; /* Above image if it's a placeholder */
+        }
+        .dark-mode .category-icon-fallback {
+            color: #e2e8f0;
+        }
+
+        .category-overlay-strip {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent dark background */
             color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            z-index: 2; /* Above the image */
         }
-        .category-button-page i {
-            font-size: 1.8rem; /* Increased font size */
-            margin-bottom: 10px; /* Increased margin */
+        .dark-mode .category-overlay-strip {
+            background-color: rgba(45, 55, 72, 0.8); /* Darker semi-transparent for dark mode */
         }
+
+        .category-name-text {
+            font-size: 1.1rem; /* Slightly larger font for category name */
+            font-weight: 700;
+            color: white; /* Ensure text is white on dark strip */
+            flex-grow: 1; /* Allow name to take available space */
+            text-align: right; /* Align name to the right */
+            margin-right: 10px; /* Space between name and button */
+            white-space: nowrap; /* Keep text on one line */
+            overflow: hidden; /* Hide overflow */
+            text-overflow: ellipsis; /* Add ellipsis for overflow */
+        }
+        .dark-mode .category-name-text {
+            color: #e2e8f0;
+        }
+
+        .info-button {
+            background: rgba(255, 255, 255, 0.2); /* Slightly transparent white */
+            border-radius: 50%;
+            width: 35px; /* Larger button */
+            height: 35px; /* Larger button */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem; /* Icon size */
+            color: white; /* White icon on dark strip */
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0; /* Prevent button from shrinking */
+        }
+        .info-button:hover {
+            background: rgba(255, 255, 255, 0.4); /* More opaque on hover */
+        }
+        .dark-mode .info-button {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .dark-mode .info-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
 
         .modal-overlay {
             position: fixed;
@@ -554,6 +643,20 @@
             .nav-link-store i, .cart-icon-container i { /* Removed #dark-mode-toggle i from here */
                 font-size: 1rem;
             }
+            .category-button-page {
+                height: 100px; /* Adjusted height for mobile to maintain wider look (80px * 1.25) */
+            }
+            .category-overlay-strip {
+                padding: 8px 12px;
+            }
+            .category-name-text {
+                font-size: 1rem;
+            }
+            .info-button {
+                width: 30px;
+                height: 30px;
+                font-size: 0.85rem;
+            }
         }
     </style>
 </head>
@@ -676,7 +779,7 @@
                 <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">تصفح الأقسام</h2>
                 <div class="w-10"></div> <!-- Placeholder for balance -->
             </div>
-            <div id="categories-grid-page" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div id="categories-grid-page" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <!-- Categories will be loaded here by JS -->
                 <div class="col-span-full text-center py-10 text-gray-500">جاري تحميل الأقسام...</div>
             </div>
@@ -1012,6 +1115,24 @@
             </div>
         </div>
 
+        <!-- Category Description Modal -->
+        <div id="category-description-modal" class="modal-overlay hidden">
+            <div class="modal-content max-w-lg">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 id="modal-category-name" class="font-bold text-xl text-gray-800">اسم القسم</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <p id="modal-category-description" class="text-gray-700 leading-relaxed mb-6">وصف القسم سيظهر هنا.</p>
+                <div class="mt-6 flex justify-end">
+                    <button class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div> <!-- End of container -->
 
     <!-- Footer Navigation Bar -->
@@ -1043,7 +1164,7 @@
             authDomain: "zio3-8ffdd.firebaseapp.com",
             databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
             projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            storageBucket: "zio3-8ffdd.firebaseapp.com",
             messagingSenderId: "560939348415",
             appId: "1:560939348415:web:c854e9e214e498ad2d310a",
             measurementId: "G-CVN2B2D0RD"
@@ -1424,7 +1545,8 @@
             const category = window.storeData.categories.find(cat => cat.id === product.categoryId);
             document.getElementById('modal-product-category').textContent = `القسم: ${category ? category.name : 'عام'}`;
             document.getElementById('modal-product-inventory').textContent = `المخزون: ${product.inventory > 0 ? 'متوفر' : 'غير متوفر'}`;
-            document.getElementById('modal-product-description').textContent = product.description || 'لا يوجد وصف متاح لهذا المنتج.';
+            // Replace newline characters with <br> tags for correct rendering
+            document.getElementById('modal-product-description').innerHTML = (product.description || 'لا يوجد وصف متاح لهذا المنتج.').replace(/\n/g, '<br>');
 
             // Set the add to cart button's onclick directly
             const addToCartBtn = document.getElementById('add-to-cart-btn');
@@ -1562,18 +1684,51 @@
                     const button = document.createElement('button');
                     button.className = 'category-button-page'; // Use class for page buttons
                     button.setAttribute('data-category-id', category.id);
-                    button.innerHTML = `<i class="${category.icon || 'fas fa-tag'}"></i> <span>${category.name}</span>`; // Assuming category has an icon
-                    button.addEventListener('click', () => {
-                        // When a category is clicked on the categories page, switch to home section and filter
-                        showStoreSection('home-section');
-                        filterProductsByCategory(category.id);
+                    // Prevent default button click behavior to allow info button to work
+                    button.addEventListener('click', (e) => {
+                        // Only navigate if the click is not on the info button
+                        if (!e.target.closest('.info-button')) {
+                            showStoreSection('home-section');
+                            filterProductsByCategory(category.id);
+                        }
                     });
+
+                    const mediaHtml = category.image 
+                        ? `<img src="${category.image}" alt="${category.name}" onerror="this.onerror=null; this.src='https://placehold.co/300x200/E0E7FF/4F46E5?text=Category';" class="category-main-image">`
+                        : `<i class="${category.icon || 'fas fa-tag'} category-icon-fallback"></i>`; // Fallback to icon if no image
+
+                    button.innerHTML = `
+                        ${mediaHtml}
+                        <div class="category-overlay-strip">
+                            <span class="category-name-text">${category.name}</span>
+                            <button class="info-button" onclick="openCategoryDescriptionModal('${category.id}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    `;
                     categoriesGridPage.appendChild(button);
                 });
             } else {
                 categoriesGridPage.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">لا توجد أقسام متاحة حالياً.</div>`;
             }
         }
+
+        /**
+         * Opens the category description modal.
+         * @param {string} categoryId - The ID of the category whose description to display.
+         */
+        window.openCategoryDescriptionModal = function(categoryId) {
+            const category = window.storeData.categories.find(c => c.id === categoryId);
+            if (!category) {
+                showNotification("لم يتم العثور على وصف القسم.", "error");
+                return;
+            }
+
+            document.getElementById('modal-category-name').textContent = category.name || 'اسم القسم';
+            document.getElementById('modal-category-description').innerHTML = (category.description || 'لا يوجد وصف متاح لهذا القسم.').replace(/\n/g, '<br>');
+            document.getElementById('category-description-modal').classList.remove('hidden');
+        };
+
 
         /**
          * Renders products into a specific grid, optionally filtered or from a provided array.
@@ -2437,9 +2592,20 @@
         function applySortAndRender() {
             const sortBySelect = document.getElementById('sort-by-select');
             const sortBy = sortBySelect.value;
+            // Get the ID of the currently active section to re-render it with sorted products
+            const activeSectionId = document.querySelector('.store-section:not(.hidden)').id;
             const sortedProducts = sortProducts(window.currentDisplayedProducts, sortBy);
-            // Assuming we always want to render to the home grid after sorting
-            renderProducts('products-grid-home', 'none', sortedProducts);
+            
+            // Re-render the current section with the sorted products
+            if (activeSectionId === 'home-section') {
+                renderProducts('products-grid-home', 'none', sortedProducts);
+            } else if (activeSectionId === 'sales-section') {
+                renderProducts('products-grid-sales', 'none', sortedProducts);
+            } else if (activeSectionId === 'new-arrivals-section') {
+                renderProducts('products-grid-new-arrivals', 'none', sortedProducts);
+            } else if (activeSectionId === 'favorites-section') {
+                renderProducts('products-grid-favorites', 'none', sortedProducts);
+            }
         }
 
 
@@ -2501,13 +2667,29 @@
                     const button = document.createElement('button');
                     button.className = 'category-button-page';
                     button.setAttribute('data-category-id', category.id);
-                    button.innerHTML = `<i class="${category.icon || 'fas fa-tag'}"></i> <span>${category.name}</span>`;
-                    button.addEventListener('click', () => {
-                        searchInput.value = ''; // Clear search input
-                        searchSuggestionsDiv.classList.add('hidden'); // Hide suggestions
-                        showStoreSection('home-section'); // Go to home section
-                        filterProductsByCategory(category.id); // Filter products by selected category
+                    button.addEventListener('click', (e) => {
+                         // Only navigate if the click is not on the info button
+                        if (!e.target.closest('.info-button')) {
+                            searchInput.value = ''; // Clear search input
+                            searchSuggestionsDiv.classList.add('hidden'); // Hide suggestions
+                            showStoreSection('home-section'); // Go to home section
+                            filterProductsByCategory(category.id); // Filter products by selected category
+                        }
                     });
+                    
+                    const mediaHtml = category.image 
+                        ? `<img src="${category.image}" alt="${category.name}" onerror="this.onerror=null; this.src='https://placehold.co/300x200/E0E7FF/4F46E5?text=Category';" class="category-main-image">`
+                        : `<i class="${category.icon || 'fas fa-tag'} category-icon-fallback"></i>`; // Fallback to icon if no image
+
+                    button.innerHTML = `
+                        ${mediaHtml}
+                        <div class="category-overlay-strip">
+                            <span class="category-name-text">${category.name}</span>
+                            <button class="info-button" onclick="openCategoryDescriptionModal('${category.id}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>
+                        </div>
+                    `;
                     categoriesGridPage.appendChild(button);
                 });
             } else {
@@ -2593,6 +2775,9 @@
 
         // --- Event Listeners and Initial Load ---
         document.addEventListener("DOMContentLoaded", function() {
+            // Scroll to top on load
+            window.scrollTo(0, 0);
+
             // Load dark mode preference
             const savedDarkMode = localStorage.getItem('darkMode');
             if (savedDarkMode === 'true') {
