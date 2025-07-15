@@ -659,7 +659,7 @@
                     <p id="profile-display-name" class="font-semibold text-lg text-gray-800"></p>
                     <p id="profile-display-email" class="text-gray-600 text-sm"></p>
                 </div>
-                <form id="profile-form" onsubmit="event.preventDefault(); saveUserProfile()">
+                <form id="profile-form" onsubmit="event.preventDefault(); saveUserProfile()" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                         <div>
                             <label for="profile-name" class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
@@ -684,7 +684,7 @@
                     <button id="google-sign-in-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center justify-center w-full sm:w-auto">
                         <i class="fab fa-google ml-2"></i> تسجيل الدخول باستخدام Google
                     </button>
-                    <button id="sign-out-btn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg flex items-center justify-center w-full sm:w-auto">
+                    <button id="sign-out-btn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg flex items-center justify-center w-full sm:w-auto hidden">
                         <i class="fas fa-sign-out-alt ml-2"></i> تسجيل الخروج
                     </button>
                 </div>
@@ -991,7 +991,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
         import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics.js";
         // Firebase Auth and Firestore imports
         import { getAuth, signInAnonymously, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
@@ -1608,7 +1608,7 @@
                         <button class="favorite-toggle-btn ${isFavorited ? 'active' : ''}" data-product-id="${product.id}">
                             <i class="${favoriteIconClass}"></i>
                         </button>
-                        <div class="product-image" data-product-id="${product.id}">
+                        <div class="product-image" data-product-id="${product.id}"> <!-- Added data-product-id here -->
                             <img src="${product.image || 'https://placehold.co/400x400/E0E7FF/4F46E5?text=Product'}" alt="${product.name || 'Product Image'}" onerror="this.onerror=null; this.src='https://placehold.co/400x400/E0E7FF/4F46E5?text=Image+Not+Found';">
                         </div>
                         <div class="product-info" data-product-id="${product.id}">
@@ -1981,7 +1981,7 @@
             if (!currentUser || !currentUser.uid) {
                 console.log("Skipping loadUserProfile: No current user or UID.");
                 window.storeData.userProfile = null; // Clear profile if no user
-                renderProfileDetails();
+                renderProfileDetails(); // Update UI to show logged out state
                 return;
             }
             
@@ -2033,7 +2033,7 @@
             const profileDisplayEmailElem = document.getElementById('profile-display-email');
             const googleSignInBtn = document.getElementById('google-sign-in-btn');
             const signOutBtn = document.getElementById('sign-out-btn');
-            const profileForm = document.getElementById('profile-form');
+            const profileForm = document.getElementById('profile-form'); // The form containing name, email, phone inputs
 
 
             if (profile) {
@@ -2047,21 +2047,24 @@
                 profileDisplayNameElem.textContent = profile.name || 'مستخدم غير معروف';
                 profileDisplayEmailElem.textContent = profile.email || '';
 
-                // Hide Google Sign-in if already logged in with Google
-                if (auth.currentUser && auth.currentUser.providerData.some(p => p.providerId === 'google.com')) {
+                // Check if the current user is logged in with Google
+                const isGoogleUser = auth.currentUser && auth.currentUser.providerData.some(p => p.providerId === 'google.com');
+
+                if (isGoogleUser) {
                     googleSignInBtn.classList.add('hidden');
+                    signOutBtn.classList.remove('hidden');
                     // Make email and name fields read-only if from Google
                     profileEmailInput.readOnly = true;
                     profileNameInput.readOnly = true;
                 } else {
-                    googleSignInBtn.classList.remove('hidden');
+                    googleSignInBtn.classList.remove('hidden'); // Show Google sign-in for anonymous users
+                    signOutBtn.classList.remove('hidden'); // Allow anonymous users to sign out (which signs them back in anonymously)
                     profileEmailInput.readOnly = false;
                     profileNameInput.readOnly = false;
                 }
-                signOutBtn.classList.remove('hidden');
-                profileForm.classList.remove('hidden'); // Show form if user is logged in
+                profileForm.classList.remove('hidden'); // Show form if any user is logged in (anonymous or Google)
             } else {
-                // No user logged in or profile cleared
+                // No user logged in or profile cleared (e.g., after explicit sign-out before anonymous re-login)
                 profileNameInput.value = '';
                 profileEmailInput.value = '';
                 profilePhoneInput.value = '';
@@ -2070,7 +2073,7 @@
                 profileDisplayEmailElem.textContent = '';
 
                 googleSignInBtn.classList.remove('hidden');
-                signOutBtn.classList.add('hidden');
+                signOutBtn.classList.add('hidden'); // Hide sign out if no user is truly logged in
                 profileForm.classList.add('hidden'); // Hide form if no user logged in
             }
         }
@@ -2090,8 +2093,9 @@
 
             const userProfileNodeRef = ref(db, `users/${window.currentUserId}`);
             try {
-                // Only update fields that are editable by the user
                 const updateData = {};
+                // Only update fields that are editable by the user
+                // If the email/name fields are readOnly, it means they are managed by Google Auth
                 if (!document.getElementById('profile-name').readOnly) {
                     updateData.name = name;
                 }
