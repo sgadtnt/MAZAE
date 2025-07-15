@@ -151,6 +151,16 @@
         .bg-red-100 { background-color: #fee2e2; } .text-red-800 { color: #991b1b; }
         .bg-gray-100 { background-color: #f3f4f6; } .text-gray-800 { color: #1f2937; }
 
+        /* Product image preview in modal */
+        .product-image-preview {
+            width: 40px; /* Small size for preview */
+            height: 40px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            flex-shrink: 0; /* Prevent shrinking */
+        }
+
         /* Mobile responsiveness for tables */
         @media (max-width: 768px) {
             .table-container {
@@ -394,16 +404,43 @@
                                 <label for="setting-contact-email" class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
                                 <input type="email" id="setting-contact-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                             </div>
-                            <div>
-                                <label for="setting-delivery-price" class="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل (د.ع)</label>
-                                <input type="number" id="setting-delivery-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
-                            </div>
+                            <!-- Removed old delivery price input -->
                             <div class="md:col-span-2">
                                 <label for="setting-thank-you-message" class="block text-sm font-medium text-gray-700 mb-1">رسالة الشكر بعد الطلب</label>
                                 <textarea id="setting-thank-you-message" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
                             </div>
                         </div>
-                        <div class="flex justify-end">
+
+                        <!-- New Section for City Delivery Prices -->
+                        <div class="admin-card mt-8">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-gray-800">أسعار التوصيل حسب المدينة</h2>
+                                <button type="button" onclick="openCityDeliveryPriceModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm flex items-center">
+                                    <i class="fas fa-plus ml-2"></i> إضافة مدينة
+                                </button>
+                            </div>
+                            <div class="mb-4">
+                                <label for="setting-default-delivery-price" class="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل الافتراضي (د.ع)</label>
+                                <input type="number" id="setting-default-delivery-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0">
+                            </div>
+                            <div class="table-container">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">المدينة</th>
+                                            <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">سعر التوصيل (د.ع)</th>
+                                            <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="city-delivery-prices-table-body" class="bg-white divide-y divide-gray-200">
+                                        <!-- City delivery prices will be loaded here -->
+                                        <tr><td colspan="3" class="text-center py-4 text-gray-500">جاري تحميل أسعار المدن...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-end mt-6">
                             <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg flex items-center">
                                 <i class="fas fa-save ml-2"></i> حفظ الإعدادات
                             </button>
@@ -491,10 +528,18 @@
                             <input type="number" id="product-inventory" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
                         </div>
                     </div>
+                    
+                    <!-- Product Images Section -->
                     <div class="mb-4">
-                        <label for="product-image" class="block text-sm font-medium text-gray-700 mb-1">رابط الصورة</label>
-                        <input type="url" id="product-image" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">صور المنتج</label>
+                        <div id="product-images-container" class="space-y-2 mb-2">
+                            <!-- Image input fields will be added here -->
+                        </div>
+                        <button type="button" id="add-image-url-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm flex items-center">
+                            <i class="fas fa-plus ml-2"></i> إضافة رابط صورة
+                        </button>
                     </div>
+
                     <div class="mb-4">
                         <label for="product-description" class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
                         <textarea id="product-description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
@@ -512,7 +557,16 @@
                     <div id="sale-fields-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 hidden">
                         <div>
                             <label for="product-discount-percentage" class="block text-sm font-medium text-gray-700 mb-1">نسبة التخفيض (%)</label>
-                            <input type="number" id="product-discount-percentage" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0" max="100">
+                            <input type="number" id="product-discount-percentage" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0" max="100" step="0.01">
+                        </div>
+                        <div>
+                            <label for="product-sale-price" class="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض (د.ع)</label>
+                            <input type="number" id="product-sale-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" step="0.01">
+                        </div>
+                        <div class="md:col-span-2 flex justify-end">
+                            <button type="button" id="calculate-round-sale-price-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm flex items-center">
+                                <i class="fas fa-calculator ml-2"></i> حساب وتقريب السعر
+                            </button>
                         </div>
                         <div>
                             <label for="product-sale-start-date" class="block text-sm font-medium text-gray-700 mb-1">تاريخ بدء العرض</label>
@@ -558,6 +612,37 @@
                     <div class="mb-6">
                         <label for="category-image" class="block text-sm font-medium text-gray-700 mb-1">رابط الصورة</label>
                         <input type="url" id="category-image" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                    <div class="flex justify-end">
+                        <button type="button" class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg ml-3">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg">
+                            <i class="fas fa-save ml-2"></i> حفظ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- City Delivery Price Add/Edit Modal -->
+        <div id="city-delivery-price-modal" class="modal-overlay hidden">
+            <div class="modal-content max-w-md">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 id="city-delivery-price-modal-title" class="font-bold text-xl text-gray-800">إضافة مدينة جديدة</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="city-delivery-price-form" onsubmit="event.preventDefault(); saveCityDeliveryPrice()">
+                    <input type="hidden" id="city-id-hidden"> <!-- Used to store the original city name for updates -->
+                    <div class="mb-4">
+                        <label for="city-name-input" class="block text-sm font-medium text-gray-700 mb-1">اسم المدينة</label>
+                        <input type="text" id="city-name-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                    </div>
+                    <div class="mb-6">
+                        <label for="city-price-input" class="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل (د.ع)</label>
+                        <input type="number" id="city-price-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0" required>
                     </div>
                     <div class="flex justify-end">
                         <button type="button" class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg ml-3">
@@ -618,7 +703,7 @@
             orders: [],
             products: [],
             categories: [],
-            settings: {}
+            settings: {} // Will now contain deliveryPricesByCity and defaultDeliveryPrice
         };
 
         // --- Utility Functions ---
@@ -692,18 +777,29 @@
                 const settings = snapshot.val();
                 if (settings) {
                     window.adminData.settings = settings;
+                    // Ensure deliveryPricesByCity is an object, even if null/undefined in Firebase
+                    if (!window.adminData.settings.deliveryPricesByCity) {
+                        window.adminData.settings.deliveryPricesByCity = {};
+                    }
                     renderSettings();
+                    renderCityDeliveryPricesTable(); // Render city prices table after settings are loaded
                 } else {
                     // Default settings if none exist in Firebase
                     window.adminData.settings = {
                         storeName: "متجرنا الإلكتروني",
-                        contactPhone: "+964 782 305 3419",
-                        contactWhatsapp: "+964 782 305 3419",
+                        contactPhone: "+9647823053419",
+                        contactWhatsapp: "+9647823053419",
                         contactEmail: "info@zioshop.com",
-                        deliveryPrice: 5000,
+                        deliveryPricesByCity: { // Default cities
+                            "بغداد": 5000,
+                            "البصرة": 7000,
+                            "أربيل": 6000
+                        },
+                        defaultDeliveryPrice: 5000, // Default price
                         thankYouMessage: "شكراً لثقتك بنا! سيتواصل معك فريقنا قريباً لتأكيد طلبك."
                     };
                     renderSettings();
+                    renderCityDeliveryPricesTable();
                 }
                 showNotification("تم تحميل الإعدادات", "info");
             }, (error) => {
@@ -915,7 +1011,8 @@
                     try {
                         await remove(ref(db, `orders/${orderId}`));
                         showNotification("تم حذف الطلب بنجاح", "success");
-                    } catch (error) {
+                    }
+                    catch (error) {
                         console.error("Error deleting order:", error);
                         showNotification("فشل حذف الطلب", "error");
                     }
@@ -950,15 +1047,22 @@
                 filteredProducts.forEach(product => {
                     const originalPrice = (product.price || 0).toLocaleString('ar-EG');
                     let salePriceHtml = 'N/A';
-                    if (product.isSale && product.discountPercentage != null) {
-                        const calculatedSalePrice = product.price * (1 - product.discountPercentage / 100);
-                        salePriceHtml = `${calculatedSalePrice.toLocaleString('ar-EG')} د.ع`;
+                    if (product.isSale) {
+                        if (product.salePrice != null) { // Prefer saved salePrice
+                            salePriceHtml = `${product.salePrice.toLocaleString('ar-EG')} د.ع`;
+                        } else if (product.discountPercentage != null) { // Fallback to calculate from discount if salePrice not explicitly set
+                            const calculatedSalePrice = product.price * (1 - product.discountPercentage / 100);
+                            salePriceHtml = `${calculatedSalePrice.toLocaleString('ar-EG')} د.ع`;
+                        }
                     }
+
+                    // Use the first image for display in the table, or a placeholder
+                    const displayImage = product.images && product.images.length > 0 ? product.images[0] : 'https://placehold.co/80x80/E0E7FF/4F46E5?text=Product';
 
                     html += `
                     <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4" data-label="صورة">
-                            <img src="${product.image || 'https://placehold.co/80x80/E0E7FF/4F46E5?text=Product'}" 
+                            <img src="${displayImage}" 
                                  onerror="this.onerror=null;this.src='https://placehold.co/80x80/E0E7FF/4F46E5?text=Product';"
                                  class="w-20 h-20 object-cover rounded-md" alt="${product.name || 'Product Image'}">
                         </td>
@@ -986,6 +1090,40 @@
         }
 
         /**
+         * Adds a new image URL input field to the product modal with a preview.
+         */
+        window.addImageUrlField = function(imageUrl = '') {
+            const container = document.getElementById('product-images-container');
+            const div = document.createElement('div');
+            div.className = 'flex items-center space-x-2'; // Tailwind classes for spacing
+            div.innerHTML = `
+                <input type="url" class="product-image-url mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="رابط الصورة" value="${imageUrl}">
+                <img src="${imageUrl || 'https://placehold.co/40x40/E0E7FF/4F46E5?text=IMG'}" 
+                     onerror="this.onerror=null;this.src='https://placehold.co/40x40/E0E7FF/4F46E5?text=IMG';"
+                     class="product-image-preview">
+                <button type="button" onclick="removeImageUrlField(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md text-sm flex-shrink-0">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
+
+            // Add event listener to the newly created input for live preview
+            const newImageInput = div.querySelector('.product-image-url');
+            const newImagePreview = div.querySelector('.product-image-preview');
+            newImageInput.addEventListener('input', function() {
+                newImagePreview.src = this.value;
+            });
+        };
+
+        /**
+         * Removes an image URL input field from the product modal.
+         * @param {HTMLElement} button - The remove button element.
+         */
+        window.removeImageUrlField = function(button) {
+            button.closest('div').remove();
+        };
+
+        /**
          * Opens the product add/edit modal and populates it with data if editing an existing product.
          * @param {string|null} productId - The ID of the product to edit, or null for a new product.
          */
@@ -994,6 +1132,9 @@
             const form = document.getElementById("product-form");
             form.reset(); // Clear form
             document.getElementById("product-id").value = productId; // Set hidden ID
+
+            // Clear existing image URL fields
+            document.getElementById('product-images-container').innerHTML = '';
 
             populateCategoryDropdown('product-category');
 
@@ -1010,11 +1151,17 @@
                     document.getElementById("product-description").value = product.description || '';
                     document.getElementById("product-price").value = product.price || '';
                     document.getElementById("product-inventory").value = product.inventory || '';
-                    document.getElementById("product-image").value = product.image || '';
+                    // Populate multiple image URLs
+                    if (product.images && product.images.length > 0) {
+                        product.images.forEach(imgUrl => addImageUrlField(imgUrl));
+                    } else {
+                        addImageUrlField(); // Add at least one empty field
+                    }
                     document.getElementById("product-category").value = product.categoryId || ''; // Use categoryId
                     
                     productIsSaleCheckbox.checked = product.isSale || false;
                     document.getElementById("product-discount-percentage").value = product.discountPercentage || '';
+                    document.getElementById("product-sale-price").value = product.salePrice || ''; // Populate new sale price field
                     document.getElementById("product-sale-start-date").value = product.saleStartDate || '';
                     document.getElementById("product-sale-end-date").value = product.saleEndDate || '';
                 }
@@ -1023,6 +1170,7 @@
                 document.getElementById("product-modal-title").textContent = "إضافة منتج جديد";
                 // Ensure sale fields are hidden by default for new products
                 productIsSaleCheckbox.checked = false;
+                addImageUrlField(); // Add one empty image field for new product
             }
 
             // Toggle visibility of sale fields based on checkbox state
@@ -1061,22 +1209,31 @@
             const description = document.getElementById("product-description").value.trim();
             const price = parseFloat(document.getElementById("product-price").value);
             const inventory = parseInt(document.getElementById("product-inventory").value);
-            const image = document.getElementById("product-image").value.trim();
+            // Get all image URLs
+            const imageUrlInputs = document.querySelectorAll('.product-image-url');
+            const images = Array.from(imageUrlInputs).map(input => input.value.trim()).filter(url => url !== '');
+
             const categoryId = document.getElementById("product-category").value;
             const isNew = document.getElementById("product-is-new").checked;
             const isSale = document.getElementById("product-is-sale").checked;
 
             let discountPercentage = null;
+            let salePrice = null; // New variable for explicit sale price
             let saleStartDate = null;
             let saleEndDate = null;
 
             if (isSale) {
                 discountPercentage = parseFloat(document.getElementById("product-discount-percentage").value);
+                salePrice = parseFloat(document.getElementById("product-sale-price").value); // Get value from new field
                 saleStartDate = document.getElementById("product-sale-start-date").value;
                 saleEndDate = document.getElementById("product-sale-end-date").value;
 
                 if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
                     showNotification("يرجى إدخال نسبة تخفيض صحيحة بين 0 و 100.", "error");
+                    return;
+                }
+                if (isNaN(salePrice) || salePrice < 0) { // Validate new sale price field
+                    showNotification("يرجى إدخال سعر عرض صحيح.", "error");
                     return;
                 }
                 if (!saleStartDate || !saleEndDate) {
@@ -1093,6 +1250,10 @@
                 showNotification("يرجى ملء جميع الحقول المطلوبة بشكل صحيح (الاسم، السعر، المخزون، القسم).", "error");
                 return;
             }
+            if (images.length === 0) {
+                showNotification("يرجى إضافة رابط صورة واحد على الأقل للمنتج.", "error");
+                return;
+            }
 
             const categoryName = window.adminData.categories.find(c => c.id === categoryId)?.name || 'عام';
 
@@ -1101,12 +1262,13 @@
                 description,
                 price,
                 inventory,
-                image,
+                images, // Save as an array of image URLs
                 categoryId, // Store category ID
                 category: categoryName, // Store category name for display in store
                 isNew,
                 isSale,
                 discountPercentage: isSale ? discountPercentage : null,
+                salePrice: isSale ? salePrice : null, // Save the definitive sale price
                 saleStartDate: isSale ? saleStartDate : null,
                 saleEndDate: isSale ? saleEndDate : null,
                 createdAt: productId ? window.adminData.products.find(p => p.id === productId)?.createdAt : new Date().toLocaleString('ar-EG')
@@ -1289,9 +1451,140 @@
             document.getElementById("setting-contact-phone").value = settings.contactPhone || '';
             document.getElementById("setting-contact-whatsapp").value = settings.contactWhatsapp || '';
             document.getElementById("setting-contact-email").value = settings.contactEmail || '';
-            document.getElementById("setting-delivery-price").value = settings.deliveryPrice || '';
+            // document.getElementById("setting-delivery-price").value = settings.deliveryPrice || ''; // Removed old field
+            document.getElementById("setting-default-delivery-price").value = settings.defaultDeliveryPrice || ''; // New field
             document.getElementById("setting-thank-you-message").value = settings.thankYouMessage || '';
         }
+
+        /**
+         * Renders the city delivery prices table.
+         */
+        function renderCityDeliveryPricesTable() {
+            const tableBody = document.getElementById("city-delivery-prices-table-body");
+            if (!tableBody) return;
+
+            const cities = window.adminData.settings.deliveryPricesByCity || {};
+            let html = '';
+            const cityNames = Object.keys(cities).sort(); // Sort cities alphabetically
+
+            if (cityNames.length === 0) {
+                html = `<tr><td colspan="3" class="text-center py-4 text-gray-500">لا توجد أسعار توصيل للمدن.</td></tr>`;
+            } else {
+                cityNames.forEach(cityName => {
+                    const price = cities[cityName];
+                    html += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4" data-label="المدينة">${cityName}</td>
+                        <td class="px-6 py-4" data-label="سعر التوصيل">${(price || 0).toLocaleString('ar-EG')} د.ع</td>
+                        <td class="px-6 py-4 text-right" data-label="إجراءات">
+                            <button onclick="openCityDeliveryPriceModal('${cityName}')" class="text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="deleteCityDeliveryPrice('${cityName}')" class="text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
+                });
+            }
+            tableBody.innerHTML = html;
+        }
+
+        /**
+         * Opens the city delivery price add/edit modal.
+         * @param {string|null} cityName - The name of the city to edit, or null for a new city.
+         */
+        window.openCityDeliveryPriceModal = function(cityName = null) {
+            const modal = document.getElementById("city-delivery-price-modal");
+            const form = document.getElementById("city-delivery-price-form");
+            form.reset();
+            document.getElementById("city-id-hidden").value = cityName; // Store original city name
+
+            if (cityName) {
+                document.getElementById("city-delivery-price-modal-title").textContent = "تعديل سعر التوصيل للمدينة";
+                const price = window.adminData.settings.deliveryPricesByCity[cityName];
+                document.getElementById("city-name-input").value = cityName;
+                document.getElementById("city-price-input").value = price;
+                document.getElementById("city-name-input").readOnly = true; // Prevent changing city name when editing
+            } else {
+                document.getElementById("city-delivery-price-modal-title").textContent = "إضافة مدينة جديدة";
+                document.getElementById("city-name-input").readOnly = false;
+            }
+            modal.classList.remove("hidden");
+        };
+
+        /**
+         * Saves (adds or updates) a city delivery price in settings.
+         */
+        window.saveCityDeliveryPrice = async function() {
+            const originalCityName = document.getElementById("city-id-hidden").value;
+            const cityName = document.getElementById("city-name-input").value.trim();
+            const price = parseFloat(document.getElementById("city-price-input").value);
+
+            if (!cityName || isNaN(price) || price < 0) {
+                showNotification("يرجى إدخال اسم المدينة وسعر توصيل صحيح.", "error");
+                return;
+            }
+
+            // Check for duplicate city name if adding a new city
+            if (!originalCityName && window.adminData.settings.deliveryPricesByCity[cityName]) {
+                showNotification("هذه المدينة موجودة بالفعل. يرجى التعديل عليها بدلاً من الإضافة.", "error");
+                return;
+            }
+
+            // Update the settings object
+            const updatedSettings = { ...window.adminData.settings };
+            if (!updatedSettings.deliveryPricesByCity) {
+                updatedSettings.deliveryPricesByCity = {};
+            }
+
+            // If city name was changed during edit (shouldn't happen with readOnly, but as a safeguard)
+            if (originalCityName && originalCityName !== cityName) {
+                delete updatedSettings.deliveryPricesByCity[originalCityName]; // Remove old entry
+            }
+            updatedSettings.deliveryPricesByCity[cityName] = price; // Add/update new entry
+
+            try {
+                await set(settingsRef, updatedSettings); // Save the entire settings object
+                window.adminData.settings = updatedSettings; // Update local data
+                renderCityDeliveryPricesTable(); // Re-render the table
+                document.getElementById("city-delivery-price-modal").classList.add("hidden");
+                showNotification("تم حفظ سعر التوصيل للمدينة بنجاح", "success");
+            } catch (error) {
+                console.error("Error saving city delivery price:", error);
+                showNotification("فشل حفظ سعر التوصيل للمدينة", "error");
+            }
+        };
+
+        /**
+         * Deletes a city delivery price from settings.
+         * @param {string} cityName - The name of the city to delete.
+         */
+        window.deleteCityDeliveryPrice = async function(cityName) {
+            showConfirmModal(`هل أنت متأكد أنك تريد حذف سعر التوصيل للمدينة "${cityName}"؟`, async (confirmed) => {
+                if (confirmed) {
+                    const updatedSettings = { ...window.adminData.settings };
+                    if (updatedSettings.deliveryPricesByCity && updatedSettings.deliveryPricesByCity[cityName]) {
+                        delete updatedSettings.deliveryPricesByCity[cityName];
+                        try {
+                            await set(settingsRef, updatedSettings); // Save the entire settings object
+                            window.adminData.settings = updatedSettings; // Update local data
+                            renderCityDeliveryPricesTable(); // Re-render the table
+                            showNotification("تم حذف سعر التوصيل للمدينة بنجاح", "success");
+                        } catch (error) {
+                            console.error("Error deleting city delivery price:", error);
+                            showNotification("فشل حذف سعر التوصيل للمدينة", "error");
+                        }
+                    } else {
+                        showNotification("المدينة غير موجودة.", "warning");
+                    }
+                } else {
+                    showNotification("تم إلغاء عملية الحذف", "info");
+                }
+            });
+        };
+
 
         /**
          * Saves the store settings to Firebase.
@@ -1301,25 +1594,28 @@
             const contactPhone = document.getElementById("setting-contact-phone").value.trim();
             const contactWhatsapp = document.getElementById("setting-contact-whatsapp").value.trim();
             const contactEmail = document.getElementById("setting-contact-email").value.trim();
-            const deliveryPrice = parseFloat(document.getElementById("setting-delivery-price").value);
+            const defaultDeliveryPrice = parseFloat(document.getElementById("setting-default-delivery-price").value); // New field
             const thankYouMessage = document.getElementById("setting-thank-you-message").value.trim();
 
-            if (!storeName || !contactPhone || !contactWhatsapp || !contactEmail || isNaN(deliveryPrice) || deliveryPrice < 0) {
+            if (!storeName || !contactPhone || !contactWhatsapp || !contactEmail || isNaN(defaultDeliveryPrice) || defaultDeliveryPrice < 0) {
                 showNotification("يرجى ملء جميع حقول الإعدادات بشكل صحيح.", "error");
                 return;
             }
 
+            // Create a new settings object, preserving existing city prices
             const settingsData = {
                 storeName,
                 contactPhone,
                 contactWhatsapp,
                 contactEmail,
-                deliveryPrice,
-                thankYouMessage
+                defaultDeliveryPrice, // Save new field
+                thankYouMessage,
+                deliveryPricesByCity: window.adminData.settings.deliveryPricesByCity // Preserve city prices
             };
 
             try {
                 await set(settingsRef, settingsData);
+                window.adminData.settings = settingsData; // Update local data
                 showNotification("تم حفظ الإعدادات بنجاح", "success");
             } catch (error) {
                 console.error("Error saving settings:", error);
@@ -1355,6 +1651,9 @@
             const adminContent = document.getElementById("admin-content");
             const loginError = document.getElementById("login-error");
             const togglePasswordButton = document.getElementById("toggle-password");
+            const addImageUrlButton = document.getElementById('add-image-url-btn');
+            const calculateRoundSalePriceBtn = document.getElementById('calculate-round-sale-price-btn');
+
 
             // Search inputs and clear buttons
             const ordersSearchInput = document.getElementById("orders-search-input");
@@ -1370,7 +1669,7 @@
                     loginPage.classList.add("hidden");
                     adminContent.classList.remove("hidden");
                     // Load all data after successful login
-                    loadSettings();
+                    loadSettings(); // This now also loads city delivery prices
                     loadCategories();
                     loadProducts(); 
                     loadOrders();
@@ -1415,8 +1714,25 @@
 
             // Close modal on outside click
             window.addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal-overlay')) {
-                    e.target.classList.add('hidden');
+                const cityDeliveryPriceModal = document.getElementById('city-delivery-price-modal');
+                if (e.target.classList.contains('modal-overlay') && !cityDeliveryPriceModal.classList.contains('hidden')) {
+                    cityDeliveryPriceModal.classList.add('hidden');
+                }
+                const productModal = document.getElementById('product-modal');
+                if (e.target.classList.contains('modal-overlay') && !productModal.classList.contains('hidden')) {
+                    productModal.classList.add('hidden');
+                }
+                const categoryModal = document.getElementById('category-modal');
+                if (e.target.classList.contains('modal-overlay') && !categoryModal.classList.contains('hidden')) {
+                    categoryModal.classList.add('hidden');
+                }
+                const orderDetailsModal = document.getElementById('order-details-modal');
+                if (e.target.classList.contains('modal-overlay') && !orderDetailsModal.classList.contains('hidden')) {
+                    orderDetailsModal.classList.add('hidden');
+                }
+                const confirmModal = document.getElementById('confirm-modal');
+                if (e.target.classList.contains('modal-overlay') && !confirmModal.classList.contains('hidden')) {
+                    confirmModal.classList.add('hidden');
                 }
             });
 
@@ -1429,10 +1745,41 @@
                     saleFieldsContainer.classList.add('hidden');
                     // Clear sale fields when checkbox is unchecked
                     document.getElementById("product-discount-percentage").value = '';
+                    document.getElementById("product-sale-price").value = ''; // Clear new sale price field
                     document.getElementById("product-sale-start-date").value = '';
                     document.getElementById("product-sale-end-date").value = '';
                 }
             });
+
+            // Event listener for "Add Image URL" button
+            addImageUrlButton.addEventListener('click', () => window.addImageUrlField());
+
+            // Event listener for "Calculate & Round Sale Price" button
+            calculateRoundSalePriceBtn.addEventListener('click', function() {
+                const originalPriceInput = document.getElementById('product-price');
+                const discountPercentageInput = document.getElementById('product-discount-percentage');
+                const salePriceInput = document.getElementById('product-sale-price');
+
+                const originalPrice = parseFloat(originalPriceInput.value);
+                const discountPercentage = parseFloat(discountPercentageInput.value);
+
+                if (isNaN(originalPrice) || originalPrice <= 0) {
+                    showNotification("يرجى إدخال السعر الأصلي للمنتج أولاً.", "warning");
+                    return;
+                }
+                if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
+                    showNotification("يرجى إدخال نسبة تخفيض صحيحة بين 0 و 100.", "warning");
+                    return;
+                }
+
+                const calculatedSalePrice = originalPrice * (1 - discountPercentage / 100);
+                // Round up to the nearest whole number
+                const roundedSalePrice = Math.ceil(calculatedSalePrice); 
+
+                salePriceInput.value = roundedSalePrice; // Set the rounded value
+                showNotification("تم حساب وتقريب سعر العرض بنجاح.", "success");
+            });
+
 
             // --- Search Functionality Event Listeners ---
 
