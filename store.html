@@ -4,2205 +4,1314 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>متجرنا الإلكتروني</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap');
         body {
-            background-color: #f8f9fa;
-            color: #333;
-            min-height: 100vh;
-            padding-bottom: 70px;
+            font-family: 'Tajawal', sans-serif;
+            background-color: #f5f7fa; /* Light background */
+            direction: rtl; /* Right-to-left for Arabic */
+            text-align: right;
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            display: flex;
+            flex-direction: column;
         }
-        
-        /* شريط التنقل العلوي */
-        .top-nav {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            flex-grow: 1; /* Allow container to grow and push footer down */
+            padding-bottom: 90px; /* Default padding for footer height */
+        }
+
+        .header {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
             padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        
-        .logo {
-            color: white;
-            font-size: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-        }
-        
-        .logo i {
-            margin-left: 10px;
-        }
-        
-        .nav-icons {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .nav-icons a {
-            color: white;
-            font-size: 1.2rem;
-            position: relative;
-        }
-        
-        .cart-count {
-            position: absolute;
-            top: -8px;
-            left: -8px;
-            background-color: #ff4757;
-            color: white;
-            font-size: 0.7rem;
-            width: 18px;
-            height: 18px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        /* شريط البحث */
-        .search-container {
-            padding: 10px 20px;
-            background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 68px;
-            z-index: 99;
-        }
-        
-        .search-box {
-            display: flex;
-            background: #f1f2f6;
-            border-radius: 30px;
-            padding: 8px 15px;
-        }
-        
-        .search-box input {
-            flex: 1;
-            border: none;
-            background: transparent;
-            outline: none;
-            font-size: 1rem;
-            padding: 5px;
-        }
-        
-        .search-box button {
-            background: transparent;
-            border: none;
-            color: #6a11cb;
-            font-size: 1.2rem;
-            cursor: pointer;
-        }
-        
-        /* أقسام الصفحات */
-        .page {
-            display: none;
-            padding: 20px;
-            animation: fadeIn 0.5s;
-        }
-        
-        .page.active {
-            display: block;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .section-title {
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            color: #2f3542;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-title i {
-            margin-left: 10px;
-            color: #3742fa;
-        }
-        
-        /* تصميم الأقسام */
-        .categories-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .category-card {
-            background: white;
             border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s;
-            text-align: center;
-            padding: 15px 10px;
-            cursor: pointer;
-            border: 2px solid transparent;
+            /* Removed flex and justify-content from here, using Tailwind grid instead */
+            align-items: center; /* Keep align-items for vertical centering */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-        
-        .category-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .category-card.active {
-            border-color: #6a11cb;
-        }
-        
-        .category-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 auto 10px;
-            color: white;
-            font-size: 1.5rem;
-        }
-        
-        .category-name {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
-        /* تصميم المنتجات */
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .product-card {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s, box-shadow 0.3s;
-            position: relative;
-        }
-        
-        .product-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        }
-        
-        .product-image {
-            height: 140px;
-            background-color: #f1f2f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        
-        .product-image img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        
-        .product-info {
-            padding: 12px;
-        }
-        
-        .product-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 0.95rem;
-            height: 40px;
-            overflow: hidden;
-        }
-        
-        .product-price {
-            color: #e84118;
-            font-weight: 700;
-            font-size: 1.1rem;
-        }
-        
-        .product-stock {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-            margin: 5px 0;
-        }
-        
-        .original-price {
-            color: #7f8c8d;
-            text-decoration: line-through;
-            font-size: 0.85rem;
-            margin-left: 5px;
-        }
-        
-        .discount-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: #ff4757;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .new-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: #2ed573;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-        
-        .action-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-        }
-        
-        .add-to-cart, .add-to-fav {
-            background: #3742fa;
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .add-to-cart:hover {
-            background: #5352ed;
-        }
-        
-        .add-to-fav {
-            background: #ff6b81;
-        }
-        
-        .add-to-fav:hover {
-            background: #ff4757;
-        }
-        
-        .add-to-fav.active {
-            background: #ff4757;
-            color: white;
-        }
-        
-        /* صفحة المفضلة */
-        .favorite-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-bottom: 15px;
-        }
-        
-        .remove-all-btn {
-            background: #ff6b81;
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .remove-all-btn:hover {
-            background: #ff4757;
-        }
-        
-        /* صفحة السلة */
-        .cart-item {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            align-items: center;
-        }
-        
-        .cart-item-image {
-            width: 80px;
-            height: 80px;
-            background: #f1f2f6;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-left: 15px;
-            overflow: hidden;
-        }
-        
-        .cart-item-image img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-        }
-        
-        .cart-item-details {
-            flex: 1;
-        }
-        
-        .cart-item-name {
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        
-        .cart-item-price {
-            color: #e84118;
-            font-weight: 700;
-        }
-        
-        .cart-item-actions {
+        .header-nav-links {
             display: flex;
             align-items: center;
-            margin-top: 10px;
         }
-        
-        .quantity-btn {
-            width: 28px;
-            height: 28px;
-            background: #f1f2f6;
-            border: none;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-        
-        .quantity-value {
-            margin: 0 10px;
-            font-weight: 600;
-        }
-        
-        .remove-btn {
-            margin-right: 15px;
-            color: #ff6b81;
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-        
-        .cart-summary {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 12px;
-        }
-        
-        .summary-total {
-            font-weight: 700;
-            font-size: 1.2rem;
-            color: #2f3542;
-            padding-top: 15px;
-            border-top: 1px dashed #dfe4ea;
-        }
-        
-        .checkout-btn {
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+        .footer-nav {
+            background-color: #4f46e5; /* Indigo 600 */
             color: white;
-            border: none;
-            border-radius: 30px;
-            padding: 15px;
-            width: 100%;
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-top: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(37, 117, 252, 0.3);
-            transition: transform 0.3s;
-        }
-        
-        .checkout-btn:hover {
-            transform: translateY(-3px);
-        }
-        
-        /* شريط التذييل السفلي */
-        .bottom-nav {
-            position: fixed;
+            padding: 10px 0;
+            position: fixed; /* Make it fixed */
             bottom: 0;
             left: 0;
             right: 0;
-            background: white;
+            z-index: 999; /* Ensure it's above other content */
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column; /* Stack main links and categories vertically */
+            align-items: center;
+        }
+        .footer-main-links {
             display: flex;
             justify-content: space-around;
-            padding: 12px 0;
-            border-top: 1px solid #f1f2f6;
-            box-shadow: 0 -4px 10px rgba(0, 0, 0, 0.05);
-            z-index: 100;
+            width: 100%;
+            flex-wrap: wrap;
         }
-        
-        .nav-btn {
+        .nav-link-store, .cart-icon-container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            color: #7f8c8d;
-            font-size: 0.8rem;
-            text-decoration: none;
-            transition: color 0.3s;
-            width: 70px;
+            justify-content: center;
+            padding: 8px 10px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            color: white; /* Ensure text color is white */
+            text-decoration: none; /* Remove underline */
+            font-size: 0.85rem; /* Smaller font for footer links */
+            min-width: 70px; /* Ensure consistent width for buttons */
         }
-        
-        .nav-btn i {
-            font-size: 1.4rem;
-            margin-bottom: 5px;
+        .nav-link-store i, .cart-icon-container i {
+            margin-bottom: 5px; /* Space between icon and text */
+            font-size: 1.2rem; /* Adjust icon size */
+            margin-left: 0; /* Remove right-to-left margin */
         }
-        
-        .nav-btn.active {
-            color: #3742fa;
+        .nav-link-store:hover, .cart-icon-container:hover {
+            background-color: #4338ca; /* Indigo 700 */
         }
-        
-        /* تأثيرات عامة */
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #7f8c8d;
+        .nav-link-store.active {
+            background-color: #4338ca; /* Indigo 700 */
         }
-        
-        .empty-state i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            color: #dfe4ea;
+        .cart-icon-container {
+            position: relative;
         }
-        
-        .payment-info {
-            background: white;
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: 5px; /* Adjusted position for header icons */
+            background-color: #ef4444; /* Red 500 */
+            color: white;
+            border-radius: 50%;
+            padding: 2px 7px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+        .product-card {
+            background-color: white;
             border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            /* Removed cursor: pointer from here as we have specific clickable areas now */
+            display: flex;
+            flex-direction: column;
+            height: 100%; /* Ensure cards in a row have equal height */
+            position: relative; /* For favorite icon positioning */
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        .product-image {
+            width: 100%;
+            height: 200px; /* Fixed height for consistent image size */
+            object-fit: cover;
+            border-bottom: 1px solid #eee;
+            cursor: pointer; /* Make image clickable for modal */
+        }
+        .product-info {
             padding: 15px;
-            text-align: center;
-            margin-top: 15px;
+            flex-grow: 1; /* Allow info section to expand */
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            font-weight: 600;
-            color: #3742fa;
-            border: 1px solid #e0e0e0;
+            flex-direction: column;
+            justify-content: space-between;
+            cursor: pointer; /* Make info area clickable for modal */
         }
-        
-        /* فلتر الترتيب */
-        .sort-container {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        
-        .sort-container select {
-            width: 100%;
-            padding: 10px 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-            background: white;
-            font-size: 1rem;
+        .product-name {
+            font-weight: 700;
+            font-size: 1.1rem;
             color: #333;
-        }
-        
-        /* الإشعارات */
-        .notification {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 15px 25px;
-            border-radius: 30px;
-            font-size: 0.9rem;
-            z-index: 1000;
-            animation: fadeInOut 3s forwards;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-            20% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            80% { opacity: 1; transform: translateX(-50%) translateY(0); }
-            100% { opacity: 0; transform: translateX(-50%) translateY(20px); }
-        }
-        
-        /* تأكيد الحذف */
-        .confirm-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .confirm-content {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
-        }
-        
-        .confirm-title {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
-            color: #2f3542;
-        }
-        
-        .confirm-message {
-            margin-bottom: 25px;
-            color: #7f8c8d;
-        }
-        
-        .confirm-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .confirm-btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .confirm-cancel {
-            background: #f1f2f6;
-            color: #2f3542;
-        }
-        
-        .confirm-cancel:hover {
-            background: #e0e0e0;
-        }
-        
-        .confirm-delete {
-            background: #ff6b81;
-            color: white;
-        }
-        
-        .confirm-delete:hover {
-            background: #ff4757;
-        }
-        
-        /* رسالة تأكيد الحذف */
-        .confirm-favorite-delete {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .confirm-favorite-content {
-            background: white;
-            border-radius: 15px;
-            padding: 25px;
-            width: 90%;
-            max-width: 350px;
-            text-align: center;
-        }
-        
-        /* صفحة معلومات العميل */
-        .customer-form {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
             margin-bottom: 8px;
-            font-weight: 600;
-            color: #2f3542;
         }
-        
-        .form-group input, .form-group textarea {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            background: #f8f9fa;
-        }
-        
-        .form-group textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        
-        .back-to-cart {
-            display: inline-block;
-            margin-top: 15px;
-            color: #3742fa;
-            text-decoration: none;
-            font-weight: 600;
-        }
-        
-        .back-to-cart i {
-            margin-left: 5px;
-        }
-        
-        /* لوحة التحكم */
-        .admin-dashboard {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .admin-section {
-            margin-bottom: 30px;
-        }
-        
-        .admin-section h3 {
+        .product-price {
             font-size: 1.2rem;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #f1f2f6;
+            font-weight: 700;
+            color: #4f46e5; /* Indigo 600 */
+        }
+        .product-original-price {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 0.9rem;
+            margin-right: 8px;
+        }
+        .product-description {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+        .category-button-page { /* Class for category buttons on the new categories page */
+            background-color: #e0e7ff; /* Indigo 100 */
+            color: #4f46e5; /* Indigo 600 */
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 1rem;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100px; /* Fixed height for category cards */
+        }
+        .category-button-page:hover, .category-button-page.active {
+            background-color: #4f46e5; /* Indigo 600 */
+            color: white;
+        }
+        .category-button-page i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
             display: flex;
             align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-out;
         }
-        
-        .admin-section h3 i {
-            margin-left: 10px;
-            color: #3742fa;
-        }
-        
-        .orders-list {
-            max-height: 400px;
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            width: 90%;
+            max-width: 700px;
+            animation: slideIn 0.3s ease-out;
+            max-height: 90vh;
             overflow-y: auto;
         }
-        
-        .order-item {
-            padding: 15px;
-            margin-bottom: 15px;
-            border: 1px solid #f1f2f6;
-            border-radius: 10px;
-            background: #f8f9fa;
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        
-        .order-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px dashed #dfe4ea;
+        @keyframes slideIn {
+            from { transform: translateY(-30px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
-        
-        .order-customer {
-            font-weight: 600;
-        }
-        
-        .order-date {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-        
-        .order-items {
-            margin-top: 10px;
-        }
-        
-        .order-item-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-            font-size: 0.9rem;
-        }
-        
-        .order-total {
-            font-weight: 700;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px dashed #dfe4ea;
-        }
-        
-        .order-status {
-            margin-top: 10px;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            display: inline-block;
-        }
-        
-        .status-pending {
-            background: #ffd166;
-            color: #333;
-        }
-        
-        .status-completed {
-            background: #06d6a0;
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
             color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            animation: slideInNotification 0.3s, fadeOutNotification 0.5s 2.5s forwards;
         }
-        
-        /* صفحة الملف الشخصي */
-        .profile-page {
-            display: none;
-            padding: 20px;
-            animation: fadeIn 0.5s;
+        @keyframes slideInNotification {
+            from { right: -300px; opacity: 0; }
+            to { right: 20px; opacity: 1; }
         }
-        
-        .profile-page.active {
-            display: block;
+        @keyframes fadeOutNotification {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
-        
-        .profile-header {
-            text-align: center;
-            padding: 20px 0;
-        }
-        
-        .profile-pic {
-            width: 100px;
-            height: 100px;
+        .notification.success { background-color: #10b981; }
+        .notification.error { background-color: #ef4444; }
+        .notification.warning { background-color: #f59e0b; }
+        .notification.info { background-color: #3b82f6; }
+
+        .favorite-toggle-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
             border-radius: 50%;
-            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-            margin: 0 auto 15px;
+            width: 35px;
+            height: 35px;
             display: flex;
+            align-items: center;
             justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 2.5rem;
+            font-size: 1.2rem;
+            color: #ccc;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            z-index: 10;
         }
-        
-        .profile-name {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 5px;
+        .favorite-toggle-btn.active {
+            color: #ef4444; /* Red for favorited */
         }
-        
-        .profile-email {
-            color: #7f8c8d;
-            margin-bottom: 20px;
+        .favorite-toggle-btn:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+            color: #e02424;
         }
-        
-        .profile-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-bottom: 30px;
-        }
-        
-        .stat-card {
-            background: white;
-            border-radius: 12px;
-            padding: 15px;
-            text-align: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .stat-value {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #3742fa;
-        }
-        
-        .stat-label {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-        
-        .profile-menu {
-            background: white;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-        
-        .menu-item {
-            padding: 18px 20px;
+
+        .back-to-home-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-left: 10px; /* Space from the title */
             display: flex;
             align-items: center;
-            border-bottom: 1px solid #f1f2f6;
-            transition: background 0.3s;
+            justify-content: center;
+            color: #4f46e5; /* Indigo 600 */
+            transition: color 0.2s ease;
         }
-        
-        .menu-item:last-child {
-            border-bottom: none;
+        .back-to-home-btn:hover {
+            color: #4338ca; /* Indigo 700 */
         }
-        
-        .menu-item:hover {
-            background: #f8f9fa;
+        .back-to-home-btn i {
+            font-size: 1.5rem; /* Adjust icon size */
         }
-        
-        .menu-item i {
-            width: 30px;
-            color: #3742fa;
-            font-size: 1.2rem;
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .header {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+                justify-items: center; /* Center items in the grid */
+            }
+            .header h1 {
+                margin-bottom: 10px;
+            }
+            .header-nav-links {
+                width: 100%;
+                justify-content: center;
+                margin-top: 10px; /* Add some space below the title */
+            }
+            .footer-nav {
+                padding: 10px 5px;
+            }
+            .footer-main-links {
+                flex-wrap: wrap;
+                justify-content: space-around;
+            }
+            .nav-link-store, .cart-icon-container {
+                margin: 5px 0; /* Add vertical margin for wrapped items */
+                font-size: 0.7rem; /* Even smaller font for very small screens */
+                min-width: 60px;
+            }
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            }
+            .product-image {
+                height: 140px;
+            }
+            .modal-content {
+                padding: 15px;
+            }
         }
     </style>
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 </head>
 <body>
-    <!-- شريط التنقل العلوي -->
-    <nav class="top-nav">
-        <div class="logo">
-            <i class="fas fa-store"></i>
-            <span>متجرنا</span>
-        </div>
-        <div class="nav-icons">
-            <a href="#" class="cart-icon" data-page="cart">
-                <i class="fas fa-shopping-cart"></i>
-                <span class="cart-count">0</span>
-            </a>
-            <a href="#" class="profile-icon" data-page="profile">
-                <i class="fas fa-user"></i>
-            </a>
-        </div>
-    </nav>
+    <div class="container">
+        <!-- Header -->
+        <header class="header grid grid-cols-3 items-center">
+            <!-- Empty div for left alignment to push middle to center -->
+            <div></div> 
+            <h1 id="store-name" class="text-3xl font-bold flex items-center justify-center col-start-2 col-span-1">
+                <i class="fas fa-store ml-3"></i> متجرنا الإلكتروني
+            </h1>
+            <nav class="header-nav-links justify-self-end">
+                <a href="#" id="contact-us-link" class="nav-link-store text-white hover:bg-indigo-700 ml-4"><i class="fas fa-info-circle ml-2"></i> اتصل بنا</a>
+                <div id="cart-icon-container" class="cart-icon-container text-white hover:bg-indigo-700 ml-4" onclick="openCartModal()">
+                    <i class="fas fa-shopping-cart ml-2"></i>
+                    <span>السلة</span>
+                    <span id="cart-count" class="cart-count">0</span>
+                </div>
+            </nav>
+        </header>
 
-    <!-- شريط البحث -->
-    <div class="search-container">
-        <div class="search-box">
-            <input type="text" id="search-input" placeholder="ابحث عن منتج...">
-            <button id="search-btn">
-                <i class="fas fa-search"></i>
-            </button>
-        </div>
-    </div>
+        <!-- Home Section (Main Products Display) -->
+        <section id="home-section" class="store-section">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">منتجاتنا</h2>
+            <div id="products-grid-home" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+                <!-- Products will be loaded here by JS -->
+                <div class="col-span-full text-center py-10 text-gray-500">جاري تحميل المنتجات...</div>
+            </div>
+        </section>
 
-    <!-- محتوى الصفحات -->
-    <main>
-        <!-- الصفحة الرئيسية -->
-        <section id="home" class="page active">
-            <h2 class="section-title">
-                <i class="fas fa-list"></i>
-                الأقسام
-            </h2>
-            
-            <div class="categories-grid" id="categories-container">
-                <!-- سيتم إضافة الأقسام ديناميكيًا من لوحة التحكم -->
-                <div class="empty-state" style="grid-column: 1/-1">
-                    <i class="fas fa-box-open"></i>
-                    <h3>لا توجد أقسام بعد</h3>
-                    <p>يرجى إضافة أقسام من لوحة التحكم</p>
-                </div>
-            </div>
-            
-            <h2 class="section-title">
-                <i class="fas fa-star"></i>
-                المنتجات
-            </h2>
-            
-            <div class="sort-container">
-                <select id="sort-select">
-                    <option value="default">الترتيب الافتراضي</option>
-                    <option value="price_high_low">السعر (من الأعلى إلى الأقل)</option>
-                    <option value="price_low_high">السعر (من الأقل إلى الأعلى)</option>
-                    <option value="quantity_high_low">الكمية (من الأكثر إلى الأقل)</option>
-                    <option value="quantity_low_high">الكمية (من الأقل إلى الأكثر)</option>
-                </select>
-            </div>
-            
-            <div class="products-grid" id="products-container">
-                <!-- سيتم إضافة المنتجات ديناميكيًا من لوحة التحكم -->
-                <div class="empty-state" style="grid-column: 1/-1">
-                    <i class="fas fa-box-open"></i>
-                    <h3>لا توجد منتجات بعد</h3>
-                    <p>يرجى إضافة منتجات من لوحة التحكم</p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- صفحة المنتجات الجديدة -->
-        <section id="new" class="page">
-            <h2 class="section-title">
-                <i class="fas fa-fire"></i>
-                المنتجات الجديدة
-            </h2>
-            
-            <div class="products-grid" id="new-products">
-                <!-- سيتم إضافة المنتجات ديناميكيًا -->
-                <div class="empty-state" style="grid-column: 1/-1">
-                    <i class="fas fa-box-open"></i>
-                    <h3>لا توجد منتجات جديدة</h3>
-                    <p>يرجى إضافة منتجات جديدة من لوحة التحكم</p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- صفحة التخفيضات -->
-        <section id="discounts" class="page">
-            <h2 class="section-title">
-                <i class="fas fa-percentage"></i>
-                التخفيضات والعروض
-            </h2>
-            
-            <div class="products-grid" id="discounted-products">
-                <!-- سيتم إضافة المنتجات ديناميكيًا -->
-                <div class="empty-state" style="grid-column: 1/-1">
-                    <i class="fas fa-box-open"></i>
-                    <h3>لا توجد عروض حالية</h3>
-                    <p>يرجى إضافة عروض من لوحة التحكم</p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- صفحة المفضلة -->
-        <section id="wishlist" class="page">
-            <div class="favorite-actions">
-                <button class="remove-all-btn" id="remove-all-favorites">
-                    <i class="fas fa-trash-alt"></i> حذف الكل
+        <!-- Sales Section -->
+        <section id="sales-section" class="store-section hidden">
+            <div class="flex items-center justify-between mb-6">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                    <i class="fas fa-arrow-left"></i>
                 </button>
+                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">عروضنا المميزة</h2>
+                <div class="w-10"></div> <!-- Placeholder for balance -->
             </div>
-            
-            <h2 class="section-title">
-                <i class="fas fa-heart"></i>
-                منتجاتك المفضلة
-            </h2>
-            
-            <div class="products-grid" id="favorite-products">
-                <!-- سيتم إضافة المنتجات ديناميكيًا -->
-                <div class="empty-state" style="grid-column: 1/-1">
-                    <i class="fas fa-heart"></i>
-                    <h3>قائمة المفضلة فارغة</h3>
-                    <p>أضف منتجات إلى قائمة المفضلة بالضغط على القلب</p>
-                </div>
+            <div id="products-grid-sales" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+                <!-- Sales products will be loaded here by JS -->
+                <div class="col-span-full text-center py-10 text-gray-500">لا توجد عروض حالياً.</div>
             </div>
         </section>
-        
-        <!-- صفحة السلة -->
-        <section id="cart" class="page">
-            <h2 class="section-title">
-                <i class="fas fa-shopping-cart"></i>
-                سلة التسوق
-            </h2>
-            
-            <div id="cart-items">
-                <!-- سيتم إضافة عناصر السلة ديناميكيًا -->
-                <div class="empty-state">
-                    <i class="fas fa-shopping-cart"></i>
-                    <h3>سلة التسوق فارغة</h3>
-                    <p>ابدأ بإضافة بعض المنتجات إلى سلة التسوق</p>
-                </div>
+
+        <!-- New Arrivals Section -->
+        <section id="new-arrivals-section" class="store-section hidden">
+            <div class="flex items-center justify-between mb-6">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">وصل حديثاً</h2>
+                <div class="w-10"></div> <!-- Placeholder for balance -->
             </div>
-            
-            <div class="cart-summary">
-                <div class="summary-row">
-                    <span>المجموع الجزئي</span>
-                    <span>0 د.ع</span>
-                </div>
-                <div class="summary-row">
-                    <span>التوصيل</span>
-                    <span>0 د.ع</span>
-                </div>
-                <div class="summary-row summary-total">
-                    <span>الإجمالي</span>
-                    <span>0 د.ع</span>
-                </div>
-                
-                <h3 class="section-title" style="margin-top: 20px;">
-                    <i class="fas fa-money-bill-wave"></i>
-                    طريقة الدفع
-                </h3>
-                
-                <div class="payment-info">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    الدفع عند الاستلام فقط
-                </div>
-                
-                <button class="checkout-btn" id="proceed-to-checkout">إتمام الشراء</button>
+            <div id="products-grid-new-arrivals" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+                <!-- New arrivals products will be loaded here by JS -->
+                <div class="col-span-full text-center py-10 text-gray-500">لا توجد منتجات جديدة حالياً.</div>
             </div>
         </section>
-        
-        <!-- صفحة معلومات العميل -->
-        <section id="customer-info" class="page">
-            <h2 class="section-title">
-                <i class="fas fa-user"></i>
-                معلومات العميل
-            </h2>
-            
-            <a href="#" class="back-to-cart" data-page="cart">
-                <i class="fas fa-arrow-left"></i> العودة إلى السلة
-            </a>
-            
-            <div class="customer-form">
-                <form id="customer-form">
-                    <div class="form-group">
-                        <label for="customer-name">اسم العميل الكامل</label>
-                        <input type="text" id="customer-name" required placeholder="أدخل اسمك الكامل">
+
+        <!-- Favorites Section -->
+        <section id="favorites-section" class="store-section hidden">
+            <div class="flex items-center justify-between mb-6">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">منتجاتك المفضلة</h2>
+                <div class="w-10"></div> <!-- Placeholder for balance -->
+            </div>
+            <div id="products-grid-favorites" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+                <!-- Favorite products will be loaded here by JS -->
+                <div class="col-span-full text-center py-10 text-gray-500">لم تقم بإضافة أي منتجات إلى المفضلة بعد.</div>
+            </div>
+        </section>
+
+        <!-- Categories Page Section -->
+        <section id="categories-page-section" class="store-section hidden">
+            <div class="flex items-center justify-between mb-6">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">تصفح الأقسام</h2>
+                <div class="w-10"></div> <!-- Placeholder for balance -->
+            </div>
+            <div id="categories-grid-page" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Categories will be loaded here by JS -->
+                <div class="col-span-full text-center py-10 text-gray-500">جاري تحميل الأقسام...</div>
+            </div>
+        </section>
+
+        <!-- Product Details Modal -->
+        <div id="product-details-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 id="modal-product-name" class="font-bold text-xl text-gray-800">اسم المنتج</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <img id="modal-product-image" src="" alt="Product Image" class="w-full h-auto object-cover rounded-md mb-4">
+                        <div class="flex items-baseline mb-2">
+                            <p id="modal-product-price" class="text-3xl font-bold text-indigo-600 ml-2">0 د.ع</p>
+                            <p id="modal-product-original-price" class="text-lg text-gray-500 line-through hidden">0 د.ع</p>
+                        </div>
+                        <p id="modal-product-category" class="text-sm text-gray-600 mb-2">القسم: عام</p>
+                        <p id="modal-product-inventory" class="text-sm text-gray-600 mb-4">المخزون: متوفر</p>
                     </div>
-                    <div class="form-group">
-                        <label for="customer-phone">رقم الهاتف</label>
-                        <input type="tel" id="customer-phone" required placeholder="أدخل رقم هاتفك">
+                    <div>
+                        <p id="modal-product-description" class="text-gray-700 leading-relaxed mb-6">وصف المنتج سيظهر هنا.</p>
+                        <button id="add-to-cart-btn" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg w-full flex items-center justify-center text-lg font-semibold">
+                            <i class="fas fa-cart-plus ml-3"></i> أضف إلى السلة
+                        </button>
+                        <button id="toggle-favorite-modal-btn" class="mt-3 bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-lg w-full flex items-center justify-center text-lg font-semibold">
+                            <i class="fas fa-heart ml-3"></i> <span id="favorite-text">أضف إلى المفضلة</span>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="customer-address">العنوان التفصيلي</label>
-                        <textarea id="customer-address" required placeholder="أدخل عنوانك بالتفصيل"></textarea>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg">
+                        إغلاق
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart Modal -->
+        <div id="cart-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 class="font-bold text-xl text-gray-800">سلة التسوق</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="cart-items-list" class="space-y-4 mb-6 max-h-80 overflow-y-auto">
+                    <!-- Cart items will be rendered here -->
+                    <p class="text-center text-gray-500 py-4">سلة التسوق فارغة.</p>
+                </div>
+                <div class="flex justify-between items-center text-lg font-bold text-gray-800 border-t pt-4">
+                    <span>الإجمالي الفرعي:</span>
+                    <span id="cart-subtotal">0 د.ع</span>
+                </div>
+                <div class="flex justify-between items-center text-lg font-bold text-gray-800 mt-2">
+                    <span>سعر التوصيل:</span>
+                    <span id="cart-delivery-price">0 د.ع</span>
+                </div>
+                <div class="flex justify-between items-center text-2xl font-bold text-indigo-600 border-t pt-4 mt-4">
+                    <span>الإجمالي الكلي:</span>
+                    <span id="cart-total">0 د.ع</span>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg ml-3">
+                        متابعة التسوق
+                    </button>
+                    <button id="proceed-to-checkout-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg">
+                        <i class="fas fa-money-check-alt ml-2"></i> إتمام الشراء
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Checkout Modal -->
+        <div id="checkout-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 class="font-bold text-xl text-gray-800">إتمام الشراء</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <form id="checkout-form" onsubmit="event.preventDefault(); placeOrder()">
+                    <h4 class="font-bold text-lg mb-3">معلومات الشحن</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div>
+                            <label for="checkout-name" class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
+                            <input type="text" id="checkout-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                        </div>
+                        <div>
+                            <label for="checkout-phone" class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
+                            <input type="tel" id="checkout-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="checkout-address" class="block text-sm font-medium text-gray-700 mb-1">العنوان الكامل</label>
+                            <textarea id="checkout-address" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required></textarea>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label for="checkout-notes" class="block text-sm font-medium text-gray-700 mb-1">ملاحظات إضافية (اختياري)</label>
+                            <textarea id="checkout-notes" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="customer-notes">ملاحظات إضافية</label>
-                        <textarea id="customer-notes" placeholder="ملاحظات حول الطلب (اختياري)"></textarea>
+
+                    <h4 class="font-bold text-lg mb-3">طريقة الدفع</h4>
+                    <div class="mb-6 p-3 bg-gray-100 rounded-md text-gray-700">
+                        <p><i class="fas fa-money-bill-wave ml-2 text-green-600"></i> الدفع عند الاستلام فقط</p>
                     </div>
-                    <button type="submit" class="checkout-btn">إرسال الطلب</button>
+
+                    <h4 class="font-bold text-lg mb-3">ملخص الطلب</h4>
+                    <div id="checkout-summary-list" class="space-y-2 mb-4 bg-gray-50 p-4 rounded-md max-h-40 overflow-y-auto">
+                        <!-- Cart items summary will be rendered here -->
+                    </div>
+                    <div class="flex justify-between items-center text-md font-medium text-gray-700">
+                        <span>الإجمالي الفرعي:</span>
+                        <span id="checkout-subtotal">0 د.ع</span>
+                    </div>
+                    <div class="flex justify-between items-center text-md font-medium text-gray-700 mt-2">
+                        <span>سعر التوصيل:</span>
+                        <span id="checkout-delivery-price">0 د.ع</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xl font-bold text-indigo-600 border-t pt-4 mt-4">
+                        <span>الإجمالي الكلي:</span>
+                        <span id="checkout-total">0 د.ع</span>
+                    </div>
+
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button type="button" class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg ml-3">
+                            إلغاء
+                        </button>
+                        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg">
+                            <i class="fas fa-check-circle ml-2"></i> تأكيد الطلب
+                        </button>
+                    </div>
                 </form>
             </div>
-        </section>
-        
-        <!-- لوحة تحكم المشرف -->
-        <section id="admin-dashboard" class="page">
-            <h2 class="section-title">
-                <i class="fas fa-tachometer-alt"></i>
-                لوحة التحكم
-            </h2>
-            
-            <div class="admin-dashboard">
-                <div class="admin-section">
-                    <h3><i class="fas fa-shopping-cart"></i> الطلبات الحديثة</h3>
-                    <div class="orders-list" id="orders-list">
-                        <!-- سيتم إضافة الطلبات ديناميكيًا -->
-                        <div class="empty-state">
-                            <i class="fas fa-shopping-cart"></i>
-                            <h3>لا توجد طلبات بعد</h3>
-                            <p>سيظهر هنا أحدث الطلبات من العملاء</p>
-                        </div>
-                    </div>
+        </div>
+
+        <!-- Contact Us Modal -->
+        <div id="contact-us-modal" class="modal-overlay hidden">
+            <div class="modal-content max-w-lg">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 class="font-bold text-xl text-gray-800">اتصل بنا</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                
-                <div class="admin-section">
-                    <h3><i class="fas fa-chart-line"></i> إحصائيات المتجر</h3>
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <div class="stat-value">0</div>
-                            <div class="stat-label">إجمالي الطلبات</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">0</div>
-                            <div class="stat-label">إجمالي المبيعات (د.ع)</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-value">0</div>
-                            <div class="stat-label">المنتجات</div>
-                        </div>
-                    </div>
+                <div class="text-gray-700 space-y-3">
+                    <p class="flex items-center"><i class="fas fa-store ml-3 text-indigo-600"></i> <span id="contact-store-name"></span></p>
+                    <p class="flex items-center"><i class="fas fa-phone ml-3 text-indigo-600"></i> <span id="contact-phone"></span></p>
+                    <p class="flex items-center"><i class="fab fa-whatsapp ml-3 text-green-600"></i> <span id="contact-whatsapp"></span></p>
+                    <p class="flex items-center"><i class="fas fa-envelope ml-3 text-indigo-600"></i> <span id="contact-email"></span></p>
+                </div>
+                <div class="mt-6 flex justify-end">
+                    <button class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg">
+                        إغلاق
+                    </button>
                 </div>
             </div>
-        </section>
-    </main>
-    
-    <!-- صفحة الملف الشخصي -->
-    <section id="profile" class="profile-page">
-        <div class="profile-header">
-            <div class="profile-pic">
-                <i class="fas fa-user"></i>
-            </div>
-            <div class="profile-name">سجاد الياسري</div>
-            <div class="profile-email">sajad@example.com</div>
         </div>
-        
-        <div class="profile-stats">
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">الطلبات</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0</div>
-                <div class="stat-label">المفضلة</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-value">0.0</div>
-                <div class="stat-label">التقييم</div>
-            </div>
-        </div>
-        
-        <div class="profile-menu">
-            <div class="menu-item">
-                <i class="fas fa-history"></i>
-                <span>طلباتي السابقة</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>عناويني</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-credit-card"></i>
-                <span>طرق الدفع</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-cog"></i>
-                <span>الإعدادات</span>
-            </div>
-            <div class="menu-item">
-                <i class="fas fa-sign-out-alt"></i>
-                <span>تسجيل الخروج</span>
-            </div>
-        </div>
-    </section>
-    
-    <!-- شريط التذييل السفلي -->
-    <nav class="bottom-nav">
-        <a href="#" class="nav-btn active" data-page="home">
-            <i class="fas fa-home"></i>
-            الرئيسية
-        </a>
-        <a href="#" class="nav-btn" data-page="new">
-            <i class="fas fa-fire"></i>
-            جديد
-        </a>
-        <a href="#" class="nav-btn" data-page="discounts">
-            <i class="fas fa-percentage"></i>
-            تخفيضات
-        </a>
-        <a href="#" class="nav-btn" data-page="wishlist">
-            <i class="fas fa-heart"></i>
-            المفضلة
-        </a>
-    </nav>
 
-    <!-- إشعارات -->
-    <div id="notification" class="notification" style="display: none;">
-        <i class="fas fa-check-circle"></i>
-        <span id="notification-text"></span>
-    </div>
-    
-    <!-- تأكيد حذف المفضلة -->
-    <div id="confirm-favorite-modal" class="confirm-modal" style="display: none;">
-        <div class="confirm-content">
-            <div class="confirm-title">تأكيد الحذف</div>
-            <div class="confirm-message">هل أنت متأكد من أنك تريد حذف هذا المنتج من المفضلة؟</div>
-            <div class="confirm-buttons">
-                <button class="confirm-btn confirm-cancel">إلغاء</button>
-                <button class="confirm-btn confirm-delete">حذف</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- تأكيد حذف السلة -->
-    <div id="confirm-cart-modal" class="confirm-modal" style="display: none;">
-        <div class="confirm-content">
-            <div class="confirm-title">تأكيد الحذف</div>
-            <div class="confirm-message" id="cart-confirm-message">هل أنت متأكد من أنك تريد حذف هذا المنتج من السلة؟</div>
-            <div class="confirm-buttons">
-                <button class="confirm-btn confirm-cancel">إلغاء</button>
-                <button class="confirm-btn confirm-delete">حذف</button>
-            </div>
-        </div>
-    </div>
+    </div> <!-- End of container -->
 
-    <script>
-        // تهيئة Firebase
+    <!-- Footer Navigation Bar -->
+    <footer class="footer-nav">
+        <div class="footer-main-links">
+            <a href="#" data-section="home-section" class="nav-link-store active"><i class="fas fa-home"></i> <span>الرئيسية</span></a>
+            <a href="#" data-section="sales-section" class="nav-link-store"><i class="fas fa-fire"></i> <span>العروض</span></a>
+            <a href="#" data-section="new-arrivals-section" class="nav-link-store"><i class="fas fa-box-open"></i> <span>الجديد</span></a>
+            <a href="#" data-section="favorites-section" class="nav-link-store"><i class="fas fa-heart"></i> <span>المفضلة</span></a>
+            <a href="#" id="toggle-categories-btn" class="nav-link-store"><i class="fas fa-list"></i> <span>الأقسام</span></a>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getDatabase, ref, onValue, push, set } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+        // Firebase configuration (use your existing configuration from the admin panel)
         const firebaseConfig = {
             apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
             authDomain: "zio3-8ffdd.firebaseapp.com",
             databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
             projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            storageBucket: "zio3-8ffdd.appspot.com",
             messagingSenderId: "560939348415",
-            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-            measurementId: "G-CVN2B2D0RD"
+            appId: "1:560939348415:web:c854e9e214e498ad2a"
         };
 
         // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const productsRef = ref(db, "products");
+        const categoriesRef = ref(db, "categories");
+        const settingsRef = ref(db, "settings");
+        const ordersRef = ref(db, "orders"); // Reference to orders for placing new orders
 
-        // مراجع Firebase
-        const ordersRef = db.ref('orders');
-        const productsRef = db.ref('products');
-        const categoriesRef = db.ref('categories');
+        // Global data storage for the store
+        window.storeData = {
+            products: [],
+            categories: [],
+            settings: {},
+            cart: [], // Initialize cart array
+            favorites: [] // Initialize favorites array
+        };
 
-        // متغيرات التطبيق
-        let products = [];
-        let categories = [];
-        let orders = [];
-        let currentCategory = "all";
-        let currentSort = "default";
-
-        // تهيئة المتجر
-        document.addEventListener('DOMContentLoaded', function() {
-            // تحميل الأقسام من Firebase
-            loadCategoriesFromFirebase();
+        // --- Utility Functions ---
+        /**
+         * Displays a temporary notification message on the screen.
+         * @param {string} message - The message to display.
+         * @param {'success'|'error'|'warning'|'info'} type - The type of notification.
+         */
+        function showNotification(message, type) {
+            const oldNotification = document.querySelector('.notification');
+            if (oldNotification) oldNotification.remove();
             
-            // تحميل المنتجات من Firebase
-            loadProductsFromFirebase();
-            
-            // إعداد مستمعي الأحداث
-            setupEventListeners();
-            
-            // تحميل السلة والمفضلة من التخزين المحلي
-            loadCart();
-            loadFavorites();
-            
-            // تحميل الطلبات للمشرف
-            loadOrdersForAdmin();
-        });
-
-        // تحميل الأقسام من Firebase
-        function loadCategoriesFromFirebase() {
-            categoriesRef.on('value', (snapshot) => {
-                const categoriesData = snapshot.val();
-                if (categoriesData) {
-                    categories = Object.keys(categoriesData).map(key => {
-                        return { id: key, ...categoriesData[key] };
-                    });
-                    renderCategories();
-                } else {
-                    // إذا لم توجد أقسام، عرض رسالة
-                    categories = [];
-                    renderCategories();
-                }
-            });
-        }
-
-        // عرض الأقسام
-        function renderCategories() {
-            const categoriesContainer = document.getElementById('categories-container');
-            categoriesContainer.innerHTML = '';
-            
-            if (categories.length === 0) {
-                categoriesContainer.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1">
-                        <i class="fas fa-box-open"></i>
-                        <h3>لا توجد أقسام بعد</h3>
-                        <p>يرجى إضافة أقسام من لوحة التحكم</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            // إضافة قسم "الكل"
-            const allCategory = document.createElement('div');
-            allCategory.className = 'category-card active';
-            allCategory.dataset.id = 'all';
-            allCategory.innerHTML = `
-                <div class="category-icon">
-                    <i class="fas fa-th-large"></i>
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} ml-2"></i>
+                    <span>${message}</span>
                 </div>
-                <div class="category-name">الكل</div>
             `;
-            categoriesContainer.appendChild(allCategory);
             
-            // إضافة الأقسام الأخرى
-            categories.forEach(category => {
-                const categoryCard = document.createElement('div');
-                categoryCard.className = 'category-card';
-                categoryCard.dataset.id = category.id;
-                categoryCard.innerHTML = `
-                    <div class="category-icon">
-                        <i class="${category.icon || 'fas fa-box'}"></i>
-                    </div>
-                    <div class="category-name">${category.name}</div>
-                `;
-                categoriesContainer.appendChild(categoryCard);
-            });
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
-        // تحميل المنتجات من Firebase
-        function loadProductsFromFirebase() {
-            productsRef.on('value', (snapshot) => {
-                const productsData = snapshot.val();
-                if (productsData) {
-                    products = Object.keys(productsData).map(key => {
-                        return { id: key, ...productsData[key] };
-                    });
-                    renderProducts();
+        /**
+         * Saves the current cart to localStorage.
+         */
+        function saveCart() {
+            localStorage.setItem('storeCart', JSON.stringify(window.storeData.cart));
+            updateCartCount();
+        }
+
+        /**
+         * Loads the cart from localStorage.
+         */
+        function loadCart() {
+            const storedCart = localStorage.getItem('storeCart');
+            if (storedCart) {
+                window.storeData.cart = JSON.parse(storedCart);
+            }
+            updateCartCount();
+        }
+
+        /**
+         * Updates the cart item count displayed in the header.
+         */
+        function updateCartCount() {
+            const totalItems = window.storeData.cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            // Update header cart count
+            const headerCartCountElement = document.getElementById('cart-count');
+            if (headerCartCountElement) {
+                headerCartCountElement.textContent = totalItems;
+                if (totalItems > 0) {
+                    headerCartCountElement.classList.remove('hidden');
                 } else {
-                    // إذا لم توجد منتجات، عرض رسالة
-                    products = [];
-                    renderProducts();
+                    headerCartCountElement.classList.add('hidden');
                 }
-            });
+            }
         }
 
-        // تحميل الطلبات للمشرف
-        function loadOrdersForAdmin() {
-            ordersRef.on('value', (snapshot) => {
-                const ordersData = snapshot.val();
-                if (ordersData) {
-                    orders = Object.keys(ordersData).map(key => {
-                        return { id: key, ...ordersData[key] };
-                    });
-                    renderOrdersForAdmin();
-                }
-            });
-        }
+        /**
+         * Adds a product to the cart or increments its quantity if already present.
+         * @param {object} product - The product object to add.
+         */
+        window.addToCart = function(product) {
+            console.log("Attempting to add product to cart:", product); // Debugging: log product being added
 
-        // عرض الطلبات في لوحة التحكم
-        function renderOrdersForAdmin() {
-            const ordersList = document.getElementById('orders-list');
-            ordersList.innerHTML = '';
-            
-            if (orders.length === 0) {
-                ordersList.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-shopping-cart"></i>
-                        <h3>لا توجد طلبات بعد</h3>
-                        <p>سيظهر هنا أحدث الطلبات من العملاء</p>
-                    </div>
-                `;
+            if (!product || !product.id) {
+                console.error("Error: Invalid product object or missing ID when adding to cart.", product);
+                showNotification("حدث خطأ: لا يمكن إضافة منتج غير صالح إلى السلة.", "error");
                 return;
             }
+
+            const existingItemIndex = window.storeData.cart.findIndex(item => item.id === product.id);
+
+            if (existingItemIndex > -1) {
+                // Item exists, increment quantity
+                window.storeData.cart[existingItemIndex].quantity++;
+                console.log("Product quantity incremented. Current cart:", window.storeData.cart); // Debugging
+            } else {
+                // Item does not exist, add new with quantity 1
+                window.storeData.cart.push({ ...product, quantity: 1 });
+                console.log("New product added to cart. Current cart:", window.storeData.cart); // Debugging
+            }
+            saveCart();
+            showNotification(`تمت إضافة "${product.name}" إلى السلة!`, "success");
+            // Only close modal if it's open and the call came from inside it
+            if (!document.getElementById('product-details-modal').classList.contains('hidden')) {
+                document.getElementById('product-details-modal').classList.add('hidden'); 
+            }
+        };
+
+        /**
+         * Removes a product from the cart or decrements its quantity.
+         * @param {string} productId - The ID of the product to modify.
+         */
+        window.updateCartItemQuantity = function(productId, change) {
+            const itemIndex = window.storeData.cart.findIndex(item => item.id === productId);
+
+            if (itemIndex > -1) {
+                window.storeData.cart[itemIndex].quantity += change;
+                if (window.storeData.cart[itemIndex].quantity <= 0) {
+                    window.storeData.cart.splice(itemIndex, 1); // Remove if quantity is 0 or less
+                }
+                saveCart();
+                renderCart(); // Re-render cart after update
+            }
+        };
+
+        /**
+         * Saves the current favorites to localStorage.
+         */
+        function saveFavorites() {
+            localStorage.setItem('storeFavorites', JSON.stringify(window.storeData.favorites));
+        }
+
+        /**
+         * Loads the favorites from localStorage.
+         */
+        function loadFavorites() {
+            const storedFavorites = localStorage.getItem('storeFavorites');
+            if (storedFavorites) {
+                window.storeData.favorites = JSON.parse(storedFavorites);
+            }
+        }
+
+        /**
+         * Toggles a product in/out of favorites.
+         * @param {string} productId - The ID of the product to toggle.
+         */
+        window.toggleFavorite = function(productId) {
+            const product = window.storeData.products.find(p => p.id === productId);
+            if (!product) return;
+
+            const existingFavoriteIndex = window.storeData.favorites.findIndex(id => id === product.id);
+
+            if (existingFavoriteIndex > -1) {
+                // Remove from favorites
+                window.storeData.favorites.splice(existingFavoriteIndex, 1);
+                showNotification(`تمت إزالة "${product.name}" من المفضلة.`, "info");
+            } else {
+                // Add to favorites
+                window.storeData.favorites.push(product.id);
+                showNotification(`تمت إضافة "${product.name}" إلى المفضلة!`, "success");
+            }
+            saveFavorites();
+            // Re-render favorites section if it's currently active
+            if (!document.getElementById('favorites-section').classList.contains('hidden')) {
+                renderFavorites();
+            }
+            // Update the favorite button state in the modal if it's open
+            if (!document.getElementById('product-details-modal').classList.contains('hidden')) {
+                updateModalFavoriteButton(productId);
+            }
+            // Re-render the product grids to update favorite icons
+            renderProducts('products-grid-home', 'all');
+            renderProducts('products-grid-sales', 'sales');
+            renderProducts('products-grid-new-arrivals', 'new-arrivals');
+        };
+
+        /**
+         * Updates the favorite button state in the product details modal.
+         * @param {string} productId - The ID of the product.
+         */
+        function updateModalFavoriteButton(productId) {
+            const toggleFavoriteModalBtn = document.getElementById('toggle-favorite-modal-btn');
+            const favoriteText = document.getElementById('favorite-text');
+            const isFavorited = window.storeData.favorites.includes(productId);
+
+            if (isFavorited) {
+                toggleFavoriteModalBtn.classList.add('active');
+                favoriteText.textContent = 'إزالة من المفضلة';
+            } else {
+                toggleFavoriteModalBtn.classList.remove('active');
+                favoriteText.textContent = 'أضف إلى المفضلة';
+            }
+            // Set the onclick for the button
+            toggleFavoriteModalBtn.onclick = () => toggleFavorite(productId);
+        }
+
+        /**
+         * Opens the product details modal with information for the given product ID.
+         * @param {string} productId - The ID of the product to display.
+         */
+        window.openProductDetailsModal = function(productId) {
+            const product = window.storeData.products.find(p => p.id === productId);
+            if (!product) {
+                console.error("Product not found:", productId);
+                showNotification("لم يتم العثور على المنتج.", "error");
+                return;
+            }
+            console.log("Opening product details for:", product); // Debugging: log product details
+
+            document.getElementById('modal-product-name').textContent = product.name || 'اسم المنتج';
             
-            // عرض آخر 5 طلبات
-            const recentOrders = [...orders].reverse().slice(0, 5);
+            const modalImage = document.getElementById('modal-product-image');
+            modalImage.src = product.image || 'https://placehold.co/400x300/E0E7FF/4F46E5?text=Product';
+            modalImage.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x300/E0E7FF/4F46E5?text=Image+Not+Found'; };
+
+            document.getElementById('modal-product-price').textContent = `${(product.price || 0).toLocaleString('ar-EG')} د.ع`;
             
-            recentOrders.forEach(order => {
-                const orderDate = new Date(order.timestamp);
-                const formattedDate = `${orderDate.getDate()}/${orderDate.getMonth()+1}/${orderDate.getFullYear()}`;
-                const formattedTime = `${orderDate.getHours()}:${orderDate.getMinutes().toString().padStart(2, '0')}`;
-                
-                const orderItem = document.createElement('div');
-                orderItem.className = 'order-item';
-                
-                let itemsHTML = '';
-                order.items.forEach((item, index) => {
-                    itemsHTML += `
-                        <div class="order-item-row">
-                            <span>${index + 1}. ${item.name}</span>
-                            <span>${item.quantity} × ${formatPrice(item.price)} د.ع</span>
+            const originalPriceElem = document.getElementById('modal-product-original-price');
+            const today = new Date();
+            const isSale = product.isSale && product.discountPercentage != null &&
+                           new Date(product.saleStartDate) <= today &&
+                           new Date(product.saleEndDate) >= today;
+
+            if (isSale) {
+                originalPriceElem.textContent = `${(product.price || 0).toLocaleString('ar-EG')} د.ع`;
+                originalPriceElem.classList.remove('hidden');
+                document.getElementById('modal-product-price').textContent = `${(product.price * (1 - product.discountPercentage / 100) || 0).toLocaleString('ar-EG')} د.ع`;
+            } else {
+                originalPriceElem.classList.add('hidden');
+            }
+
+            const category = window.storeData.categories.find(cat => cat.id === product.categoryId);
+            document.getElementById('modal-product-category').textContent = `القسم: ${category ? category.name : 'عام'}`;
+            document.getElementById('modal-product-inventory').textContent = `المخزون: ${product.inventory > 0 ? 'متوفر' : 'غير متوفر'}`;
+            document.getElementById('modal-product-description').textContent = product.description || 'لا يوجد وصف متاح لهذا المنتج.';
+
+            // Set the add to cart button's onclick directly
+            const addToCartBtn = document.getElementById('add-to-cart-btn');
+            addToCartBtn.onclick = () => addToCart(product);
+            
+            // Update favorite button state
+            updateModalFavoriteButton(product.id);
+
+            document.getElementById('product-details-modal').classList.remove('hidden');
+        };
+
+
+        // --- Data Loading Functions ---
+
+        /**
+         * Loads store settings from Firebase and updates the UI.
+         */
+        function loadSettings() {
+            onValue(settingsRef, (snapshot) => {
+                const settings = snapshot.val();
+                if (settings) {
+                    window.storeData.settings = settings;
+                    // Update store name with icon
+                    const storeNameElement = document.getElementById('store-name');
+                    storeNameElement.innerHTML = `<i class="fas fa-store ml-3"></i> ${settings.storeName || 'متجرنا الإلكتروني'}`;
+
+                    // Update contact modal info
+                    document.getElementById('contact-store-name').textContent = settings.storeName || 'متجرنا الإلكتروني';
+                    document.getElementById('contact-phone').textContent = settings.contactPhone || 'N/A';
+                    document.getElementById('contact-whatsapp').textContent = settings.contactWhatsapp || 'N/A';
+                    document.getElementById('contact-email').textContent = settings.contactEmail || 'N/A';
+                } else {
+                    // Default settings if none exist
+                    window.storeData.settings = {
+                        storeName: "متجرنا الإلكتروني",
+                        contactPhone: "+964 782 305 3419",
+                        contactWhatsapp: "+964 782 305 3419",
+                        contactEmail: "info@zioshop.com",
+                        deliveryPrice: 5000,
+                        thankYouMessage: "شكراً لثقتك بنا! سيتواصل معك فريقنا قريباً لتأكيد طلبك."
+                    };
+                    // Update store name with icon
+                    const storeNameElement = document.getElementById('store-name');
+                    storeNameElement.innerHTML = `<i class="fas fa-store ml-3"></i> متجرنا الإلكتروني`;
+
+                    document.getElementById('contact-store-name').textContent = "متجرنا الإلكتروني";
+                    document.getElementById('contact-phone').textContent = "+964 782 305 3419";
+                    document.getElementById('contact-whatsapp').textContent = "+964 782 305 3419";
+                    document.getElementById('contact-email').textContent = "info@zioshop.com";
+                }
+                console.log("Store settings loaded:", window.storeData.settings); // Debugging
+                showNotification("تم تحميل إعدادات المتجر", "info");
+            }, (error) => {
+                console.error("Error loading settings:", error);
+                showNotification("خطأ في تحميل إعدادات المتجر", "error");
+            });
+        }
+
+        /**
+         * Loads categories from Firebase and updates the category filter buttons.
+         */
+        function loadCategories() {
+            onValue(categoriesRef, (snapshot) => {
+                const categories = [];
+                snapshot.forEach((childSnapshot) => {
+                    categories.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                window.storeData.categories = categories;
+                console.log("Categories loaded:", window.storeData.categories); // Debugging
+                renderCategoryFilters(); // This will now render into the categories page
+                showNotification("تم تحميل الأقسام", "info");
+            }, (error) => {
+                console.error("Error loading categories:", error);
+                showNotification("خطأ في تحميل الأقسام", "error");
+            });
+        }
+
+        /**
+         * Loads products from Firebase and renders them.
+         */
+        function loadProducts() {
+            onValue(productsRef, (snapshot) => {
+                const products = [];
+                snapshot.forEach((childSnapshot) => {
+                    products.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                window.storeData.products = products;
+                console.log("Products loaded. Total products:", window.storeData.products.length, window.storeData.products); // Debugging
+                // Initial render for home section
+                renderProducts('products-grid-home', 'all');
+                showNotification("تم تحميل المنتجات", "info");
+            }, (error) => {
+                console.error("Error loading products:", error);
+                showNotification("خطأ في تحميل المنتجات", "error");
+            });
+        }
+
+        // --- Rendering Functions ---
+
+        /**
+         * Renders category buttons into the dedicated categories page.
+         */
+        function renderCategoryFilters() {
+            const categoriesGridPage = document.getElementById('categories-grid-page');
+            // Clear existing categories
+            categoriesGridPage.innerHTML = ''; 
+
+            // Add new categories
+            if (window.storeData.categories.length > 0) {
+                window.storeData.categories.forEach((category) => {
+                    const button = document.createElement('button');
+                    button.className = 'category-button-page'; // Use class for page buttons
+                    button.setAttribute('data-category-id', category.id);
+                    button.innerHTML = `<i class="${category.icon || 'fas fa-tag'}"></i> <span>${category.name}</span>`; // Assuming category has an icon
+                    button.addEventListener('click', () => {
+                        // When a category is clicked on the categories page, switch to home section and filter
+                        showStoreSection('home-section');
+                        filterProductsByCategory(category.id);
+                    });
+                    categoriesGridPage.appendChild(button);
+                });
+            } else {
+                categoriesGridPage.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">لا توجد أقسام متاحة حالياً.</div>`;
+            }
+        }
+
+        /**
+         * Renders products into a specific grid, optionally filtered by category.
+         * @param {string} gridId - The ID of the product grid to render into (e.g., 'products-grid-home').
+         * @param {string} filterType - 'all', 'sales', 'new-arrivals', 'favorites', or a categoryId.
+         */
+        function renderProducts(gridId, filterType) {
+            const productsGrid = document.getElementById(gridId);
+            // Check if the grid element exists before trying to manipulate it
+            if (!productsGrid) {
+                console.warn(`Product grid with ID "${gridId}" not found.`);
+                return;
+            }
+
+            let html = '';
+            let filteredProducts = [];
+            const today = new Date();
+
+            if (filterType === 'all') {
+                filteredProducts = window.storeData.products;
+            } else if (filterType === 'sales') {
+                filteredProducts = window.storeData.products.filter(p => 
+                    p.isSale && p.discountPercentage != null &&
+                    new Date(p.saleStartDate) <= today &&
+                    new Date(p.saleEndDate) >= today
+                );
+            } else if (filterType === 'new-arrivals') {
+                filteredProducts = window.storeData.products.filter(p => p.isNew).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+                // Fallback: show recent products if 'isNew' flag is not used consistently
+                if (filteredProducts.length === 0 && window.storeData.products.length > 0) {
+                    filteredProducts = window.storeData.products.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 10); // Show top 10 recent
+                }
+            } else if (filterType === 'favorites') {
+                // Filter products based on IDs in the favorites array
+                filteredProducts = window.storeData.products.filter(p => window.storeData.favorites.includes(p.id));
+            } else {
+                // Filter by specific category ID
+                filteredProducts = window.storeData.products.filter(p => p.categoryId === filterType);
+            }
+
+            if (filteredProducts.length === 0) {
+                let message = '';
+                if (filterType === 'sales') message = 'لا توجد عروض حالياً.';
+                else if (filterType === 'new-arrivals') message = 'لا توجد منتجات جديدة حالياً.';
+                else if (filterType === 'favorites') message = 'لم تقم بإضافة أي منتجات إلى المفضلة بعد.';
+                else if (filterType === 'all') message = 'لا توجد منتجات حالياً.';
+                else message = 'لا توجد منتجات في هذا القسم حالياً.';
+
+                html = `<div class="col-span-full text-center py-10 text-gray-500">${message}</div>`;
+            } else {
+                filteredProducts.forEach(product => {
+                    const isSale = product.isSale && product.discountPercentage != null &&
+                                   new Date(product.saleStartDate) <= today &&
+                                   new Date(product.saleEndDate) >= today;
+                    
+                    let displayPrice = product.price;
+                    let originalPriceHtml = '';
+
+                    if (isSale) {
+                        displayPrice = product.price * (1 - product.discountPercentage / 100);
+                        originalPriceHtml = `<span class="product-original-price">${(product.price || 0).toLocaleString('ar-EG')} د.ع</span>`;
+                    }
+
+                    const isFavorited = window.storeData.favorites.includes(product.id);
+                    const favoriteIconClass = isFavorited ? 'fas fa-heart active' : 'far fa-heart'; // Solid heart for favorited
+
+                    html += `
+                    <div class="product-card">
+                        <button class="favorite-toggle-btn ${isFavorited ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite('${product.id}')">
+                            <i class="${favoriteIconClass}"></i>
+                        </button>
+                        <img src="${product.image || 'https://placehold.co/400x300/E0E7FF/4F46E5?text=Product'}" alt="${product.name || 'Product Image'}" class="product-image" onerror="this.onerror=null; this.src='https://placehold.co/400x300/E0E7FF/4F46E5?text=Image+Not+Found';" onclick="openProductDetailsModal('${product.id}')">
+                        <div class="product-info" onclick="openProductDetailsModal('${product.id}')">
+                            <div>
+                                <h3 class="product-name">${product.name || 'منتج غير معروف'}</h3>
+                                <p class="text-sm text-gray-500 mb-2">${product.category || 'عام'}</p>
+                            </div>
+                            <div class="flex items-baseline justify-end mt-auto">
+                                ${originalPriceHtml}
+                                <p class="product-price">${(displayPrice || 0).toLocaleString('ar-EG')} د.ع</p>
+                            </div>
                         </div>
+                        <div class="p-3 pt-0"> <!-- New div for the add to cart button -->
+                            <button onclick="event.stopPropagation(); addToCart(${JSON.stringify(product).replace(/'/g, "\\'")})" 
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg w-full text-sm font-semibold flex items-center justify-center">
+                                <i class="fas fa-cart-plus ml-2"></i> أضف للسلة
+                            </button>
+                        </div>
+                    </div>
                     `;
                 });
-                
-                orderItem.innerHTML = `
-                    <div class="order-header">
-                        <div class="order-customer">${order.customerName}</div>
-                        <div class="order-date">${formattedDate} ${formattedTime}</div>
-                    </div>
-                    <div class="order-items">
-                        ${itemsHTML}
-                    </div>
-                    <div class="order-total">الإجمالي: ${formatPrice(order.total)} د.ع</div>
-                    <div class="order-status status-pending">قيد الانتظار</div>
-                `;
-                
-                ordersList.appendChild(orderItem);
-            });
+            }
+            productsGrid.innerHTML = html;
         }
 
-        // عرض المنتجات
-        function renderProducts() {
-            const homeGrid = document.querySelector('#home .products-grid');
-            const newGrid = document.querySelector('#new-products');
-            const discountsGrid = document.querySelector('#discounted-products');
-            const favoritesGrid = document.querySelector('#favorite-products');
-            
-            // مسح المحتوى الحالي
-            homeGrid.innerHTML = '';
-            newGrid.innerHTML = '';
-            discountsGrid.innerHTML = '';
-            favoritesGrid.innerHTML = '';
-            
-            // الحصول على قيمة التصنيف المحددة
-            const sortSelect = document.getElementById('sort-select');
-            currentSort = sortSelect ? sortSelect.value : 'default';
-            
-            // إنشاء نسخة من المنتجات للترتيب
-            let sortedProducts = [...products];
-            
-            // تطبيق التصفية حسب القسم
-            if (currentCategory !== "all") {
-                sortedProducts = sortedProducts.filter(p => p.category === currentCategory);
+        /**
+         * Filters products displayed on the home page by category.
+         * @param {string} categoryId - The ID of the category to filter by.
+         */
+        function filterProductsByCategory(categoryId) {
+            renderProducts('products-grid-home', categoryId);
+            // No need to update active category button in footer, as categories are on a separate page
+        }
+
+        /**
+         * Shows a specific store section and updates the navigation links.
+         * @param {string} sectionId - The ID of the section to show (e.g., 'home-section', 'sales-section').
+         */
+        window.showStoreSection = function(sectionId) {
+            document.querySelectorAll('.store-section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+
+            // Update active class for footer main navigation links
+            document.querySelectorAll('.footer-main-links .nav-link-store').forEach(link => {
+                link.classList.remove('active');
+            });
+            // Only activate if it's one of the main section links
+            const mainNavLink = document.querySelector(`.footer-main-links .nav-link-store[data-section="${sectionId}"]`);
+            if (mainNavLink) {
+                mainNavLink.classList.add('active');
+            } else if (sectionId === 'categories-page-section') {
+                // If categories page is active, ensure "الأقسام" button is active
+                document.getElementById('toggle-categories-btn')?.classList.add('active');
             }
-            
-            // تطبيق الترتيب حسب الاختيار
-            switch(currentSort) {
-                case 'price_high_low':
-                    sortedProducts.sort((a, b) => b.price - a.price);
-                    break;
-                case 'price_low_high':
-                    sortedProducts.sort((a, b) => a.price - b.price);
-                    break;
-                case 'quantity_high_low':
-                    sortedProducts.sort((a, b) => b.stock - a.stock);
-                    break;
-                case 'quantity_low_high':
-                    sortedProducts.sort((a, b) => a.stock - b.stock);
-                    break;
-                default:
-                    // الترتيب الافتراضي (لا تغيير)
-            }
-            
-            // عرض المنتجات بعد الترتيب في الصفحة الرئيسية
-            if (sortedProducts.length === 0) {
-                homeGrid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1">
-                        <i class="fas fa-box-open"></i>
-                        <h3>لا توجد منتجات بعد</h3>
-                        <p>يرجى إضافة منتجات من لوحة التحكم</p>
-                    </div>
-                `;
-            } else {
-                sortedProducts.forEach(product => {
-                    const productCard = createProductCard(product);
-                    homeGrid.appendChild(productCard);
-                });
-            }
-            
-            // المنتجات الجديدة (أضيفت خلال 30 يوم)
-            const newProducts = products.filter(product => isProductNew(product.dateAdded));
-            if (newProducts.length === 0) {
-                newGrid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1">
-                        <i class="fas fa-box-open"></i>
-                        <h3>لا توجد منتجات جديدة</h3>
-                        <p>يرجى إضافة منتجات جديدة من لوحة التحكم</p>
-                    </div>
-                `;
-            } else {
-                newProducts.forEach(product => {
-                    const productCard = createProductCard(product);
-                    newGrid.appendChild(productCard);
-                });
-            }
-            
-            // المنتجات المخفضة
-            const discountedProducts = products.filter(product => product.discount && product.discount > 0);
-            if (discountedProducts.length === 0) {
-                discountsGrid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1">
-                        <i class="fas fa-box-open"></i>
-                        <h3>لا توجد عروض حالية</h3>
-                        <p>يرجى إضافة عروض من لوحة التحكم</p>
-                    </div>
-                `;
-            } else {
-                discountedProducts.forEach(product => {
-                    const productCard = createProductCard(product);
-                    discountsGrid.appendChild(productCard);
-                });
-            }
-            
-            // المنتجات المفضلة
-            const favoriteProducts = products.filter(product => isFavorite(product.id));
-            if (favoriteProducts.length === 0) {
-                favoritesGrid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1">
-                        <i class="fas fa-heart"></i>
-                        <h3>قائمة المفضلة فارغة</h3>
-                        <p>أضف منتجات إلى قائمة المفضلة بالضغط على القلب</p>
-                    </div>
-                `;
-            } else {
-                favoriteProducts.forEach(product => {
-                    const productCard = createFavoriteCard(product);
-                    favoritesGrid.appendChild(productCard);
-                });
+
+
+            // Re-render content for the active section if needed
+            if (sectionId === 'home-section') {
+                renderProducts('products-grid-home', 'all'); // Default to all products on home
+            } else if (sectionId === 'sales-section') {
+                renderProducts('products-grid-sales', 'sales');
+            } else if (sectionId === 'new-arrivals-section') {
+                renderProducts('products-grid-new-arrivals', 'new-arrivals');
+            } else if (sectionId === 'favorites-section') {
+                renderFavorites(); // Always re-render favorites when opened
             }
         }
-        
-        // التحقق من أن المنتج جديد (أضيف خلال 30 يوم)
-        function isProductNew(dateAdded) {
-            if (!dateAdded) return false;
-            const addedDate = new Date(dateAdded);
-            const today = new Date();
-            const diffTime = Math.abs(today - addedDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            return diffDays <= 30;
-        }
-        
-        // إنشاء بطاقة منتج
-        function createProductCard(product) {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.dataset.id = product.id;
-            
-            let imageHTML = `<div class="product-image">`;
-            if (product.image) {
-                imageHTML += `<img src="${product.image}" alt="${product.name}">`;
-            } else {
-                imageHTML += `<i class="fas fa-box fa-2x"></i>`;
-            }
-            imageHTML += `</div>`;
-            
-            let priceHTML = `<div class="product-price">${formatPrice(product.price)} د.ع</div>`;
-            if (product.originalPrice) {
-                priceHTML += `<span class="original-price">${formatPrice(product.originalPrice)} د.ع</span>`;
-            }
-            
-            let badgeHTML = '';
-            if (product.discount && product.discount > 0) {
-                badgeHTML = `<div class="discount-badge">-${product.discount}%</div>`;
-            } else if (isProductNew(product.dateAdded)) {
-                badgeHTML = `<div class="new-badge">جديد</div>`;
-            }
-            
-            const isFav = isFavorite(product.id);
-            
-            card.innerHTML = `
-                ${badgeHTML}
-                ${imageHTML}
-                <div class="product-info">
-                    <div class="product-name">${product.name}</div>
-                    <div>${priceHTML}</div>
-                    <div class="product-stock">المتاح: ${product.stock} قطعة</div>
-                    <div class="action-buttons">
-                        <button class="add-to-cart">
-                            <i class="fas fa-shopping-cart"></i>
-                        </button>
-                        <button class="add-to-fav ${isFav ? 'active' : ''}">
-                            <i class="fas fa-heart"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            return card;
-        }
-        
-        // إنشاء بطاقة منتج في صفحة المفضلة
-        function createFavoriteCard(product) {
-            const card = document.createElement('div');
-            card.className = 'product-card';
-            card.dataset.id = product.id;
-            
-            let imageHTML = `<div class="product-image">`;
-            if (product.image) {
-                imageHTML += `<img src="${product.image}" alt="${product.name}">`;
-            } else {
-                imageHTML += `<i class="fas fa-box fa-2x"></i>`;
-            }
-            imageHTML += `</div>`;
-            
-            let priceHTML = `<div class="product-price">${formatPrice(product.price)} د.ع</div>`;
-            if (product.originalPrice) {
-                priceHTML += `<span class="original-price">${formatPrice(product.originalPrice)} د.ع</span>`;
-            }
-            
-            card.innerHTML = `
-                ${imageHTML}
-                <div class="product-info">
-                    <div class="product-name">${product.name}</div>
-                    <div>${priceHTML}</div>
-                    <div class="product-stock">المتاح: ${product.stock} قطعة</div>
-                    <div class="action-buttons">
-                        <button class="remove-fav">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            return card;
-        }
-        
-        // تنسيق السعر
-        function formatPrice(price) {
-            return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        }
-        
-        // تحميل السلة من التخزين المحلي
-        function loadCart() {
-            const savedCart = localStorage.getItem('cart');
-            if (savedCart) {
-                cartItems = JSON.parse(savedCart);
-                updateCartCount();
-                renderCartItems();
-            }
-        }
-        
-        // تحميل المفضلة من التخزين المحلي
-        function loadFavorites() {
-            const savedFavorites = localStorage.getItem('favorites');
-            if (savedFavorites) {
-                favorites = JSON.parse(savedFavorites);
-            }
-        }
-        
-        // التحقق من أن المنتج في المفضلة
-        function isFavorite(productId) {
-            const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-            return favorites.includes(productId);
-        }
-        
-        // تحديث عدد العناصر في السلة
-        function updateCartCount() {
-            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-            const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-            document.querySelector('.cart-count').textContent = totalItems;
-        }
-        
-        // إظهار الإشعار
-        function showNotification(message) {
-            const notification = document.getElementById('notification');
-            const notificationText = document.getElementById('notification-text');
-            
-            notificationText.textContent = message;
-            notification.style.display = 'flex';
-            
-            setTimeout(() => {
-                notification.style.display = 'none';
-            }, 3000);
-        }
-        
-        // عرض عناصر السلة
-        function renderCartItems() {
-            const cartItemsContainer = document.getElementById('cart-items');
-            cartItemsContainer.innerHTML = '';
-            
-            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-            
-            if (cartItems.length === 0) {
-                cartItemsContainer.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-shopping-cart"></i>
-                        <h3>سلة التسوق فارغة</h3>
-                        <p>ابدأ بإضافة بعض المنتجات إلى سلة التسوق</p>
-                    </div>
-                `;
-                
-                // إخفاء ملخص الطلب
-                document.querySelector('.cart-summary').style.display = 'none';
-                return;
-            }
-            
-            // إظهار ملخص الطلب
-            document.querySelector('.cart-summary').style.display = 'block';
-            
-            // حساب الإجماليات
+
+        /**
+         * Renders the items currently in the cart.
+         */
+        function renderCart() {
+            const cartItemsList = document.getElementById('cart-items-list');
+            let html = '';
             let subtotal = 0;
-            
-            cartItems.forEach(item => {
-                const cartItem = document.createElement('div');
-                cartItem.className = 'cart-item';
-                
-                const itemTotal = item.price * item.quantity;
-                subtotal += itemTotal;
-                
-                cartItem.innerHTML = `
-                    <div class="cart-item-image">
-                        ${item.image ? 
-                          `<img src="${item.image}" alt="${item.name}">` : 
-                          `<i class="fas fa-box fa-2x"></i>`
-                        }
-                    </div>
-                    <div class="cart-item-details">
-                        <div class="cart-item-name">${item.name}</div>
-                        <div class="cart-item-price">${formatPrice(item.price)} د.ع × ${item.quantity} = ${formatPrice(itemTotal)} د.ع</div>
-                        <div class="cart-item-actions">
-                            <button class="remove-btn" data-id="${item.id}">
-                                <i class="fas fa-trash-alt"></i>
+
+            if (window.storeData.cart.length === 0) {
+                html = `<p class="text-center text-gray-500 py-4">سلة التسوق فارغة.</p>`;
+                document.getElementById('proceed-to-checkout-btn').disabled = true;
+                document.getElementById('proceed-to-checkout-btn').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                window.storeData.cart.forEach(item => {
+                    const itemPrice = item.price * item.quantity;
+                    subtotal += itemPrice;
+                    html += `
+                    <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg shadow-sm">
+                        <div class="flex items-center">
+                            <img src="${item.image || 'https://placehold.co/50x50/E0E7FF/4F46E5?text=Item'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-md ml-3">
+                            <div>
+                                <h4 class="font-semibold text-gray-800">${item.name}</h4>
+                                <p class="text-sm text-gray-600">${(item.price || 0).toLocaleString('ar-EG')} د.ع</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                            <button onclick="updateCartItemQuantity('${item.id}', -1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300">-</button>
+                            <span class="mx-2 text-lg font-medium">${item.quantity}</span>
+                            <button onclick="updateCartItemQuantity('${item.id}', 1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300">+</button>
+                            <button onclick="updateCartItemQuantity('${item.id}', -${item.quantity})" class="text-red-600 hover:text-red-800 mr-3">
+                                <i class="fas fa-trash"></i>
                             </button>
-                            <button class="quantity-btn minus" data-id="${item.id}">-</button>
-                            <span class="quantity-value">${item.quantity}</span>
-                            <button class="quantity-btn plus" data-id="${item.id}">+</button>
                         </div>
                     </div>
-                `;
-                
-                cartItemsContainer.appendChild(cartItem);
-            });
-            
-            // تحديث الإجماليات
-            const delivery = subtotal > 0 ? 5000 : 0;
-            const total = subtotal + delivery;
-            
-            document.querySelector('.summary-row:nth-child(1) span:last-child').textContent = 
-                formatPrice(subtotal) + ' د.ع';
-            
-            document.querySelector('.summary-row:nth-child(2) span:last-child').textContent = 
-                formatPrice(delivery) + ' د.ع';
-            
-            document.querySelector('.summary-total span:last-child').textContent = 
-                formatPrice(total) + ' د.ع';
+                    `;
+                });
+                document.getElementById('proceed-to-checkout-btn').disabled = false;
+                document.getElementById('proceed-to-checkout-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            cartItemsList.innerHTML = html;
+
+            const deliveryPrice = window.storeData.settings.deliveryPrice || 0;
+            const total = subtotal + deliveryPrice;
+
+            document.getElementById('cart-subtotal').textContent = `${subtotal.toLocaleString('ar-EG')} د.ع`;
+            document.getElementById('cart-delivery-price').textContent = `${deliveryPrice.toLocaleString('ar-EG')} د.ع`;
+            document.getElementById('cart-total').textContent = `${total.toLocaleString('ar-EG')} د.ع`;
         }
 
-        // إعداد مستمعي الأحداث
-        function setupEventListeners() {
-            // التنقل بين الصفحات
-            document.querySelectorAll('[data-page]').forEach(link => {
+        /**
+         * Opens the cart modal.
+         */
+        window.openCartModal = function() {
+            renderCart(); // Render cart items every time modal is opened
+            document.getElementById('cart-modal').classList.remove('hidden');
+        };
+
+        /**
+         * Opens the checkout modal and populates it with order summary.
+         */
+        window.openCheckoutModal = function() {
+            const subtotal = window.storeData.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const deliveryPrice = window.storeData.settings.deliveryPrice || 0;
+            const total = subtotal + deliveryPrice;
+
+            const checkoutSummaryList = document.getElementById('checkout-summary-list');
+            let summaryHtml = '';
+            if (window.storeData.cart.length === 0) {
+                summaryHtml = `<p class="text-center text-gray-500 py-4">سلة التسوق فارغة.</p>`;
+            } else {
+                window.storeData.cart.forEach(item => {
+                    summaryHtml += `
+                        <li class="flex justify-between">
+                            <span>${item.name} (x${item.quantity})</span>
+                            <span>${(item.price * item.quantity).toLocaleString('ar-EG')} د.ع</span>
+                        </li>
+                    `;
+                });
+            }
+            checkoutSummaryList.innerHTML = summaryHtml;
+
+            document.getElementById('checkout-subtotal').textContent = `${subtotal.toLocaleString('ar-EG')} د.ع`;
+            document.getElementById('checkout-delivery-price').textContent = `${deliveryPrice.toLocaleString('ar-EG')} د.ع`;
+            document.getElementById('checkout-total').textContent = `${total.toLocaleString('ar-EG')} د.ع`;
+
+            document.getElementById('cart-modal').classList.add('hidden'); // Hide cart modal
+            document.getElementById('checkout-modal').classList.remove('hidden'); // Show checkout modal
+        };
+
+        /**
+         * Simulates placing an order. In a real app, this would send data to Firebase.
+         */
+        window.placeOrder = async function() {
+            const name = document.getElementById('checkout-name').value.trim();
+            const phone = document.getElementById('checkout-phone').value.trim();
+            const address = document.getElementById('checkout-address').value.trim();
+            const notes = document.getElementById('checkout-notes').value.trim();
+
+            if (!name || !phone || !address) {
+                showNotification("يرجى ملء جميع الحقول المطلوبة (الاسم، الهاتف، العنوان).", "error");
+                return;
+            }
+
+            if (window.storeData.cart.length === 0) {
+                showNotification("سلة التسوق فارغة، لا يمكن إتمام الطلب.", "error");
+                return;
+            }
+
+            const subtotal = window.storeData.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const deliveryPrice = window.storeData.settings.deliveryPrice || 0;
+            const total = subtotal + deliveryPrice;
+
+            // Generate a random 5-digit invoice number
+            const invoiceNumber = Math.floor(10000 + Math.random() * 90000);
+
+            const orderData = {
+                invoiceNumber: invoiceNumber, // Use the generated random number
+                name,
+                phone,
+                address,
+                notes,
+                products: window.storeData.cart.map(item => ({
+                    id: item.id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                subtotal,
+                deliveryPrice,
+                total,
+                status: "جديد", // New order status
+                createdAt: new Date().toLocaleString('ar-EG')
+            };
+
+            try {
+                // Push the order to the 'orders' collection in Firebase
+                await push(ordersRef, orderData);
+                showNotification("تم تأكيد طلبك بنجاح! شكراً لك.", "success");
+                
+                // --- Removed CallMeBot WhatsApp API integration due to CORS issues ---
+                // For real-world deployment, consider using a backend proxy (e.g., Firebase Cloud Functions)
+                // to make API calls to CallMeBot securely and bypass browser CORS restrictions.
+
+                window.storeData.cart = []; // Clear cart after successful order
+                saveCart(); // Update localStorage and cart count
+                document.getElementById('checkout-modal').classList.add('hidden'); // Close checkout modal
+                document.getElementById('checkout-form').reset(); // Reset form
+            } catch (error) {
+                console.error("Error placing order:", error);
+                showNotification("حدث خطأ أثناء تأكيد الطلب. يرجى المحاولة مرة أخرى.", "error");
+            }
+        };
+
+        /**
+         * Renders products marked as favorites.
+         */
+        function renderFavorites() {
+            renderProducts('products-grid-favorites', 'favorites');
+        }
+
+
+        // --- Event Listeners and Initial Load ---
+        document.addEventListener("DOMContentLoaded", function() {
+            // Load all data
+            loadSettings();
+            loadCategories();
+            loadProducts();
+            loadCart(); // Load cart on page load
+            loadFavorites(); // Load favorites on page load
+
+            // Set initial section to Home
+            showStoreSection('home-section');
+
+            // Navigation links for sections (now in footer)
+            document.querySelectorAll('.footer-main-links .nav-link-store[data-section]').forEach(link => {
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const pageId = this.dataset.page;
-                    
-                    // إخفاء كل الصفحات
-                    document.querySelectorAll('.page').forEach(page => {
-                        page.classList.remove('active');
-                    });
-                    
-                    // إخفاء صفحة الملف الشخصي
-                    document.getElementById('profile').classList.remove('active');
-                    
-                    // إظهار الصفحة المطلوبة
-                    if (pageId === 'profile') {
-                        document.getElementById('profile').classList.add('active');
-                    } else {
-                        document.getElementById(pageId).classList.add('active');
-                    }
-                    
-                    // تحديث الأزرار النشطة
-                    document.querySelectorAll('.nav-btn').forEach(btn => {
-                        btn.classList.remove('active');
-                    });
-                    
-                    // إذا كانت الصفحة جزء من الشريط السفلي
-                    if (this.classList.contains('nav-btn')) {
-                        this.classList.add('active');
-                    }
-                    
-                    // إذا كانت صفحة السلة، قم بعرض محتوياتها
-                    if (pageId === 'cart') {
-                        renderCartItems();
-                    }
-                    
-                    // إذا كانت صفحة المفضلة، قم بعرض محتوياتها
-                    if (pageId === 'wishlist') {
-                        renderFavorites();
-                    }
+                    showStoreSection(this.getAttribute('data-section'));
                 });
             });
-            
-            // إضافة إلى المفضلة
-            document.body.addEventListener('click', function(e) {
-                if (e.target.closest('.add-to-fav')) {
-                    const btn = e.target.closest('.add-to-fav');
-                    btn.classList.toggle('active');
-                    const productId = btn.closest('.product-card').dataset.id;
-                    
-                    // تحديث المفضلة في localStorage
-                    let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-                    
-                    if (favorites.includes(productId)) {
-                        favorites = favorites.filter(id => id !== productId);
-                        showNotification('تمت إزالة المنتج من المفضلة');
-                    } else {
-                        favorites.push(productId);
-                        showNotification('تمت إضافة المنتج إلى المفضلة');
-                    }
-                    
-                    localStorage.setItem('favorites', JSON.stringify(favorites));
-                    
-                    // إذا كنا في صفحة المفضلة، نقوم بإعادة التحميل
-                    if (document.getElementById('wishlist').classList.contains('active')) {
-                        renderFavorites();
-                    }
-                }
-            });
-            
-            // إضافة إلى السلة
-            document.body.addEventListener('click', function(e) {
-                if (e.target.closest('.add-to-cart')) {
-                    const btn = e.target.closest('.add-to-cart');
-                    const productId = btn.closest('.product-card').dataset.id;
-                    const product = products.find(p => p.id == productId);
-                    
-                    if (!product) return;
-                    
-                    // إضافة المنتج إلى السلة
-                    const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-                    const existingItem = cartItems.find(item => item.id == productId);
-                    
-                    if (existingItem) {
-                        existingItem.quantity++;
-                    } else {
-                        cartItems.push({
-                            id: product.id,
-                            name: product.name,
-                            price: product.price,
-                            quantity: 1,
-                            image: product.image
-                        });
-                    }
-                    
-                    // حفظ السلة وتحديث العدد
-                    localStorage.setItem('cart', JSON.stringify(cartItems));
-                    updateCartCount();
-                    
-                    // إظهار تأكيد الإضافة
-                    showNotification('تمت إضافة المنتج إلى السلة');
-                }
-            });
-            
-            // البحث التلقائي عند الكتابة
-            const searchInput = document.getElementById('search-input');
-            searchInput.addEventListener('input', function() {
-                searchProducts();
-            });
-            
-            // زر البحث
-            const searchBtn = document.getElementById('search-btn');
-            searchBtn.addEventListener('click', searchProducts);
-            
-            // حذف من المفضلة
-            document.body.addEventListener('click', function(e) {
-                if (e.target.closest('.remove-fav')) {
-                    const btn = e.target.closest('.remove-fav');
-                    const productCard = btn.closest('.product-card');
-                    const productId = productCard.dataset.id;
-                    
-                    // عرض نافذة تأكيد الحذف
-                    const confirmModal = document.getElementById('confirm-favorite-modal');
-                    confirmModal.style.display = 'flex';
-                    
-                    // إعداد مستمعي الأحداث للأزرار
-                    const cancelBtn = confirmModal.querySelector('.confirm-cancel');
-                    const deleteBtn = confirmModal.querySelector('.confirm-delete');
-                    
-                    cancelBtn.onclick = function() {
-                        confirmModal.style.display = 'none';
-                    };
-                    
-                    deleteBtn.onclick = function() {
-                        // تحديث المفضلة في localStorage
-                        let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-                        favorites = favorites.filter(id => id !== productId);
-                        localStorage.setItem('favorites', JSON.stringify(favorites));
-                        
-                        showNotification('تم حذف المنتج من المفضلة');
-                        confirmModal.style.display = 'none';
-                        
-                        // إعادة تحميل المفضلة
-                        renderFavorites();
-                    };
-                }
-            });
-            
-            // حذف الكل من المفضلة
-            document.getElementById('remove-all-favorites').addEventListener('click', function() {
-                if (confirm('هل أنت متأكد من حذف جميع المنتجات من المفضلة؟')) {
-                    localStorage.removeItem('favorites');
-                    renderFavorites();
-                    showNotification('تم حذف جميع المنتجات من المفضلة');
-                }
-            });
-            
-            // تغيير الفئة
-            document.body.addEventListener('click', function(e) {
-                if (e.target.closest('.category-card')) {
-                    const card = e.target.closest('.category-card');
-                    document.querySelectorAll('.category-card').forEach(c => {
-                        c.classList.remove('active');
-                    });
-                    card.classList.add('active');
-                    
-                    currentCategory = card.dataset.id;
-                    filterProducts(currentCategory);
-                }
-            });
-            
-            // تغيير الترتيب
-            const sortSelect = document.getElementById('sort-select');
-            if (sortSelect) {
-                sortSelect.addEventListener('change', function() {
-                    currentSort = this.value;
-                    filterProducts(currentCategory);
-                });
-            }
-            
-            // إدارة السلة: زيادة ونقصان الكمية
-            document.body.addEventListener('click', function(e) {
-                if (e.target.closest('.quantity-btn')) {
-                    const btn = e.target.closest('.quantity-btn');
-                    const action = btn.classList.contains('plus') ? 'plus' : 'minus';
-                    const productId = btn.dataset.id;
-                    
-                    updateCartItemQuantity(productId, action);
-                }
-            });
-            
-            // إدارة السلة: حذف عنصر
-            document.body.addEventListener('click', function(e) {
-                if (e.target.closest('.remove-btn')) {
-                    const btn = e.target.closest('.remove-btn');
-                    const productId = btn.dataset.id;
-                    const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-                    const item = cartItems.find(item => item.id === productId);
-                    
-                    if (!item) return;
-                    
-                    // عرض نافذة تأكيد الحذف
-                    const confirmModal = document.getElementById('confirm-cart-modal');
-                    const confirmMessage = document.getElementById('cart-confirm-message');
-                    confirmMessage.textContent = `هل أنت متأكد من أنك تريد حذف "${item.name}" من السلة؟`;
-                    confirmModal.style.display = 'flex';
-                    
-                    // إعداد مستمعي الأحداث للأزرار
-                    const cancelBtn = confirmModal.querySelector('.confirm-cancel');
-                    const deleteBtn = confirmModal.querySelector('.confirm-delete');
-                    
-                    cancelBtn.onclick = function() {
-                        confirmModal.style.display = 'none';
-                    };
-                    
-                    deleteBtn.onclick = function() {
-                        removeCartItem(productId);
-                        confirmModal.style.display = 'none';
-                    };
-                }
-            });
-            
-            // إرسال الطلب
-            document.getElementById('customer-form').addEventListener('submit', function(e) {
+
+            // Toggle categories button listener
+            document.getElementById('toggle-categories-btn').addEventListener('click', function(e) {
                 e.preventDefault();
-                processOrder();
+                showStoreSection('categories-page-section'); // Show the dedicated categories page
             });
-            
-            // الانتقال إلى صفحة معلومات العميل
-            document.getElementById('proceed-to-checkout').addEventListener('click', function() {
-                const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-                if (cartItems.length === 0) {
-                    alert('سلة التسوق فارغة!');
-                    return;
-                }
-                
-                // الانتقال إلى صفحة معلومات العميل
-                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-                document.getElementById('customer-info').classList.add('active');
-            });
-        }
-        
-        // البحث عن المنتجات
-        function searchProducts() {
-            const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
-            
-            if (!searchTerm) {
-                renderProducts();
-                return;
-            }
-            
-            const filteredProducts = products.filter(product => 
-                product.name.toLowerCase().includes(searchTerm) ||
-                (product.category && product.category.toLowerCase().includes(searchTerm))
-            );
-            
-            const homeGrid = document.querySelector('#home .products-grid');
-            homeGrid.innerHTML = '';
-            
-            if (filteredProducts.length === 0) {
-                homeGrid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1">
-                        <i class="fas fa-search"></i>
-                        <h3>لا توجد نتائج</h3>
-                        <p>لم نعثر على منتجات تطابق بحثك</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            filteredProducts.forEach(product => {
-                const productCard = createProductCard(product);
-                homeGrid.appendChild(productCard);
-            });
-        }
-        
-        // تصفية المنتجات حسب الفئة
-        function filterProducts(categoryId) {
-            currentCategory = categoryId;
-            renderProducts();
-        }
-        
-        // تحديث كمية عنصر في السلة
-        function updateCartItemQuantity(productId, action) {
-            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-            const itemIndex = cartItems.findIndex(item => item.id === productId);
-            
-            if (itemIndex === -1) return;
-            
-            if (action === 'plus') {
-                cartItems[itemIndex].quantity++;
-            } else {
-                if (cartItems[itemIndex].quantity > 1) {
-                    cartItems[itemIndex].quantity--;
-                } else {
-                    // إذا كانت الكمية 1، قم بإزالة المنتج من السلة
-                    cartItems.splice(itemIndex, 1);
-                    showNotification('تمت إزالة المنتج من السلة');
-                }
-            }
-            
-            localStorage.setItem('cart', JSON.stringify(cartItems));
-            updateCartCount();
-            renderCartItems();
-        }
-        
-        // إزالة عنصر من السلة
-        function removeCartItem(productId) {
-            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-            const updatedCart = cartItems.filter(item => item.id !== productId);
-            
-            localStorage.setItem('cart', JSON.stringify(updatedCart));
-            updateCartCount();
-            renderCartItems();
-            showNotification('تمت إزالة المنتج من السلة');
-        }
-        
-        // عرض المنتجات المفضلة
-        function renderFavorites() {
-            const favoritesGrid = document.getElementById('favorite-products');
-            favoritesGrid.innerHTML = '';
-            
-            const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
-            
-            if (favorites.length === 0) {
-                favoritesGrid.innerHTML = `
-                    <div class="empty-state" style="grid-column: 1/-1">
-                        <i class="fas fa-heart"></i>
-                        <h3>قائمة المفضلة فارغة</h3>
-                        <p>أضف منتجات إلى قائمة المفضلة بالضغط على القلب</p>
-                    </div>
-                `;
-                return;
-            }
-            
-            favorites.forEach(productId => {
-                const product = products.find(p => p.id === productId);
-                if (product) {
-                    const productCard = createFavoriteCard(product);
-                    favoritesGrid.appendChild(productCard);
-                }
-            });
-        }
-        
-        // معالجة الطلب
-        function processOrder() {
-            const cartItems = JSON.parse(localStorage.getItem('cart') || '[]');
-            if (cartItems.length === 0) {
-                showNotification('سلة التسوق فارغة!');
-                return;
-            }
-            
-            // جمع بيانات العميل
-            const customerName = document.getElementById('customer-name').value;
-            const customerPhone = document.getElementById('customer-phone').value;
-            const customerAddress = document.getElementById('customer-address').value;
-            const customerNotes = document.getElementById('customer-notes').value;
-            
-            // حساب الإجماليات
-            const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-            const delivery = 5000;
-            const total = subtotal + delivery;
-            
-            // إنشاء كائن الطلب
-            const orderData = {
-                customerName,
-                customerPhone,
-                customerAddress,
-                customerNotes,
-                items: cartItems,
-                subtotal,
-                delivery,
-                total,
-                status: "pending",
-                timestamp: new Date().toISOString()
-            };
-            
-            // حفظ الطلب في Firebase
-            saveOrderToFirebase(orderData);
-            
-            // إرسال الطلب إلى واتساب
-            sendOrderToWhatsApp(orderData);
-            
-            // مسح السلة
-            localStorage.removeItem('cart');
-            updateCartCount();
-            
-            // عرض رسالة نجاح
-            showNotification('تم إرسال طلبك بنجاح! سيتم التواصل معك قريبًا');
-            
-            // العودة إلى الصفحة الرئيسية
-            setTimeout(() => {
-                document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-                document.getElementById('home').classList.add('active');
-                document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-                document.querySelector('.nav-btn[data-page="home"]').classList.add('active');
-            }, 3000);
-        }
-        
-        // إرسال الطلب إلى واتساب
-        function sendOrderToWhatsApp(orderData) {
-            const whatsappApiKey = "4909594";
-            const phoneNumber = "+9647823053419";
-            
-            // إنشاء رسالة مفصلة للطلب
-            let message = `طلب جديد! 🛒\n\n`;
-            message += `👤 *العميل:* ${orderData.customerName}\n`;
-            message += `📱 *الهاتف:* ${orderData.customerPhone}\n`;
-            message += `📍 *العنوان:* ${orderData.customerAddress}\n`;
-            message += `📝 *الملاحظات:* ${orderData.customerNotes || "لا توجد"}\n\n`;
-            message += `📋 *تفاصيل الطلب:*\n`;
-            
-            orderData.items.forEach((item, index) => {
-                message += `${index + 1}. ${item.name} - ${item.quantity} × ${formatPrice(item.price)} د.ع = ${formatPrice(item.quantity * item.price)} د.ع\n`;
-            });
-            
-            message += `\n💰 *المجموع:* ${formatPrice(orderData.subtotal)} د.ع\n`;
-            message += `🚚 *التوصيل:* ${formatPrice(orderData.delivery)} د.ع\n`;
-            message += `💵 *الإجمالي:* ${formatPrice(orderData.total)} د.ع\n\n`;
-            message += `🕒 *وقت الطلب:* ${new Date(orderData.timestamp).toLocaleString()}`;
-            
-            // ترميز الرسالة للرابط
-            const encodedMessage = encodeURIComponent(message);
-            
-            // إنشاء رابط واتساب
-            const whatsappUrl = `https://api.callmebot.com/whatsapp.php?phone=${phoneNumber}&text=${encodedMessage}&apikey=${whatsappApiKey}`;
-            
-            // إرسال الطلب
-            fetch(whatsappUrl)
-                .then(response => {
-                    if (response.ok) {
-                        showNotification('تم إرسال الطلب إلى واتساب بنجاح!');
-                    } else {
-                        showNotification('حدث خطأ في إرسال الطلب إلى واتساب');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error sending to WhatsApp:', error);
-                    showNotification('حدث خطأ في إرسال الطلب إلى واتساب');
+
+            // Close modals
+            document.querySelectorAll('.close-modal').forEach(button => {
+                button.addEventListener('click', function() {
+                    this.closest('.modal-overlay').classList.add('hidden');
                 });
-        }
-        
-        // حفظ الطلب في Firebase
-        function saveOrderToFirebase(orderData) {
-            const newOrderRef = ordersRef.push();
-            newOrderRef.set(orderData)
-                .then(() => {
-                    showNotification('تم حفظ الطلب في قاعدة البيانات بنجاح!');
-                })
-                .catch(error => {
-                    console.error('Error saving order:', error);
-                    showNotification('حدث خطأ في حفظ الطلب');
-                });
-        }
+            });
+
+            // Close modal on outside click
+            window.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-overlay')) {
+                    e.target.classList.add('hidden');
+                }
+            });
+
+            // Open Contact Us modal (from header link)
+            document.getElementById('contact-us-link').addEventListener('click', (e) => {
+                e.preventDefault();
+                document.getElementById('contact-us-modal').classList.remove('hidden');
+            });
+
+            // Event listener for "Proceed to Checkout" button in cart modal
+            document.getElementById('proceed-to-checkout-btn').addEventListener('click', openCheckoutModal);
+        });
     </script>
 </body>
 </html>
