@@ -674,14 +674,16 @@
 
         /**
          * Adds a product to the cart or increments its quantity if already present.
-         * @param {object} product - The product object to add.
+         * @param {string} productId - The ID of the product to add.
          */
-        window.addToCart = function(product) {
-            console.log("Attempting to add product to cart:", product); // Debugging: log product being added
+        window.addToCart = function(productId) { // Changed to accept productId
+            console.log("Attempting to add product with ID to cart:", productId); // Debugging: log product ID
 
-            if (!product || !product.id) {
-                console.error("Error: Invalid product object or missing ID when adding to cart.", product);
-                showNotification("حدث خطأ: لا يمكن إضافة منتج غير صالح إلى السلة.", "error");
+            const product = window.storeData.products.find(p => p.id === productId); // Find the product object
+
+            if (!product) {
+                console.error("Error: Product not found with ID:", productId);
+                showNotification("حدث خطأ: لم يتم العثور على المنتج لإضافته إلى السلة.", "error");
                 return;
             }
 
@@ -834,7 +836,7 @@
 
             // Set the add to cart button's onclick directly
             const addToCartBtn = document.getElementById('add-to-cart-btn');
-            addToCartBtn.onclick = () => addToCart(product);
+            addToCartBtn.onclick = () => addToCart(product.id); // Pass product.id here too
             
             // Update favorite button state
             updateModalFavoriteButton(product.id);
@@ -1045,7 +1047,7 @@
                             </div>
                         </div>
                         <div class="p-3 pt-0"> <!-- New div for the add to cart button -->
-                            <button onclick="event.stopPropagation(); addToCart(${JSON.stringify(product).replace(/'/g, "\\'")})" 
+                            <button onclick="event.stopPropagation(); addToCart('${product.id}')" 
                                 class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg w-full text-sm font-semibold flex items-center justify-center">
                                 <i class="fas fa-cart-plus ml-2"></i> أضف للسلة
                             </button>
@@ -1239,7 +1241,8 @@
             try {
                 // Push the order to the 'orders' collection in Firebase
                 await push(ordersRef, orderData);
-                showNotification("تم تأكيد طلبك بنجاح! شكراً لك.", "success");
+                // Use the thankYouMessage from settings
+                showNotification(window.storeData.settings.thankYouMessage || "تم تأكيد طلبك بنجاح! شكراً لك.", "success");
                 
                 // --- Removed CallMeBot WhatsApp API integration due to CORS issues ---
                 // For real-world deployment, consider using a backend proxy (e.g., Firebase Cloud Functions)
