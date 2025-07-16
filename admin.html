@@ -258,8 +258,11 @@
     <div id="login-page" class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">تسجيل الدخول إلى لوحة التحكم</h2>
+            <div class="mb-4">
+                <input type="email" id="email-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 text-lg text-center" placeholder="البريد الإلكتروني" dir="ltr">
+            </div>
             <div class="mb-4 relative">
-                <input type="password" id="password-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 text-lg text-center pr-10" placeholder="أدخل كلمة المرور" dir="ltr">
+                <input type="password" id="password-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 text-lg text-center pr-10" placeholder="كلمة المرور" dir="ltr">
                 <button type="button" id="toggle-password" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none">
                     <i class="fas fa-eye"></i>
                 </button>
@@ -267,13 +270,7 @@
             <button id="login-button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-lg w-full">
                 تسجيل الدخول
             </button>
-            <p id="login-error" class="text-red-500 mt-4 hidden">كلمة المرور غير صحيحة. حاول مرة أخرى.</p>
-            <div class="mt-6">
-                <p class="text-gray-600 mb-2">أو تسجيل الدخول باستخدام:</p>
-                <button id="google-login-button" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg w-full flex items-center justify-center">
-                    <i class="fab fa-google ml-2"></i> تسجيل الدخول بحساب جوجل
-                </button>
-            </div>
+            <p id="login-error" class="text-red-500 mt-4 hidden">البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مرة أخرى.</p>
         </div>
     </div>
 
@@ -302,7 +299,6 @@
                         <i class="fas fa-tags"></i>
                         <span>الأقسام</span>
                     </a>
-                </a>
                 </li>
                 <li>
                     <a href="#" data-section="users-section" class="nav-link text-indigo-200 hover:bg-indigo-700">
@@ -397,7 +393,7 @@
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">المخزون</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">جديد</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الرئيسية</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th> <!-- NEW -->
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
                                 </tr>
                             </thead>
@@ -433,7 +429,7 @@
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">صورة</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الوصف</th>
-                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th> <!-- NEW -->
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
                                 </tr>
                             </thead>
@@ -544,8 +540,8 @@
                                 <option value="toggleUserStatus">تغيير حالة مستخدم</option>
                                 <option value="deleteUser">حذف مستخدم</option>
                                 <option value="clearAnonymousProfiles">مسح سجلات الضيوف</option>
-                                <option value="toggleProductActive">تغيير تفعيل منتج</option> <!-- NEW -->
-                                <option value="toggleCategoryActive">تغيير تفعيل قسم</option> <!-- NEW -->
+                                <option value="toggleProductActive">تغيير تفعيل منتج</option>
+                                <option value="toggleCategoryActive">تغيير تفعيل قسم</option>
                             </select>
                         </div>
                     </div>
@@ -919,7 +915,7 @@
                         <input type="checkbox" id="product-is-featured" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
                         <label for="product-is-featured" class="ml-2 block text-sm text-gray-900">إضافة إلى الرئيسية</label>
                     </div>
-                    <div class="flex items-center mb-4"> <!-- NEW: Product Active Status -->
+                    <div class="flex items-center mb-4">
                         <input type="checkbox" id="product-is-active" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" checked>
                         <label for="product-is-active" class="ml-2 block text-sm text-gray-900">تفعيل المنتج</label>
                     </div>
@@ -984,7 +980,7 @@
                         <label for="category-description" class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
                         <textarea id="category-description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
                     </div>
-                    <div class="mb-4"> <!-- NEW: Category Active Status -->
+                    <div class="mb-4">
                         <label for="category-image" class="block text-sm font-medium text-gray-700 mb-1">رابط الصورة</label>
                         <input type="url" id="category-image" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                     </div>
@@ -1048,6 +1044,7 @@
                                 <option value="محظور">محظور</option>
                                 <option value="مشرف">مشرف</option>
                                 <option value="مسؤول توصيل">مسؤول توصيل</option>
+                                <option value="مراقب">مراقب</option>
                                 <option value="مدير">مدير</option>
                             </select>
                         </div>
@@ -1164,7 +1161,7 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
         import { getDatabase, ref, push, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 
 
         // Firebase configuration (use your existing configuration)
@@ -1182,7 +1179,6 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app); // Initialize Firebase Auth
-        const googleProvider = new GoogleAuthProvider(); // Google Auth Provider
 
         const ordersRef = ref(db, "orders");
         const settingsRef = ref(db, "settings");
@@ -1313,7 +1309,7 @@
                 const currentUser = window.adminData.currentUser;
                 if (currentUser) {
                     const userProfile = window.adminData.users.find(u => u.id === currentUser.uid);
-                    if (userProfile && (userProfile.role === 'مشرف' || userProfile.role === 'مدير')) {
+                    if (userProfile && (userProfile.role === 'مشرف' || userProfile.role === 'مدير' || userProfile.role === 'مراقب')) {
                         const moderatorLogEntry = {
                             userId: currentUser.uid,
                             userName: userProfile.name || currentUser.displayName || 'N/A',
@@ -1831,7 +1827,7 @@
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">نعم</span>` : 
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">لا</span>`;
                     
-                    // NEW: Active status display
+                    // Active status display
                     const isActiveHtml = product.isActive ?
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">مفعل</span>` :
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">غير مفعل</span>`;
@@ -1937,7 +1933,7 @@
 
                     document.getElementById("product-is-new").checked = product.isNew || false;
                     document.getElementById("product-is-featured").checked = product.isFeatured || false;
-                    document.getElementById("product-is-active").checked = product.isActive !== false; // NEW: Set active status
+                    document.getElementById("product-is-active").checked = product.isActive !== false; // Set active status
                     productIsSaleCheckbox.checked = product.isSale || false;
                     document.getElementById("product-discount-percentage").value = product.discountPercentage || '';
                     document.getElementById("product-sale-start-date").value = product.saleStartDate || '';
@@ -1952,7 +1948,7 @@
                 document.getElementById("product-modal-title").textContent = "إضافة منتج جديد";
                 document.getElementById("product-is-new").checked = false;
                 document.getElementById("product-is-featured").checked = false;
-                document.getElementById("product-is-active").checked = true; // NEW: Default to active for new product
+                document.getElementById("product-is-active").checked = true; // Default to active for new product
                 productIsSaleCheckbox.checked = false;
                 productUseCustomDiscountCheckbox.checked = false; // Default to unchecked for new product
                 addAdditionalImageRow(); // Add one empty row for new product
@@ -2047,7 +2043,7 @@
             const categoryId = document.getElementById("product-category").value;
             const isNew = document.getElementById("product-is-new").checked;
             const isFeatured = document.getElementById("product-is-featured").checked;
-            const isActive = document.getElementById("product-is-active").checked; // NEW: Get active status
+            const isActive = document.getElementById("product-is-active").checked; // Get active status
             const isSale = document.getElementById("product-is-sale").checked;
 
             // Collect additional image URLs
@@ -2119,7 +2115,7 @@
                 category: categoryName,
                 isNew,
                 isFeatured,
-                isActive, // NEW: Save active status
+                isActive, // Save active status
                 isSale,
                 discountPercentage: discountPercentage,
                 saleStartDate: saleStartDate,
@@ -2156,7 +2152,12 @@
          * @param {boolean} newStatus - The new active status (true for active, false for inactive).
          */
         window.toggleProductStatus = async function(productId, newStatus) {
-            const productName = window.adminData.products.find(p => p.id === productId)?.name || 'N/A';
+            const product = window.adminData.products.find(p => p.id === productId);
+            if (!product) {
+                showNotification("المنتج غير موجود", "error");
+                return;
+            }
+            const productName = product.name || 'N/A';
             const statusText = newStatus ? 'مفعل' : 'غير مفعل';
             showConfirmModal(`هل أنت متأكد أنك تريد ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} المنتج "${productName}"؟`, async (confirmed) => {
                 if (confirmed) {
@@ -2224,7 +2225,7 @@
                 html = `<tr><td colspan="5" class="text-center py-4 text-gray-500">لا توجد أقسام مطابقة لبحثك.</td></tr>`;
             } else {
                 filteredCategories.forEach(category => {
-                    // NEW: Active status display
+                    // Active status display
                     const isActiveHtml = category.isActive ?
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">مفعل</span>` :
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">غير مفعل</span>`;
@@ -2278,12 +2279,12 @@
                     document.getElementById("category-name").value = category.name || '';
                     document.getElementById("category-description").value = category.description || '';
                     document.getElementById("category-image").value = category.image || '';
-                    document.getElementById("category-is-active").checked = category.isActive !== false; // NEW: Set active status
+                    document.getElementById("category-is-active").checked = category.isActive !== false; // Set active status
                 }
             } else {
                 // Add new category
                 document.getElementById("category-modal-title").textContent = "إضافة قسم جديد";
-                document.getElementById("category-is-active").checked = true; // NEW: Default to active for new category
+                document.getElementById("category-is-active").checked = true; // Default to active for new category
             }
             modal.classList.remove("hidden");
         };
@@ -2296,7 +2297,7 @@
             const name = document.getElementById("category-name").value.trim();
             const description = document.getElementById("category-description").value.trim();
             const image = document.getElementById("category-image").value.trim();
-            const isActive = document.getElementById("category-is-active").checked; // NEW: Get active status
+            const isActive = document.getElementById("category-is-active").checked; // Get active status
 
             if (!name) {
                 showNotification("يرجى إدخال اسم القسم.", "error");
@@ -2307,7 +2308,7 @@
                 name,
                 description,
                 image,
-                isActive // NEW: Save active status
+                isActive // Save active status
             };
 
             try {
@@ -2339,7 +2340,12 @@
          * @param {boolean} newStatus - The new active status (true for active, false for inactive).
          */
         window.toggleCategoryStatus = async function(categoryId, newStatus) {
-            const categoryName = window.adminData.categories.find(c => c.id === categoryId)?.name || 'N/A';
+            const category = window.adminData.categories.find(c => c.id === categoryId);
+            if (!category) {
+                showNotification("القسم غير موجود", "error");
+                return;
+            }
+            const categoryName = category.name || 'N/A';
             const statusText = newStatus ? 'مفعل' : 'غير مفعل';
             showConfirmModal(`هل أنت متأكد أنك تريد ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} القسم "${categoryName}"؟`, async (confirmed) => {
                 if (confirmed) {
@@ -2543,6 +2549,17 @@
             const currentUser = window.adminData.currentUser;
             const currentLoggedInUserRole = window.adminData.currentUserRole;
 
+            // Populate role options
+            userRoleSelect.innerHTML = `
+                <option value="عادي">عادي</option>
+                <option value="عضو مميز">عضو مميز</option>
+                <option value="محظور">محظور</option>
+                <option value="مشرف">مشرف</option>
+                <option value="مسؤول توصيل">مسؤول توصيل</option>
+                <option value="مراقب">مراقب</option>
+                <option value="مدير">مدير</option>
+            `;
+
             if (userId) {
                 // Edit existing user
                 document.getElementById("user-modal-title").textContent = "تعديل المستخدم";
@@ -2556,15 +2573,11 @@
                     userRoleSelect.value = user.role || 'عادي'; // Set role
 
                     // Disable role change if current user is not admin OR trying to change an admin's role
-                    if (currentLoggedInUserRole !== 'مدير' || user.role === 'مدير') {
+                    // Also, prevent a manager from changing their own role.
+                    if (currentLoggedInUserRole !== 'مدير' || (user.role === 'مدير' && currentUser.uid === userId)) {
                         userRoleSelect.disabled = true;
                     } else {
                         userRoleSelect.disabled = false;
-                    }
-
-                    // Disable editing own role if not admin, or if trying to change admin role
-                    if (currentUser && currentUser.uid === userId && currentLoggedInUserRole !== 'مدير') {
-                         userRoleSelect.disabled = true;
                     }
                 }
             } else {
@@ -2596,22 +2609,23 @@
 
             const currentUser = window.adminData.currentUser;
             const currentLoggedInUserRole = window.adminData.currentUserRole;
+            const targetUser = window.adminData.users.find(u => u.id === userId);
 
-            // Security check: Prevent non-admins from changing roles, or admins from changing other admins' roles
-            if (userId && currentUser && currentUser.uid !== userId) { // If editing another user
-                const targetUser = window.adminData.users.find(u => u.id === userId);
-                if (targetUser && targetUser.role === 'مدير' && currentLoggedInUserRole !== 'مدير') {
-                    showNotification("ليس لديك صلاحية لتغيير دور مدير آخر.", "error");
-                    return;
-                }
-                if (currentLoggedInUserRole !== 'مدير' && targetUser.role !== role) { // If not admin and trying to change role
-                    showNotification("ليس لديك صلاحية لتغيير أدوار المستخدمين.", "error");
-                    return;
-                }
+            // Security check: Prevent non-admins from assigning 'مدير' role
+            if (role === 'مدير' && currentLoggedInUserRole !== 'مدير') {
+                showNotification("ليس لديك صلاحية لتعيين دور 'مدير'.", "error");
+                return;
             }
-            // Security check: Prevent user from changing their own role if they are not an admin
-            if (userId && currentUser && currentUser.uid === userId && currentLoggedInUserRole !== 'مدير' && window.adminData.users.find(u => u.id === userId)?.role !== role) {
-                showNotification("ليس لديك صلاحية لتغيير دورك الخاص.", "error");
+
+            // Security check: Prevent non-admins from changing roles of existing managers
+            if (userId && targetUser && targetUser.role === 'مدير' && role !== 'مدير' && currentLoggedInUserRole !== 'مدير') {
+                showNotification("ليس لديك صلاحية لتغيير دور مدير آخر.", "error");
+                return;
+            }
+
+            // Security check: Prevent a manager from changing their own role
+            if (userId && currentUser && currentUser.uid === userId && currentLoggedInUserRole === 'مدير' && role !== 'مدير') {
+                showNotification("لا يمكنك تغيير دورك الخاص كمدير.", "error");
                 return;
             }
 
@@ -2635,6 +2649,11 @@
                         logActivity(window.adminData.currentUser.uid, 'editUser', `تم تعديل المستخدم: ${name} (ID: ${userId}) - الدور: ${role}`);
                     }
                 } else {
+                    // For new users, we need to create an Auth user first if email/password is provided
+                    // This part is more complex and usually involves Firebase Admin SDK on a backend.
+                    // For this client-side only app, we'll just save to RTDB, assuming Auth user exists or will be created externally.
+                    // If you want to enable direct user creation with email/password from admin panel,
+                    // you'd need `createUserWithEmailAndPassword` here, but it's generally not recommended client-side for security.
                     const newUserRef = await push(usersRef, userData);
                     showNotification("تمت إضافة المستخدم بنجاح", "success");
                     if (window.adminData.currentUser) {
@@ -2765,6 +2784,19 @@
                         if (window.adminData.currentUser) {
                             logActivity(window.adminData.currentUser.uid, 'toggleUserStatus', `تم تغيير حالة المستخدم ${targetUser?.name || userId} إلى ${newStatus}`);
                         }
+                        
+                        // If user is blocked, sign them out
+                        if (newStatus === 'blocked') {
+                            if (currentUser && currentUser.uid === userId) { // If the current logged-in user is being blocked
+                                await signOut(auth);
+                                showNotification("تم حظر حسابك. يرجى التواصل مع فريق الدعم.", "error");
+                            } else {
+                                // If another user is blocked, we can't force their client-side logout directly.
+                                // Their client will handle it on next auth state change or page load.
+                                showNotification("تم حظر المستخدم. سيتم تسجيل خروجه تلقائياً.", "warning");
+                            }
+                        }
+
                         document.getElementById("user-details-modal").classList.add("hidden"); // Close details modal after action
                     }
                     catch (error) {
@@ -3273,11 +3305,11 @@
          */
         function updateAdminUIBasedOnRole() {
             const moderatorLogsNavLink = document.getElementById('moderator-logs-nav-link');
-            if (window.adminData.currentUserRole === 'مدير') {
+            if (window.adminData.currentUserRole === 'مدير' || window.adminData.currentUserRole === 'مشرف' || window.adminData.currentUserRole === 'مراقب') {
                 moderatorLogsNavLink.classList.remove('hidden');
             } else {
                 moderatorLogsNavLink.classList.add('hidden');
-                // If the user is not an admin and is currently on the moderator logs page, redirect them
+                // If the user is not an admin/moderator/monitor and is currently on the moderator logs page, redirect them
                 if (!document.getElementById('moderator-logs-section').classList.contains('hidden')) {
                     showSection('orders-section'); // Redirect to a default safe page
                 }
@@ -3289,12 +3321,12 @@
 
         // --- Event Listeners and Initial Load ---
         document.addEventListener("DOMContentLoaded", function() {
-            const correctPassword = "sgad2025sgad2025";
-            const adminEmail = "sgadbd321123@gmail.com"; // The specific admin email for Google login
+            const adminEmail = "sgadbd321123@gmail.com";
+            const adminPassword = "sgadsgad";
 
+            const emailInput = document.getElementById("email-input");
             const passwordInput = document.getElementById("password-input");
             const loginButton = document.getElementById("login-button");
-            const googleLoginButton = document.getElementById("google-login-button");
             const loginPage = document.getElementById("login-page");
             const adminContent = document.getElementById("admin-content");
             const loginError = document.getElementById("login-error");
@@ -3336,153 +3368,41 @@
                 showSection('orders-section');
             }
 
-            // Password-based login
-            function attemptPasswordLogin() {
-                if (passwordInput.value === correctPassword) {
-                    // For password login, we'll mock a user for activity logging
-                    // In a real system, this would be a specific admin user record
-                    window.adminData.currentUser = { uid: 'local_admin', displayName: 'مدير محلي' };
-                    window.adminData.currentUserRole = 'مدير'; // Assume local admin is 'مدير'
-                    initializeAdminPanel();
-                    logActivity('local_admin', 'login', 'تسجيل الدخول بكلمة المرور');
-                } else {
-                    loginError.classList.remove("hidden");
-                    passwordInput.value = ""; // Clear password input
-                }
-            }
+            // Email/Password-based login
+            loginButton.addEventListener("click", async () => {
+                const email = emailInput.value.trim();
+                const password = passwordInput.value.trim();
 
-            loginButton.addEventListener("click", attemptPasswordLogin);
-            passwordInput.addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    attemptPasswordLogin();
+                if (!email || !password) {
+                    showNotification("الرجاء إدخال البريد الإلكتروني وكلمة المرور.", "error");
+                    return;
                 }
-            });
 
-            // Google Sign-in
-            googleLoginButton.addEventListener("click", async () => {
                 try {
-                    const result = await signInWithPopup(auth, googleProvider);
-                    const user = result.user; // Firebase Auth User object
+                    // Firebase Authentication with Email/Password
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    const user = userCredential.user;
 
-                    // IMPORTANT SECURITY CHECK: Only allow the specific admin email
-                    if (user.email !== adminEmail) {
-                        showNotification("ليس لديك صلاحية للدخول بهذه الطريقة.", "error");
-                        await signOut(auth); // Sign out immediately
-                        return;
-                    }
+                    // Fetch user role from Realtime Database
+                    const userProfileRef = ref(db, `users/${user.uid}`);
+                    const userProfileSnapshot = await new Promise(resolve => onValue(userProfileRef, resolve, { onlyOnce: true }));
+                    const userProfile = userProfileSnapshot.val();
 
-                    console.log("Google Sign-in successful:", user);
-                    window.adminData.currentUser = user; // Set current authenticated user
+                    let userRole = 'عادي';
+                    let userStatus = 'active';
 
-                    // 1. Check if an anonymous profile exists for this newly logged-in user
-                    let anonymousProfileToConvertId = null;
-                    let anonymousProfileData = null;
-
-                    // Fetch all anonymous profiles once to search
-                    const anonymousProfilesSnapshot = await new Promise(resolve => {
-                        onValue(anonymousProfilesRef, resolve, { onlyOnce: true });
-                    });
-
-                    anonymousProfilesSnapshot.forEach((childSnapshot) => {
-                        const anonProfile = childSnapshot.val();
-                        // Try matching by email
-                        if (user.email && anonProfile.email && user.email.toLowerCase() === anonProfile.email.toLowerCase()) {
-                            anonymousProfileToConvertId = childSnapshot.key;
-                            anonymousProfileData = anonProfile;
-                            return true; // Stop iterating
-                        }
-                        // If no email match, try matching by phone number
-                        if (!anonymousProfileToConvertId && user.phoneNumber && anonProfile.phone && user.phoneNumber === anonProfile.phone) {
-                            anonymousProfileToConvertId = childSnapshot.key;
-                            anonymousProfileData = anonProfile;
-                            return true; // Stop iterating
-                        }
-                        // If no phone match, try matching by name (less reliable)
-                        if (!anonymousProfileToConvertId && user.displayName && anonProfile.name && user.displayName.toLowerCase() === anonProfile.name.toLowerCase()) {
-                             anonymousProfileToConvertId = childSnapshot.key;
-                             anonymousProfileData = anonProfile;
-                             return true; // Stop iterating
-                        }
-                    });
-
-                    // Now, handle the registered user profile in /users
-                    const userDbRef = ref(db, `users/${user.uid}`);
-                    onValue(userDbRef, async (snapshot) => {
-                        const existingUserProfile = snapshot.val();
-                        let userRole = 'عادي'; // Default role for new users
-
-                        if (!existingUserProfile) {
-                            // New user, create profile
-                            userRole = (user.email === adminEmail) ? 'مدير' : 'عادي'; // Assign 'مدير' role for the specific admin email
-                            await set(userDbRef, {
-                                name: user.displayName || 'مستخدم جديد',
-                                email: user.email || '',
-                                phone: user.phoneNumber || (anonymousProfileData?.phone || ''), // Use phone from anonymous profile if available
-                                address: '', // No address from Google by default
-                                status: 'active',
-                                role: userRole,
-                                createdAt: new Date().toLocaleString('ar-EG'),
-                                lastLogin: new Date().toLocaleString('ar-EG'),
-                                photoURL: user.photoURL || ''
-                            });
-                            showNotification("تم تسجيل مستخدم جديد عبر جوجل.", "success");
-                        } else {
-                            // Existing user, update last login and potentially role if it's the admin email
-                            userRole = existingUserProfile.role; // Keep existing role
-                            if (user.email === adminEmail && existingUserProfile.role !== 'مدير') {
-                                // If it's the admin email but role isn't admin, upgrade it
-                                userRole = 'مدير';
-                                await update(userDbRef, { role: 'مدير' });
-                            }
-                            await update(userDbRef, { lastLogin: new Date().toLocaleString('ar-EG') });
-                            showNotification("تم تسجيل الدخول عبر جوجل.", "success");
-                        }
-                        window.adminData.currentUserRole = userRole; // Update global role
-
-                        // If an anonymous profile was found, convert it
-                        if (anonymousProfileToConvertId) {
-                            // Update all orders associated with the anonymous ID to the new registered UID
-                            const ordersToUpdate = window.adminData.orders.filter(order => order.userId === anonymousProfileToConvertId);
-                            for (const order of ordersToUpdate) {
-                                await set(ref(db, `orders/${order.id}/userId`), user.uid);
-                            }
-                            // Delete the anonymous profile record
-                            await remove(ref(db, `anonymousProfiles/${anonymousProfileToConvertId}`));
-                            console.log(`Converted anonymous profile ${anonymousProfileToConvertId} to registered user ${user.uid}`);
-                            showNotification("تم نقل سجل الضيف إلى المستخدمين المسجلين.", "info");
-                        }
-
-                        initializeAdminPanel();
-                        logActivity(user.uid, 'login', `تسجيل الدخول بحساب جوجل (${user.email})`);
-                    }, { onlyOnce: true });
-
-                } catch (error) {
-                    console.error("Google Sign-in error:", error);
-                    showNotification(`خطأ في تسجيل الدخول بجوجل: ${error.message}`, "error");
-                }
-            });
-
-            // Listen for auth state changes (useful if user is already logged in)
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    // User is signed in, set current user and fetch their role
-                    window.adminData.currentUser = user;
-                    const userProfileSnapshot = await new Promise(resolve => onValue(ref(db, `users/${user.uid}`), resolve, { onlyOnce: true }));
-                    if (userProfileSnapshot.exists()) {
-                        window.adminData.currentUserRole = userProfileSnapshot.val().role || 'عادي';
-                        // Ensure the specific admin email always has 'مدير' role
-                        if (user.email === adminEmail && window.adminData.currentUserRole !== 'مدير') {
-                            await update(ref(db, `users/${user.uid}`), { role: 'مدير' });
-                            window.adminData.currentUserRole = 'مدير';
-                        }
+                    if (userProfile) {
+                        userRole = userProfile.role || 'عادي';
+                        userStatus = userProfile.status || 'active';
+                        // Update last login
+                        await update(userProfileRef, { lastLogin: new Date().toLocaleString('ar-EG') });
                     } else {
-                        // If user exists in Auth but not in DB (e.g., first time Google login)
-                        // This case should be handled by the googleLoginButton logic, but as a fallback:
-                        const userRole = (user.email === adminEmail) ? 'مدير' : 'عادي';
-                        await set(ref(db, `users/${user.uid}`), {
+                        // If user exists in Auth but not in DB, create a basic profile
+                        userRole = (user.email === adminEmail) ? 'مدير' : 'عادي';
+                        await set(userProfileRef, {
                             name: user.displayName || 'مستخدم جديد',
                             email: user.email || '',
-                            phone: user.phoneNumber || '',
+                            phone: '',
                             address: '',
                             status: 'active',
                             role: userRole,
@@ -3490,7 +3410,69 @@
                             lastLogin: new Date().toLocaleString('ar-EG'),
                             photoURL: user.photoURL || ''
                         });
-                        window.adminData.currentUserRole = userRole;
+                    }
+
+                    // Specific admin login check
+                    if (email === adminEmail && password === adminPassword) {
+                        userRole = 'مدير';
+                        // Ensure this role is persisted if it was just set locally
+                        await update(userProfileRef, { role: 'مدير' });
+                    }
+
+                    if (userStatus === 'blocked') {
+                        await signOut(auth); // Sign out blocked user immediately
+                        showNotification("تم حظر حسابك. يرجى التواصل مع فريق الدعم.", "error");
+                        loginError.classList.remove("hidden"); // Show generic error on login page
+                        emailInput.value = "";
+                        passwordInput.value = "";
+                        return;
+                    }
+
+                    window.adminData.currentUser = user;
+                    window.adminData.currentUserRole = userRole;
+                    initializeAdminPanel();
+                    logActivity(user.uid, 'login', `تسجيل الدخول بالبريد الإلكتروني (${user.email})`);
+                    showNotification("تم تسجيل الدخول بنجاح", "success");
+                    loginError.classList.add("hidden"); // Hide error on success
+
+                } catch (error) {
+                    console.error("Login error:", error);
+                    loginError.classList.remove("hidden");
+                    passwordInput.value = ""; // Clear password input
+                    showNotification("فشل تسجيل الدخول: البريد الإلكتروني أو كلمة المرور غير صحيحة.", "error");
+                }
+            });
+
+            emailInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    loginButton.click();
+                }
+            });
+            passwordInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    loginButton.click();
+                }
+            });
+
+            // Listen for auth state changes (useful if user is already logged in or after blocking)
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    window.adminData.currentUser = user;
+                    const userProfileRef = ref(db, `users/${user.uid}`);
+                    const userProfileSnapshot = await new Promise(resolve => onValue(userProfileRef, resolve, { onlyOnce: true }));
+                    const userProfile = userProfileSnapshot.val();
+
+                    if (userProfile) {
+                        window.adminData.currentUserRole = userProfile.role || 'عادي';
+                        if (userProfile.status === 'blocked') {
+                            await signOut(auth);
+                            showNotification("تم حظر حسابك. يرجى التواصل مع فريق الدعم.", "error");
+                            return; // Stop further initialization for blocked user
+                        }
+                    } else {
+                        // This case should ideally not happen if user creation is handled correctly,
+                        // but as a fallback, assign default role.
+                        window.adminData.currentUserRole = 'عادي';
                     }
                     console.log("User already authenticated:", user.uid, "Role:", window.adminData.currentUserRole);
                     initializeAdminPanel();
