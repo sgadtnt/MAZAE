@@ -258,19 +258,14 @@
     <div id="login-page" class="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
         <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md text-center">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">تسجيل الدخول إلى لوحة التحكم</h2>
-            <div class="mb-4">
-                <input type="email" id="email-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 text-lg text-center" placeholder="البريد الإلكتروني" dir="ltr">
-            </div>
             <div class="mb-4 relative">
-                <input type="password" id="password-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 text-lg text-center pr-10" placeholder="كلمة المرور" dir="ltr">
-                <button type="button" id="toggle-password" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none">
-                    <i class="fas fa-eye"></i>
-                </button>
+                 <input type="password" id="login-code-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 text-lg text-center tracking-widest" placeholder="أدخل رمز الدخول" dir="ltr">
+                 <i class="fas fa-key absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
             </div>
             <button id="login-button" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg text-lg w-full">
-                تسجيل الدخول
+                دخول
             </button>
-            <p id="login-error" class="text-red-500 mt-4 hidden">البريد الإلكتروني أو كلمة المرور غير صحيحة. حاول مرة أخرى.</p>
+            <p id="login-error" class="text-red-500 mt-4 hidden">رمز الدخول غير صحيح. حاول مرة أخرى.</p>
         </div>
     </div>
 
@@ -1139,34 +1134,10 @@
     </div>
 
     <script type="module">
-        // =====================================================================================================
-        // ملاحظة هامة: حل خطأ "auth/unauthorized-domain"
-        // =====================================================================================================
-        // هذا الخطأ (Firebase: Error (auth/unauthorized-domain)) لا يعني وجود مشكلة في الكود نفسه،
-        // بل يشير إلى أن النطاق (Domain) الذي يتم تشغيل لوحة التحكم عليه (مثل 'localhost' أو عنوان IP أو نطاق موقعك الفعلي)
-        // غير مضاف إلى قائمة النطاقات المصرح بها في إعدادات مشروع Firebase الخاص بك.
-        //
-        // لحل هذه المشكلة، اتبع الخطوات التالية في لوحة تحكم Firebase:
-        //
-        // 1. اذهب إلى Firebase Console: https://console.firebase.google.com/
-        // 2. اختر مشروعك.
-        // 3. في القائمة الجانبية، اذهب إلى "Authentication" (المصادقة).
-        // 4. اختر علامة التبويب "Settings" (الإعدادات).
-        // 5. ابحث عن قسم "Authorized domains" (النطاقات المصرح بها).
-        // 6. انقر على "Add domain" (إضافة نطاق).
-        // 7. أضف النطاق الذي تستخدمه حالياً:
-        //    - إذا كنت تختبر محلياً، أضف "localhost" (إذا لم يكن موجوداً).
-        //    - إذا كنت تستخدم عنوان IP (مثل 127.0.0.1)، أضفه أيضاً.
-        //    - إذا كنت تستضيف التطبيق على نطاق مباشر (مثل example.com)، أضف "example.com".
-        //    - تأكد من إضافة النطاق بدون "http://" أو "https://" أو المسارات الفرعية.
-        // 8. احفظ التغييرات.
-        //
-        // بعد إضافة النطاق، يجب أن يعمل تسجيل الدخول بحساب جوجل بشكل صحيح.
-        // =====================================================================================================
-
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        // Import signInAnonymously to fix permission errors
+        import { getAuth, signInAnonymously, updatePassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 
         // Firebase configuration (use your existing configuration)
@@ -1183,41 +1154,36 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        const auth = getAuth(app); // Initialize Firebase Auth
+        const auth = getAuth(app);
 
         const ordersRef = ref(db, "orders");
         const settingsRef = ref(db, "settings");
         const categoriesRef = ref(db, "categories");
         const productsRef = ref(db, "products");
         const homepageSettingsRef = ref(db, "homepageSettings");
-        const usersRef = ref(db, "users"); // New Firebase reference for registered users
-        const anonymousProfilesRef = ref(db, "anonymousProfiles"); // New Firebase reference for anonymous guests
-        const userActivityLogsRef = ref(db, "userActivityLogs"); // New Firebase reference for user activity logs
-        const moderatorLogsRef = ref(db, "moderatorLogs"); // New Firebase reference for moderator activity logs
+        const usersRef = ref(db, "users");
+        const anonymousProfilesRef = ref(db, "anonymousProfiles");
+        const userActivityLogsRef = ref(db, "userActivityLogs");
+        const moderatorLogsRef = ref(db, "moderatorLogs");
 
         // Global data storage
         window.adminData = {
             orders: [],
             products: [],
             categories: [],
-            users: [], // Registered users
-            anonymousProfiles: [], // Anonymous guest profiles
+            users: [], 
+            anonymousProfiles: [],
             settings: {},
             homepageSettings: {},
-            userActivityLogs: {}, // Stores logs per user ID
-            moderatorLogs: [], // Stores all moderator logs
-            currentUser: null, // Stores the current authenticated user from Firebase Auth
-            currentUserRoles: [] // Changed to array for multiple roles, updated after login
+            userActivityLogs: {},
+            moderatorLogs: [],
+            currentUser: null,
+            currentUserRoles: []
         };
 
         // --- Utility Functions ---
-        /**
-         * Displays a temporary notification message on the screen.
-         * @param {string} message - The message to display.
-         * @param {'success'|'error'|'warning'|'info'} type - The type of notification (determines color and icon).
-         */
         function showNotification(message, type) {
-            console.log(`Notification (${type}): ${message}`); // Added for debugging
+            console.log(`Notification (${type}): ${message}`);
             const oldNotification = document.querySelector('.notification');
             if (oldNotification) oldNotification.remove();
             
@@ -1237,27 +1203,18 @@
             }, 3000);
         }
 
-        // Global variable to store the confirmation callback
         let confirmCallback = null;
 
-        /**
-         * Displays a custom confirmation modal instead of the browser's native confirm dialog.
-         * @param {string} message - The message to display in the confirmation modal.
-         * @param {function(boolean): void} onConfirm - Callback function to execute when the user confirms or cancels.
-         * It receives `true` for confirm, `false` for cancel.
-         */
         window.showConfirmModal = function(message, onConfirm) {
             document.getElementById("confirm-message").textContent = message;
             document.getElementById("confirm-modal").classList.remove("hidden");
-            confirmCallback = onConfirm; // Store the callback
+            confirmCallback = onConfirm;
 
-            // Event listeners for confirm modal buttons
-            // These are added dynamically to ensure only one listener is active per confirmation
             document.getElementById("confirm-ok-btn").onclick = () => {
                 document.getElementById("confirm-modal").classList.add("hidden");
                 if (confirmCallback) {
                     confirmCallback(true);
-                    confirmCallback = null; // Clear callback
+                    confirmCallback = null;
                 }
             };
 
@@ -1265,38 +1222,24 @@
                 document.getElementById("confirm-modal").classList.add("hidden");
                 if (confirmCallback) {
                     confirmCallback(false);
-                    confirmCallback = null; // Clear callback
+                    confirmCallback = null;
                 }
             };
         };
 
-        /**
-         * Function to generate a consistent guest ID based on available order info.
-         * This ID should be stable for the same guest across multiple orders.
-         * @param {Object} order - The order object.
-         * @returns {string} - A consistent guest ID.
-         */
         function generateGuestId(order) {
-            // Prioritize email, then phone, then name for consistency
             if (order.email && order.email.trim() !== '') {
-                return `guest_email_${order.email.trim().toLowerCase().replace(/[.#$\[\]]/g, '_')}`; // Sanitize for Firebase key
+                return `guest_email_${order.email.trim().toLowerCase().replace(/[.#$\[\]]/g, '_')}`;
             }
             if (order.phone && order.phone.trim() !== '') {
-                return `guest_phone_${order.phone.replace(/\D/g, '')}`; // Digits only
+                return `guest_phone_${order.phone.replace(/\D/g, '')}`;
             }
             if (order.name && order.name.trim() !== '') {
                 return `guest_name_${order.name.trim().toLowerCase().replace(/\s/g, '_').replace(/[.#$\[\]]/g, '_')}`;
             }
-            // Fallback if no identifiable info. This guest will be unique per order.
             return `guest_unknown_${order.id}`;
         }
 
-        /**
-         * Logs an activity to both user-specific and moderator logs if applicable.
-         * @param {string} userId - The ID of the user performing the action.
-         * @param {string} action - A short code for the action (e.g., 'login', 'editProduct').
-         * @param {string} details - A descriptive string of what happened.
-         */
         async function logActivity(userId, action, details) {
             const timestamp = new Date().toLocaleString('ar-EG');
             const logEntry = {
@@ -1306,25 +1249,23 @@
             };
 
             try {
-                // Log to user's activity log
-                await push(ref(db, `userActivityLogs/${userId}`), logEntry);
-                console.log(`User activity logged for ${userId}: ${action} - ${details}`);
+                const effectiveUserId = userId || 'admin_user';
+                await push(ref(db, `userActivityLogs/${effectiveUserId}`), logEntry);
+                console.log(`User activity logged for ${effectiveUserId}: ${action} - ${details}`);
 
-                // Check if the current user is a moderator or admin and log to moderator logs
                 const currentUser = window.adminData.currentUser;
                 if (currentUser) {
-                    const userProfile = window.adminData.users.find(u => u.id === currentUser.uid);
-                    // Check if userProfile exists and if their roles array includes 'مشرف', 'مدير', or 'مراقب'
-                    if (userProfile && userProfile.roles && userProfile.roles.some(role => ['مشرف', 'مدير', 'مراقب'].includes(role))) {
+                    const userRoles = window.adminData.currentUserRoles;
+                    if (userRoles.some(role => ['مشرف', 'مدير', 'مراقب'].includes(role))) {
                         const moderatorLogEntry = {
                             userId: currentUser.uid,
-                            userName: userProfile.name || currentUser.displayName || 'N/A',
+                            userName: 'Admin',
                             action,
                             timestamp,
                             details
                         };
                         await push(moderatorLogsRef, moderatorLogEntry);
-                        console.log(`Moderator activity logged for ${userProfile.name}: ${action} - ${details}`);
+                        console.log(`Moderator activity logged for Admin: ${action} - ${details}`);
                     }
                 }
             } catch (error) {
@@ -1335,10 +1276,6 @@
 
 
         // --- Data Loading Functions ---
-
-        /**
-         * Loads store settings from Firebase and updates the UI.
-         */
         function loadSettings() {
             onValue(settingsRef, (snapshot) => {
                 const settings = snapshot.val();
@@ -1346,13 +1283,12 @@
                     window.adminData.settings = settings;
                     renderSettings();
                 } else {
-                    // Default settings if none exist in Firebase
                     window.adminData.settings = {
                         storeName: "متجرنا الإلكتروني",
                         contactPhone: "+964 782 305 3419",
                         contactWhatsapp: "+964 782 305 3419",
                         contactEmail: "info@zioshop.com",
-                        deliveryPricesByCity: [], // Initialize as empty array for city-based delivery
+                        deliveryPricesByCity: [],
                         thankYouMessage: "شكراً لثقتك بنا! سيتواصل معك فريقنا قريباً لتأكيد طلبك."
                     };
                     renderSettings();
@@ -1364,53 +1300,20 @@
             });
         }
 
-        /**
-         * Loads homepage settings from Firebase and updates the UI.
-         */
         function loadHomepageSettings() {
             onValue(homepageSettingsRef, (snapshot) => {
                 const settings = snapshot.val();
                 if (settings) {
                     window.adminData.homepageSettings = settings;
                 } else {
-                    // Default homepage settings if none exist
                     window.adminData.homepageSettings = {
-                        mainBanner: {
-                            enabled: true,
-                            image: '',
-                            title: 'عنوان البانر الرئيسي',
-                            description: 'وصف جذاب للبانر الرئيسي هنا.',
-                            ctaText: 'تسوق الآن',
-                            ctaLink: '#'
-                        },
-                        productCategories: {
-                            enabled: true,
-                            selectedCategories: []
-                        },
-                        featuredProducts: {
-                            enabled: true,
-                            type: 'most_selling' // 'most_selling', 'new_products', 'discounts'
-                        },
-                        internalBanners: {
-                            enabled: true,
-                            banners: [] // Array of { image: '', link: '' }
-                        },
-                        customerReviews: {
-                            enabled: true
-                        },
-                        blog: {
-                            enabled: true
-                        },
-                        footer: {
-                            contactEnabled: true,
-                            socialEnabled: true,
-                            customLinksEnabled: true,
-                            facebook: '',
-                            instagram: '',
-                            twitter: '',
-                            linkedin: '',
-                            customLinks: [] // Array of { text: '', link: '' }
-                        }
+                        mainBanner: { enabled: true, image: '', title: 'عنوان البانر الرئيسي', description: 'وصف جذاب للبانر الرئيسي هنا.', ctaText: 'تسوق الآن', ctaLink: '#' },
+                        productCategories: { enabled: true, selectedCategories: [] },
+                        featuredProducts: { enabled: true, type: 'most_selling' },
+                        internalBanners: { enabled: true, banners: [] },
+                        customerReviews: { enabled: true },
+                        blog: { enabled: true },
+                        footer: { contactEnabled: true, socialEnabled: true, customLinksEnabled: true, facebook: '', instagram: '', twitter: '', linkedin: '', customLinks: [] }
                     };
                 }
                 renderHomepageSettings();
@@ -1421,26 +1324,17 @@
             });
         }
 
-
-        /**
-         * Loads categories from Firebase and updates the categories table and product category dropdown.
-         */
         function loadCategories() {
             onValue(categoriesRef, (snapshot) => {
                 const categories = [];
                 snapshot.forEach((childSnapshot) => {
-                    categories.push({
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    });
+                    categories.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 window.adminData.categories = categories;
-                renderCategoriesTable(); // Call with no search query initially
-                // If the add/edit product modal is open, re-render category dropdown
+                renderCategoriesTable();
                 if (!document.getElementById('product-modal').classList.contains('hidden')) {
                     populateCategoryDropdown('product-category');
                 }
-                // Also populate homepage categories dropdown
                 if (!document.getElementById('homepage-settings-section').classList.contains('hidden')) {
                     populateHomepageCategoryDropdown();
                 }
@@ -1451,20 +1345,14 @@
             });
         }
 
-        /**
-         * Loads products from Firebase and updates the products table.
-         */
         function loadProducts() {
             onValue(productsRef, (snapshot) => {
                 const products = [];
                 snapshot.forEach((childSnapshot) => {
-                    products.push({
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    });
+                    products.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 window.adminData.products = products;
-                renderProductsTable(); // Call with no search query initially
+                renderProductsTable();
                 showNotification("تم تحميل المنتجات", "info");
             }, (error) => {
                 console.error("Error loading products:", error);
@@ -1472,31 +1360,21 @@
             });
         }
 
-        /**
-         * Loads orders from Firebase and updates the orders table.
-         * Also, ensures orders have a userId for user management features and updates anonymous profiles.
-         */
         function loadOrders() {
             onValue(ordersRef, (snapshot) => {
                 const orders = [];
                 snapshot.forEach((childSnapshot) => {
-                    const order = {
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    };
-                    // If order doesn't have a userId or it's a legacy guest ID, generate a consistent one
-                    // and update the anonymous profile.
+                    const order = { id: childSnapshot.key, ...childSnapshot.val() };
                     if (!order.userId || order.userId.startsWith('guest_') || order.userId.length !== 28) {
                         const guestId = generateGuestId(order);
-                        order.userId = guestId; // Assign the consistent guest ID to the order object
-                        // Persist this guestId to the order in Firebase (optional, but good for consistency)
+                        order.userId = guestId;
                         set(ref(db, `orders/${order.id}/userId`), guestId);
                         updateAnonymousProfileFromOrder(order);
                     }
                     orders.push(order);
                 });
-                window.adminData.orders = orders.reverse(); // Show newest first
-                renderOrdersTable(); // Call with no search query initially
+                window.adminData.orders = orders.reverse();
+                renderOrdersTable();
                 showNotification("تم تحميل الطلبات", "info");
             }, (error) => {
                 console.error("Error loading orders:", error);
@@ -1504,32 +1382,15 @@
             });
         }
 
-        /**
-         * Loads registered users from Firebase and updates the users table.
-         */
         function loadUsers() {
             onValue(usersRef, (snapshot) => {
                 const users = [];
                 snapshot.forEach((childSnapshot) => {
-                    users.push({
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    });
+                    users.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 window.adminData.users = users;
-                renderUsersTable(); // Call with no search query initially
-
-                // Update current user's roles if logged in
-                if (window.adminData.currentUser) {
-                    const loggedInUser = users.find(u => u.id === window.adminData.currentUser.uid);
-                    if (loggedInUser) {
-                        // Ensure roles is always an array
-                        window.adminData.currentUserRoles = Array.isArray(loggedInUser.roles) ? loggedInUser.roles : [loggedInUser.roles || 'عادي'];
-                    } else {
-                        window.adminData.currentUserRoles = ['عادي']; // Default if profile not found
-                    }
-                    updateAdminUIBasedOnRole(); // Update UI visibility based on new roles
-                }
+                renderUsersTable();
+                updateAdminUIBasedOnRole();
                 showNotification("تم تحميل المستخدمين المسجلين", "info");
             }, (error) => {
                 console.error("Error loading registered users:", error);
@@ -1537,17 +1398,11 @@
             });
         }
 
-        /**
-         * Loads anonymous profiles from Firebase and updates the anonymous users table.
-         */
         function loadAnonymousProfiles() {
             onValue(anonymousProfilesRef, (snapshot) => {
                 const profiles = [];
                 snapshot.forEach((childSnapshot) => {
-                    profiles.push({
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    });
+                    profiles.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 window.adminData.anonymousProfiles = profiles;
                 renderAnonymousProfilesTable();
@@ -1558,9 +1413,6 @@
             });
         }
 
-        /**
-         * Loads user activity logs from Firebase.
-         */
         function loadUserActivityLogs() {
             onValue(userActivityLogsRef, (snapshot) => {
                 const logs = {};
@@ -1568,12 +1420,9 @@
                     const userId = userSnapshot.key;
                     const userLogs = [];
                     userSnapshot.forEach((logEntrySnapshot) => {
-                        userLogs.push({
-                            id: logEntrySnapshot.key,
-                            ...logEntrySnapshot.val()
-                        });
+                        userLogs.push({ id: logEntrySnapshot.key, ...logEntrySnapshot.val() });
                     });
-                    logs[userId] = userLogs.reverse(); // Show newest first
+                    logs[userId] = userLogs.reverse();
                 });
                 window.adminData.userActivityLogs = logs;
                 showNotification("تم تحميل سجلات نشاط المستخدمين", "info");
@@ -1583,19 +1432,13 @@
             });
         }
 
-        /**
-         * Loads moderator activity logs from Firebase.
-         */
         function loadModeratorLogs() {
             onValue(moderatorLogsRef, (snapshot) => {
                 const logs = [];
                 snapshot.forEach((logEntrySnapshot) => {
-                    logs.push({
-                        id: logEntrySnapshot.key,
-                        ...logEntrySnapshot.val()
-                    });
+                    logs.push({ id: logEntrySnapshot.key, ...logEntrySnapshot.val() });
                 });
-                window.adminData.moderatorLogs = logs.reverse(); // Show newest first
+                window.adminData.moderatorLogs = logs.reverse();
                 renderModeratorLogsTable();
                 populateModeratorLogFilters();
                 showNotification("تم تحميل سجلات المشرفين", "info");
@@ -1605,14 +1448,8 @@
             });
         }
 
-
-        /**
-         * Updates or creates an anonymous profile based on a new order from a guest.
-         * This function is called from loadOrders.
-         * @param {Object} order - The order object.
-         */
         async function updateAnonymousProfileFromOrder(order) {
-            const guestId = order.userId; // This is now guaranteed to be a guest_... ID
+            const guestId = order.userId;
             const guestPhone = order.phone || '';
             const guestName = order.name || '';
             const guestEmail = order.email || ''; 
@@ -1620,19 +1457,16 @@
 
             const anonymousProfileRefForId = ref(db, `anonymousProfiles/${guestId}`);
             
-            // Fetch once to avoid infinite loops with onValue listeners
             const snapshot = await new Promise(resolve => onValue(anonymousProfileRefForId, resolve, { onlyOnce: true }));
 
             if (snapshot.exists()) {
-                // Update existing profile
                 await update(anonymousProfileRefForId, {
                     lastOrderDate: lastOrderDate,
-                    name: guestName || snapshot.val().name, // Update if new name is provided or existing is empty
-                    phone: guestPhone || snapshot.val().phone, // Update if new phone is provided or existing is empty
-                    email: guestEmail || snapshot.val().email // Update if new email is provided or existing is empty
+                    name: guestName || snapshot.val().name,
+                    phone: guestPhone || snapshot.val().phone,
+                    email: guestEmail || snapshot.val().email
                 });
             } else {
-                // Create new profile
                 await set(anonymousProfileRefForId, {
                     name: guestName,
                     phone: guestPhone,
@@ -1643,24 +1477,16 @@
             }
         }
 
-
-        // --- Rendering Functions ---
-
-        /**
-         * Renders the orders data into the orders table, optionally filtered by a search query.
-         * @param {string} searchQuery - The text to filter orders by.
-         */
+        // --- Rendering Functions (omitted for brevity, no changes here) ---
         function renderOrdersTable(searchQuery = '') {
             const tableBody = document.getElementById("orders-table-body");
             if (!tableBody) return;
 
             const lowerCaseQuery = searchQuery.toLowerCase();
             const filteredOrders = window.adminData.orders.filter(order => {
-                // Ensure properties are strings before calling toLowerCase()
                 const nameMatch = String(order.name || '').toLowerCase().includes(lowerCaseQuery);
                 const invoiceMatch = String(order.invoiceNumber || '').toLowerCase().includes(lowerCaseQuery);
-                const phoneMatch = String(order.phone || '').includes(lowerCaseQuery); // Phone numbers might not need toLowerCase if purely numeric
-
+                const phoneMatch = String(order.phone || '').includes(lowerCaseQuery);
                 return nameMatch || invoiceMatch || phoneMatch;
             });
 
@@ -1695,11 +1521,6 @@
             tableBody.innerHTML = html;
         }
 
-        /**
-         * Returns the appropriate Tailwind CSS class for an order status.
-         * @param {string} status - The order status string.
-         * @returns {string} - The CSS classes for the status badge.
-         */
         function getOrderStatusClass(status) {
             switch (status) {
                 case "جديد": return "bg-blue-100 text-blue-800";
@@ -1710,10 +1531,6 @@
             }
         }
 
-        /**
-         * Displays the order details in a modal.
-         * @param {string} orderId - The ID of the order to display.
-         */
         window.showOrderDetails = function(orderId) {
             const order = window.adminData.orders.find(o => o.id === orderId);
             if (!order) {
@@ -1755,12 +1572,6 @@
             document.getElementById("order-details-modal").classList.remove("hidden");
         };
 
-        /**
-         * Updates the status of a specific order in Firebase.
-         * @param {string} orderId - The ID of the order to update.
-         * @param {string} newStatus - The new status for the order.
-         * @param {string} oldStatus - The old status for logging purposes.
-         */
         window.updateOrderStatus = async function(orderId, newStatus, oldStatus) {
             try {
                 await set(ref(db, `orders/${orderId}/status`), newStatus);
@@ -1774,10 +1585,6 @@
             }
         };
 
-        /**
-         * Deletes an order from Firebase after user confirmation.
-         * @param {string} orderId - The ID of the order to delete.
-         */
         window.deleteOrder = async function(orderId) {
             showConfirmModal("هل أنت متأكد أنك تريد حذف هذا الطلب؟", async (confirmed) => {
                 if (confirmed) {
@@ -1797,21 +1604,15 @@
             });
         };
 
-        /**
-         * Renders the products data into the products table, optionally filtered by a search query.
-         * @param {string} searchQuery - The text to filter products by.
-         */
         function renderProductsTable(searchQuery = '') {
             const tableBody = document.getElementById("products-table-body");
             if (!tableBody) return;
 
             const lowerCaseQuery = searchQuery.toLowerCase();
             const filteredProducts = window.adminData.products.filter(product => {
-                // Ensure properties are strings before calling toLowerCase()
                 const nameMatch = String(product.name || '').toLowerCase().includes(lowerCaseQuery);
                 const descriptionMatch = String(product.description || '').toLowerCase().includes(lowerCaseQuery);
                 const categoryMatch = String(product.category || '').toLowerCase().includes(lowerCaseQuery);
-
                 return nameMatch || descriptionMatch || categoryMatch;
             });
 
@@ -1822,19 +1623,16 @@
                 filteredProducts.forEach(product => {
                     const originalPrice = (product.price || 0).toLocaleString('ar-EG');
                     let salePriceHtml = 'N/A';
-                    // Prioritize custom discount price if enabled
                     if (product.isSale && product.useCustomDiscountPrice && product.customDiscountPrice != null) {
                         salePriceHtml = `${product.customDiscountPrice.toLocaleString('ar-EG')} د.ع (خصم يدوي)`;
                     } else if (product.isSale && product.discountPercentage != null) {
                         const calculatedSalePrice = product.price * (1 - product.discountPercentage / 100);
                         salePriceHtml = `${calculatedSalePrice.toLocaleString('ar-EG')} د.ع`;
                     }
-                    // Determine featured status display
                     const isFeaturedHtml = product.isFeatured ? 
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">نعم</span>` : 
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">لا</span>`;
                     
-                    // Active status display
                     const isActiveHtml = product.isActive ?
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">مفعل</span>` :
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">غير مفعل</span>`;
@@ -1877,12 +1675,6 @@
             tableBody.innerHTML = html;
         }
 
-        /**
-         * Rounds the value in the product price input field to the nearest 250, 500, or 1000.
-         * Logic:
-         * If X % 250 is less than or equal to 124, round down to the nearest multiple of 250.
-         * If X % 250 is greater than or equal to 125, round up to the nearest multiple of 250.
-         */
         window.roundProductPrice = function() {
             const priceInput = document.getElementById('product-price');
             if (priceInput && !isNaN(parseFloat(priceInput.value))) {
@@ -1898,26 +1690,20 @@
             }
         };
 
-        /**
-         * Opens the product add/edit modal and populates it with data if editing an existing product.
-         * @param {string|null} productId - The ID of the product to edit, or null for a new product.
-         */
         window.openProductModal = function(productId = null) {
             const modal = document.getElementById("product-modal");
             const form = document.getElementById("product-form");
-            form.reset(); // Clear form
-            document.getElementById("product-id").value = productId; // Set hidden ID
+            form.reset();
+            document.getElementById("product-id").value = productId;
 
-            // Get sale-related fields container and checkboxes
             const saleFieldsContainer = document.getElementById('sale-fields-container');
             const productIsSaleCheckbox = document.getElementById('product-is-sale');
             const productUseCustomDiscountCheckbox = document.getElementById('product-use-custom-discount');
             const customDiscountPriceContainer = document.getElementById('custom-discount-price-container');
             const additionalImagesContainer = document.getElementById('additional-images-container');
-            additionalImagesContainer.innerHTML = ''; // Clear existing additional images
+            additionalImagesContainer.innerHTML = '';
 
             if (productId) {
-                // Edit existing product
                 document.getElementById("product-modal-title").textContent = "تعديل المنتج";
                 const product = window.adminData.products.find(p => p.id === productId);
                 if (product) {
@@ -1925,72 +1711,61 @@
                     document.getElementById("product-description").value = product.description || '';
                     document.getElementById("product-price").value = product.price || '';
                     document.getElementById("product-inventory").value = product.inventory || '';
-                    document.getElementById("product-image").value = product.image || ''; // Primary image
+                    document.getElementById("product-image").value = product.image || '';
                     
-                    // Set category dropdown value
-                    populateCategoryDropdown('product-category'); // Populate first
-                    document.getElementById("product-category").value = product.categoryId || ''; // Then set value
+                    populateCategoryDropdown('product-category');
+                    document.getElementById("product-category").value = product.categoryId || '';
 
-                    // Load additional images
                     if (product.additionalImages && product.additionalImages.length > 0) {
                         product.additionalImages.forEach(imgUrl => addAdditionalImageRow(imgUrl));
                     } else {
-                        addAdditionalImageRow(); // Add one empty row if none exist
+                        addAdditionalImageRow();
                     }
 
                     document.getElementById("product-is-new").checked = product.isNew || false;
                     document.getElementById("product-is-featured").checked = product.isFeatured || false;
-                    document.getElementById("product-is-active").checked = product.isActive !== false; // Set active status
+                    document.getElementById("product-is-active").checked = product.isActive !== false;
                     productIsSaleCheckbox.checked = product.isSale || false;
                     document.getElementById("product-discount-percentage").value = product.discountPercentage || '';
                     document.getElementById("product-sale-start-date").value = product.saleStartDate || '';
                     document.getElementById("product-sale-end-date").value = product.saleEndDate || '';
 
-                    // Load custom discount price
                     productUseCustomDiscountCheckbox.checked = product.useCustomDiscountPrice || false;
                     document.getElementById("product-custom-discount-price").value = product.customDiscountPrice || '';
                 }
             } else {
-                // Add new product
                 document.getElementById("product-modal-title").textContent = "إضافة منتج جديد";
                 document.getElementById("product-is-new").checked = false;
                 document.getElementById("product-is-featured").checked = false;
-                document.getElementById("product-is-active").checked = true; // Default to active for new product
+                document.getElementById("product-is-active").checked = true;
                 productIsSaleCheckbox.checked = false;
-                productUseCustomDiscountCheckbox.checked = false; // Default to unchecked for new product
-                addAdditionalImageRow(); // Add one empty row for new product
-                populateCategoryDropdown('product-category'); // Populate for new product
+                productUseCustomDiscountCheckbox.checked = false;
+                addAdditionalImageRow();
+                populateCategoryDropdown('product-category');
             }
 
-            // Toggle visibility of sale fields based on checkbox state
             if (productIsSaleCheckbox.checked) {
                 saleFieldsContainer.classList.remove('hidden');
             } else {
                 saleFieldsContainer.classList.add('hidden');
-                // Clear sale fields when checkbox is unchecked
                 document.getElementById("product-discount-percentage").value = '';
                 document.getElementById("product-sale-start-date").value = '';
                 document.getElementById("product-sale-end-date").value = '';
-                productUseCustomDiscountCheckbox.checked = false; // Also uncheck custom discount
-                customDiscountPriceContainer.classList.add('hidden'); // Hide custom discount price field
-                document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
+                productUseCustomDiscountCheckbox.checked = false;
+                customDiscountPriceContainer.classList.add('hidden');
+                document.getElementById("product-custom-discount-price").value = '';
             }
 
-            // Toggle visibility of custom discount price based on its checkbox state
             if (productUseCustomDiscountCheckbox.checked) {
                 customDiscountPriceContainer.classList.remove('hidden');
             } else {
                 customDiscountPriceContainer.classList.add('hidden');
-                document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
+                document.getElementById("product-custom-discount-price").value = '';
             }
 
             modal.classList.remove("hidden");
         };
 
-        /**
-         * Adds a new input field for an additional product image URL.
-         * @param {string} [imageUrl=''] - The image URL to pre-fill the input with.
-         */
         window.addAdditionalImageRow = function(imageUrl = '') {
             const container = document.getElementById('additional-images-container');
             const div = document.createElement('div');
@@ -2004,26 +1779,16 @@
             container.appendChild(div);
         };
 
-        /**
-         * Removes an additional image URL input field.
-         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
-         */
         window.removeAdditionalImageRow = function(buttonElement) {
             buttonElement.closest('.flex.items-center.mb-2.gap-2').remove();
         };
 
-        /**
-         * Populates the category dropdown in the product modal.
-         * @param {string} selectId - The ID of the select element to populate.
-         */
         function populateCategoryDropdown(selectId) {
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
-            // Save current selection (important for multi-selects, though this is single)
             const currentSelectedValue = selectElement.value;
-
-            selectElement.innerHTML = '<option value="">اختر قسماً</option>'; // Default option
+            selectElement.innerHTML = '<option value="">اختر قسماً</option>';
             window.adminData.categories.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category.id;
@@ -2031,32 +1796,27 @@
                 selectElement.appendChild(option);
             });
 
-            // Restore selection
             if (currentSelectedValue) {
                 selectElement.value = currentSelectedValue;
             }
         }
 
-        /**
-         * Saves (adds or updates) a product in Firebase.
-         */
         window.saveProduct = async function() {
             const productId = document.getElementById("product-id").value;
             const name = document.getElementById("product-name").value.trim();
             const description = document.getElementById("product-description").value.trim();
             const price = parseFloat(document.getElementById("product-price").value);
             const inventory = parseInt(document.getElementById("product-inventory").value);
-            const image = document.getElementById("product-image").value.trim(); // Primary image
+            const image = document.getElementById("product-image").value.trim();
             const categoryId = document.getElementById("product-category").value;
             const isNew = document.getElementById("product-is-new").checked;
             const isFeatured = document.getElementById("product-is-featured").checked;
-            const isActive = document.getElementById("product-is-active").checked; // Get active status
+            const isActive = document.getElementById("product-is-active").checked;
             const isSale = document.getElementById("product-is-sale").checked;
 
-            // Collect additional image URLs
             const additionalImages = Array.from(document.querySelectorAll('#additional-images-container .additional-image-input'))
                                           .map(input => input.value.trim())
-                                          .filter(url => url !== ''); // Filter out empty URLs
+                                          .filter(url => url !== '');
 
             let discountPercentage = null;
             let saleStartDate = null;
@@ -2071,8 +1831,6 @@
                         showNotification("يرجى إدخال سعر خصم نهائي صحيح.", "error");
                         return;
                     }
-                    // If custom price is used, percentage and dates are not strictly required for calculation
-                    // but we might still save them if they were entered previously.
                     discountPercentage = parseFloat(document.getElementById("product-discount-percentage").value) || null;
                     saleStartDate = document.getElementById("product-sale-start-date").value || null;
                     saleEndDate = document.getElementById("product-sale-end-date").value || null;
@@ -2096,7 +1854,6 @@
                     }
                 }
             } else {
-                // If not on sale, clear all sale-related fields
                 useCustomDiscountPrice = false;
                 customDiscountPrice = null;
                 discountPercentage = null;
@@ -2112,23 +1869,9 @@
             const categoryName = window.adminData.categories.find(c => c.id === categoryId)?.name || 'عام';
 
             const productData = {
-                name,
-                description,
-                price,
-                inventory,
-                image, // Primary image
-                additionalImages, // Save additional images array
-                categoryId,
-                category: categoryName,
-                isNew,
-                isFeatured,
-                isActive, // Save active status
-                isSale,
-                discountPercentage: discountPercentage,
-                saleStartDate: saleStartDate,
-                saleEndDate: saleEndDate,
-                useCustomDiscountPrice: useCustomDiscountPrice, // Save custom discount flag
-                customDiscountPrice: customDiscountPrice, // Save custom discount price
+                name, description, price, inventory, image, additionalImages, categoryId, category: categoryName,
+                isNew, isFeatured, isActive, isSale, discountPercentage, saleStartDate, saleEndDate,
+                useCustomDiscountPrice, customDiscountPrice,
                 createdAt: productId ? window.adminData.products.find(p => p.id === productId)?.createdAt : new Date().toLocaleString('ar-EG')
             };
 
@@ -2153,11 +1896,6 @@
             }
         };
 
-        /**
-         * Toggles the active status of a product.
-         * @param {string} productId - The ID of the product to toggle.
-         * @param {boolean} newStatus - The new active status (true for active, false for inactive).
-         */
         window.toggleProductStatus = async function(productId, newStatus) {
             const product = window.adminData.products.find(p => p.id === productId);
             if (!product) {
@@ -2179,17 +1917,12 @@
                         showNotification("فشل تغيير حالة المنتج", "error");
                     }
                 } else {
-                    // Revert the checkbox state if the user cancels
                     document.querySelector(`#products-table-body input[type="checkbox"][onchange="toggleProductStatus('${productId}', this.checked)"]`).checked = !newStatus;
                     showNotification("تم إلغاء العملية", "info");
                 }
             });
         };
 
-        /**
-         * Deletes a product from Firebase after user confirmation.
-         * @param {string} productId - The ID of the product to delete.
-         */
         window.deleteProduct = async function(productId) {
             showConfirmModal("هل أنت متأكد أنك تريد حذف هذا المنتج؟", async (confirmed) => {
                 if (confirmed) {
@@ -2210,20 +1943,14 @@
             });
         };
 
-        /**
-         * Renders the categories data into the categories table, optionally filtered by a search query.
-         * @param {string} searchQuery - The text to filter categories by.
-         */
         function renderCategoriesTable(searchQuery = '') {
             const tableBody = document.getElementById("categories-table-body");
             if (!tableBody) return;
 
             const lowerCaseQuery = searchQuery.toLowerCase();
             const filteredCategories = window.adminData.categories.filter(category => {
-                // Ensure properties are strings before calling toLowerCase()
                 const nameMatch = String(category.name || '').toLowerCase().includes(lowerCaseQuery);
                 const descriptionMatch = String(category.description || '').toLowerCase().includes(lowerCaseQuery);
-
                 return nameMatch || descriptionMatch;
             });
 
@@ -2232,7 +1959,6 @@
                 html = `<tr><td colspan="5" class="text-center py-4 text-gray-500">لا توجد أقسام مطابقة لبحثك.</td></tr>`;
             } else {
                 filteredCategories.forEach(category => {
-                    // Active status display
                     const isActiveHtml = category.isActive ?
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">مفعل</span>` :
                         `<span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">غير مفعل</span>`;
@@ -2268,66 +1994,50 @@
             tableBody.innerHTML = html;
         }
 
-        /**
-         * Opens the category add/edit modal and populates it with data if editing an existing category.
-         * @param {string|null} categoryId - The ID of the category to edit, or null for a new category.
-         */
         window.openCategoryModal = function(categoryId = null) {
             const modal = document.getElementById("category-modal");
             const form = document.getElementById("category-form");
-            form.reset(); // Clear form
-            document.getElementById("category-id").value = categoryId; // Set hidden ID
+            form.reset();
+            document.getElementById("category-id").value = categoryId;
 
             if (categoryId) {
-                // Edit existing category
                 document.getElementById("category-modal-title").textContent = "تعديل القسم";
                 const category = window.adminData.categories.find(c => c.id === categoryId);
                 if (category) {
                     document.getElementById("category-name").value = category.name || '';
                     document.getElementById("category-description").value = category.description || '';
                     document.getElementById("category-image").value = category.image || '';
-                    document.getElementById("category-is-active").checked = category.isActive !== false; // Set active status
+                    document.getElementById("category-is-active").checked = category.isActive !== false;
                 }
             } else {
-                // Add new category
                 document.getElementById("category-modal-title").textContent = "إضافة قسم جديد";
-                document.getElementById("category-is-active").checked = true; // Default to active for new category
+                document.getElementById("category-is-active").checked = true;
             }
             modal.classList.remove("hidden");
         };
 
-        /**
-         * Saves (adds or updates) a category in Firebase.
-         */
         window.saveCategory = async function() {
             const categoryId = document.getElementById("category-id").value;
             const name = document.getElementById("category-name").value.trim();
             const description = document.getElementById("category-description").value.trim();
             const image = document.getElementById("category-image").value.trim();
-            const isActive = document.getElementById("category-is-active").checked; // Get active status
+            const isActive = document.getElementById("category-is-active").checked;
 
             if (!name) {
                 showNotification("يرجى إدخال اسم القسم.", "error");
                 return;
             }
 
-            const categoryData = {
-                name,
-                description,
-                image,
-                isActive // Save active status
-            };
+            const categoryData = { name, description, image, isActive };
 
             try {
                 if (categoryId) {
-                    // Update existing category
                     await set(ref(db, `categories/${categoryId}`), categoryData);
                     showNotification("تم تحديث القسم بنجاح", "success");
                     if (window.adminData.currentUser) {
                         logActivity(window.adminData.currentUser.uid, 'editCategory', `تم تعديل القسم: ${name} (ID: ${categoryId})`);
                     }
                 } else {
-                    // Add new category
                     const newCategoryRef = await push(categoriesRef, categoryData);
                     showNotification("تمت إضافة القسم بنجاح", "success");
                     if (window.adminData.currentUser) {
@@ -2341,11 +2051,6 @@
             }
         };
 
-        /**
-         * Toggles the active status of a category.
-         * @param {string} categoryId - The ID of the category to toggle.
-         * @param {boolean} newStatus - The new active status (true for active, false for inactive).
-         */
         window.toggleCategoryStatus = async function(categoryId, newStatus) {
             const category = window.adminData.categories.find(c => c.id === categoryId);
             if (!category) {
@@ -2367,17 +2072,12 @@
                         showNotification("فشل تغيير حالة القسم", "error");
                     }
                 } else {
-                    // Revert the checkbox state if the user cancels
                     document.querySelector(`#categories-table-body input[type="checkbox"][onchange="toggleCategoryStatus('${categoryId}', this.checked)"]`).checked = !newStatus;
                     showNotification("تم إلغاء العملية", "info");
                 }
             });
         };
 
-        /**
-         * Deletes a category from Firebase after user confirmation.
-         * @param {string} categoryId - The ID of the category to delete.
-         */
         window.deleteCategory = async function(categoryId) {
             showConfirmModal("هل أنت متأكد أنك تريد حذف هذا القسم؟", async (confirmed) => {
                 if (confirmed) {
@@ -2398,10 +2098,6 @@
             });
         };
 
-        /**
-         * Renders the registered users data into the users table, optionally filtered by a search query.
-         * @param {string} searchQuery - The text to filter users by.
-         */
         function renderUsersTable(searchQuery = '') {
             const tableBody = document.getElementById("users-table-body");
             if (!tableBody) return;
@@ -2454,9 +2150,6 @@
             tableBody.innerHTML = html;
         }
 
-        /**
-         * Renders the anonymous profiles data into the anonymous users table.
-         */
         function renderAnonymousProfilesTable() {
             const tableBody = document.getElementById("anonymous-users-table-body");
             if (!tableBody) return;
@@ -2484,10 +2177,6 @@
             tableBody.innerHTML = html;
         }
 
-        /**
-         * Deletes a single anonymous profile from Firebase.
-         * @param {string} profileId - The ID of the anonymous profile to delete.
-         */
         window.deleteAnonymousProfile = async function(profileId) {
             showConfirmModal("هل أنت متأكد أنك تريد حذف سجل هذا الضيف؟", async (confirmed) => {
                 if (confirmed) {
@@ -2507,9 +2196,6 @@
             });
         };
 
-        /**
-         * Clears all anonymous profiles from Firebase.
-         */
         window.clearAllAnonymousProfiles = async function() {
             showConfirmModal("هل أنت متأكد أنك تريد مسح جميع سجلات الضيوف؟ هذا الإجراء لا يمكن التراجع عنه.", async (confirmed) => {
                 if (confirmed) {
@@ -2529,12 +2215,6 @@
             });
         };
 
-
-        /**
-         * Returns the appropriate Tailwind CSS class for a user status.
-         * @param {string} status - The user status string.
-         * @returns {string} - The CSS classes for the status badge.
-         */
         function getUserStatusClass(status) {
             switch (status) {
                 case "active": return "bg-green-100 text-green-800";
@@ -2544,115 +2224,86 @@
             }
         }
 
-        /**
-         * Opens the user add/edit modal and populates it with data if editing an existing user.
-         * @param {string|null} userId - The ID of the user to edit, or null for a new user.
-         */
         window.openUserModal = function(userId = null) {
             const modal = document.getElementById("user-modal");
             const form = document.getElementById("user-form");
-            form.reset(); // Clear form
-            document.getElementById("user-id").value = userId; // Set hidden ID
+            form.reset();
+            document.getElementById("user-id").value = userId;
 
             const userEmailInput = document.getElementById("user-email");
             const userPasswordField = document.getElementById("user-password-field");
             const userPasswordInput = document.getElementById("user-password");
             const userRoleSelect = document.getElementById("user-role");
-            const currentUser = window.adminData.currentUser;
-            const currentLoggedInUserRoles = window.adminData.currentUserRoles; // Now an array
+            const currentLoggedInUserRoles = window.adminData.currentUserRoles;
 
-            // Clear previous selections for multi-select
             Array.from(userRoleSelect.options).forEach(option => {
                 option.selected = false;
             });
 
             if (userId) {
-                // Editing existing user
                 document.getElementById("user-modal-title").textContent = "تعديل المستخدم";
                 const user = window.adminData.users.find(u => u.id === userId);
                 if (user) {
                     userEmailInput.value = user.email || '';
-                    userEmailInput.disabled = true; // Cannot change email for existing Auth user
-                    userPasswordField.classList.remove('hidden'); // Show password field
-                    userPasswordInput.placeholder = "اتركه فارغاً لعدم التغيير"; // Placeholder for optional change
-                    userPasswordInput.removeAttribute('required'); // Password not required for edit
+                    userEmailInput.disabled = true;
+                    userPasswordField.classList.remove('hidden');
+                    userPasswordInput.placeholder = "اتركه فارغاً لعدم التغيير";
+                    userPasswordInput.removeAttribute('required');
 
                     document.getElementById("user-name").value = user.name || '';
                     document.getElementById("user-phone").value = user.phone || '';
                     document.getElementById("user-address").value = user.address || '';
                     document.getElementById("user-status").value = user.status || 'active';
                     
-                    // Select existing roles in multi-select
                     if (Array.isArray(user.roles)) {
                         user.roles.forEach(role => {
                             const option = Array.from(userRoleSelect.options).find(opt => opt.value === role);
-                            if (option) {
-                                option.selected = true;
-                            }
+                            if (option) option.selected = true;
                         });
-                    } else if (user.roles) { // Handle case where it might still be a single string
+                    } else if (user.roles) {
                         const option = Array.from(userRoleSelect.options).find(opt => opt.value === user.roles);
-                        if (option) {
-                            option.selected = true;
-                        }
+                        if (option) option.selected = true;
                     }
 
-                    // Disable role change if current user is not manager OR trying to change a manager's role
-                    // Also, prevent a manager from changing their own roles.
                     const isCurrentUserManager = currentLoggedInUserRoles.includes('مدير');
                     const isTargetUserAManager = Array.isArray(user.roles) && user.roles.includes('مدير');
-                    const isEditingSelf = currentUser && currentUser.uid === userId;
-
-                    if (!isCurrentUserManager || (isTargetUserAManager && !isEditingSelf)) {
-                        userRoleSelect.disabled = true;
-                    } else {
-                        userRoleSelect.disabled = false;
-                    }
+                    
+                    userRoleSelect.disabled = !isCurrentUserManager || isTargetUserAManager;
                 }
             } else {
-                // Adding new user
                 document.getElementById("user-modal-title").textContent = "إضافة مستخدم جديد";
                 userEmailInput.value = '';
                 userEmailInput.disabled = false;
-                userPasswordField.classList.remove('hidden'); // Show password field
-                userPasswordInput.placeholder = "كلمة المرور"; // Placeholder for new password
-                userPasswordInput.setAttribute('required', 'required'); // Password required for new user
+                userPasswordField.classList.remove('hidden');
+                userPasswordInput.placeholder = "كلمة المرور";
+                userPasswordInput.setAttribute('required', 'required');
 
-                document.getElementById("user-status").value = 'active'; // Default status
+                document.getElementById("user-status").value = 'active';
                 
-                // Default role for new user (single 'عادي' selected)
                 const defaultOption = Array.from(userRoleSelect.options).find(opt => opt.value === 'عادي');
-                if (defaultOption) {
-                    defaultOption.selected = true;
-                }
+                if (defaultOption) defaultOption.selected = true;
 
-                // Only managers can set roles for new users beyond 'عادي'
                 userRoleSelect.disabled = !currentLoggedInUserRoles.includes('مدير');
             }
             modal.classList.remove("hidden");
         };
 
-        /**
-         * Saves (adds or updates) a user in Firebase.
-         * Handles both Realtime Database profile and Firebase Authentication user.
-         */
         window.saveUser = async function() {
             const userId = document.getElementById("user-id").value;
             const name = document.getElementById("user-name").value.trim();
             const email = document.getElementById("user-email").value.trim();
-            const password = document.getElementById("user-password").value.trim(); // New
+            const password = document.getElementById("user-password").value.trim();
             const phone = document.getElementById("user-phone").value.trim();
             const address = document.getElementById("user-address").value.trim();
             const status = document.getElementById("user-status").value;
             
-            // Get selected roles from the multi-select dropdown
             const selectedRoles = Array.from(document.getElementById("user-role").selectedOptions).map(option => option.value);
 
             if (!name || !email) {
                 showNotification("الاسم والبريد الإلكتروني حقلان مطلوبان.", "error");
                 return;
             }
-            if (!userId && !password) { // Password required for new users
+            if (!userId && !password) {
                 showNotification("يرجى إدخال كلمة مرور للمستخدم الجديد.", "error");
                 return;
             }
@@ -2661,54 +2312,29 @@
                 return;
             }
 
-            const currentUser = window.adminData.currentUser;
             const currentLoggedInUserRoles = window.adminData.currentUserRoles;
             const targetUser = window.adminData.users.find(u => u.id === userId);
 
-            // Security check: Prevent non-admins from assigning 'مدير' role
             if (selectedRoles.includes('مدير') && !currentLoggedInUserRoles.includes('مدير')) {
                 showNotification("ليس لديك صلاحية لتعيين دور 'مدير'.", "error");
                 return;
             }
 
-            // Security check: Prevent non-admins from changing roles of existing managers
             if (userId && targetUser && Array.isArray(targetUser.roles) && targetUser.roles.includes('مدير') && !selectedRoles.includes('مدير') && !currentLoggedInUserRoles.includes('مدير')) {
                 showNotification("ليس لديك صلاحية لتغيير دور مدير آخر.", "error");
                 return;
             }
-
-            // Security check: Prevent a manager from changing their own roles (must retain 'مدير')
-            if (userId && currentUser && currentUser.uid === userId && currentLoggedInUserRoles.includes('مدير') && !selectedRoles.includes('مدير')) {
-                showNotification("لا يمكنك إزالة دور 'مدير' من حسابك الخاص.", "error");
-                return;
-            }
-
+            
             const userData = {
-                name,
-                email,
-                phone,
-                address,
-                status,
-                roles: selectedRoles, // Save roles as an array
+                name, email, phone, address, status, roles: selectedRoles,
                 createdAt: userId ? (window.adminData.users.find(u => u.id === userId)?.createdAt || new Date().toLocaleString('ar-EG')) : new Date().toLocaleString('ar-EG'),
                 lastLogin: userId ? (window.adminData.users.find(u => u.id === userId)?.lastLogin || new Date().toLocaleString('ar-EG')) : new Date().toLocaleString('ar-EG')
             };
 
             try {
                 if (userId) {
-                    // Update existing user
-                    // Update Auth password if provided
                     if (password) {
-                        const authUser = auth.currentUser;
-                        if (authUser && authUser.uid === userId) {
-                            await updatePassword(authUser, password);
-                            showNotification("تم تحديث كلمة المرور بنجاح.", "success");
-                        } else {
-                            // This scenario is tricky. To update another user's password,
-                            // you'd typically need Firebase Admin SDK on a backend.
-                            // For client-side, it's only possible for the currently logged-in user.
-                            showNotification("لا يمكن تحديث كلمة مرور مستخدم آخر من لوحة التحكم.", "warning");
-                        }
+                        showNotification("لا يمكن تحديث كلمة مرور مستخدم حالي من هنا. يجب أن يقوم المستخدم بتغييرها بنفسه.", "warning");
                     }
                     await set(ref(db, `users/${userId}`), userData);
                     showNotification("تم تحديث المستخدم بنجاح", "success");
@@ -2716,12 +2342,11 @@
                         logActivity(window.adminData.currentUser.uid, 'editUser', `تم تعديل المستخدم: ${name} (ID: ${userId}) - الأدوار: ${selectedRoles.join(', ')}`);
                     }
                 } else {
-                    // Add new user (Firebase Auth + Realtime DB)
                     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
                     const newAuthUser = userCredential.user;
                     await set(ref(db, `users/${newAuthUser.uid}`), {
                         ...userData,
-                        email: newAuthUser.email, // Ensure email from Auth is used
+                        email: newAuthUser.email,
                         createdAt: new Date().toLocaleString('ar-EG'),
                         lastLogin: new Date().toLocaleString('ar-EG')
                     });
@@ -2733,23 +2358,14 @@
                 document.getElementById("user-modal").classList.add("hidden");
             } catch (error) {
                 console.error("Error saving user:", error);
-                // Handle specific Firebase Auth errors
                 let errorMessage = "فشل حفظ المستخدم.";
-                if (error.code === 'auth/email-already-in-use') {
-                    errorMessage = "هذا البريد الإلكتروني مستخدم بالفعل.";
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = "صيغة البريد الإلكتروني غير صحيحة.";
-                } else if (error.code === 'auth/weak-password') {
-                    errorMessage = "كلمة المرور ضعيفة جداً. يجب أن تتكون من 6 أحرف على الأقل.";
-                }
+                if (error.code === 'auth/email-already-in-use') errorMessage = "هذا البريد الإلكتروني مستخدم بالفعل.";
+                else if (error.code === 'auth/invalid-email') errorMessage = "صيغة البريد الإلكتروني غير صحيحة.";
+                else if (error.code === 'auth/weak-password') errorMessage = "كلمة المرور ضعيفة جداً. يجب أن تتكون من 6 أحرف على الأقل.";
                 showNotification(errorMessage, "error");
             }
         };
 
-        /**
-         * Displays the user details in a modal.
-         * @param {string} userId - The ID of the user to display.
-         */
         window.showUserDetails = async function(userId) {
             const user = window.adminData.users.find(u => u.id === userId);
             if (!user) {
@@ -2762,30 +2378,22 @@
             document.getElementById("user-details-phone").textContent = user.phone || 'N/A';
             document.getElementById("user-details-address").textContent = user.address || 'N/A';
             document.getElementById("user-details-status").textContent = user.status || 'N/A';
-            document.getElementById("user-details-role").textContent = Array.isArray(user.roles) ? user.roles.join(', ') : (user.roles || 'N/A'); // Display roles array
+            document.getElementById("user-details-role").textContent = Array.isArray(user.roles) ? user.roles.join(', ') : (user.roles || 'N/A');
             document.getElementById("user-details-created-at").textContent = user.createdAt || 'N/A';
             document.getElementById("user-details-last-login").textContent = user.lastLogin || 'N/A';
 
-            // Populate user orders
             const userOrdersList = document.getElementById("user-orders-list");
             let ordersHtml = '';
-
-            // Get all orders that match either the registered user's UID OR their name/phone/email (for past guest orders)
             const userOrders = window.adminData.orders.filter(order => {
-                // Match by UID if available (for orders placed after registration)
                 if (order.userId === user.id) return true;
-
-                // Match by name, phone, and/or email for potential past guest orders
                 const nameMatch = user.name && order.name && user.name.toLowerCase() === order.name.toLowerCase();
                 const phoneMatch = user.phone && order.phone && user.phone === order.phone;
                 const emailMatch = user.email && order.email && user.email.toLowerCase() === order.email.toLowerCase();
-
-                // Consider an order a match if it's a guest order (starts with "guest_") AND at least one piece of info matches
                 if (order.userId && order.userId.startsWith('guest_') && (nameMatch || phoneMatch || emailMatch)) {
                     return true;
                 }
                 return false;
-            }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by date descending
+            }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
             if (userOrders.length > 0) {
                 userOrders.forEach(order => {
@@ -2796,7 +2404,6 @@
             }
             userOrdersList.innerHTML = ordersHtml;
 
-            // Populate user activities (from userActivityLogs)
             const userActivitiesList = document.getElementById("user-activities-list");
             const activities = window.adminData.userActivityLogs[userId] || [];
             let activitiesHtml = '';
@@ -2809,8 +2416,6 @@
             }
             userActivitiesList.innerHTML = activitiesHtml;
 
-
-            // Set up action buttons in details modal
             document.getElementById("user-details-edit-btn").onclick = () => {
                 document.getElementById("user-details-modal").classList.add("hidden");
                 openUserModal(user.id);
@@ -2821,11 +2426,6 @@
             document.getElementById("user-details-modal").classList.remove("hidden");
         };
 
-        /**
-         * Toggles the status of a user (active/restricted/blocked).
-         * @param {string} userId - The ID of the user to update.
-         * @param {string} currentStatus - The current status of the user.
-         */
         window.toggleUserStatus = async function(userId, currentStatus) {
             let newStatus;
             let confirmMessage;
@@ -2835,27 +2435,20 @@
             } else if (currentStatus === 'restricted') {
                 newStatus = 'blocked';
                 confirmMessage = "هل أنت متأكد أنك تريد حظر هذا المستخدم نهائياً؟";
-            } else { // currentStatus is 'blocked' or unknown
+            } else {
                 newStatus = 'active';
                 confirmMessage = "هل أنت متأكد أنك تريد إعادة تنشيط هذا المستخدم؟";
             }
 
-            const currentUser = window.adminData.currentUser;
-            const currentLoggedInUserRoles = window.adminData.currentUserRoles; // Now an array
+            const currentLoggedInUserRoles = window.adminData.currentUserRoles;
             const targetUser = window.adminData.users.find(u => u.id === userId);
 
-            // Security check: Prevent non-admins from changing status of admins
             const isTargetUserAManager = Array.isArray(targetUser?.roles) && targetUser.roles.includes('مدير');
             if (isTargetUserAManager && !currentLoggedInUserRoles.includes('مدير')) {
                 showNotification("ليس لديك صلاحية لتغيير حالة مدير آخر.", "error");
                 return;
             }
-            // Security check: Prevent user from changing their own status if they are an admin
-            if (currentUser && currentUser.uid === userId && currentLoggedInUserRoles.includes('مدير')) {
-                showNotification("لا يمكنك تغيير حالتك الخاصة كمدير.", "error");
-                return;
-            }
-
+            
             showConfirmModal(confirmMessage, async (confirmed) => {
                 if (confirmed) {
                     try {
@@ -2864,20 +2457,7 @@
                         if (window.adminData.currentUser) {
                             logActivity(window.adminData.currentUser.uid, 'toggleUserStatus', `تم تغيير حالة المستخدم ${targetUser?.name || userId} إلى ${newStatus}`);
                         }
-                        
-                        // If user is blocked, sign them out
-                        if (newStatus === 'blocked') {
-                            if (currentUser && currentUser.uid === userId) { // If the current logged-in user is being blocked
-                                await signOut(auth);
-                                showNotification("تم حظر حسابك. يرجى التواصل مع فريق الدعم.", "error");
-                            } else {
-                                // If another user is blocked, we can't force their client-side logout directly.
-                                // Their client will handle it on next auth state change or page load.
-                                showNotification("تم حظر المستخدم. سيتم تسجيل خروجه تلقائياً.", "warning");
-                            }
-                        }
-
-                        document.getElementById("user-details-modal").classList.add("hidden"); // Close details modal after action
+                        document.getElementById("user-details-modal").classList.add("hidden");
                     }
                     catch (error) {
                         console.error("Error toggling user status:", error);
@@ -2889,37 +2469,28 @@
             });
         };
 
-        /**
-         * Deletes a user from Firebase after user confirmation.
-         * @param {string} userId - The ID of the user to delete.
-         */
         window.deleteUser = async function(userId) {
             showConfirmModal("هل أنت متأكد أنك تريد حذف هذا المستخدم نهائياً؟ سيتم حذف جميع بياناته.", async (confirmed) => {
                 if (confirmed) {
                     try {
                         const userName = window.adminData.users.find(u => u.id === userId)?.name || 'N/A';
                         await remove(ref(db, `users/${userId}`));
-                        // Also remove their activity logs
                         await remove(ref(db, `userActivityLogs/${userId}`));
                         showNotification("تم حذف المستخدم بنجاح", "success");
                         if (window.adminData.currentUser) {
                             logActivity(window.adminData.currentUser.uid, 'deleteUser', `تم حذف المستخدم: ${userName} (ID: ${userId})`);
                         }
-                        document.getElementById("user-details-modal").classList.add("hidden"); // Close details modal after action
+                        document.getElementById("user-details-modal").classList.add("hidden");
                     } catch (error) {
                         console.error("Error deleting user:", error);
                         showNotification("فشل حذف المستخدم", "error");
                     }
                 } else {
-                    showNotification("تم إلغاء عملية الحذف", "info");
+                    showNotification("تم إلغاء العملية", "info");
                 }
             });
         };
 
-
-        /**
-         * Renders the store settings into the settings form.
-         */
         function renderSettings() {
             const settings = window.adminData.settings;
             if (!settings) return;
@@ -2930,25 +2501,18 @@
             document.getElementById("setting-contact-email").value = settings.contactEmail || '';
             document.getElementById("setting-thank-you-message").value = settings.thankYouMessage || '';
 
-            // Render delivery prices by city
             const deliveryPricesContainer = document.getElementById('delivery-prices-container');
-            deliveryPricesContainer.innerHTML = ''; // Clear existing rows
+            deliveryPricesContainer.innerHTML = '';
 
             if (settings.deliveryPricesByCity && settings.deliveryPricesByCity.length > 0) {
                 settings.deliveryPricesByCity.forEach(cityData => {
                     addCityDeliveryRow(cityData.city, cityData.price);
                 });
             } else {
-                // Add an empty row if no cities are defined
                 addCityDeliveryRow();
             }
         }
 
-        /**
-         * Adds a new row for city delivery price input fields.
-         * @param {string} [city=''] - The city name to pre-fill.
-         * @param {number} [price=''] - The price to pre-fill.
-         */
         window.addCityDeliveryRow = function(city = '', price = '') {
             const container = document.getElementById('delivery-prices-container');
             const row = document.createElement('div');
@@ -2969,17 +2533,10 @@
             container.appendChild(row);
         };
 
-        /**
-         * Removes a city delivery price row.
-         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
-         */
         window.removeCityDeliveryRow = function(buttonElement) {
             buttonElement.closest('.flex.flex-col.md\\:flex-row.gap-2.mb-3').remove();
         };
 
-        /**
-         * Saves the store settings to Firebase.
-         */
         window.saveSettings = async function() {
             const storeName = document.getElementById("setting-store-name").value.trim();
             const contactPhone = document.getElementById("setting-contact-phone").value.trim();
@@ -2998,35 +2555,25 @@
                 const price = parseFloat(priceInputs[i].value);
 
                 if (city === '' && (isNaN(price) || price === 0 || priceInputs[i].value.trim() === '')) {
-                    // Allow empty rows if both city and price are empty/zero
                     continue;
                 }
 
                 if (city === '' || isNaN(price) || price < 0) {
-                    showNotification("يرجى ملء جميع حقول أسعار التوصيل بشكل صحيح (اسم المدينة والسعر يجب أن يكونا صالحين).", "error");
+                    showNotification("يرجى ملء جميع حقول أسعار التوصيل بشكل صحيح.", "error");
                     isValidDeliveryPrices = false;
                     break;
                 }
                 deliveryPricesByCity.push({ city, price });
             }
 
-            if (!isValidDeliveryPrices) {
-                return;
-            }
+            if (!isValidDeliveryPrices) return;
 
             if (!storeName || !contactPhone || !contactWhatsapp || !contactEmail) {
                 showNotification("يرجى ملء جميع حقول الإعدادات المطلوبة.", "error");
                 return;
             }
             
-            const settingsData = {
-                storeName,
-                contactPhone,
-                contactWhatsapp,
-                contactEmail,
-                deliveryPricesByCity, // Save as array of objects
-                thankYouMessage
-            };
+            const settingsData = { storeName, contactPhone, contactWhatsapp, contactEmail, deliveryPricesByCity, thankYouMessage };
 
             try {
                 await set(settingsRef, settingsData);
@@ -3040,14 +2587,10 @@
             }
         };
 
-        /**
-         * Renders the homepage settings into the form.
-         */
         function renderHomepageSettings() {
             const hpSettings = window.adminData.homepageSettings;
             if (!hpSettings) return;
 
-            // Main Banner
             document.getElementById('hp-main-banner-enabled').checked = hpSettings.mainBanner?.enabled || false;
             document.getElementById('hp-main-banner-image').value = hpSettings.mainBanner?.image || '';
             document.getElementById('hp-main-banner-title').value = hpSettings.mainBanner?.title || '';
@@ -3055,34 +2598,25 @@
             document.getElementById('hp-main-banner-cta-text').value = hpSettings.mainBanner?.ctaText || '';
             document.getElementById('hp-main-banner-cta-link').value = hpSettings.mainBanner?.ctaLink || '';
 
-            // Product Categories
             document.getElementById('hp-categories-enabled').checked = hpSettings.productCategories?.enabled || false;
             populateHomepageCategoryDropdown(hpSettings.productCategories?.selectedCategories || []);
 
-            // Featured Products
             document.getElementById('hp-featured-products-enabled').checked = hpSettings.featuredProducts?.enabled || false;
             const featuredType = hpSettings.featuredProducts?.type || 'most_selling';
             document.querySelector(`input[name="hp-featured-products-type"][value="${featuredType}"]`).checked = true;
 
-            // Internal Banners
             document.getElementById('hp-internal-banners-enabled').checked = hpSettings.internalBanners?.enabled || false;
             const internalBannersContainer = document.getElementById('hp-internal-banners-container');
-            internalBannersContainer.innerHTML = ''; // Clear existing
+            internalBannersContainer.innerHTML = '';
             if (hpSettings.internalBanners?.banners && hpSettings.internalBanners.banners.length > 0) {
-                hpSettings.internalBanners.banners.forEach(banner => {
-                    addInternalBannerRow(banner.image, banner.link);
-                });
+                hpSettings.internalBanners.banners.forEach(banner => addInternalBannerRow(banner.image, banner.link));
             } else {
-                addInternalBannerRow(); // Add an empty one if none exist
+                addInternalBannerRow();
             }
 
-            // Customer Reviews
             document.getElementById('hp-reviews-enabled').checked = hpSettings.customerReviews?.enabled || false;
-
-            // Blog
             document.getElementById('hp-blog-enabled').checked = hpSettings.blog?.enabled || false;
 
-            // Footer
             document.getElementById('hp-footer-contact-enabled').checked = hpSettings.footer?.contactEnabled || false;
             document.getElementById('hp-footer-social-enabled').checked = hpSettings.footer?.socialEnabled || false;
             document.getElementById('hp-footer-custom-links-enabled').checked = hpSettings.footer?.customLinksEnabled || false;
@@ -3092,25 +2626,19 @@
             document.getElementById('hp-footer-linkedin').value = hpSettings.footer?.linkedin || '';
 
             const footerCustomLinksContainer = document.getElementById('hp-footer-custom-links-container');
-            footerCustomLinksContainer.innerHTML = ''; // Clear existing
+            footerCustomLinksContainer.innerHTML = '';
             if (hpSettings.footer?.customLinks && hpSettings.footer.customLinks.length > 0) {
-                hpSettings.footer.customLinks.forEach(link => {
-                    addFooterCustomLinkRow(link.text, link.link);
-                });
+                hpSettings.footer.customLinks.forEach(link => addFooterCustomLinkRow(link.text, link.link));
             } else {
-                addFooterCustomLinkRow(); // Add an empty one if none exist
+                addFooterCustomLinkRow();
             }
         }
 
-        /**
-         * Populates the homepage category multi-select dropdown.
-         * @param {Array<string>} selectedCategoryIds - An array of category IDs that should be selected.
-         */
         function populateHomepageCategoryDropdown(selectedCategoryIds = []) {
             const selectElement = document.getElementById('hp-selected-categories');
             if (!selectElement) return;
 
-            selectElement.innerHTML = ''; // Clear existing options
+            selectElement.innerHTML = '';
             window.adminData.categories.forEach(category => {
                 const option = document.createElement('option');
                 option.value = category.id;
@@ -3122,11 +2650,6 @@
             });
         }
 
-        /**
-         * Adds a new row for internal banner image and link.
-         * @param {string} [image=''] - Image URL to pre-fill.
-         * @param {string} [link=''] - Link URL to pre-fill.
-         */
         window.addInternalBannerRow = function(image = '', link = '') {
             const container = document.getElementById('hp-internal-banners-container');
             const row = document.createElement('div');
@@ -3147,19 +2670,10 @@
             container.appendChild(row);
         };
 
-        /**
-         * Removes an internal banner row.
-         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
-         */
         window.removeInternalBannerRow = function(buttonElement) {
             buttonElement.closest('.flex.flex-col.md\\:flex-row.gap-2.mb-3').remove();
         };
 
-        /**
-         * Adds a new row for footer custom link text and URL.
-         * @param {string} [text=''] - Link text to pre-fill.
-         * @param {string} [link=''] - Link URL to pre-fill.
-         */
         window.addFooterCustomLinkRow = function(text = '', link = '') {
             const container = document.getElementById('hp-footer-custom-links-container');
             const row = document.createElement('div');
@@ -3180,22 +2694,13 @@
             container.appendChild(row);
         };
 
-        /**
-         * Removes a footer custom link row.
-         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
-         */
         window.removeFooterCustomLinkRow = function(buttonElement) {
             buttonElement.closest('.flex.flex-col.md\\:flex-row.gap-2.mb-3').remove();
         };
 
-
-        /**
-         * Saves the homepage settings to Firebase.
-         */
         window.saveHomepageSettings = async function() {
             const hpSettings = {};
 
-            // Main Banner
             hpSettings.mainBanner = {
                 enabled: document.getElementById('hp-main-banner-enabled').checked,
                 image: document.getElementById('hp-main-banner-image').value.trim(),
@@ -3205,29 +2710,23 @@
                 ctaLink: document.getElementById('hp-main-banner-cta-link').value.trim()
             };
 
-            // Product Categories
             const selectedCategories = Array.from(document.getElementById('hp-selected-categories').selectedOptions).map(option => option.value);
             hpSettings.productCategories = {
                 enabled: document.getElementById('hp-categories-enabled').checked,
                 selectedCategories: selectedCategories
             };
 
-            // Featured Products
             hpSettings.featuredProducts = {
                 enabled: document.getElementById('hp-featured-products-enabled').checked,
                 type: document.querySelector('input[name="hp-featured-products-type"]:checked').value
             };
 
-            // Internal Banners
             const internalBanners = [];
             document.querySelectorAll('#hp-internal-banners-container .flex.flex-col.md\\:flex-row.gap-2.mb-3').forEach(row => {
                 const imageInput = row.querySelector('.hp-internal-banner-image');
                 const linkInput = row.querySelector('.hp-internal-banner-link');
                 if (imageInput.value.trim() !== '' || linkInput.value.trim() !== '') {
-                    internalBanners.push({
-                        image: imageInput.value.trim(),
-                        link: linkInput.value.trim()
-                    });
+                    internalBanners.push({ image: imageInput.value.trim(), link: linkInput.value.trim() });
                 }
             });
             hpSettings.internalBanners = {
@@ -3235,26 +2734,15 @@
                 banners: internalBanners
             };
 
-            // Customer Reviews
-            hpSettings.customerReviews = {
-                enabled: document.getElementById('hp-reviews-enabled').checked
-            };
+            hpSettings.customerReviews = { enabled: document.getElementById('hp-reviews-enabled').checked };
+            hpSettings.blog = { enabled: document.getElementById('hp-blog-enabled').checked };
 
-            // Blog
-            hpSettings.blog = {
-                enabled: document.getElementById('hp-blog-enabled').checked
-            };
-
-            // Footer
             const footerCustomLinks = [];
             document.querySelectorAll('#hp-footer-custom-links-container .flex.flex-col.md\\:flex-row.gap-2.mb-3').forEach(row => {
                 const textInput = row.querySelector('.hp-footer-custom-link-text');
                 const urlInput = row.querySelector('.hp-footer-custom-link-url');
                 if (textInput.value.trim() !== '' || urlInput.value.trim() !== '') {
-                    footerCustomLinks.push({
-                        text: textInput.value.trim(),
-                        link: urlInput.value.trim()
-                    });
+                    footerCustomLinks.push({ text: textInput.value.trim(), link: urlInput.value.trim() });
                 }
             });
 
@@ -3281,11 +2769,6 @@
             }
         };
 
-        /**
-         * Renders the moderator logs into the table.
-         * @param {string} userFilter - Optional user ID to filter by.
-         * @param {string} actionFilter - Optional action type to filter by.
-         */
         function renderModeratorLogsTable(userFilter = '', actionFilter = '') {
             const tableBody = document.getElementById("moderator-logs-table-body");
             if (!tableBody) return;
@@ -3315,21 +2798,14 @@
             tableBody.innerHTML = html;
         }
 
-        /**
-         * Populates the filter dropdowns for moderator logs.
-         */
         function populateModeratorLogFilters() {
             const userFilterSelect = document.getElementById('moderator-log-user-filter');
             const actionFilterSelect = document.getElementById('moderator-log-action-filter');
 
-            // Clear previous options except "All"
             userFilterSelect.innerHTML = '<option value="">جميع المشرفين</option>';
-            // Action filter options are static in HTML, no need to clear/repopulate
 
-            // Populate with all users who have a moderator/admin role
             const uniqueModerators = new Set();
             window.adminData.users.forEach(user => {
-                // Ensure user.roles is an array before checking includes
                 const roles = Array.isArray(user.roles) ? user.roles : [user.roles];
                 if (roles.some(role => ['مدير', 'مشرف', 'مراقب'].includes(role))) {
                     uniqueModerators.add(user.id);
@@ -3346,7 +2822,6 @@
                 }
             });
 
-            // Add event listeners to filters
             userFilterSelect.onchange = () => {
                 renderModeratorLogsTable(userFilterSelect.value, actionFilterSelect.value);
             };
@@ -3355,12 +2830,7 @@
             };
         }
 
-
         // --- UI Navigation ---
-        /**
-         * Shows a specific admin section and updates the navigation links.
-         * @param {string} sectionId - The ID of the section to show (e.g., 'orders-section').
-         */
         function showSection(sectionId) {
             document.querySelectorAll('.admin-section').forEach(section => {
                 section.classList.add('hidden');
@@ -3371,54 +2841,41 @@
                 link.classList.remove('bg-indigo-700', 'text-white');
                 link.classList.add('text-indigo-200', 'hover:bg-indigo-700');
             });
-            document.querySelector(`.nav-link[data-section="${sectionId}"]`).classList.remove('text-indigo-200', 'hover:bg-indigo-700');
-            document.querySelector(`.nav-link[data-section="${sectionId}"]`).classList.add('bg-indigo-700', 'text-white');
+            const activeLink = document.querySelector(`.nav-link[data-section="${sectionId}"]`);
+            if (activeLink) {
+                activeLink.classList.remove('text-indigo-200', 'hover:bg-indigo-700');
+                activeLink.classList.add('bg-indigo-700', 'text-white');
+            }
 
-            // Special handling for homepage settings section to re-render categories
             if (sectionId === 'homepage-settings-section') {
                 populateHomepageCategoryDropdown(window.adminData.homepageSettings.productCategories?.selectedCategories || []);
             }
-            // Special handling for moderator logs section to re-render
             if (sectionId === 'moderator-logs-section') {
                 renderModeratorLogsTable();
                 populateModeratorLogFilters();
             }
         }
 
-        /**
-         * Updates the visibility of admin-specific UI elements based on the current user's role.
-         */
         function updateAdminUIBasedOnRole() {
             const moderatorLogsNavLink = document.getElementById('moderator-logs-nav-link');
-            // Check if current user roles array includes 'مدير', 'مشرف', or 'مراقب'
             if (window.adminData.currentUserRoles.some(role => ['مدير', 'مشرف', 'مراقب'].includes(role))) {
                 moderatorLogsNavLink.classList.remove('hidden');
             } else {
                 moderatorLogsNavLink.classList.add('hidden');
-                // If the user is not an admin/moderator/monitor and is currently on the moderator logs page, redirect them
                 if (!document.getElementById('moderator-logs-section').classList.contains('hidden')) {
-                    showSection('orders-section'); // Redirect to a default safe page
+                    showSection('orders-section');
                 }
             }
-            // Add more role-based UI adjustments here as needed
-            // For example, disabling add/edit/delete buttons for non-moderators
         }
-
 
         // --- Event Listeners and Initial Load ---
         document.addEventListener("DOMContentLoaded", function() {
-            const adminEmail = "sgadbd321123@gmail.com";
-            const adminPassword = "sgadsgad";
-
-            const emailInput = document.getElementById("email-input");
-            const passwordInput = document.getElementById("password-input");
+            const loginCodeInput = document.getElementById("login-code-input");
             const loginButton = document.getElementById("login-button");
             const loginPage = document.getElementById("login-page");
             const adminContent = document.getElementById("admin-content");
             const loginError = document.getElementById("login-error");
-            const togglePasswordButton = document.getElementById("toggle-password");
 
-            // Search inputs and clear buttons
             const ordersSearchInput = document.getElementById("orders-search-input");
             const ordersClearSearchButton = document.getElementById("orders-clear-search");
             const productsSearchInput = document.getElementById("products-search-input");
@@ -3428,218 +2885,64 @@
             const usersSearchInput = document.getElementById("users-search-input");
             const usersClearSearchButton = document.getElementById("users-clear-search");
 
-            // Product modal specific elements
             const productIsSaleCheckbox = document.getElementById('product-is-sale');
             const saleFieldsContainer = document.getElementById('sale-fields-container');
             const productUseCustomDiscountCheckbox = document.getElementById('product-use-custom-discount');
             const customDiscountPriceContainer = document.getElementById('custom-discount-price-container');
 
-            /**
-             * Initializes the admin panel after successful authentication.
-             */
             function initializeAdminPanel() {
                 loginPage.classList.add("hidden");
                 adminContent.classList.remove("hidden");
-                // Load all data after successful login
                 loadSettings();
                 loadCategories();
                 loadProducts(); 
-                loadOrders(); // Orders are loaded first to create/update anonymous profiles
+                loadOrders();
                 loadHomepageSettings();
-                loadUsers(); // Registered users are loaded after orders to ensure anonymous profiles are processed
-                loadAnonymousProfiles(); // Load anonymous guests
-                loadUserActivityLogs(); // Load all user activity logs
-                loadModeratorLogs(); // Load all moderator logs
-                // Set initial section to Orders
+                loadUsers();
+                loadAnonymousProfiles();
+                loadUserActivityLogs();
+                loadModeratorLogs();
                 showSection('orders-section');
+                updateAdminUIBasedOnRole();
             }
 
-            // Email/Password-based login
+            // Login with code and anonymous authentication
             loginButton.addEventListener("click", async () => {
-                const email = emailInput.value.trim();
-                const password = passwordInput.value.trim();
+                const code = loginCodeInput.value.trim();
+                const correctCode = "10001000";
 
-                if (!email || !password) {
-                    showNotification("الرجاء إدخال البريد الإلكتروني وكلمة المرور.", "error");
-                    return;
-                }
+                if (code === correctCode) {
+                    try {
+                        // Sign in anonymously to get permissions
+                        const userCredential = await signInAnonymously(auth);
+                        const user = userCredential.user;
+                        
+                        // Set the current user and roles for the session
+                        window.adminData.currentUser = user;
+                        window.adminData.currentUserRoles = ['مدير']; // Grant admin role locally
 
-                // Basic client-side email format validation
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!emailRegex.test(email)) {
-                    showNotification("صيغة البريد الإلكتروني غير صحيحة. يرجى التحقق.", "error");
-                    loginError.classList.remove("hidden");
-                    return;
-                }
+                        initializeAdminPanel();
+                        logActivity(user.uid, 'login', `تسجيل الدخول بالرمز (UID: ${user.uid})`);
+                        showNotification("تم تسجيل الدخول بنجاح", "success");
+                        loginError.classList.add("hidden");
 
-                console.log("Attempting login with email:", email, "and password:", password); // Debug log
-
-                try {
-                    // Firebase Authentication with Email/Password
-                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
-                    const user = userCredential.user;
-
-                    // Fetch user roles from Realtime Database
-                    const userProfileRef = ref(db, `users/${user.uid}`);
-                    const userProfileSnapshot = await new Promise(resolve => onValue(userProfileRef, resolve, { onlyOnce: true }));
-                    let userProfile = userProfileSnapshot.val();
-
-                    let userRoles = ['عادي']; // Default to 'عادي'
-                    let userStatus = 'active';
-
-                    if (userProfile) {
-                        // Ensure roles is always an array
-                        userRoles = Array.isArray(userProfile.roles) ? userProfile.roles : [userProfile.roles || 'عادي'];
-                        userStatus = userProfile.status || 'active';
-                        // Update last login
-                        await update(userProfileRef, { lastLogin: new Date().toLocaleString('ar-EG') });
-                    } else {
-                        // If user exists in Auth but not in DB, create a basic profile
-                        userRoles = (user.email === adminEmail) ? ['مدير'] : ['عادي'];
-                        userProfile = { // Create a temporary profile object to use for the check below
-                            name: user.displayName || 'مستخدم جديد',
-                            email: user.email || '',
-                            phone: '',
-                            address: '',
-                            status: 'active',
-                            roles: userRoles, // Save as array
-                            createdAt: new Date().toLocaleString('ar-EG'),
-                            lastLogin: new Date().toLocaleString('ar-EG'),
-                            photoURL: user.photoURL || ''
-                        };
-                        await set(userProfileRef, userProfile); // Save the newly created profile
-                    }
-
-                    // Specific admin login check (if hardcoded admin email/password is used)
-                    if (email === adminEmail && password === adminPassword) {
-                        userRoles = ['مدير'];
-                        // Ensure this role is persisted if it was just set locally
-                        await update(userProfileRef, { roles: ['مدير'] });
-                    }
-
-                    // --- Security Check: Restrict login to specific roles ---
-                    const allowedLoginRoles = ['مدير', 'مشرف', 'مراقب'];
-                    const hasAllowedRole = userRoles.some(role => allowedLoginRoles.includes(role));
-
-                    if (!hasAllowedRole) {
-                        await signOut(auth); // Sign out unauthorized user
-                        showNotification("ليس لديك صلاحية للوصول إلى لوحة التحكم.", "error");
-                        loginError.textContent = "ليس لديك صلاحية للوصول إلى لوحة التحكم.";
+                    } catch (error) {
+                        console.error("Anonymous sign-in error:", error);
+                        showNotification("فشل في مصادقة الجلسة. يرجى المحاولة مرة أخرى.", "error");
+                        loginError.textContent = "فشل في الاتصال بالخادم.";
                         loginError.classList.remove("hidden");
-                        emailInput.value = "";
-                        passwordInput.value = "";
-                        return; // Stop execution
                     }
-
-                    if (userStatus === 'blocked') {
-                        await signOut(auth); // Sign out blocked user immediately
-                        showNotification("تم حظر حسابك. يرجى التواصل مع فريق الدعم.", "error");
-                        loginError.classList.remove("hidden"); // Show generic error on login page
-                        emailInput.value = "";
-                        passwordInput.value = "";
-                        return;
-                    }
-
-                    window.adminData.currentUser = user;
-                    window.adminData.currentUserRoles = userRoles;
-                    initializeAdminPanel();
-                    logActivity(user.uid, 'login', `تسجيل الدخول بالبريد الإلكتروني (${user.email})`);
-                    showNotification("تم تسجيل الدخول بنجاح", "success");
-                    loginError.classList.add("hidden"); // Hide error on success
-
-                } catch (error) {
-                    console.error("Login error:", error);
-                    loginError.classList.remove("hidden");
-                    passwordInput.value = ""; // Clear password input
-                    showNotification("فشل تسجيل الدخول: البريد الإلكتروني أو كلمة المرور غير صحيحة.", "error");
-                }
-            });
-
-            emailInput.addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    loginButton.click();
-                }
-            });
-            passwordInput.addEventListener("keypress", function(event) {
-                if (event.key === "Enter") {
-                    loginButton.click();
-                }
-            });
-
-            // Listen for auth state changes (useful if user is already logged in or after blocking)
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    window.adminData.currentUser = user;
-                    const userProfileRef = ref(db, `users/${user.uid}`);
-                    const userProfileSnapshot = await new Promise(resolve => onValue(userProfileRef, resolve, { onlyOnce: true }));
-                    let userProfile = userProfileSnapshot.val();
-
-                    if (userProfile) {
-                        // Ensure roles is always an array
-                        window.adminData.currentUserRoles = Array.isArray(userProfile.roles) ? userProfile.roles : [userProfile.roles || 'عادي'];
-                        if (userProfile.status === 'blocked') {
-                            await signOut(auth);
-                            showNotification("تم حظر حسابك. يرجى التواصل مع فريق الدعم.", "error");
-                            return; // Stop further initialization for blocked user
-                        }
-
-                        // --- Security Check on Auth State Change: Restrict login to specific roles ---
-                        const allowedLoginRoles = ['مدير', 'مشرف', 'مراقب'];
-                        const hasAllowedRole = window.adminData.currentUserRoles.some(role => allowedLoginRoles.includes(role));
-                        if (!hasAllowedRole) {
-                            await signOut(auth); // Sign out unauthorized user
-                            showNotification("ليس لديك صلاحية للوصول إلى لوحة التحكم.", "error");
-                            // Do not show loginError on the login page itself, just sign out.
-                            return; // Stop execution
-                        }
-
-                    } else {
-                        // If user exists in Auth but not in DB, create a basic profile and assign default role
-                        // This might happen if a user is created directly via Firebase Auth console without a RTDB entry.
-                        window.adminData.currentUserRoles = ['عادي']; // Default role for newly detected auth user without RTDB profile
-                        userProfile = {
-                            name: user.displayName || 'مستخدم جديد',
-                            email: user.email || '',
-                            phone: '',
-                            address: '',
-                            status: 'active',
-                            roles: window.adminData.currentUserRoles, // Save as array
-                            createdAt: new Date().toLocaleString('ar-EG'),
-                            lastLogin: new Date().toLocaleString('ar-EG'),
-                            photoURL: user.photoURL || ''
-                        };
-                        await set(userProfileRef, userProfile); // Save the newly created profile
-
-                        // After creating, re-check role for security
-                        const allowedLoginRoles = ['مدير', 'مشرف', 'مراقب'];
-                        const hasAllowedRole = window.adminData.currentUserRoles.some(role => allowedLoginRoles.includes(role));
-                        if (!hasAllowedRole) {
-                            await signOut(auth); // Sign out unauthorized user
-                            showNotification("ليس لديك صلاحية للوصول إلى لوحة التحكم.", "error");
-                            return; // Stop execution
-                        }
-                    }
-                    console.log("User already authenticated:", user.uid, "Roles:", window.adminData.currentUserRoles);
-                    initializeAdminPanel();
-                    updateAdminUIBasedOnRole(); // Update UI based on roles
                 } else {
-                    // User is signed out, show login page
-                    window.adminData.currentUser = null;
-                    window.adminData.currentUserRoles = ['عادي']; // Reset roles on logout
-                    loginPage.classList.remove("hidden");
-                    adminContent.classList.add("hidden");
-                    updateAdminUIBasedOnRole(); // Hide admin UI elements
+                    loginError.classList.remove("hidden");
+                    loginCodeInput.value = "";
+                    showNotification("رمز الدخول غير صحيح.", "error");
                 }
             });
 
-
-            // Toggle password visibility
-            togglePasswordButton.addEventListener("click", function() {
-                const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
-                passwordInput.setAttribute("type", type);
-                // Toggle the eye icon
-                this.querySelector('i').classList.toggle('fa-eye');
-                this.querySelector('i').classList.toggle('fa-eye-slash');
+            loginCodeInput.addEventListener("keypress", function(event) {
+                if (event.key === "Enter") {
+                    loginButton.click();
+                }
             });
 
             // Navigation links
@@ -3657,50 +2960,39 @@
                 });
             });
 
-            // Close modal on outside click
             window.addEventListener('click', (e) => {
                 if (e.target.classList.contains('modal-overlay')) {
                     e.target.classList.add('hidden');
                 }
             });
 
-            // Event listener for product-is-sale checkbox to toggle sale fields visibility
             productIsSaleCheckbox.addEventListener('change', function() {
                 if (this.checked) {
                     saleFieldsContainer.classList.remove('hidden');
                 } else {
                     saleFieldsContainer.classList.add('hidden');
-                    // Clear sale fields when checkbox is unchecked
                     document.getElementById("product-discount-percentage").value = '';
                     document.getElementById("product-sale-start-date").value = '';
                     document.getElementById("product-sale-end-date").value = '';
-                    productUseCustomDiscountCheckbox.checked = false; // Also uncheck custom discount
-                    customDiscountPriceContainer.classList.add('hidden'); // Hide custom discount price field
-                    document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
+                    productUseCustomDiscountCheckbox.checked = false;
+                    customDiscountPriceContainer.classList.add('hidden');
+                    document.getElementById("product-custom-discount-price").value = '';
                 }
             });
 
-            // Event listener for product-use-custom-discount checkbox to toggle custom discount price visibility
             productUseCustomDiscountCheckbox.addEventListener('change', function() {
                 if (this.checked) {
                     customDiscountPriceContainer.classList.remove('hidden');
                 } else {
                     customDiscountPriceContainer.classList.add('hidden');
-                    document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
+                    document.getElementById("product-custom-discount-price").value = '';
                 }
             });
 
-
             // --- Search Functionality Event Listeners ---
-
-            // Orders Search
             ordersSearchInput.addEventListener('input', function() {
                 renderOrdersTable(this.value);
-                if (this.value.length > 0) {
-                    ordersClearSearchButton.classList.remove('hidden');
-                } else {
-                    ordersClearSearchButton.classList.add('hidden');
-                }
+                ordersClearSearchButton.classList.toggle('hidden', this.value.length === 0);
             });
             ordersClearSearchButton.addEventListener('click', function() {
                 ordersSearchInput.value = '';
@@ -3708,14 +3000,9 @@
                 this.classList.add('hidden');
             });
 
-            // Products Search
             productsSearchInput.addEventListener('input', function() {
                 renderProductsTable(this.value);
-                if (this.value.length > 0) {
-                    productsClearSearchButton.classList.remove('hidden');
-                } else {
-                    productsClearSearchButton.classList.add('hidden');
-                }
+                productsClearSearchButton.classList.toggle('hidden', this.value.length === 0);
             });
             productsClearSearchButton.addEventListener('click', function() {
                 productsSearchInput.value = '';
@@ -3723,14 +3010,9 @@
                 this.classList.add('hidden');
             });
 
-            // Categories Search
             categoriesSearchInput.addEventListener('input', function() {
                 renderCategoriesTable(this.value);
-                if (this.value.length > 0) {
-                    categoriesClearSearchButton.classList.remove('hidden');
-                } else {
-                    categoriesClearSearchButton.classList.add('hidden');
-                }
+                categoriesClearSearchButton.classList.toggle('hidden', this.value.length === 0);
             });
             categoriesClearSearchButton.addEventListener('click', function() {
                 categoriesSearchInput.value = '';
@@ -3738,14 +3020,9 @@
                 this.classList.add('hidden');
             });
 
-            // Users Search (NEW)
             usersSearchInput.addEventListener('input', function() {
                 renderUsersTable(this.value);
-                if (this.value.length > 0) {
-                    usersClearSearchButton.classList.remove('hidden');
-                } else {
-                    usersClearSearchButton.classList.add('hidden');
-                }
+                usersClearSearchButton.classList.toggle('hidden', this.value.length === 0);
             });
             usersClearSearchButton.addEventListener('click', function() {
                 usersSearchInput.value = '';
@@ -3756,3 +3033,5 @@
     </script>
 </body>
 </html>
+
+
