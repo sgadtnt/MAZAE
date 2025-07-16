@@ -1018,7 +1018,11 @@
                         </div>
                         <div>
                             <label for="user-email" class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
-                            <input type="email" id="user-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                            <input type="email" id="user-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                        </div>
+                        <div id="user-password-field"> <!-- New field for password -->
+                            <label for="user-password" class="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
+                            <input type="password" id="user-password" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="اتركه فارغاً لعدم التغيير">
                         </div>
                         <div>
                             <label for="user-phone" class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
@@ -1036,9 +1040,9 @@
                                 <option value="blocked">محظور</option>
                             </select>
                         </div>
-                        <div>
-                            <label for="user-role" class="block text-sm font-medium text-gray-700 mb-1">الدور</label>
-                            <select id="user-role" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        <div class="md:col-span-2"> <!-- Make roles span 2 columns for multi-select -->
+                            <label for="user-role" class="block text-sm font-medium text-gray-700 mb-1">الأدوار</label>
+                            <select id="user-role" multiple class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 h-32">
                                 <option value="عادي">عادي</option>
                                 <option value="عضو مميز">عضو مميز</option>
                                 <option value="محظور">محظور</option>
@@ -1047,6 +1051,7 @@
                                 <option value="مراقب">مراقب</option>
                                 <option value="مدير">مدير</option>
                             </select>
+                            <p class="text-xs text-gray-500 mt-1">يمكنك اختيار عدة أدوار بالضغط على Ctrl/Cmd والنقر.</p>
                         </div>
                     </div>
                     <div class="flex justify-end mt-6">
@@ -1161,7 +1166,7 @@
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 
         // Firebase configuration (use your existing configuration)
@@ -1202,7 +1207,7 @@
             userActivityLogs: {}, // Stores logs per user ID
             moderatorLogs: [], // Stores all moderator logs
             currentUser: null, // Stores the current authenticated user from Firebase Auth
-            currentUserRole: 'عادي' // Default role, updated after login
+            currentUserRoles: [] // Changed to array for multiple roles, updated after login
         };
 
         // --- Utility Functions ---
@@ -1309,7 +1314,8 @@
                 const currentUser = window.adminData.currentUser;
                 if (currentUser) {
                     const userProfile = window.adminData.users.find(u => u.id === currentUser.uid);
-                    if (userProfile && (userProfile.role === 'مشرف' || userProfile.role === 'مدير' || userProfile.role === 'مراقب')) {
+                    // Check if userProfile exists and if their roles array includes 'مشرف', 'مدير', or 'مراقب'
+                    if (userProfile && userProfile.roles && userProfile.roles.some(role => ['مشرف', 'مدير', 'مراقب'].includes(role))) {
                         const moderatorLogEntry = {
                             userId: currentUser.uid,
                             userName: userProfile.name || currentUser.displayName || 'N/A',
@@ -1513,15 +1519,16 @@
                 window.adminData.users = users;
                 renderUsersTable(); // Call with no search query initially
 
-                // Update current user's role if logged in
+                // Update current user's roles if logged in
                 if (window.adminData.currentUser) {
                     const loggedInUser = users.find(u => u.id === window.adminData.currentUser.uid);
                     if (loggedInUser) {
-                        window.adminData.currentUserRole = loggedInUser.role || 'عادي';
+                        // Ensure roles is always an array
+                        window.adminData.currentUserRoles = Array.isArray(loggedInUser.roles) ? loggedInUser.roles : [loggedInUser.roles || 'عادي'];
                     } else {
-                        window.adminData.currentUserRole = 'عادي'; // Default if profile not found
+                        window.adminData.currentUserRoles = ['عادي']; // Default if profile not found
                     }
-                    updateAdminUIBasedOnRole(); // Update UI visibility based on new role
+                    updateAdminUIBasedOnRole(); // Update UI visibility based on new roles
                 }
                 showNotification("تم تحميل المستخدمين المسجلين", "info");
             }, (error) => {
@@ -2404,7 +2411,8 @@
                 const nameMatch = String(user.name || '').toLowerCase().includes(lowerCaseQuery);
                 const emailMatch = String(user.email || '').toLowerCase().includes(lowerCaseQuery);
                 const phoneMatch = String(user.phone || '').includes(lowerCaseQuery);
-                const roleMatch = String(user.role || '').toLowerCase().includes(lowerCaseQuery);
+                const rolesString = Array.isArray(user.roles) ? user.roles.join(', ').toLowerCase() : String(user.roles || '').toLowerCase();
+                const roleMatch = rolesString.includes(lowerCaseQuery);
                 const statusMatch = String(user.status || '').toLowerCase().includes(lowerCaseQuery);
                 return nameMatch || emailMatch || phoneMatch || roleMatch || statusMatch;
             });
@@ -2415,6 +2423,7 @@
             } else {
                 filteredUsers.forEach(user => {
                     const statusClass = getUserStatusClass(user.status);
+                    const displayRoles = Array.isArray(user.roles) ? user.roles.join(', ') : (user.roles || 'عادي');
                     html += `
                     <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4" data-label="الاسم">${user.name || 'N/A'}</td>
@@ -2423,7 +2432,7 @@
                         <td class="px-6 py-4" data-label="الحالة">
                             <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${user.status || 'غير معروف'}</span>
                         </td>
-                        <td class="px-6 py-4" data-label="الدور">${user.role || 'عادي'}</td>
+                        <td class="px-6 py-4" data-label="الدور">${displayRoles}</td>
                         <td class="px-6 py-4 text-right" data-label="إجراءات">
                             <button onclick="showUserDetails('${user.id}')" class="inline-flex items-center justify-center text-blue-600 hover:text-blue-900 mr-3 p-2 rounded-md">
                                 <i class="fas fa-eye text-lg"></i>
@@ -2545,90 +2554,134 @@
             form.reset(); // Clear form
             document.getElementById("user-id").value = userId; // Set hidden ID
 
+            const userEmailInput = document.getElementById("user-email");
+            const userPasswordField = document.getElementById("user-password-field");
+            const userPasswordInput = document.getElementById("user-password");
             const userRoleSelect = document.getElementById("user-role");
             const currentUser = window.adminData.currentUser;
-            const currentLoggedInUserRole = window.adminData.currentUserRole;
+            const currentLoggedInUserRoles = window.adminData.currentUserRoles; // Now an array
 
-            // Populate role options
-            userRoleSelect.innerHTML = `
-                <option value="عادي">عادي</option>
-                <option value="عضو مميز">عضو مميز</option>
-                <option value="محظور">محظور</option>
-                <option value="مشرف">مشرف</option>
-                <option value="مسؤول توصيل">مسؤول توصيل</option>
-                <option value="مراقب">مراقب</option>
-                <option value="مدير">مدير</option>
-            `;
+            // Clear previous selections for multi-select
+            Array.from(userRoleSelect.options).forEach(option => {
+                option.selected = false;
+            });
 
             if (userId) {
-                // Edit existing user
+                // Editing existing user
                 document.getElementById("user-modal-title").textContent = "تعديل المستخدم";
                 const user = window.adminData.users.find(u => u.id === userId);
                 if (user) {
+                    userEmailInput.value = user.email || '';
+                    userEmailInput.disabled = true; // Cannot change email for existing Auth user
+                    userPasswordField.classList.remove('hidden'); // Show password field
+                    userPasswordInput.placeholder = "اتركه فارغاً لعدم التغيير"; // Placeholder for optional change
+                    userPasswordInput.removeAttribute('required'); // Password not required for edit
+
                     document.getElementById("user-name").value = user.name || '';
-                    document.getElementById("user-email").value = user.email || '';
                     document.getElementById("user-phone").value = user.phone || '';
                     document.getElementById("user-address").value = user.address || '';
                     document.getElementById("user-status").value = user.status || 'active';
-                    userRoleSelect.value = user.role || 'عادي'; // Set role
+                    
+                    // Select existing roles in multi-select
+                    if (Array.isArray(user.roles)) {
+                        user.roles.forEach(role => {
+                            const option = Array.from(userRoleSelect.options).find(opt => opt.value === role);
+                            if (option) {
+                                option.selected = true;
+                            }
+                        });
+                    } else if (user.roles) { // Handle case where it might still be a single string
+                        const option = Array.from(userRoleSelect.options).find(opt => opt.value === user.roles);
+                        if (option) {
+                            option.selected = true;
+                        }
+                    }
 
-                    // Disable role change if current user is not admin OR trying to change an admin's role
-                    // Also, prevent a manager from changing their own role.
-                    if (currentLoggedInUserRole !== 'مدير' || (user.role === 'مدير' && currentUser.uid === userId)) {
+                    // Disable role change if current user is not manager OR trying to change a manager's role
+                    // Also, prevent a manager from changing their own roles.
+                    const isCurrentUserManager = currentLoggedInUserRoles.includes('مدير');
+                    const isTargetUserAManager = Array.isArray(user.roles) && user.roles.includes('مدير');
+                    const isEditingSelf = currentUser && currentUser.uid === userId;
+
+                    if (!isCurrentUserManager || (isTargetUserAManager && !isEditingSelf)) {
                         userRoleSelect.disabled = true;
                     } else {
                         userRoleSelect.disabled = false;
                     }
                 }
             } else {
-                // Add new user
+                // Adding new user
                 document.getElementById("user-modal-title").textContent = "إضافة مستخدم جديد";
+                userEmailInput.value = '';
+                userEmailInput.disabled = false;
+                userPasswordField.classList.remove('hidden'); // Show password field
+                userPasswordInput.placeholder = "كلمة المرور"; // Placeholder for new password
+                userPasswordInput.setAttribute('required', 'required'); // Password required for new user
+
                 document.getElementById("user-status").value = 'active'; // Default status
-                userRoleSelect.value = 'عادي'; // Default role
-                userRoleSelect.disabled = (currentLoggedInUserRole !== 'مدير'); // Only admin can set roles for new users
+                
+                // Default role for new user (single 'عادي' selected)
+                const defaultOption = Array.from(userRoleSelect.options).find(opt => opt.value === 'عادي');
+                if (defaultOption) {
+                    defaultOption.selected = true;
+                }
+
+                // Only managers can set roles for new users beyond 'عادي'
+                userRoleSelect.disabled = !currentLoggedInUserRoles.includes('مدير');
             }
             modal.classList.remove("hidden");
         };
 
         /**
          * Saves (adds or updates) a user in Firebase.
+         * Handles both Realtime Database profile and Firebase Authentication user.
          */
         window.saveUser = async function() {
             const userId = document.getElementById("user-id").value;
             const name = document.getElementById("user-name").value.trim();
             const email = document.getElementById("user-email").value.trim();
+            const password = document.getElementById("user-password").value.trim(); // New
             const phone = document.getElementById("user-phone").value.trim();
             const address = document.getElementById("user-address").value.trim();
             const status = document.getElementById("user-status").value;
-            const role = document.getElementById("user-role").value;
+            
+            // Get selected roles from the multi-select dropdown
+            const selectedRoles = Array.from(document.getElementById("user-role").selectedOptions).map(option => option.value);
 
             if (!name || !email) {
                 showNotification("الاسم والبريد الإلكتروني حقلان مطلوبان.", "error");
                 return;
             }
+            if (!userId && !password) { // Password required for new users
+                showNotification("يرجى إدخال كلمة مرور للمستخدم الجديد.", "error");
+                return;
+            }
+            if (password && password.length < 6) {
+                showNotification("كلمة المرور يجب أن تتكون من 6 أحرف على الأقل.", "error");
+                return;
+            }
 
             const currentUser = window.adminData.currentUser;
-            const currentLoggedInUserRole = window.adminData.currentUserRole;
+            const currentLoggedInUserRoles = window.adminData.currentUserRoles;
             const targetUser = window.adminData.users.find(u => u.id === userId);
 
             // Security check: Prevent non-admins from assigning 'مدير' role
-            if (role === 'مدير' && currentLoggedInUserRole !== 'مدير') {
+            if (selectedRoles.includes('مدير') && !currentLoggedInUserRoles.includes('مدير')) {
                 showNotification("ليس لديك صلاحية لتعيين دور 'مدير'.", "error");
                 return;
             }
 
             // Security check: Prevent non-admins from changing roles of existing managers
-            if (userId && targetUser && targetUser.role === 'مدير' && role !== 'مدير' && currentLoggedInUserRole !== 'مدير') {
+            if (userId && targetUser && Array.isArray(targetUser.roles) && targetUser.roles.includes('مدير') && !selectedRoles.includes('مدير') && !currentLoggedInUserRoles.includes('مدير')) {
                 showNotification("ليس لديك صلاحية لتغيير دور مدير آخر.", "error");
                 return;
             }
 
-            // Security check: Prevent a manager from changing their own role
-            if (userId && currentUser && currentUser.uid === userId && currentLoggedInUserRole === 'مدير' && role !== 'مدير') {
-                showNotification("لا يمكنك تغيير دورك الخاص كمدير.", "error");
+            // Security check: Prevent a manager from changing their own roles (must retain 'مدير')
+            if (userId && currentUser && currentUser.uid === userId && currentLoggedInUserRoles.includes('مدير') && !selectedRoles.includes('مدير')) {
+                showNotification("لا يمكنك إزالة دور 'مدير' من حسابك الخاص.", "error");
                 return;
             }
-
 
             const userData = {
                 name,
@@ -2636,34 +2689,60 @@
                 phone,
                 address,
                 status,
-                role, // Save role
-                createdAt: userId ? window.adminData.users.find(u => u.id === userId)?.createdAt : new Date().toLocaleString('ar-EG'),
-                lastLogin: userId ? window.adminData.users.find(u => u.id === userId)?.lastLogin : new Date().toLocaleString('ar-EG') // Mock last login
+                roles: selectedRoles, // Save roles as an array
+                createdAt: userId ? (window.adminData.users.find(u => u.id === userId)?.createdAt || new Date().toLocaleString('ar-EG')) : new Date().toLocaleString('ar-EG'),
+                lastLogin: userId ? (window.adminData.users.find(u => u.id === userId)?.lastLogin || new Date().toLocaleString('ar-EG')) : new Date().toLocaleString('ar-EG')
             };
 
             try {
                 if (userId) {
+                    // Update existing user
+                    // Update Auth password if provided
+                    if (password) {
+                        const authUser = auth.currentUser;
+                        if (authUser && authUser.uid === userId) {
+                            await updatePassword(authUser, password);
+                            showNotification("تم تحديث كلمة المرور بنجاح.", "success");
+                        } else {
+                            // This scenario is tricky. To update another user's password,
+                            // you'd typically need Firebase Admin SDK on a backend.
+                            // For client-side, it's only possible for the currently logged-in user.
+                            showNotification("لا يمكن تحديث كلمة مرور مستخدم آخر من لوحة التحكم.", "warning");
+                        }
+                    }
                     await set(ref(db, `users/${userId}`), userData);
                     showNotification("تم تحديث المستخدم بنجاح", "success");
                     if (window.adminData.currentUser) {
-                        logActivity(window.adminData.currentUser.uid, 'editUser', `تم تعديل المستخدم: ${name} (ID: ${userId}) - الدور: ${role}`);
+                        logActivity(window.adminData.currentUser.uid, 'editUser', `تم تعديل المستخدم: ${name} (ID: ${userId}) - الأدوار: ${selectedRoles.join(', ')}`);
                     }
                 } else {
-                    // For new users, we need to create an Auth user first if email/password is provided
-                    // This part is more complex and usually involves Firebase Admin SDK on a backend.
-                    // For this client-side only app, we'll just save to RTDB, assuming Auth user exists or will be created externally.
-                    // If you want to enable direct user creation with email/password from admin panel,
-                    // you'd need `createUserWithEmailAndPassword` here, but it's generally not recommended client-side for security.
-                    const newUserRef = await push(usersRef, userData);
+                    // Add new user (Firebase Auth + Realtime DB)
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const newAuthUser = userCredential.user;
+                    await set(ref(db, `users/${newAuthUser.uid}`), {
+                        ...userData,
+                        email: newAuthUser.email, // Ensure email from Auth is used
+                        createdAt: new Date().toLocaleString('ar-EG'),
+                        lastLogin: new Date().toLocaleString('ar-EG')
+                    });
                     showNotification("تمت إضافة المستخدم بنجاح", "success");
                     if (window.adminData.currentUser) {
-                        logActivity(window.adminData.currentUser.uid, 'addUser', `تم إضافة مستخدم جديد: ${name} (ID: ${newUserRef.key}) - الدور: ${role}`);
+                        logActivity(window.adminData.currentUser.uid, 'addUser', `تم إضافة مستخدم جديد: ${name} (ID: ${newAuthUser.uid}) - الأدوار: ${selectedRoles.join(', ')}`);
                     }
                 }
                 document.getElementById("user-modal").classList.add("hidden");
             } catch (error) {
                 console.error("Error saving user:", error);
-                showNotification("فشل حفظ المستخدم", "error");
+                // Handle specific Firebase Auth errors
+                let errorMessage = "فشل حفظ المستخدم.";
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = "هذا البريد الإلكتروني مستخدم بالفعل.";
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = "صيغة البريد الإلكتروني غير صحيحة.";
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = "كلمة المرور ضعيفة جداً. يجب أن تتكون من 6 أحرف على الأقل.";
+                }
+                showNotification(errorMessage, "error");
             }
         };
 
@@ -2683,7 +2762,7 @@
             document.getElementById("user-details-phone").textContent = user.phone || 'N/A';
             document.getElementById("user-details-address").textContent = user.address || 'N/A';
             document.getElementById("user-details-status").textContent = user.status || 'N/A';
-            document.getElementById("user-details-role").textContent = user.role || 'N/A';
+            document.getElementById("user-details-role").textContent = Array.isArray(user.roles) ? user.roles.join(', ') : (user.roles || 'N/A'); // Display roles array
             document.getElementById("user-details-created-at").textContent = user.createdAt || 'N/A';
             document.getElementById("user-details-last-login").textContent = user.lastLogin || 'N/A';
 
@@ -2762,16 +2841,17 @@
             }
 
             const currentUser = window.adminData.currentUser;
-            const currentLoggedInUserRole = window.adminData.currentUserRole;
+            const currentLoggedInUserRoles = window.adminData.currentUserRoles; // Now an array
             const targetUser = window.adminData.users.find(u => u.id === userId);
 
             // Security check: Prevent non-admins from changing status of admins
-            if (targetUser && targetUser.role === 'مدير' && currentLoggedInUserRole !== 'مدير') {
+            const isTargetUserAManager = Array.isArray(targetUser?.roles) && targetUser.roles.includes('مدير');
+            if (isTargetUserAManager && !currentLoggedInUserRoles.includes('مدير')) {
                 showNotification("ليس لديك صلاحية لتغيير حالة مدير آخر.", "error");
                 return;
             }
             // Security check: Prevent user from changing their own status if they are an admin
-            if (currentUser && currentUser.uid === userId && currentLoggedInUserRole === 'مدير') {
+            if (currentUser && currentUser.uid === userId && currentLoggedInUserRoles.includes('مدير')) {
                 showNotification("لا يمكنك تغيير حالتك الخاصة كمدير.", "error");
                 return;
             }
@@ -3246,9 +3326,14 @@
             userFilterSelect.innerHTML = '<option value="">جميع المشرفين</option>';
             // Action filter options are static in HTML, no need to clear/repopulate
 
+            // Populate with all users who have a moderator/admin role
             const uniqueModerators = new Set();
-            window.adminData.moderatorLogs.forEach(log => {
-                uniqueModerators.add(log.userId);
+            window.adminData.users.forEach(user => {
+                // Ensure user.roles is an array before checking includes
+                const roles = Array.isArray(user.roles) ? user.roles : [user.roles];
+                if (roles.some(role => ['مدير', 'مشرف', 'مراقب'].includes(role))) {
+                    uniqueModerators.add(user.id);
+                }
             });
 
             uniqueModerators.forEach(userId => {
@@ -3305,7 +3390,8 @@
          */
         function updateAdminUIBasedOnRole() {
             const moderatorLogsNavLink = document.getElementById('moderator-logs-nav-link');
-            if (window.adminData.currentUserRole === 'مدير' || window.adminData.currentUserRole === 'مشرف' || window.adminData.currentUserRole === 'مراقب') {
+            // Check if current user roles array includes 'مدير', 'مشرف', or 'مراقب'
+            if (window.adminData.currentUserRoles.some(role => ['مدير', 'مشرف', 'مراقب'].includes(role))) {
                 moderatorLogsNavLink.classList.remove('hidden');
             } else {
                 moderatorLogsNavLink.classList.add('hidden');
@@ -3393,40 +3479,56 @@
                     const userCredential = await signInWithEmailAndPassword(auth, email, password);
                     const user = userCredential.user;
 
-                    // Fetch user role from Realtime Database
+                    // Fetch user roles from Realtime Database
                     const userProfileRef = ref(db, `users/${user.uid}`);
                     const userProfileSnapshot = await new Promise(resolve => onValue(userProfileRef, resolve, { onlyOnce: true }));
-                    const userProfile = userProfileSnapshot.val();
+                    let userProfile = userProfileSnapshot.val();
 
-                    let userRole = 'عادي';
+                    let userRoles = ['عادي']; // Default to 'عادي'
                     let userStatus = 'active';
 
                     if (userProfile) {
-                        userRole = userProfile.role || 'عادي';
+                        // Ensure roles is always an array
+                        userRoles = Array.isArray(userProfile.roles) ? userProfile.roles : [userProfile.roles || 'عادي'];
                         userStatus = userProfile.status || 'active';
                         // Update last login
                         await update(userProfileRef, { lastLogin: new Date().toLocaleString('ar-EG') });
                     } else {
                         // If user exists in Auth but not in DB, create a basic profile
-                        userRole = (user.email === adminEmail) ? 'مدير' : 'عادي';
-                        await set(userProfileRef, {
+                        userRoles = (user.email === adminEmail) ? ['مدير'] : ['عادي'];
+                        userProfile = { // Create a temporary profile object to use for the check below
                             name: user.displayName || 'مستخدم جديد',
                             email: user.email || '',
                             phone: '',
                             address: '',
                             status: 'active',
-                            role: userRole,
+                            roles: userRoles, // Save as array
                             createdAt: new Date().toLocaleString('ar-EG'),
                             lastLogin: new Date().toLocaleString('ar-EG'),
                             photoURL: user.photoURL || ''
-                        });
+                        };
+                        await set(userProfileRef, userProfile); // Save the newly created profile
                     }
 
-                    // Specific admin login check
+                    // Specific admin login check (if hardcoded admin email/password is used)
                     if (email === adminEmail && password === adminPassword) {
-                        userRole = 'مدير';
+                        userRoles = ['مدير'];
                         // Ensure this role is persisted if it was just set locally
-                        await update(userProfileRef, { role: 'مدير' });
+                        await update(userProfileRef, { roles: ['مدير'] });
+                    }
+
+                    // --- Security Check: Restrict login to specific roles ---
+                    const allowedLoginRoles = ['مدير', 'مشرف', 'مراقب'];
+                    const hasAllowedRole = userRoles.some(role => allowedLoginRoles.includes(role));
+
+                    if (!hasAllowedRole) {
+                        await signOut(auth); // Sign out unauthorized user
+                        showNotification("ليس لديك صلاحية للوصول إلى لوحة التحكم.", "error");
+                        loginError.textContent = "ليس لديك صلاحية للوصول إلى لوحة التحكم.";
+                        loginError.classList.remove("hidden");
+                        emailInput.value = "";
+                        passwordInput.value = "";
+                        return; // Stop execution
                     }
 
                     if (userStatus === 'blocked') {
@@ -3439,7 +3541,7 @@
                     }
 
                     window.adminData.currentUser = user;
-                    window.adminData.currentUserRole = userRole;
+                    window.adminData.currentUserRoles = userRoles;
                     initializeAdminPanel();
                     logActivity(user.uid, 'login', `تسجيل الدخول بالبريد الإلكتروني (${user.email})`);
                     showNotification("تم تسجيل الدخول بنجاح", "success");
@@ -3470,27 +3572,60 @@
                     window.adminData.currentUser = user;
                     const userProfileRef = ref(db, `users/${user.uid}`);
                     const userProfileSnapshot = await new Promise(resolve => onValue(userProfileRef, resolve, { onlyOnce: true }));
-                    const userProfile = userProfileSnapshot.val();
+                    let userProfile = userProfileSnapshot.val();
 
                     if (userProfile) {
-                        window.adminData.currentUserRole = userProfile.role || 'عادي';
+                        // Ensure roles is always an array
+                        window.adminData.currentUserRoles = Array.isArray(userProfile.roles) ? userProfile.roles : [userProfile.roles || 'عادي'];
                         if (userProfile.status === 'blocked') {
                             await signOut(auth);
                             showNotification("تم حظر حسابك. يرجى التواصل مع فريق الدعم.", "error");
                             return; // Stop further initialization for blocked user
                         }
+
+                        // --- Security Check on Auth State Change: Restrict login to specific roles ---
+                        const allowedLoginRoles = ['مدير', 'مشرف', 'مراقب'];
+                        const hasAllowedRole = window.adminData.currentUserRoles.some(role => allowedLoginRoles.includes(role));
+                        if (!hasAllowedRole) {
+                            await signOut(auth); // Sign out unauthorized user
+                            showNotification("ليس لديك صلاحية للوصول إلى لوحة التحكم.", "error");
+                            // Do not show loginError on the login page itself, just sign out.
+                            return; // Stop execution
+                        }
+
                     } else {
-                        // This case should ideally not happen if user creation is handled correctly,
-                        // but as a fallback, assign default role.
-                        window.adminData.currentUserRole = 'عادي';
+                        // If user exists in Auth but not in DB, create a basic profile and assign default role
+                        // This might happen if a user is created directly via Firebase Auth console without a RTDB entry.
+                        window.adminData.currentUserRoles = ['عادي']; // Default role for newly detected auth user without RTDB profile
+                        userProfile = {
+                            name: user.displayName || 'مستخدم جديد',
+                            email: user.email || '',
+                            phone: '',
+                            address: '',
+                            status: 'active',
+                            roles: window.adminData.currentUserRoles, // Save as array
+                            createdAt: new Date().toLocaleString('ar-EG'),
+                            lastLogin: new Date().toLocaleString('ar-EG'),
+                            photoURL: user.photoURL || ''
+                        };
+                        await set(userProfileRef, userProfile); // Save the newly created profile
+
+                        // After creating, re-check role for security
+                        const allowedLoginRoles = ['مدير', 'مشرف', 'مراقب'];
+                        const hasAllowedRole = window.adminData.currentUserRoles.some(role => allowedLoginRoles.includes(role));
+                        if (!hasAllowedRole) {
+                            await signOut(auth); // Sign out unauthorized user
+                            showNotification("ليس لديك صلاحية للوصول إلى لوحة التحكم.", "error");
+                            return; // Stop execution
+                        }
                     }
-                    console.log("User already authenticated:", user.uid, "Role:", window.adminData.currentUserRole);
+                    console.log("User already authenticated:", user.uid, "Roles:", window.adminData.currentUserRoles);
                     initializeAdminPanel();
-                    updateAdminUIBasedOnRole(); // Update UI based on role
+                    updateAdminUIBasedOnRole(); // Update UI based on roles
                 } else {
                     // User is signed out, show login page
                     window.adminData.currentUser = null;
-                    window.adminData.currentUserRole = 'عادي';
+                    window.adminData.currentUserRoles = ['عادي']; // Reset roles on logout
                     loginPage.classList.remove("hidden");
                     adminContent.classList.add("hidden");
                     updateAdminUIBasedOnRole(); // Hide admin UI elements
