@@ -1159,9 +1159,9 @@
         // بعد إضافة النطاق، يجب أن يعمل تسجيل الدخول بحساب جوجل بشكل صحيح.
         // =====================================================================================================
 
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, push, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 
         // Firebase configuration (use your existing configuration)
@@ -1990,7 +1990,7 @@
             div.className = 'flex items-center mb-2 gap-2';
             div.innerHTML = `
                 <input type="url" class="additional-image-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${imageUrl}" placeholder="رابط صورة إضافية">
-                <button type="button" onclick="removeAdditionalImageRow(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm flex-shrink-0">
+                <button type="button" onclick="removeAdditionalImageRow(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm">
                     <i class="fas fa-times"></i>
                 </button>
             `;
@@ -3377,6 +3377,16 @@
                     showNotification("الرجاء إدخال البريد الإلكتروني وكلمة المرور.", "error");
                     return;
                 }
+
+                // Basic client-side email format validation
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showNotification("صيغة البريد الإلكتروني غير صحيحة. يرجى التحقق.", "error");
+                    loginError.classList.remove("hidden");
+                    return;
+                }
+
+                console.log("Attempting login with email:", email, "and password:", password); // Debug log
 
                 try {
                     // Firebase Authentication with Email/Password
