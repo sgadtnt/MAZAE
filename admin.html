@@ -151,16 +151,6 @@
         .bg-red-100 { background-color: #fee2e2; } .text-red-800 { color: #991b1b; }
         .bg-gray-100 { background-color: #f3f4f6; } .text-gray-800 { color: #1f2937; }
 
-        /* Product image preview in modal */
-        .product-image-preview {
-            width: 40px; /* Small size for preview */
-            height: 40px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-            flex-shrink: 0; /* Prevent shrinking */
-        }
-
         /* Mobile responsiveness for tables */
         @media (max-width: 768px) {
             .table-container {
@@ -214,6 +204,53 @@
                 grid-template-columns: 1fr; /* Force single column layout on small screens */
             }
         }
+        /* Custom Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 24px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #4f46e5; /* Indigo 600 */
+        }
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 1px #4f46e5;
+        }
+        input:checked + .toggle-slider:before {
+            -webkit-transform: translateX(16px);
+            -ms-transform: translateX(16px);
+            transform: translateX(16px);
+        }
     </style>
 </head>
 <body>
@@ -231,6 +268,12 @@
                 تسجيل الدخول
             </button>
             <p id="login-error" class="text-red-500 mt-4 hidden">كلمة المرور غير صحيحة. حاول مرة أخرى.</p>
+            <div class="mt-6">
+                <p class="text-gray-600 mb-2">أو تسجيل الدخول باستخدام:</p>
+                <button id="google-login-button" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg text-lg w-full flex items-center justify-center">
+                    <i class="fab fa-google ml-2"></i> تسجيل الدخول بحساب جوجل
+                </button>
+            </div>
         </div>
     </div>
 
@@ -259,11 +302,31 @@
                         <i class="fas fa-tags"></i>
                         <span>الأقسام</span>
                     </a>
+                </a>
+                </li>
+                <li>
+                    <a href="#" data-section="users-section" class="nav-link text-indigo-200 hover:bg-indigo-700">
+                        <i class="fas fa-users"></i>
+                        <span>المستخدمون</span>
+                    </a>
                 </li>
                 <li>
                     <a href="#" data-section="settings-section" class="nav-link text-indigo-200 hover:bg-indigo-700">
                         <i class="fas fa-cogs"></i>
                         <span>الإعدادات</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" data-section="homepage-settings-section" class="nav-link text-indigo-200 hover:bg-indigo-700">
+                        <i class="fas fa-home"></i>
+                        <span>إعدادات الصفحة الرئيسية</span>
+                    </a>
+                </li>
+                <!-- New: Moderator Logs Section Link (visible only to admin) -->
+                <li id="moderator-logs-nav-link" class="hidden">
+                    <a href="#" data-section="moderator-logs-section" class="nav-link text-indigo-200 hover:bg-indigo-700">
+                        <i class="fas fa-user-shield"></i>
+                        <span>سجل المشرفين</span>
                     </a>
                 </li>
             </ul>
@@ -333,12 +396,14 @@
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">سعر العرض</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">المخزون</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">جديد</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الرئيسية</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th> <!-- NEW -->
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
                                 </tr>
                             </thead>
                             <tbody id="products-table-body" class="bg-white divide-y divide-gray-200">
                                 <!-- Products will be loaded here -->
-                                <tr><td colspan="8" class="text-center py-4 text-gray-500">جاري تحميل المنتجات...</td></tr>
+                                <tr><td colspan="10" class="text-center py-4 text-gray-500">جاري تحميل المنتجات...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -368,12 +433,135 @@
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">صورة</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
                                     <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الوصف</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th> <!-- NEW -->
                                     <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
                                 </tr>
                             </thead>
                             <tbody id="categories-table-body" class="bg-white divide-y divide-gray-200">
                                 <!-- Categories will be loaded here -->
-                                <tr><td colspan="4" class="text-center py-4 text-gray-500">جاري تحميل الأقسام...</td></tr>
+                                <tr><td colspan="5" class="text-center py-4 text-gray-500">جاري تحميل الأقسام...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Users Section (NEW) -->
+            <section id="users-section" class="admin-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">إدارة المستخدمين</h1>
+                    <button onclick="openUserModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-user-plus ml-2"></i> إضافة مستخدم
+                    </button>
+                </div>
+                <div class="admin-card mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">المستخدمون المسجلون</h2>
+                    <div class="relative mb-4">
+                        <input type="text" id="users-search-input" placeholder="بحث في المستخدمين المسجلين..." class="w-full p-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent" dir="rtl">
+                        <i class="fas fa-search absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <button type="button" id="users-clear-search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none hidden">
+                            <i class="fas fa-times-circle"></i>
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">البريد الإلكتروني</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الهاتف</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الحالة</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الدور</th>
+                                    <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Users will be loaded here -->
+                                <tr><td colspan="6" class="text-center py-4 text-gray-500">جاري تحميل المستخدمين...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="admin-card">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-800">الضيوف (المستخدمون المجهولون)</h2>
+                        <button onclick="clearAllAnonymousProfiles()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-trash ml-2"></i> مسح الكل
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الاسم (من الطلب)</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">البريد الإلكتروني (من الطلب)</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الهاتف (من الطلب)</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">آخر طلب</th>
+                                    <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
+                                </tr>
+                            </thead>
+                            <tbody id="anonymous-users-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Anonymous users will be loaded here -->
+                                <tr><td colspan="5" class="text-center py-4 text-gray-500">لا توجد سجلات ضيوف.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Moderator Logs Section (NEW) -->
+            <section id="moderator-logs-section" class="admin-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">سجل إشعارات المشرفين</h1>
+                </div>
+                <div class="admin-card">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="moderator-log-user-filter" class="block text-sm font-medium text-gray-700 mb-1">تصفية حسب المشرف</label>
+                            <select id="moderator-log-user-filter" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">جميع المشرفين</option>
+                                <!-- Populated by JS with actual moderator names -->
+                            </select>
+                        </div>
+                        <div>
+                            <label for="moderator-log-action-filter" class="block text-sm font-medium text-gray-700 mb-1">تصفية حسب نوع العملية</label>
+                            <select id="moderator-log-action-filter" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                                <option value="">جميع العمليات</option>
+                                <option value="login">تسجيل الدخول</option>
+                                <option value="addProduct">إضافة منتج</option>
+                                <option value="editProduct">تعديل منتج</option>
+                                <option value="deleteProduct">حذف منتج</option>
+                                <option value="addCategory">إضافة قسم</option>
+                                <option value="editCategory">تعديل قسم</option>
+                                <option value="deleteCategory">حذف قسم</option>
+                                <option value="updateOrder">تغيير حالة طلب</option>
+                                <option value="deleteOrder">حذف طلب</option>
+                                <option value="updateSettings">تعديل إعدادات المتجر</option>
+                                <option value="updateHomepage">تعديل إعدادات الصفحة الرئيسية</option>
+                                <option value="addUser">إضافة مستخدم</option>
+                                <option value="editUser">تعديل مستخدم</option>
+                                <option value="toggleUserStatus">تغيير حالة مستخدم</option>
+                                <option value="deleteUser">حذف مستخدم</option>
+                                <option value="clearAnonymousProfiles">مسح سجلات الضيوف</option>
+                                <option value="toggleProductActive">تغيير تفعيل منتج</option> <!-- NEW -->
+                                <option value="toggleCategoryActive">تغيير تفعيل قسم</option> <!-- NEW -->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">المشرف</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">نوع العملية</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">الوقت</th>
+                                    <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">التفاصيل</th>
+                                </tr>
+                            </thead>
+                            <tbody id="moderator-logs-table-body" class="bg-white divide-y divide-gray-200">
+                                <!-- Moderator logs will be loaded here -->
+                                <tr><td colspan="4" class="text-center py-4 text-gray-500">جاري تحميل سجلات المشرفين...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -404,45 +592,213 @@
                                 <label for="setting-contact-email" class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
                                 <input type="email" id="setting-contact-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                             </div>
-                            <!-- Removed old delivery price input -->
                             <div class="md:col-span-2">
                                 <label for="setting-thank-you-message" class="block text-sm font-medium text-gray-700 mb-1">رسالة الشكر بعد الطلب</label>
                                 <textarea id="setting-thank-you-message" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
                             </div>
                         </div>
 
-                        <!-- New Section for City Delivery Prices -->
-                        <div class="admin-card mt-8">
-                            <div class="flex justify-between items-center mb-4">
-                                <h2 class="text-xl font-bold text-gray-800">أسعار التوصيل حسب المدينة</h2>
-                                <button type="button" onclick="openCityDeliveryPriceModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm flex items-center">
-                                    <i class="fas fa-plus ml-2"></i> إضافة مدينة
-                                </button>
+                        <!-- Delivery Prices by City Section -->
+                        <div class="mb-6 border-t pt-6 mt-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">أسعار التوصيل حسب المدينة</h2>
+                            <div id="delivery-prices-container">
+                                <!-- City/Price input rows will be added here by JS -->
                             </div>
-                            <div class="mb-4">
-                                <label for="setting-default-delivery-price" class="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل الافتراضي (د.ع)</label>
-                                <input type="number" id="setting-default-delivery-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0">
-                            </div>
-                            <div class="table-container">
-                                <table class="min-w-full divide-y divide-gray-200">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">المدينة</th>
-                                            <th scope="col" class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">سعر التوصيل (د.ع)</th>
-                                            <th scope="col" class="relative px-6 py-3"><span class="sr-only">إجراءات</span></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="city-delivery-prices-table-body" class="bg-white divide-y divide-gray-200">
-                                        <!-- City delivery prices will be loaded here -->
-                                        <tr><td colspan="3" class="text-center py-4 text-gray-500">جاري تحميل أسعار المدن...</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                            <button type="button" onclick="addCityDeliveryRow()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center mt-4">
+                                <i class="fas fa-plus ml-2"></i> إضافة مدينة جديدة
+                            </button>
                         </div>
-                        
-                        <div class="flex justify-end mt-6">
+
+                        <div class="flex justify-end">
                             <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg flex items-center">
                                 <i class="fas fa-save ml-2"></i> حفظ الإعدادات
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Homepage Settings Section -->
+            <section id="homepage-settings-section" class="admin-section hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-3xl font-bold text-gray-800">إعدادات الصفحة الرئيسية</h1>
+                </div>
+                <div class="admin-card">
+                    <form id="homepage-settings-form" onsubmit="event.preventDefault(); saveHomepageSettings()">
+                        <!-- Main Banner Section -->
+                        <div class="mb-6 pb-6 border-b">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-gray-800">البانر الرئيسي</h2>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-main-banner-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label for="hp-main-banner-image" class="block text-sm font-medium text-gray-700 mb-1">رابط الصورة</label>
+                                    <input type="url" id="hp-main-banner-image" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                                <div>
+                                    <label for="hp-main-banner-title" class="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+                                    <input type="text" id="hp-main-banner-title" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                                <div class="md:col-span-2">
+                                    <label for="hp-main-banner-description" class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                                    <textarea id="hp-main-banner-description" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
+                                </div>
+                                <div>
+                                    <label for="hp-main-banner-cta-text" class="block text-sm font-medium text-gray-700 mb-1">نص زر الإجراء (CTA)</label>
+                                    <input type="text" id="hp-main-banner-cta-text" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                                <div>
+                                    <label for="hp-main-banner-cta-link" class="block text-sm font-medium text-gray-700 mb-1">رابط زر الإجراء (CTA)</label>
+                                    <input type="url" id="hp-main-banner-cta-link" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Product Categories Section -->
+                        <div class="mb-6 pb-6 border-b">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-gray-800">أقسام المنتجات (الفئات)</h2>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-categories-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div>
+                                <label for="hp-selected-categories" class="block text-sm font-medium text-gray-700 mb-1">اختيار الفئات للعرض</label>
+                                <select id="hp-selected-categories" multiple class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 h-32">
+                                    <!-- Categories will be populated by JS -->
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">يمكنك اختيار عدة فئات بالضغط على Ctrl/Cmd والنقر.</p>
+                            </div>
+                        </div>
+
+                        <!-- Featured Products Section -->
+                        <div class="mb-6 pb-6 border-b">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-gray-800">المنتجات المختارة</h2>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-featured-products-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="flex flex-wrap gap-4">
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="hp-featured-products-type" value="most_selling" class="form-radio text-indigo-600" checked>
+                                    <span class="ml-2 text-gray-700">الأكثر مبيعًا</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="hp-featured-products-type" value="new_products" class="form-radio text-indigo-600">
+                                    <span class="ml-2 text-gray-700">الجديدة</span>
+                                </label>
+                                <label class="inline-flex items-center">
+                                    <input type="radio" name="hp-featured-products-type" value="discounts" class="form-radio text-indigo-600">
+                                    <span class="ml-2 text-gray-700">خصومات</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Internal Banners/Sub-ads Section -->
+                        <div class="mb-6 pb-6 border-b">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-gray-800">بانرات داخلية/إعلانات فرعية</h2>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-internal-banners-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div id="hp-internal-banners-container">
+                                <!-- Internal banner rows will be added here by JS -->
+                            </div>
+                            <button type="button" onclick="addInternalBannerRow()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center mt-4">
+                                <i class="fas fa-plus ml-2"></i> إضافة بانر داخلي
+                            </button>
+                        </div>
+
+                        <!-- Customer Reviews Section -->
+                        <div class="mb-6 pb-6 border-b">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-gray-800">قسم تقييمات العملاء</h2>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-reviews-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p class="text-sm text-gray-600">تفعيل/تعطيل عرض قسم تقييمات العملاء في الصفحة الرئيسية.</p>
+                        </div>
+
+                        <!-- Articles/Blog Section -->
+                        <div class="mb-6 pb-6 border-b">
+                            <div class="flex justify-between items-center mb-4">
+                                <h2 class="text-xl font-bold text-gray-800">قسم المقالات/المدونة</h2>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-blog-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p class="text-sm text-gray-600">تفعيل/تعطيل عرض أحدث المقالات أو الأخبار في الصفحة الرئيسية.</p>
+                        </div>
+
+                        <!-- Footer Section -->
+                        <div class="mb-6 pb-6">
+                            <h2 class="text-xl font-bold text-gray-800 mb-4">الفوتر (تذييل الصفحة)</h2>
+                            
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg font-medium text-gray-700">معلومات التواصل (من الإعدادات العامة)</h3>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-footer-contact-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <p class="text-sm text-gray-600 mb-4">تفعيل/تعطيل عرض معلومات الاتصال في الفوتر. يتم إدارة تفاصيل الاتصال من قسم "الإعدادات".</p>
+
+                            <div class="flex justify-between items-center mb-4 mt-6">
+                                <h3 class="text-lg font-medium text-gray-700">روابط التواصل الاجتماعي</h3>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-footer-social-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label for="hp-footer-facebook" class="block text-sm font-medium text-gray-700 mb-1">رابط فيسبوك</label>
+                                    <input type="url" id="hp-footer-facebook" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                                <div>
+                                    <label for="hp-footer-instagram" class="block text-sm font-medium text-gray-700 mb-1">رابط انستغرام</label>
+                                    <input type="url" id="hp-footer-instagram" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                                <div>
+                                    <label for="hp-footer-twitter" class="block text-sm font-medium text-gray-700 mb-1">رابط تويتر</label>
+                                    <input type="url" id="hp-footer-twitter" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                                <div>
+                                    <label for="hp-footer-linkedin" class="block text-sm font-medium text-gray-700 mb-1">رابط لينكدإن</label>
+                                    <input type="url" id="hp-footer-linkedin" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center mb-4 mt-6">
+                                <h3 class="text-lg font-medium text-gray-700">روابط مخصصة في الفوتر</h3>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="hp-footer-custom-links-enabled">
+                                    <span class="toggle-slider"></span>
+                                </label>
+                            </div>
+                            <div id="hp-footer-custom-links-container">
+                                <!-- Custom footer link rows will be added here by JS -->
+                            </div>
+                            <button type="button" onclick="addFooterCustomLinkRow()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg flex items-center mt-4">
+                                <i class="fas fa-plus ml-2"></i> إضافة رابط مخصص
+                            </button>
+                        </div>
+
+                        <div class="flex justify-end mt-6">
+                            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg flex items-center">
+                                <i class="fas fa-save ml-2"></i> حفظ إعدادات الصفحة الرئيسية
                             </button>
                         </div>
                     </form>
@@ -519,25 +875,36 @@
                                 <!-- Categories will be populated by JS -->
                             </select>
                         </div>
-                        <div>
+                        <div class="col-span-1 md:col-span-2">
                             <label for="product-price" class="block text-sm font-medium text-gray-700 mb-1">السعر (د.ع)</label>
-                            <input type="number" id="product-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" step="0.01" required>
+                            <div class="flex items-center">
+                                <input type="number" id="product-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" step="0.01" required>
+                                <button type="button" onclick="roundProductPrice()" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md transition duration-150 ease-in-out">
+                                    <i class="fas fa-money-bill-wave"></i> تقريب
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label for="product-inventory" class="block text-sm font-medium text-gray-700 mb-1">المخزون</label>
                             <input type="number" id="product-inventory" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
                         </div>
                     </div>
-                    
-                    <!-- Product Images Section -->
+                    <!-- Primary Image URL -->
                     <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">صور المنتج</label>
-                        <div id="product-images-container" class="space-y-2 mb-2">
-                            <!-- Image input fields will be added here -->
+                        <label for="product-image" class="block text-sm font-medium text-gray-700 mb-1">رابط الصورة الرئيسية</label>
+                        <input type="url" id="product-image" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                    <!-- Additional Images -->
+                    <div class="mb-4 border-t pt-4 mt-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="block text-sm font-medium text-gray-700">صور إضافية</label>
+                            <button type="button" onclick="addAdditionalImageRow()" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm">
+                                <i class="fas fa-plus ml-1"></i> إضافة صورة
+                            </button>
                         </div>
-                        <button type="button" id="add-image-url-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm flex items-center">
-                            <i class="fas fa-plus ml-2"></i> إضافة رابط صورة
-                        </button>
+                        <div id="additional-images-container">
+                            <!-- Additional image inputs will be added here by JS -->
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -547,6 +914,14 @@
                     <div class="flex items-center mb-4">
                         <input type="checkbox" id="product-is-new" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
                         <label for="product-is-new" class="ml-2 block text-sm text-gray-900">منتج جديد</label>
+                    </div>
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="product-is-featured" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <label for="product-is-featured" class="ml-2 block text-sm text-gray-900">إضافة إلى الرئيسية</label>
+                    </div>
+                    <div class="flex items-center mb-4"> <!-- NEW: Product Active Status -->
+                        <input type="checkbox" id="product-is-active" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" checked>
+                        <label for="product-is-active" class="ml-2 block text-sm text-gray-900">تفعيل المنتج</label>
                     </div>
                     <div class="flex items-center mb-6">
                         <input type="checkbox" id="product-is-sale" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
@@ -560,21 +935,21 @@
                             <input type="number" id="product-discount-percentage" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0" max="100" step="0.01">
                         </div>
                         <div>
-                            <label for="product-sale-price" class="block text-sm font-medium text-gray-700 mb-1">السعر بعد التخفيض (د.ع)</label>
-                            <input type="number" id="product-sale-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" step="0.01">
-                        </div>
-                        <div class="md:col-span-2 flex justify-end">
-                            <button type="button" id="calculate-round-sale-price-btn" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm flex items-center">
-                                <i class="fas fa-calculator ml-2"></i> حساب وتقريب السعر
-                            </button>
-                        </div>
-                        <div>
                             <label for="product-sale-start-date" class="block text-sm font-medium text-gray-700 mb-1">تاريخ بدء العرض</label>
                             <input type="date" id="product-sale-start-date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
                         </div>
                         <div class="md:col-span-2">
                             <label for="product-sale-end-date" class="block text-sm font-medium text-gray-700 mb-1">تاريخ انتهاء العرض</label>
                             <input type="date" id="product-sale-end-date" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <!-- New: Custom Final Discount Price -->
+                        <div class="md:col-span-2 flex items-center mt-4">
+                            <input type="checkbox" id="product-use-custom-discount" class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                            <label for="product-use-custom-discount" class="ml-2 block text-sm text-gray-900">تحديد سعر خصم نهائي يدويًا</label>
+                        </div>
+                        <div id="custom-discount-price-container" class="md:col-span-2 hidden">
+                            <label for="product-custom-discount-price" class="block text-sm font-medium text-gray-700 mb-1">السعر النهائي بعد الخصم (د.ع)</label>
+                            <input type="number" id="product-custom-discount-price" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" step="0.01" min="0">
                         </div>
                     </div>
 
@@ -609,9 +984,13 @@
                         <label for="category-description" class="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
                         <textarea id="category-description" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
                     </div>
-                    <div class="mb-6">
+                    <div class="mb-4"> <!-- NEW: Category Active Status -->
                         <label for="category-image" class="block text-sm font-medium text-gray-700 mb-1">رابط الصورة</label>
                         <input type="url" id="category-image" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                    </div>
+                    <div class="mb-6">
+                        <input type="checkbox" id="category-is-active" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" checked>
+                        <label for="category-is-active" class="ml-2 block text-sm text-gray-900">تفعيل القسم</label>
                     </div>
                     <div class="flex justify-end">
                         <button type="button" class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg ml-3">
@@ -625,26 +1004,55 @@
             </div>
         </div>
 
-        <!-- City Delivery Price Add/Edit Modal -->
-        <div id="city-delivery-price-modal" class="modal-overlay hidden">
-            <div class="modal-content max-w-md">
+        <!-- User Add/Edit Modal (NEW) -->
+        <div id="user-modal" class="modal-overlay hidden">
+            <div class="modal-content">
                 <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 id="city-delivery-price-modal-title" class="font-bold text-xl text-gray-800">إضافة مدينة جديدة</h3>
+                    <h3 id="user-modal-title" class="font-bold text-xl text-gray-800">إضافة مستخدم جديد</h3>
                     <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <form id="city-delivery-price-form" onsubmit="event.preventDefault(); saveCityDeliveryPrice()">
-                    <input type="hidden" id="city-id-hidden"> <!-- Used to store the original city name for updates -->
-                    <div class="mb-4">
-                        <label for="city-name-input" class="block text-sm font-medium text-gray-700 mb-1">اسم المدينة</label>
-                        <input type="text" id="city-name-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                <form id="user-form" onsubmit="event.preventDefault(); saveUser()">
+                    <input type="hidden" id="user-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="user-name" class="block text-sm font-medium text-gray-700 mb-1">الاسم</label>
+                            <input type="text" id="user-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                        </div>
+                        <div>
+                            <label for="user-email" class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
+                            <input type="email" id="user-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="user-phone" class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
+                            <input type="text" id="user-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="user-address" class="block text-sm font-medium text-gray-700 mb-1">العنوان</label>
+                            <input type="text" id="user-address" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                        </div>
+                        <div>
+                            <label for="user-status" class="block text-sm font-medium text-gray-700 mb-1">الحالة</label>
+                            <select id="user-status" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                <option value="active">نشط</option>
+                                <option value="restricted">مقيد</option>
+                                <option value="blocked">محظور</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="user-role" class="block text-sm font-medium text-gray-700 mb-1">الدور</label>
+                            <select id="user-role" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                                <option value="عادي">عادي</option>
+                                <option value="عضو مميز">عضو مميز</option>
+                                <option value="محظور">محظور</option>
+                                <option value="مشرف">مشرف</option>
+                                <option value="مسؤول توصيل">مسؤول توصيل</option>
+                                <option value="مدير">مدير</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-6">
-                        <label for="city-price-input" class="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل (د.ع)</label>
-                        <input type="number" id="city-price-input" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" min="0" required>
-                    </div>
-                    <div class="flex justify-end">
+                    <div class="flex justify-end mt-6">
                         <button type="button" class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg ml-3">
                             إلغاء
                         </button>
@@ -653,6 +1061,59 @@
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+
+        <!-- User Details Modal (NEW) -->
+        <div id="user-details-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-4 pb-3 border-b">
+                    <h3 class="font-bold text-xl text-gray-800">تفاصيل المستخدم</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-6">
+                    <div><strong>الاسم:</strong> <span id="user-details-name"></span></div>
+                    <div><strong>البريد الإلكتروني:</strong> <span id="user-details-email"></span></div>
+                    <div><strong>الهاتف:</strong> <span id="user-details-phone"></span></div>
+                    <div><strong>العنوان:</strong> <span id="user-details-address"></span></div>
+                    <div><strong>الحالة:</strong> <span id="user-details-status"></span></div>
+                    <div><strong>الدور:</strong> <span id="user-details-role"></span></div>
+                    <div><strong>تاريخ التسجيل:</strong> <span id="user-details-created-at"></span></div>
+                    <div><strong>آخر تسجيل دخول:</strong> <span id="user-details-last-login"></span></div>
+                </div>
+
+                <div class="mt-6 pb-6 border-b">
+                    <h4 class="font-bold text-lg mb-2">سجل الطلبات:</h4>
+                    <ul id="user-orders-list" class="list-disc list-inside bg-gray-50 p-4 rounded-md max-h-48 overflow-y-auto">
+                        <!-- User's orders will be listed here -->
+                        <li>لا توجد طلبات لهذا المستخدم.</li>
+                    </ul>
+                </div>
+
+                <div class="mt-6 pb-6">
+                    <h4 class="font-bold text-lg mb-2">النشاطات والتقييمات:</h4>
+                    <ul id="user-activities-list" class="list-disc list-inside bg-gray-50 p-4 rounded-md max-h-48 overflow-y-auto">
+                        <!-- User's activities and reviews will be listed here -->
+                        <li>لا توجد نشاطات أو تقييمات لعرضها.</li>
+                    </ul>
+                </div>
+
+                <div class="mt-6 flex justify-end gap-3">
+                    <button id="user-details-edit-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-edit ml-2"></i> تعديل
+                    </button>
+                    <button id="user-details-toggle-status-btn" class="bg-yellow-600 hover:bg-yellow-700 text-white px-5 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-ban ml-2"></i> تقييد/إلغاء تقييد
+                    </button>
+                    <button id="user-details-delete-btn" class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg flex items-center">
+                        <i class="fas fa-trash ml-2"></i> حذف
+                    </button>
+                    <button class="close-modal bg-gray-200 hover:bg-gray-300 text-gray-700 px-5 py-2 rounded-lg">
+                        إغلاق
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -676,8 +1137,35 @@
     </div>
 
     <script type="module">
+        // =====================================================================================================
+        // ملاحظة هامة: حل خطأ "auth/unauthorized-domain"
+        // =====================================================================================================
+        // هذا الخطأ (Firebase: Error (auth/unauthorized-domain)) لا يعني وجود مشكلة في الكود نفسه،
+        // بل يشير إلى أن النطاق (Domain) الذي يتم تشغيل لوحة التحكم عليه (مثل 'localhost' أو عنوان IP أو نطاق موقعك الفعلي)
+        // غير مضاف إلى قائمة النطاقات المصرح بها في إعدادات مشروع Firebase الخاص بك.
+        //
+        // لحل هذه المشكلة، اتبع الخطوات التالية في لوحة تحكم Firebase:
+        //
+        // 1. اذهب إلى Firebase Console: https://console.firebase.google.com/
+        // 2. اختر مشروعك.
+        // 3. في القائمة الجانبية، اذهب إلى "Authentication" (المصادقة).
+        // 4. اختر علامة التبويب "Settings" (الإعدادات).
+        // 5. ابحث عن قسم "Authorized domains" (النطاقات المصرح بها).
+        // 6. انقر على "Add domain" (إضافة نطاق).
+        // 7. أضف النطاق الذي تستخدمه حالياً:
+        //    - إذا كنت تختبر محلياً، أضف "localhost" (إذا لم يكن موجوداً).
+        //    - إذا كنت تستخدم عنوان IP (مثل 127.0.0.1)، أضفه أيضاً.
+        //    - إذا كنت تستضيف التطبيق على نطاق مباشر (مثل example.com)، أضف "example.com".
+        //    - تأكد من إضافة النطاق بدون "http://" أو "https://" أو المسارات الفرعية.
+        // 8. احفظ التغييرات.
+        //
+        // بعد إضافة النطاق، يجب أن يعمل تسجيل الدخول بحساب جوجل بشكل صحيح.
+        // =====================================================================================================
+
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, push, onValue, set, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getDatabase, ref, push, onValue, set, remove, update } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+
 
         // Firebase configuration (use your existing configuration)
         const firebaseConfig = {
@@ -693,17 +1181,32 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app); // Initialize Firebase Auth
+        const googleProvider = new GoogleAuthProvider(); // Google Auth Provider
+
         const ordersRef = ref(db, "orders");
         const settingsRef = ref(db, "settings");
         const categoriesRef = ref(db, "categories");
         const productsRef = ref(db, "products");
+        const homepageSettingsRef = ref(db, "homepageSettings");
+        const usersRef = ref(db, "users"); // New Firebase reference for registered users
+        const anonymousProfilesRef = ref(db, "anonymousProfiles"); // New Firebase reference for anonymous guests
+        const userActivityLogsRef = ref(db, "userActivityLogs"); // New Firebase reference for user activity logs
+        const moderatorLogsRef = ref(db, "moderatorLogs"); // New Firebase reference for moderator activity logs
 
         // Global data storage
         window.adminData = {
             orders: [],
             products: [],
             categories: [],
-            settings: {} // Will now contain deliveryPricesByCity and defaultDeliveryPrice
+            users: [], // Registered users
+            anonymousProfiles: [], // Anonymous guest profiles
+            settings: {},
+            homepageSettings: {},
+            userActivityLogs: {}, // Stores logs per user ID
+            moderatorLogs: [], // Stores all moderator logs
+            currentUser: null, // Stores the current authenticated user from Firebase Auth
+            currentUserRole: 'عادي' // Default role, updated after login
         };
 
         // --- Utility Functions ---
@@ -766,6 +1269,68 @@
             };
         };
 
+        /**
+         * Function to generate a consistent guest ID based on available order info.
+         * This ID should be stable for the same guest across multiple orders.
+         * @param {Object} order - The order object.
+         * @returns {string} - A consistent guest ID.
+         */
+        function generateGuestId(order) {
+            // Prioritize email, then phone, then name for consistency
+            if (order.email && order.email.trim() !== '') {
+                return `guest_email_${order.email.trim().toLowerCase().replace(/[.#$\[\]]/g, '_')}`; // Sanitize for Firebase key
+            }
+            if (order.phone && order.phone.trim() !== '') {
+                return `guest_phone_${order.phone.replace(/\D/g, '')}`; // Digits only
+            }
+            if (order.name && order.name.trim() !== '') {
+                return `guest_name_${order.name.trim().toLowerCase().replace(/\s/g, '_').replace(/[.#$\[\]]/g, '_')}`;
+            }
+            // Fallback if no identifiable info. This guest will be unique per order.
+            return `guest_unknown_${order.id}`;
+        }
+
+        /**
+         * Logs an activity to both user-specific and moderator logs if applicable.
+         * @param {string} userId - The ID of the user performing the action.
+         * @param {string} action - A short code for the action (e.g., 'login', 'editProduct').
+         * @param {string} details - A descriptive string of what happened.
+         */
+        async function logActivity(userId, action, details) {
+            const timestamp = new Date().toLocaleString('ar-EG');
+            const logEntry = {
+                action,
+                timestamp,
+                details
+            };
+
+            try {
+                // Log to user's activity log
+                await push(ref(db, `userActivityLogs/${userId}`), logEntry);
+                console.log(`User activity logged for ${userId}: ${action} - ${details}`);
+
+                // Check if the current user is a moderator or admin and log to moderator logs
+                const currentUser = window.adminData.currentUser;
+                if (currentUser) {
+                    const userProfile = window.adminData.users.find(u => u.id === currentUser.uid);
+                    if (userProfile && (userProfile.role === 'مشرف' || userProfile.role === 'مدير')) {
+                        const moderatorLogEntry = {
+                            userId: currentUser.uid,
+                            userName: userProfile.name || currentUser.displayName || 'N/A',
+                            action,
+                            timestamp,
+                            details
+                        };
+                        await push(moderatorLogsRef, moderatorLogEntry);
+                        console.log(`Moderator activity logged for ${userProfile.name}: ${action} - ${details}`);
+                    }
+                }
+            } catch (error) {
+                console.error("Error logging activity:", error);
+                showNotification("فشل تسجيل النشاط", "error");
+            }
+        }
+
 
         // --- Data Loading Functions ---
 
@@ -777,29 +1342,18 @@
                 const settings = snapshot.val();
                 if (settings) {
                     window.adminData.settings = settings;
-                    // Ensure deliveryPricesByCity is an object, even if null/undefined in Firebase
-                    if (!window.adminData.settings.deliveryPricesByCity) {
-                        window.adminData.settings.deliveryPricesByCity = {};
-                    }
                     renderSettings();
-                    renderCityDeliveryPricesTable(); // Render city prices table after settings are loaded
                 } else {
                     // Default settings if none exist in Firebase
                     window.adminData.settings = {
                         storeName: "متجرنا الإلكتروني",
-                        contactPhone: "+9647823053419",
-                        contactWhatsapp: "+9647823053419",
+                        contactPhone: "+964 782 305 3419",
+                        contactWhatsapp: "+964 782 305 3419",
                         contactEmail: "info@zioshop.com",
-                        deliveryPricesByCity: { // Default cities
-                            "بغداد": 5000,
-                            "البصرة": 7000,
-                            "أربيل": 6000
-                        },
-                        defaultDeliveryPrice: 5000, // Default price
+                        deliveryPricesByCity: [], // Initialize as empty array for city-based delivery
                         thankYouMessage: "شكراً لثقتك بنا! سيتواصل معك فريقنا قريباً لتأكيد طلبك."
                     };
                     renderSettings();
-                    renderCityDeliveryPricesTable();
                 }
                 showNotification("تم تحميل الإعدادات", "info");
             }, (error) => {
@@ -807,6 +1361,64 @@
                 showNotification("خطأ في تحميل الإعدادات", "error");
             });
         }
+
+        /**
+         * Loads homepage settings from Firebase and updates the UI.
+         */
+        function loadHomepageSettings() {
+            onValue(homepageSettingsRef, (snapshot) => {
+                const settings = snapshot.val();
+                if (settings) {
+                    window.adminData.homepageSettings = settings;
+                } else {
+                    // Default homepage settings if none exist
+                    window.adminData.homepageSettings = {
+                        mainBanner: {
+                            enabled: true,
+                            image: '',
+                            title: 'عنوان البانر الرئيسي',
+                            description: 'وصف جذاب للبانر الرئيسي هنا.',
+                            ctaText: 'تسوق الآن',
+                            ctaLink: '#'
+                        },
+                        productCategories: {
+                            enabled: true,
+                            selectedCategories: []
+                        },
+                        featuredProducts: {
+                            enabled: true,
+                            type: 'most_selling' // 'most_selling', 'new_products', 'discounts'
+                        },
+                        internalBanners: {
+                            enabled: true,
+                            banners: [] // Array of { image: '', link: '' }
+                        },
+                        customerReviews: {
+                            enabled: true
+                        },
+                        blog: {
+                            enabled: true
+                        },
+                        footer: {
+                            contactEnabled: true,
+                            socialEnabled: true,
+                            customLinksEnabled: true,
+                            facebook: '',
+                            instagram: '',
+                            twitter: '',
+                            linkedin: '',
+                            customLinks: [] // Array of { text: '', link: '' }
+                        }
+                    };
+                }
+                renderHomepageSettings();
+                showNotification("تم تحميل إعدادات الصفحة الرئيسية", "info");
+            }, (error) => {
+                console.error("Error loading homepage settings:", error);
+                showNotification("خطأ في تحميل إعدادات الصفحة الرئيسية", "error");
+            });
+        }
+
 
         /**
          * Loads categories from Firebase and updates the categories table and product category dropdown.
@@ -825,6 +1437,10 @@
                 // If the add/edit product modal is open, re-render category dropdown
                 if (!document.getElementById('product-modal').classList.contains('hidden')) {
                     populateCategoryDropdown('product-category');
+                }
+                // Also populate homepage categories dropdown
+                if (!document.getElementById('homepage-settings-section').classList.contains('hidden')) {
+                    populateHomepageCategoryDropdown();
                 }
                 showNotification("تم تحميل الأقسام", "info");
             }, (error) => {
@@ -856,15 +1472,26 @@
 
         /**
          * Loads orders from Firebase and updates the orders table.
+         * Also, ensures orders have a userId for user management features and updates anonymous profiles.
          */
         function loadOrders() {
             onValue(ordersRef, (snapshot) => {
                 const orders = [];
                 snapshot.forEach((childSnapshot) => {
-                    orders.push({
+                    const order = {
                         id: childSnapshot.key,
                         ...childSnapshot.val()
-                    });
+                    };
+                    // If order doesn't have a userId or it's a legacy guest ID, generate a consistent one
+                    // and update the anonymous profile.
+                    if (!order.userId || order.userId.startsWith('guest_') || order.userId.length !== 28) {
+                        const guestId = generateGuestId(order);
+                        order.userId = guestId; // Assign the consistent guest ID to the order object
+                        // Persist this guestId to the order in Firebase (optional, but good for consistency)
+                        set(ref(db, `orders/${order.id}/userId`), guestId);
+                        updateAnonymousProfileFromOrder(order);
+                    }
+                    orders.push(order);
                 });
                 window.adminData.orders = orders.reverse(); // Show newest first
                 renderOrdersTable(); // Call with no search query initially
@@ -874,6 +1501,145 @@
                 showNotification("خطأ في تحميل الطلبات", "error");
             });
         }
+
+        /**
+         * Loads registered users from Firebase and updates the users table.
+         */
+        function loadUsers() {
+            onValue(usersRef, (snapshot) => {
+                const users = [];
+                snapshot.forEach((childSnapshot) => {
+                    users.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                window.adminData.users = users;
+                renderUsersTable(); // Call with no search query initially
+
+                // Update current user's role if logged in
+                if (window.adminData.currentUser) {
+                    const loggedInUser = users.find(u => u.id === window.adminData.currentUser.uid);
+                    if (loggedInUser) {
+                        window.adminData.currentUserRole = loggedInUser.role || 'عادي';
+                    } else {
+                        window.adminData.currentUserRole = 'عادي'; // Default if profile not found
+                    }
+                    updateAdminUIBasedOnRole(); // Update UI visibility based on new role
+                }
+                showNotification("تم تحميل المستخدمين المسجلين", "info");
+            }, (error) => {
+                console.error("Error loading registered users:", error);
+                showNotification("خطأ في تحميل المستخدمين المسجلين", "error");
+            });
+        }
+
+        /**
+         * Loads anonymous profiles from Firebase and updates the anonymous users table.
+         */
+        function loadAnonymousProfiles() {
+            onValue(anonymousProfilesRef, (snapshot) => {
+                const profiles = [];
+                snapshot.forEach((childSnapshot) => {
+                    profiles.push({
+                        id: childSnapshot.key,
+                        ...childSnapshot.val()
+                    });
+                });
+                window.adminData.anonymousProfiles = profiles;
+                renderAnonymousProfilesTable();
+                showNotification("تم تحميل سجلات الضيوف", "info");
+            }, (error) => {
+                console.error("Error loading anonymous profiles:", error);
+                showNotification("خطأ في تحميل سجلات الضيوف", "error");
+            });
+        }
+
+        /**
+         * Loads user activity logs from Firebase.
+         */
+        function loadUserActivityLogs() {
+            onValue(userActivityLogsRef, (snapshot) => {
+                const logs = {};
+                snapshot.forEach((userSnapshot) => {
+                    const userId = userSnapshot.key;
+                    const userLogs = [];
+                    userSnapshot.forEach((logEntrySnapshot) => {
+                        userLogs.push({
+                            id: logEntrySnapshot.key,
+                            ...logEntrySnapshot.val()
+                        });
+                    });
+                    logs[userId] = userLogs.reverse(); // Show newest first
+                });
+                window.adminData.userActivityLogs = logs;
+                showNotification("تم تحميل سجلات نشاط المستخدمين", "info");
+            }, (error) => {
+                console.error("Error loading user activity logs:", error);
+                showNotification("خطأ في تحميل سجلات نشاط المستخدمين", "error");
+            });
+        }
+
+        /**
+         * Loads moderator activity logs from Firebase.
+         */
+        function loadModeratorLogs() {
+            onValue(moderatorLogsRef, (snapshot) => {
+                const logs = [];
+                snapshot.forEach((logEntrySnapshot) => {
+                    logs.push({
+                        id: logEntrySnapshot.key,
+                        ...logEntrySnapshot.val()
+                    });
+                });
+                window.adminData.moderatorLogs = logs.reverse(); // Show newest first
+                renderModeratorLogsTable();
+                populateModeratorLogFilters();
+                showNotification("تم تحميل سجلات المشرفين", "info");
+            }, (error) => {
+                console.error("Error loading moderator logs:", error);
+                showNotification("خطأ في تحميل سجلات المشرفين", "error");
+            });
+        }
+
+
+        /**
+         * Updates or creates an anonymous profile based on a new order from a guest.
+         * This function is called from loadOrders.
+         * @param {Object} order - The order object.
+         */
+        async function updateAnonymousProfileFromOrder(order) {
+            const guestId = order.userId; // This is now guaranteed to be a guest_... ID
+            const guestPhone = order.phone || '';
+            const guestName = order.name || '';
+            const guestEmail = order.email || ''; 
+            const lastOrderDate = order.createdAt || new Date().toLocaleString('ar-EG');
+
+            const anonymousProfileRefForId = ref(db, `anonymousProfiles/${guestId}`);
+            
+            // Fetch once to avoid infinite loops with onValue listeners
+            const snapshot = await new Promise(resolve => onValue(anonymousProfileRefForId, resolve, { onlyOnce: true }));
+
+            if (snapshot.exists()) {
+                // Update existing profile
+                await update(anonymousProfileRefForId, {
+                    lastOrderDate: lastOrderDate,
+                    name: guestName || snapshot.val().name, // Update if new name is provided or existing is empty
+                    phone: guestPhone || snapshot.val().phone, // Update if new phone is provided or existing is empty
+                    email: guestEmail || snapshot.val().email // Update if new email is provided or existing is empty
+                });
+            } else {
+                // Create new profile
+                await set(anonymousProfileRefForId, {
+                    name: guestName,
+                    phone: guestPhone,
+                    email: guestEmail,
+                    firstOrderDate: lastOrderDate,
+                    lastOrderDate: lastOrderDate
+                });
+            }
+        }
+
 
         // --- Rendering Functions ---
 
@@ -981,7 +1747,7 @@
 
             const statusSelect = document.getElementById("order-details-status");
             statusSelect.value = order.status;
-            statusSelect.onchange = () => updateOrderStatus(order.id, statusSelect.value);
+            statusSelect.onchange = () => updateOrderStatus(order.id, statusSelect.value, order.status);
 
             document.getElementById("order-details-modal").classList.remove("hidden");
         };
@@ -990,11 +1756,15 @@
          * Updates the status of a specific order in Firebase.
          * @param {string} orderId - The ID of the order to update.
          * @param {string} newStatus - The new status for the order.
+         * @param {string} oldStatus - The old status for logging purposes.
          */
-        window.updateOrderStatus = async function(orderId, newStatus) {
+        window.updateOrderStatus = async function(orderId, newStatus, oldStatus) {
             try {
                 await set(ref(db, `orders/${orderId}/status`), newStatus);
                 showNotification("تم تحديث حالة الطلب بنجاح", "success");
+                if (window.adminData.currentUser) {
+                    logActivity(window.adminData.currentUser.uid, 'updateOrder', `تم تغيير حالة الطلب رقم ${orderId} من "${oldStatus}" إلى "${newStatus}"`);
+                }
             } catch (error) {
                 console.error("Error updating order status:", error);
                 showNotification("فشل تحديث حالة الطلب", "error");
@@ -1011,8 +1781,10 @@
                     try {
                         await remove(ref(db, `orders/${orderId}`));
                         showNotification("تم حذف الطلب بنجاح", "success");
-                    }
-                    catch (error) {
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'deleteOrder', `تم حذف الطلب رقم ${orderId}`);
+                        }
+                    } catch (error) {
                         console.error("Error deleting order:", error);
                         showNotification("فشل حذف الطلب", "error");
                     }
@@ -1042,27 +1814,32 @@
 
             let html = '';
             if (filteredProducts.length === 0) {
-                html = `<tr><td colspan="8" class="text-center py-4 text-gray-500">لا توجد منتجات مطابقة لبحثك.</td></tr>`;
+                html = `<tr><td colspan="10" class="text-center py-4 text-gray-500">لا توجد منتجات مطابقة لبحثك.</td></tr>`;
             } else {
                 filteredProducts.forEach(product => {
                     const originalPrice = (product.price || 0).toLocaleString('ar-EG');
                     let salePriceHtml = 'N/A';
-                    if (product.isSale) {
-                        if (product.salePrice != null) { // Prefer saved salePrice
-                            salePriceHtml = `${product.salePrice.toLocaleString('ar-EG')} د.ع`;
-                        } else if (product.discountPercentage != null) { // Fallback to calculate from discount if salePrice not explicitly set
-                            const calculatedSalePrice = product.price * (1 - product.discountPercentage / 100);
-                            salePriceHtml = `${calculatedSalePrice.toLocaleString('ar-EG')} د.ع`;
-                        }
+                    // Prioritize custom discount price if enabled
+                    if (product.isSale && product.useCustomDiscountPrice && product.customDiscountPrice != null) {
+                        salePriceHtml = `${product.customDiscountPrice.toLocaleString('ar-EG')} د.ع (خصم يدوي)`;
+                    } else if (product.isSale && product.discountPercentage != null) {
+                        const calculatedSalePrice = product.price * (1 - product.discountPercentage / 100);
+                        salePriceHtml = `${calculatedSalePrice.toLocaleString('ar-EG')} د.ع`;
                     }
-
-                    // Use the first image for display in the table, or a placeholder
-                    const displayImage = product.images && product.images.length > 0 ? product.images[0] : 'https://placehold.co/80x80/E0E7FF/4F46E5?text=Product';
+                    // Determine featured status display
+                    const isFeaturedHtml = product.isFeatured ? 
+                        `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">نعم</span>` : 
+                        `<span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">لا</span>`;
+                    
+                    // NEW: Active status display
+                    const isActiveHtml = product.isActive ?
+                        `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">مفعل</span>` :
+                        `<span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">غير مفعل</span>`;
 
                     html += `
                     <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4" data-label="صورة">
-                            <img src="${displayImage}" 
+                            <img src="${product.image || 'https://placehold.co/80x80/E0E7FF/4F46E5?text=Product'}" 
                                  onerror="this.onerror=null;this.src='https://placehold.co/80x80/E0E7FF/4F46E5?text=Product';"
                                  class="w-20 h-20 object-cover rounded-md" alt="${product.name || 'Product Image'}">
                         </td>
@@ -1073,6 +1850,14 @@
                         <td class="px-6 py-4" data-label="المخزون">${product.inventory || 0}</td>
                         <td class="px-6 py-4" data-label="جديد">
                             <span class="px-2 py-1 rounded-full text-xs font-medium ${product.isNew ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}">${product.isNew ? 'نعم' : 'لا'}</span>
+                        </td>
+                        <td class="px-6 py-4" data-label="الرئيسية">${isFeaturedHtml}</td>
+                        <td class="px-6 py-4" data-label="الحالة">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${product.isActive ? 'checked' : ''} onchange="toggleProductStatus('${product.id}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="ml-2 text-sm">${product.isActive ? 'مفعل' : 'غير مفعل'}</span>
                         </td>
                         <td class="px-6 py-4 text-right" data-label="إجراءات">
                             <button onclick="openProductModal('${product.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
@@ -1090,37 +1875,24 @@
         }
 
         /**
-         * Adds a new image URL input field to the product modal with a preview.
+         * Rounds the value in the product price input field to the nearest 250, 500, or 1000.
+         * Logic:
+         * If X % 250 is less than or equal to 124, round down to the nearest multiple of 250.
+         * If X % 250 is greater than or equal to 125, round up to the nearest multiple of 250.
          */
-        window.addImageUrlField = function(imageUrl = '') {
-            const container = document.getElementById('product-images-container');
-            const div = document.createElement('div');
-            div.className = 'flex items-center space-x-2'; // Tailwind classes for spacing
-            div.innerHTML = `
-                <input type="url" class="product-image-url mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="رابط الصورة" value="${imageUrl}">
-                <img src="${imageUrl || 'https://placehold.co/40x40/E0E7FF/4F46E5?text=IMG'}" 
-                     onerror="this.onerror=null;this.src='https://placehold.co/40x40/E0E7FF/4F46E5?text=IMG';"
-                     class="product-image-preview">
-                <button type="button" onclick="removeImageUrlField(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-md text-sm flex-shrink-0">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            container.appendChild(div);
+        window.roundProductPrice = function() {
+            const priceInput = document.getElementById('product-price');
+            if (priceInput && !isNaN(parseFloat(priceInput.value))) {
+                let price = parseFloat(priceInput.value);
+                const remainder = price % 250;
 
-            // Add event listener to the newly created input for live preview
-            const newImageInput = div.querySelector('.product-image-url');
-            const newImagePreview = div.querySelector('.product-image-preview');
-            newImageInput.addEventListener('input', function() {
-                newImagePreview.src = this.value;
-            });
-        };
-
-        /**
-         * Removes an image URL input field from the product modal.
-         * @param {HTMLElement} button - The remove button element.
-         */
-        window.removeImageUrlField = function(button) {
-            button.closest('div').remove();
+                if (remainder <= 124) {
+                    price = price - remainder;
+                } else {
+                    price = price + (250 - remainder);
+                }
+                priceInput.value = price;
+            }
         };
 
         /**
@@ -1133,14 +1905,13 @@
             form.reset(); // Clear form
             document.getElementById("product-id").value = productId; // Set hidden ID
 
-            // Clear existing image URL fields
-            document.getElementById('product-images-container').innerHTML = '';
-
-            populateCategoryDropdown('product-category');
-
-            // Get sale-related fields container
+            // Get sale-related fields container and checkboxes
             const saleFieldsContainer = document.getElementById('sale-fields-container');
             const productIsSaleCheckbox = document.getElementById('product-is-sale');
+            const productUseCustomDiscountCheckbox = document.getElementById('product-use-custom-discount');
+            const customDiscountPriceContainer = document.getElementById('custom-discount-price-container');
+            const additionalImagesContainer = document.getElementById('additional-images-container');
+            additionalImagesContainer.innerHTML = ''; // Clear existing additional images
 
             if (productId) {
                 // Edit existing product
@@ -1151,26 +1922,41 @@
                     document.getElementById("product-description").value = product.description || '';
                     document.getElementById("product-price").value = product.price || '';
                     document.getElementById("product-inventory").value = product.inventory || '';
-                    // Populate multiple image URLs
-                    if (product.images && product.images.length > 0) {
-                        product.images.forEach(imgUrl => addImageUrlField(imgUrl));
-                    } else {
-                        addImageUrlField(); // Add at least one empty field
-                    }
-                    document.getElementById("product-category").value = product.categoryId || ''; // Use categoryId
+                    document.getElementById("product-image").value = product.image || ''; // Primary image
                     
+                    // Set category dropdown value
+                    populateCategoryDropdown('product-category'); // Populate first
+                    document.getElementById("product-category").value = product.categoryId || ''; // Then set value
+
+                    // Load additional images
+                    if (product.additionalImages && product.additionalImages.length > 0) {
+                        product.additionalImages.forEach(imgUrl => addAdditionalImageRow(imgUrl));
+                    } else {
+                        addAdditionalImageRow(); // Add one empty row if none exist
+                    }
+
+                    document.getElementById("product-is-new").checked = product.isNew || false;
+                    document.getElementById("product-is-featured").checked = product.isFeatured || false;
+                    document.getElementById("product-is-active").checked = product.isActive !== false; // NEW: Set active status
                     productIsSaleCheckbox.checked = product.isSale || false;
                     document.getElementById("product-discount-percentage").value = product.discountPercentage || '';
-                    document.getElementById("product-sale-price").value = product.salePrice || ''; // Populate new sale price field
                     document.getElementById("product-sale-start-date").value = product.saleStartDate || '';
                     document.getElementById("product-sale-end-date").value = product.saleEndDate || '';
+
+                    // Load custom discount price
+                    productUseCustomDiscountCheckbox.checked = product.useCustomDiscountPrice || false;
+                    document.getElementById("product-custom-discount-price").value = product.customDiscountPrice || '';
                 }
             } else {
                 // Add new product
                 document.getElementById("product-modal-title").textContent = "إضافة منتج جديد";
-                // Ensure sale fields are hidden by default for new products
+                document.getElementById("product-is-new").checked = false;
+                document.getElementById("product-is-featured").checked = false;
+                document.getElementById("product-is-active").checked = true; // NEW: Default to active for new product
                 productIsSaleCheckbox.checked = false;
-                addImageUrlField(); // Add one empty image field for new product
+                productUseCustomDiscountCheckbox.checked = false; // Default to unchecked for new product
+                addAdditionalImageRow(); // Add one empty row for new product
+                populateCategoryDropdown('product-category'); // Populate for new product
             }
 
             // Toggle visibility of sale fields based on checkbox state
@@ -1178,9 +1964,49 @@
                 saleFieldsContainer.classList.remove('hidden');
             } else {
                 saleFieldsContainer.classList.add('hidden');
+                // Clear sale fields when checkbox is unchecked
+                document.getElementById("product-discount-percentage").value = '';
+                document.getElementById("product-sale-start-date").value = '';
+                document.getElementById("product-sale-end-date").value = '';
+                productUseCustomDiscountCheckbox.checked = false; // Also uncheck custom discount
+                customDiscountPriceContainer.classList.add('hidden'); // Hide custom discount price field
+                document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
+            }
+
+            // Toggle visibility of custom discount price based on its checkbox state
+            if (productUseCustomDiscountCheckbox.checked) {
+                customDiscountPriceContainer.classList.remove('hidden');
+            } else {
+                customDiscountPriceContainer.classList.add('hidden');
+                document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
             }
 
             modal.classList.remove("hidden");
+        };
+
+        /**
+         * Adds a new input field for an additional product image URL.
+         * @param {string} [imageUrl=''] - The image URL to pre-fill the input with.
+         */
+        window.addAdditionalImageRow = function(imageUrl = '') {
+            const container = document.getElementById('additional-images-container');
+            const div = document.createElement('div');
+            div.className = 'flex items-center mb-2 gap-2';
+            div.innerHTML = `
+                <input type="url" class="additional-image-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${imageUrl}" placeholder="رابط صورة إضافية">
+                <button type="button" onclick="removeAdditionalImageRow(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm flex-shrink-0">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(div);
+        };
+
+        /**
+         * Removes an additional image URL input field.
+         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
+         */
+        window.removeAdditionalImageRow = function(buttonElement) {
+            buttonElement.closest('.flex.items-center.mb-2.gap-2').remove();
         };
 
         /**
@@ -1191,6 +2017,9 @@
             const selectElement = document.getElementById(selectId);
             if (!selectElement) return;
 
+            // Save current selection (important for multi-selects, though this is single)
+            const currentSelectedValue = selectElement.value;
+
             selectElement.innerHTML = '<option value="">اختر قسماً</option>'; // Default option
             window.adminData.categories.forEach(category => {
                 const option = document.createElement('option');
@@ -1198,6 +2027,11 @@
                 option.textContent = category.name;
                 selectElement.appendChild(option);
             });
+
+            // Restore selection
+            if (currentSelectedValue) {
+                selectElement.value = currentSelectedValue;
+            }
         }
 
         /**
@@ -1209,49 +2043,66 @@
             const description = document.getElementById("product-description").value.trim();
             const price = parseFloat(document.getElementById("product-price").value);
             const inventory = parseInt(document.getElementById("product-inventory").value);
-            // Get all image URLs
-            const imageUrlInputs = document.querySelectorAll('.product-image-url');
-            const images = Array.from(imageUrlInputs).map(input => input.value.trim()).filter(url => url !== '');
-
+            const image = document.getElementById("product-image").value.trim(); // Primary image
             const categoryId = document.getElementById("product-category").value;
             const isNew = document.getElementById("product-is-new").checked;
+            const isFeatured = document.getElementById("product-is-featured").checked;
+            const isActive = document.getElementById("product-is-active").checked; // NEW: Get active status
             const isSale = document.getElementById("product-is-sale").checked;
 
+            // Collect additional image URLs
+            const additionalImages = Array.from(document.querySelectorAll('#additional-images-container .additional-image-input'))
+                                          .map(input => input.value.trim())
+                                          .filter(url => url !== ''); // Filter out empty URLs
+
             let discountPercentage = null;
-            let salePrice = null; // New variable for explicit sale price
             let saleStartDate = null;
             let saleEndDate = null;
+            let useCustomDiscountPrice = document.getElementById("product-use-custom-discount").checked;
+            let customDiscountPrice = null;
 
             if (isSale) {
-                discountPercentage = parseFloat(document.getElementById("product-discount-percentage").value);
-                salePrice = parseFloat(document.getElementById("product-sale-price").value); // Get value from new field
-                saleStartDate = document.getElementById("product-sale-start-date").value;
-                saleEndDate = document.getElementById("product-sale-end-date").value;
+                if (useCustomDiscountPrice) {
+                    customDiscountPrice = parseFloat(document.getElementById("product-custom-discount-price").value);
+                    if (isNaN(customDiscountPrice) || customDiscountPrice < 0) {
+                        showNotification("يرجى إدخال سعر خصم نهائي صحيح.", "error");
+                        return;
+                    }
+                    // If custom price is used, percentage and dates are not strictly required for calculation
+                    // but we might still save them if they were entered previously.
+                    discountPercentage = parseFloat(document.getElementById("product-discount-percentage").value) || null;
+                    saleStartDate = document.getElementById("product-sale-start-date").value || null;
+                    saleEndDate = document.getElementById("product-sale-end-date").value || null;
 
-                if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
-                    showNotification("يرجى إدخال نسبة تخفيض صحيحة بين 0 و 100.", "error");
-                    return;
+                } else {
+                    discountPercentage = parseFloat(document.getElementById("product-discount-percentage").value);
+                    saleStartDate = document.getElementById("product-sale-start-date").value;
+                    saleEndDate = document.getElementById("product-sale-end-date").value;
+
+                    if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
+                        showNotification("يرجى إدخال نسبة تخفيض صحيحة بين 0 و 100.", "error");
+                        return;
+                    }
+                    if (!saleStartDate || !saleEndDate) {
+                        showNotification("يرجى تحديد تاريخ بدء وانتهاء العرض.", "error");
+                        return;
+                    }
+                    if (new Date(saleStartDate) > new Date(saleEndDate)) {
+                        showNotification("تاريخ بدء العرض يجب أن يكون قبل تاريخ انتهائه.", "error");
+                        return;
+                    }
                 }
-                if (isNaN(salePrice) || salePrice < 0) { // Validate new sale price field
-                    showNotification("يرجى إدخال سعر عرض صحيح.", "error");
-                    return;
-                }
-                if (!saleStartDate || !saleEndDate) {
-                    showNotification("يرجى تحديد تاريخ بدء وانتهاء العرض.", "error");
-                    return;
-                }
-                if (new Date(saleStartDate) > new Date(saleEndDate)) {
-                    showNotification("تاريخ بدء العرض يجب أن يكون قبل تاريخ انتهائه.", "error");
-                    return;
-                }
+            } else {
+                // If not on sale, clear all sale-related fields
+                useCustomDiscountPrice = false;
+                customDiscountPrice = null;
+                discountPercentage = null;
+                saleStartDate = null;
+                saleEndDate = null;
             }
 
             if (!name || isNaN(price) || isNaN(inventory) || price <= 0 || inventory < 0 || !categoryId) {
                 showNotification("يرجى ملء جميع الحقول المطلوبة بشكل صحيح (الاسم، السعر، المخزون، القسم).", "error");
-                return;
-            }
-            if (images.length === 0) {
-                showNotification("يرجى إضافة رابط صورة واحد على الأقل للمنتج.", "error");
                 return;
             }
 
@@ -1262,33 +2113,69 @@
                 description,
                 price,
                 inventory,
-                images, // Save as an array of image URLs
-                categoryId, // Store category ID
-                category: categoryName, // Store category name for display in store
+                image, // Primary image
+                additionalImages, // Save additional images array
+                categoryId,
+                category: categoryName,
                 isNew,
+                isFeatured,
+                isActive, // NEW: Save active status
                 isSale,
-                discountPercentage: isSale ? discountPercentage : null,
-                salePrice: isSale ? salePrice : null, // Save the definitive sale price
-                saleStartDate: isSale ? saleStartDate : null,
-                saleEndDate: isSale ? saleEndDate : null,
+                discountPercentage: discountPercentage,
+                saleStartDate: saleStartDate,
+                saleEndDate: saleEndDate,
+                useCustomDiscountPrice: useCustomDiscountPrice, // Save custom discount flag
+                customDiscountPrice: customDiscountPrice, // Save custom discount price
                 createdAt: productId ? window.adminData.products.find(p => p.id === productId)?.createdAt : new Date().toLocaleString('ar-EG')
             };
 
             try {
                 if (productId) {
-                    // Update existing product
                     await set(ref(db, `products/${productId}`), productData);
                     showNotification("تم تحديث المنتج بنجاح", "success");
+                    if (window.adminData.currentUser) {
+                        logActivity(window.adminData.currentUser.uid, 'editProduct', `تم تعديل المنتج: ${name} (ID: ${productId})`);
+                    }
                 } else {
-                    // Add new product
-                    await push(productsRef, productData);
+                    const newProductRef = await push(productsRef, productData);
                     showNotification("تمت إضافة المنتج بنجاح", "success");
+                    if (window.adminData.currentUser) {
+                        logActivity(window.adminData.currentUser.uid, 'addProduct', `تم إضافة منتج جديد: ${name} (ID: ${newProductRef.key})`);
+                    }
                 }
                 document.getElementById("product-modal").classList.add("hidden");
             } catch (error) {
                 console.error("Error saving product:", error);
                 showNotification("فشل حفظ المنتج", "error");
             }
+        };
+
+        /**
+         * Toggles the active status of a product.
+         * @param {string} productId - The ID of the product to toggle.
+         * @param {boolean} newStatus - The new active status (true for active, false for inactive).
+         */
+        window.toggleProductStatus = async function(productId, newStatus) {
+            const productName = window.adminData.products.find(p => p.id === productId)?.name || 'N/A';
+            const statusText = newStatus ? 'مفعل' : 'غير مفعل';
+            showConfirmModal(`هل أنت متأكد أنك تريد ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} المنتج "${productName}"؟`, async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        await update(ref(db, `products/${productId}`), { isActive: newStatus });
+                        showNotification(`تم ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} المنتج بنجاح.`, "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'toggleProductActive', `تم تغيير تفعيل المنتج: ${productName} (ID: ${productId}) إلى ${statusText}`);
+                        }
+                    } catch (error) {
+                        console.error("Error toggling product status:", error);
+                        showNotification("فشل تغيير حالة المنتج", "error");
+                    }
+                } else {
+                    // Revert the checkbox state if the user cancels
+                    document.querySelector(`#products-table-body input[type="checkbox"][onchange="toggleProductStatus('${productId}', this.checked)"]`).checked = !newStatus;
+                    showNotification("تم إلغاء العملية", "info");
+                }
+            });
         };
 
         /**
@@ -1299,8 +2186,12 @@
             showConfirmModal("هل أنت متأكد أنك تريد حذف هذا المنتج؟", async (confirmed) => {
                 if (confirmed) {
                     try {
+                        const productName = window.adminData.products.find(p => p.id === productId)?.name || 'N/A';
                         await remove(ref(db, `products/${productId}`));
                         showNotification("تم حذف المنتج بنجاح", "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'deleteProduct', `تم حذف المنتج: ${productName} (ID: ${productId})`);
+                        }
                     } catch (error) {
                         console.error("Error deleting product:", error);
                         showNotification("فشل حذف المنتج", "error");
@@ -1330,9 +2221,14 @@
 
             let html = '';
             if (filteredCategories.length === 0) {
-                html = `<tr><td colspan="4" class="text-center py-4 text-gray-500">لا توجد أقسام مطابقة لبحثك.</td></tr>`;
+                html = `<tr><td colspan="5" class="text-center py-4 text-gray-500">لا توجد أقسام مطابقة لبحثك.</td></tr>`;
             } else {
                 filteredCategories.forEach(category => {
+                    // NEW: Active status display
+                    const isActiveHtml = category.isActive ?
+                        `<span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">مفعل</span>` :
+                        `<span class="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">غير مفعل</span>`;
+
                     html += `
                     <tr class="bg-white border-b hover:bg-gray-50">
                         <td class="px-6 py-4" data-label="صورة">
@@ -1342,6 +2238,13 @@
                         </td>
                         <td class="px-6 py-4" data-label="الاسم">${category.name || 'N/A'}</td>
                         <td class="px-6 py-4 text-sm text-gray-500" data-label="الوصف">${category.description || 'لا يوجد وصف'}</td>
+                        <td class="px-6 py-4" data-label="الحالة">
+                            <label class="toggle-switch">
+                                <input type="checkbox" ${category.isActive ? 'checked' : ''} onchange="toggleCategoryStatus('${category.id}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="ml-2 text-sm">${category.isActive ? 'مفعل' : 'غير مفعل'}</span>
+                        </td>
                         <td class="px-6 py-4 text-right" data-label="إجراءات">
                             <button onclick="openCategoryModal('${category.id}')" class="text-blue-600 hover:text-blue-900 mr-3">
                                 <i class="fas fa-edit"></i>
@@ -1375,10 +2278,12 @@
                     document.getElementById("category-name").value = category.name || '';
                     document.getElementById("category-description").value = category.description || '';
                     document.getElementById("category-image").value = category.image || '';
+                    document.getElementById("category-is-active").checked = category.isActive !== false; // NEW: Set active status
                 }
             } else {
                 // Add new category
                 document.getElementById("category-modal-title").textContent = "إضافة قسم جديد";
+                document.getElementById("category-is-active").checked = true; // NEW: Default to active for new category
             }
             modal.classList.remove("hidden");
         };
@@ -1391,6 +2296,7 @@
             const name = document.getElementById("category-name").value.trim();
             const description = document.getElementById("category-description").value.trim();
             const image = document.getElementById("category-image").value.trim();
+            const isActive = document.getElementById("category-is-active").checked; // NEW: Get active status
 
             if (!name) {
                 showNotification("يرجى إدخال اسم القسم.", "error");
@@ -1400,7 +2306,8 @@
             const categoryData = {
                 name,
                 description,
-                image
+                image,
+                isActive // NEW: Save active status
             };
 
             try {
@@ -1408,10 +2315,16 @@
                     // Update existing category
                     await set(ref(db, `categories/${categoryId}`), categoryData);
                     showNotification("تم تحديث القسم بنجاح", "success");
+                    if (window.adminData.currentUser) {
+                        logActivity(window.adminData.currentUser.uid, 'editCategory', `تم تعديل القسم: ${name} (ID: ${categoryId})`);
+                    }
                 } else {
                     // Add new category
-                    await push(categoriesRef, categoryData);
+                    const newCategoryRef = await push(categoriesRef, categoryData);
                     showNotification("تمت إضافة القسم بنجاح", "success");
+                    if (window.adminData.currentUser) {
+                        logActivity(window.adminData.currentUser.uid, 'addCategory', `تم إضافة قسم جديد: ${name} (ID: ${newCategoryRef.key})`);
+                    }
                 }
                 document.getElementById("category-modal").classList.add("hidden");
             } catch (error) {
@@ -1421,15 +2334,47 @@
         };
 
         /**
+         * Toggles the active status of a category.
+         * @param {string} categoryId - The ID of the category to toggle.
+         * @param {boolean} newStatus - The new active status (true for active, false for inactive).
+         */
+        window.toggleCategoryStatus = async function(categoryId, newStatus) {
+            const categoryName = window.adminData.categories.find(c => c.id === categoryId)?.name || 'N/A';
+            const statusText = newStatus ? 'مفعل' : 'غير مفعل';
+            showConfirmModal(`هل أنت متأكد أنك تريد ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} القسم "${categoryName}"؟`, async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        await update(ref(db, `categories/${categoryId}`), { isActive: newStatus });
+                        showNotification(`تم ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} القسم بنجاح.`, "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'toggleCategoryActive', `تم تغيير تفعيل القسم: ${categoryName} (ID: ${categoryId}) إلى ${statusText}`);
+                        }
+                    } catch (error) {
+                        console.error("Error toggling category status:", error);
+                        showNotification("فشل تغيير حالة القسم", "error");
+                    }
+                } else {
+                    // Revert the checkbox state if the user cancels
+                    document.querySelector(`#categories-table-body input[type="checkbox"][onchange="toggleCategoryStatus('${categoryId}', this.checked)"]`).checked = !newStatus;
+                    showNotification("تم إلغاء العملية", "info");
+                }
+            });
+        };
+
+        /**
          * Deletes a category from Firebase after user confirmation.
          * @param {string} categoryId - The ID of the category to delete.
          */
         window.deleteCategory = async function(categoryId) {
-            showConfirmModal("هل أنت متأكد أنك تريد حذف هذا القسم؟ سيؤثر هذا على المنتجات المرتبطة به.", async (confirmed) => {
+            showConfirmModal("هل أنت متأكد أنك تريد حذف هذا القسم؟", async (confirmed) => {
                 if (confirmed) {
                     try {
+                        const categoryName = window.adminData.categories.find(c => c.id === categoryId)?.name || 'N/A';
                         await remove(ref(db, `categories/${categoryId}`));
                         showNotification("تم حذف القسم بنجاح", "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'deleteCategory', `تم حذف القسم: ${categoryName} (ID: ${categoryId})`);
+                        }
                     } catch (error) {
                         console.error("Error deleting category:", error);
                         showNotification("فشل حذف القسم", "error");
@@ -1439,6 +2384,426 @@
                 }
             });
         };
+
+        /**
+         * Renders the registered users data into the users table, optionally filtered by a search query.
+         * @param {string} searchQuery - The text to filter users by.
+         */
+        function renderUsersTable(searchQuery = '') {
+            const tableBody = document.getElementById("users-table-body");
+            if (!tableBody) return;
+
+            const lowerCaseQuery = searchQuery.toLowerCase();
+            const filteredUsers = window.adminData.users.filter(user => {
+                const nameMatch = String(user.name || '').toLowerCase().includes(lowerCaseQuery);
+                const emailMatch = String(user.email || '').toLowerCase().includes(lowerCaseQuery);
+                const phoneMatch = String(user.phone || '').includes(lowerCaseQuery);
+                const roleMatch = String(user.role || '').toLowerCase().includes(lowerCaseQuery);
+                const statusMatch = String(user.status || '').toLowerCase().includes(lowerCaseQuery);
+                return nameMatch || emailMatch || phoneMatch || roleMatch || statusMatch;
+            });
+
+            let html = '';
+            if (filteredUsers.length === 0) {
+                html = `<tr><td colspan="6" class="text-center py-4 text-gray-500">لا توجد مستخدمون مطابقون لبحثك.</td></tr>`;
+            } else {
+                filteredUsers.forEach(user => {
+                    const statusClass = getUserStatusClass(user.status);
+                    html += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4" data-label="الاسم">${user.name || 'N/A'}</td>
+                        <td class="px-6 py-4" data-label="البريد الإلكتروني">${user.email || 'N/A'}</td>
+                        <td class="px-6 py-4" data-label="الهاتف">${user.phone || 'N/A'}</td>
+                        <td class="px-6 py-4" data-label="الحالة">
+                            <span class="px-2 py-1 rounded-full text-xs font-medium ${statusClass}">${user.status || 'غير معروف'}</span>
+                        </td>
+                        <td class="px-6 py-4" data-label="الدور">${user.role || 'عادي'}</td>
+                        <td class="px-6 py-4 text-right" data-label="إجراءات">
+                            <button onclick="showUserDetails('${user.id}')" class="inline-flex items-center justify-center text-blue-600 hover:text-blue-900 mr-3 p-2 rounded-md">
+                                <i class="fas fa-eye text-lg"></i>
+                            </button>
+                            <button onclick="openUserModal('${user.id}')" class="inline-flex items-center justify-center text-blue-600 hover:text-blue-900 mr-3 p-2 rounded-md">
+                                <i class="fas fa-edit text-lg"></i>
+                            </button>
+                            <button onclick="toggleUserStatus('${user.id}', '${user.status}')" class="inline-flex items-center justify-center text-yellow-600 hover:text-yellow-900 mr-3 p-2 rounded-md">
+                                <i class="fas fa-ban text-lg"></i>
+                            </button>
+                            <button onclick="deleteUser('${user.id}')" class="inline-flex items-center justify-center text-red-600 hover:text-red-900 p-2 rounded-md">
+                                <i class="fas fa-trash text-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
+                });
+            }
+            tableBody.innerHTML = html;
+        }
+
+        /**
+         * Renders the anonymous profiles data into the anonymous users table.
+         */
+        function renderAnonymousProfilesTable() {
+            const tableBody = document.getElementById("anonymous-users-table-body");
+            if (!tableBody) return;
+
+            let html = '';
+            if (window.adminData.anonymousProfiles.length === 0) {
+                html = `<tr><td colspan="5" class="text-center py-4 text-gray-500">لا توجد سجلات ضيوف.</td></tr>`;
+            } else {
+                window.adminData.anonymousProfiles.forEach(profile => {
+                    html += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4" data-label="الاسم">${profile.name || 'N/A'}</td>
+                        <td class="px-6 py-4" data-label="البريد الإلكتروني">${profile.email || 'N/A'}</td>
+                        <td class="px-6 py-4" data-label="الهاتف">${profile.phone || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500" data-label="آخر طلب">${profile.lastOrderDate || 'N/A'}</td>
+                        <td class="px-6 py-4 text-right" data-label="إجراءات">
+                            <button onclick="deleteAnonymousProfile('${profile.id}')" class="inline-flex items-center justify-center text-red-600 hover:text-red-900 p-2 rounded-md">
+                                <i class="fas fa-trash text-lg"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
+                });
+            }
+            tableBody.innerHTML = html;
+        }
+
+        /**
+         * Deletes a single anonymous profile from Firebase.
+         * @param {string} profileId - The ID of the anonymous profile to delete.
+         */
+        window.deleteAnonymousProfile = async function(profileId) {
+            showConfirmModal("هل أنت متأكد أنك تريد حذف سجل هذا الضيف؟", async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        await remove(ref(db, `anonymousProfiles/${profileId}`));
+                        showNotification("تم حذف سجل الضيف بنجاح", "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'deleteAnonymousProfile', `تم حذف سجل الضيف: ${profileId}`);
+                        }
+                    } catch (error) {
+                        console.error("Error deleting anonymous profile:", error);
+                        showNotification("فشل حذف سجل الضيف", "error");
+                    }
+                } else {
+                    showNotification("تم إلغاء العملية", "info");
+                }
+            });
+        };
+
+        /**
+         * Clears all anonymous profiles from Firebase.
+         */
+        window.clearAllAnonymousProfiles = async function() {
+            showConfirmModal("هل أنت متأكد أنك تريد مسح جميع سجلات الضيوف؟ هذا الإجراء لا يمكن التراجع عنه.", async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        await remove(anonymousProfilesRef);
+                        showNotification("تم مسح جميع سجلات الضيوف بنجاح", "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'clearAnonymousProfiles', `تم مسح جميع سجلات الضيوف`);
+                        }
+                    } catch (error) {
+                        console.error("Error clearing all anonymous profiles:", error);
+                        showNotification("فشل مسح سجلات الضيوف", "error");
+                    }
+                } else {
+                    showNotification("تم إلغاء العملية", "info");
+                }
+            });
+        };
+
+
+        /**
+         * Returns the appropriate Tailwind CSS class for a user status.
+         * @param {string} status - The user status string.
+         * @returns {string} - The CSS classes for the status badge.
+         */
+        function getUserStatusClass(status) {
+            switch (status) {
+                case "active": return "bg-green-100 text-green-800";
+                case "restricted": return "bg-yellow-100 text-yellow-800";
+                case "blocked": return "bg-red-100 text-red-800";
+                default: return "bg-gray-100 text-gray-800";
+            }
+        }
+
+        /**
+         * Opens the user add/edit modal and populates it with data if editing an existing user.
+         * @param {string|null} userId - The ID of the user to edit, or null for a new user.
+         */
+        window.openUserModal = function(userId = null) {
+            const modal = document.getElementById("user-modal");
+            const form = document.getElementById("user-form");
+            form.reset(); // Clear form
+            document.getElementById("user-id").value = userId; // Set hidden ID
+
+            const userRoleSelect = document.getElementById("user-role");
+            const currentUser = window.adminData.currentUser;
+            const currentLoggedInUserRole = window.adminData.currentUserRole;
+
+            if (userId) {
+                // Edit existing user
+                document.getElementById("user-modal-title").textContent = "تعديل المستخدم";
+                const user = window.adminData.users.find(u => u.id === userId);
+                if (user) {
+                    document.getElementById("user-name").value = user.name || '';
+                    document.getElementById("user-email").value = user.email || '';
+                    document.getElementById("user-phone").value = user.phone || '';
+                    document.getElementById("user-address").value = user.address || '';
+                    document.getElementById("user-status").value = user.status || 'active';
+                    userRoleSelect.value = user.role || 'عادي'; // Set role
+
+                    // Disable role change if current user is not admin OR trying to change an admin's role
+                    if (currentLoggedInUserRole !== 'مدير' || user.role === 'مدير') {
+                        userRoleSelect.disabled = true;
+                    } else {
+                        userRoleSelect.disabled = false;
+                    }
+
+                    // Disable editing own role if not admin, or if trying to change admin role
+                    if (currentUser && currentUser.uid === userId && currentLoggedInUserRole !== 'مدير') {
+                         userRoleSelect.disabled = true;
+                    }
+                }
+            } else {
+                // Add new user
+                document.getElementById("user-modal-title").textContent = "إضافة مستخدم جديد";
+                document.getElementById("user-status").value = 'active'; // Default status
+                userRoleSelect.value = 'عادي'; // Default role
+                userRoleSelect.disabled = (currentLoggedInUserRole !== 'مدير'); // Only admin can set roles for new users
+            }
+            modal.classList.remove("hidden");
+        };
+
+        /**
+         * Saves (adds or updates) a user in Firebase.
+         */
+        window.saveUser = async function() {
+            const userId = document.getElementById("user-id").value;
+            const name = document.getElementById("user-name").value.trim();
+            const email = document.getElementById("user-email").value.trim();
+            const phone = document.getElementById("user-phone").value.trim();
+            const address = document.getElementById("user-address").value.trim();
+            const status = document.getElementById("user-status").value;
+            const role = document.getElementById("user-role").value;
+
+            if (!name || !email) {
+                showNotification("الاسم والبريد الإلكتروني حقلان مطلوبان.", "error");
+                return;
+            }
+
+            const currentUser = window.adminData.currentUser;
+            const currentLoggedInUserRole = window.adminData.currentUserRole;
+
+            // Security check: Prevent non-admins from changing roles, or admins from changing other admins' roles
+            if (userId && currentUser && currentUser.uid !== userId) { // If editing another user
+                const targetUser = window.adminData.users.find(u => u.id === userId);
+                if (targetUser && targetUser.role === 'مدير' && currentLoggedInUserRole !== 'مدير') {
+                    showNotification("ليس لديك صلاحية لتغيير دور مدير آخر.", "error");
+                    return;
+                }
+                if (currentLoggedInUserRole !== 'مدير' && targetUser.role !== role) { // If not admin and trying to change role
+                    showNotification("ليس لديك صلاحية لتغيير أدوار المستخدمين.", "error");
+                    return;
+                }
+            }
+            // Security check: Prevent user from changing their own role if they are not an admin
+            if (userId && currentUser && currentUser.uid === userId && currentLoggedInUserRole !== 'مدير' && window.adminData.users.find(u => u.id === userId)?.role !== role) {
+                showNotification("ليس لديك صلاحية لتغيير دورك الخاص.", "error");
+                return;
+            }
+
+
+            const userData = {
+                name,
+                email,
+                phone,
+                address,
+                status,
+                role, // Save role
+                createdAt: userId ? window.adminData.users.find(u => u.id === userId)?.createdAt : new Date().toLocaleString('ar-EG'),
+                lastLogin: userId ? window.adminData.users.find(u => u.id === userId)?.lastLogin : new Date().toLocaleString('ar-EG') // Mock last login
+            };
+
+            try {
+                if (userId) {
+                    await set(ref(db, `users/${userId}`), userData);
+                    showNotification("تم تحديث المستخدم بنجاح", "success");
+                    if (window.adminData.currentUser) {
+                        logActivity(window.adminData.currentUser.uid, 'editUser', `تم تعديل المستخدم: ${name} (ID: ${userId}) - الدور: ${role}`);
+                    }
+                } else {
+                    const newUserRef = await push(usersRef, userData);
+                    showNotification("تمت إضافة المستخدم بنجاح", "success");
+                    if (window.adminData.currentUser) {
+                        logActivity(window.adminData.currentUser.uid, 'addUser', `تم إضافة مستخدم جديد: ${name} (ID: ${newUserRef.key}) - الدور: ${role}`);
+                    }
+                }
+                document.getElementById("user-modal").classList.add("hidden");
+            } catch (error) {
+                console.error("Error saving user:", error);
+                showNotification("فشل حفظ المستخدم", "error");
+            }
+        };
+
+        /**
+         * Displays the user details in a modal.
+         * @param {string} userId - The ID of the user to display.
+         */
+        window.showUserDetails = async function(userId) {
+            const user = window.adminData.users.find(u => u.id === userId);
+            if (!user) {
+                showNotification("المستخدم غير موجود", "error");
+                return;
+            }
+
+            document.getElementById("user-details-name").textContent = user.name || 'N/A';
+            document.getElementById("user-details-email").textContent = user.email || 'N/A';
+            document.getElementById("user-details-phone").textContent = user.phone || 'N/A';
+            document.getElementById("user-details-address").textContent = user.address || 'N/A';
+            document.getElementById("user-details-status").textContent = user.status || 'N/A';
+            document.getElementById("user-details-role").textContent = user.role || 'N/A';
+            document.getElementById("user-details-created-at").textContent = user.createdAt || 'N/A';
+            document.getElementById("user-details-last-login").textContent = user.lastLogin || 'N/A';
+
+            // Populate user orders
+            const userOrdersList = document.getElementById("user-orders-list");
+            let ordersHtml = '';
+
+            // Get all orders that match either the registered user's UID OR their name/phone/email (for past guest orders)
+            const userOrders = window.adminData.orders.filter(order => {
+                // Match by UID if available (for orders placed after registration)
+                if (order.userId === user.id) return true;
+
+                // Match by name, phone, and/or email for potential past guest orders
+                const nameMatch = user.name && order.name && user.name.toLowerCase() === order.name.toLowerCase();
+                const phoneMatch = user.phone && order.phone && user.phone === order.phone;
+                const emailMatch = user.email && order.email && user.email.toLowerCase() === order.email.toLowerCase();
+
+                // Consider an order a match if it's a guest order (starts with "guest_") AND at least one piece of info matches
+                if (order.userId && order.userId.startsWith('guest_') && (nameMatch || phoneMatch || emailMatch)) {
+                    return true;
+                }
+                return false;
+            }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)); // Sort by date descending
+
+            if (userOrders.length > 0) {
+                userOrders.forEach(order => {
+                    ordersHtml += `<li>رقم الفاتورة: ${order.invoiceNumber || 'N/A'} - الإجمالي: ${(order.total || 0).toLocaleString('ar-EG')} د.ع - الحالة: ${order.status || 'N/A'} (${order.createdAt || 'N/A'})</li>`;
+                });
+            } else {
+                ordersHtml = '<li>لا توجد طلبات لهذا المستخدم.</li>';
+            }
+            userOrdersList.innerHTML = ordersHtml;
+
+            // Populate user activities (from userActivityLogs)
+            const userActivitiesList = document.getElementById("user-activities-list");
+            const activities = window.adminData.userActivityLogs[userId] || [];
+            let activitiesHtml = '';
+            if (activities.length > 0) {
+                activities.forEach(activity => {
+                    activitiesHtml += `<li>[${activity.timestamp}] - ${activity.details}</li>`;
+                });
+            } else {
+                activitiesHtml = '<li>لا توجد نشاطات لعرضها لهذا المستخدم.</li>';
+            }
+            userActivitiesList.innerHTML = activitiesHtml;
+
+
+            // Set up action buttons in details modal
+            document.getElementById("user-details-edit-btn").onclick = () => {
+                document.getElementById("user-details-modal").classList.add("hidden");
+                openUserModal(user.id);
+            };
+            document.getElementById("user-details-toggle-status-btn").onclick = () => toggleUserStatus(user.id, user.status);
+            document.getElementById("user-details-delete-btn").onclick = () => deleteUser(user.id);
+
+            document.getElementById("user-details-modal").classList.remove("hidden");
+        };
+
+        /**
+         * Toggles the status of a user (active/restricted/blocked).
+         * @param {string} userId - The ID of the user to update.
+         * @param {string} currentStatus - The current status of the user.
+         */
+        window.toggleUserStatus = async function(userId, currentStatus) {
+            let newStatus;
+            let confirmMessage;
+            if (currentStatus === 'active') {
+                newStatus = 'restricted';
+                confirmMessage = "هل أنت متأكد أنك تريد تقييد هذا المستخدم؟";
+            } else if (currentStatus === 'restricted') {
+                newStatus = 'blocked';
+                confirmMessage = "هل أنت متأكد أنك تريد حظر هذا المستخدم نهائياً؟";
+            } else { // currentStatus is 'blocked' or unknown
+                newStatus = 'active';
+                confirmMessage = "هل أنت متأكد أنك تريد إعادة تنشيط هذا المستخدم؟";
+            }
+
+            const currentUser = window.adminData.currentUser;
+            const currentLoggedInUserRole = window.adminData.currentUserRole;
+            const targetUser = window.adminData.users.find(u => u.id === userId);
+
+            // Security check: Prevent non-admins from changing status of admins
+            if (targetUser && targetUser.role === 'مدير' && currentLoggedInUserRole !== 'مدير') {
+                showNotification("ليس لديك صلاحية لتغيير حالة مدير آخر.", "error");
+                return;
+            }
+            // Security check: Prevent user from changing their own status if they are an admin
+            if (currentUser && currentUser.uid === userId && currentLoggedInUserRole === 'مدير') {
+                showNotification("لا يمكنك تغيير حالتك الخاصة كمدير.", "error");
+                return;
+            }
+
+            showConfirmModal(confirmMessage, async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        await set(ref(db, `users/${userId}/status`), newStatus);
+                        showNotification(`تم تحديث حالة المستخدم إلى: ${newStatus}`, "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'toggleUserStatus', `تم تغيير حالة المستخدم ${targetUser?.name || userId} إلى ${newStatus}`);
+                        }
+                        document.getElementById("user-details-modal").classList.add("hidden"); // Close details modal after action
+                    }
+                    catch (error) {
+                        console.error("Error toggling user status:", error);
+                        showNotification("فشل تحديث حالة المستخدم", "error");
+                    }
+                } else {
+                    showNotification("تم إلغاء العملية", "info");
+                }
+            });
+        };
+
+        /**
+         * Deletes a user from Firebase after user confirmation.
+         * @param {string} userId - The ID of the user to delete.
+         */
+        window.deleteUser = async function(userId) {
+            showConfirmModal("هل أنت متأكد أنك تريد حذف هذا المستخدم نهائياً؟ سيتم حذف جميع بياناته.", async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        const userName = window.adminData.users.find(u => u.id === userId)?.name || 'N/A';
+                        await remove(ref(db, `users/${userId}`));
+                        // Also remove their activity logs
+                        await remove(ref(db, `userActivityLogs/${userId}`));
+                        showNotification("تم حذف المستخدم بنجاح", "success");
+                        if (window.adminData.currentUser) {
+                            logActivity(window.adminData.currentUser.uid, 'deleteUser', `تم حذف المستخدم: ${userName} (ID: ${userId})`);
+                        }
+                        document.getElementById("user-details-modal").classList.add("hidden"); // Close details modal after action
+                    } catch (error) {
+                        console.error("Error deleting user:", error);
+                        showNotification("فشل حذف المستخدم", "error");
+                    }
+                } else {
+                    showNotification("تم إلغاء عملية الحذف", "info");
+                }
+            });
+        };
+
 
         /**
          * Renders the store settings into the settings form.
@@ -1451,140 +2816,54 @@
             document.getElementById("setting-contact-phone").value = settings.contactPhone || '';
             document.getElementById("setting-contact-whatsapp").value = settings.contactWhatsapp || '';
             document.getElementById("setting-contact-email").value = settings.contactEmail || '';
-            // document.getElementById("setting-delivery-price").value = settings.deliveryPrice || ''; // Removed old field
-            document.getElementById("setting-default-delivery-price").value = settings.defaultDeliveryPrice || ''; // New field
             document.getElementById("setting-thank-you-message").value = settings.thankYouMessage || '';
-        }
 
-        /**
-         * Renders the city delivery prices table.
-         */
-        function renderCityDeliveryPricesTable() {
-            const tableBody = document.getElementById("city-delivery-prices-table-body");
-            if (!tableBody) return;
+            // Render delivery prices by city
+            const deliveryPricesContainer = document.getElementById('delivery-prices-container');
+            deliveryPricesContainer.innerHTML = ''; // Clear existing rows
 
-            const cities = window.adminData.settings.deliveryPricesByCity || {};
-            let html = '';
-            const cityNames = Object.keys(cities).sort(); // Sort cities alphabetically
-
-            if (cityNames.length === 0) {
-                html = `<tr><td colspan="3" class="text-center py-4 text-gray-500">لا توجد أسعار توصيل للمدن.</td></tr>`;
-            } else {
-                cityNames.forEach(cityName => {
-                    const price = cities[cityName];
-                    html += `
-                    <tr class="bg-white border-b hover:bg-gray-50">
-                        <td class="px-6 py-4" data-label="المدينة">${cityName}</td>
-                        <td class="px-6 py-4" data-label="سعر التوصيل">${(price || 0).toLocaleString('ar-EG')} د.ع</td>
-                        <td class="px-6 py-4 text-right" data-label="إجراءات">
-                            <button onclick="openCityDeliveryPriceModal('${cityName}')" class="text-blue-600 hover:text-blue-900 mr-3">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button onclick="deleteCityDeliveryPrice('${cityName}')" class="text-red-600 hover:text-red-900">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                    `;
+            if (settings.deliveryPricesByCity && settings.deliveryPricesByCity.length > 0) {
+                settings.deliveryPricesByCity.forEach(cityData => {
+                    addCityDeliveryRow(cityData.city, cityData.price);
                 });
+            } else {
+                // Add an empty row if no cities are defined
+                addCityDeliveryRow();
             }
-            tableBody.innerHTML = html;
         }
 
         /**
-         * Opens the city delivery price add/edit modal.
-         * @param {string|null} cityName - The name of the city to edit, or null for a new city.
+         * Adds a new row for city delivery price input fields.
+         * @param {string} [city=''] - The city name to pre-fill.
+         * @param {number} [price=''] - The price to pre-fill.
          */
-        window.openCityDeliveryPriceModal = function(cityName = null) {
-            const modal = document.getElementById("city-delivery-price-modal");
-            const form = document.getElementById("city-delivery-price-form");
-            form.reset();
-            document.getElementById("city-id-hidden").value = cityName; // Store original city name
-
-            if (cityName) {
-                document.getElementById("city-delivery-price-modal-title").textContent = "تعديل سعر التوصيل للمدينة";
-                const price = window.adminData.settings.deliveryPricesByCity[cityName];
-                document.getElementById("city-name-input").value = cityName;
-                document.getElementById("city-price-input").value = price;
-                document.getElementById("city-name-input").readOnly = true; // Prevent changing city name when editing
-            } else {
-                document.getElementById("city-delivery-price-modal-title").textContent = "إضافة مدينة جديدة";
-                document.getElementById("city-name-input").readOnly = false;
-            }
-            modal.classList.remove("hidden");
+        window.addCityDeliveryRow = function(city = '', price = '') {
+            const container = document.getElementById('delivery-prices-container');
+            const row = document.createElement('div');
+            row.className = 'flex flex-col md:flex-row gap-2 mb-3 items-end md:items-center';
+            row.innerHTML = `
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">اسم المدينة</label>
+                    <input type="text" class="city-name-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${city}">
+                </div>
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">سعر التوصيل (د.ع)</label>
+                    <input type="number" class="city-price-input mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${price}" min="0">
+                </div>
+                <button type="button" onclick="removeCityDeliveryRow(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg flex-shrink-0 mt-2 md:mt-0">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(row);
         };
 
         /**
-         * Saves (adds or updates) a city delivery price in settings.
+         * Removes a city delivery price row.
+         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
          */
-        window.saveCityDeliveryPrice = async function() {
-            const originalCityName = document.getElementById("city-id-hidden").value;
-            const cityName = document.getElementById("city-name-input").value.trim();
-            const price = parseFloat(document.getElementById("city-price-input").value);
-
-            if (!cityName || isNaN(price) || price < 0) {
-                showNotification("يرجى إدخال اسم المدينة وسعر توصيل صحيح.", "error");
-                return;
-            }
-
-            // Check for duplicate city name if adding a new city
-            if (!originalCityName && window.adminData.settings.deliveryPricesByCity[cityName]) {
-                showNotification("هذه المدينة موجودة بالفعل. يرجى التعديل عليها بدلاً من الإضافة.", "error");
-                return;
-            }
-
-            // Update the settings object
-            const updatedSettings = { ...window.adminData.settings };
-            if (!updatedSettings.deliveryPricesByCity) {
-                updatedSettings.deliveryPricesByCity = {};
-            }
-
-            // If city name was changed during edit (shouldn't happen with readOnly, but as a safeguard)
-            if (originalCityName && originalCityName !== cityName) {
-                delete updatedSettings.deliveryPricesByCity[originalCityName]; // Remove old entry
-            }
-            updatedSettings.deliveryPricesByCity[cityName] = price; // Add/update new entry
-
-            try {
-                await set(settingsRef, updatedSettings); // Save the entire settings object
-                window.adminData.settings = updatedSettings; // Update local data
-                renderCityDeliveryPricesTable(); // Re-render the table
-                document.getElementById("city-delivery-price-modal").classList.add("hidden");
-                showNotification("تم حفظ سعر التوصيل للمدينة بنجاح", "success");
-            } catch (error) {
-                console.error("Error saving city delivery price:", error);
-                showNotification("فشل حفظ سعر التوصيل للمدينة", "error");
-            }
+        window.removeCityDeliveryRow = function(buttonElement) {
+            buttonElement.closest('.flex.flex-col.md\\:flex-row.gap-2.mb-3').remove();
         };
-
-        /**
-         * Deletes a city delivery price from settings.
-         * @param {string} cityName - The name of the city to delete.
-         */
-        window.deleteCityDeliveryPrice = async function(cityName) {
-            showConfirmModal(`هل أنت متأكد أنك تريد حذف سعر التوصيل للمدينة "${cityName}"؟`, async (confirmed) => {
-                if (confirmed) {
-                    const updatedSettings = { ...window.adminData.settings };
-                    if (updatedSettings.deliveryPricesByCity && updatedSettings.deliveryPricesByCity[cityName]) {
-                        delete updatedSettings.deliveryPricesByCity[cityName];
-                        try {
-                            await set(settingsRef, updatedSettings); // Save the entire settings object
-                            window.adminData.settings = updatedSettings; // Update local data
-                            renderCityDeliveryPricesTable(); // Re-render the table
-                            showNotification("تم حذف سعر التوصيل للمدينة بنجاح", "success");
-                        } catch (error) {
-                            console.error("Error deleting city delivery price:", error);
-                            showNotification("فشل حذف سعر التوصيل للمدينة", "error");
-                        }
-                    } else {
-                        showNotification("المدينة غير موجودة.", "warning");
-                    }
-                } else {
-                    showNotification("تم إلغاء عملية الحذف", "info");
-                }
-            });
-        };
-
 
         /**
          * Saves the store settings to Firebase.
@@ -1594,34 +2873,371 @@
             const contactPhone = document.getElementById("setting-contact-phone").value.trim();
             const contactWhatsapp = document.getElementById("setting-contact-whatsapp").value.trim();
             const contactEmail = document.getElementById("setting-contact-email").value.trim();
-            const defaultDeliveryPrice = parseFloat(document.getElementById("setting-default-delivery-price").value); // New field
             const thankYouMessage = document.getElementById("setting-thank-you-message").value.trim();
 
-            if (!storeName || !contactPhone || !contactWhatsapp || !contactEmail || isNaN(defaultDeliveryPrice) || defaultDeliveryPrice < 0) {
-                showNotification("يرجى ملء جميع حقول الإعدادات بشكل صحيح.", "error");
+            const cityInputs = document.querySelectorAll('#delivery-prices-container .city-name-input');
+            const priceInputs = document.querySelectorAll('#delivery-prices-container .city-price-input');
+            
+            const deliveryPricesByCity = [];
+            let isValidDeliveryPrices = true;
+
+            for (let i = 0; i < cityInputs.length; i++) {
+                const city = cityInputs[i].value.trim();
+                const price = parseFloat(priceInputs[i].value);
+
+                if (city === '' && (isNaN(price) || price === 0 || priceInputs[i].value.trim() === '')) {
+                    // Allow empty rows if both city and price are empty/zero
+                    continue;
+                }
+
+                if (city === '' || isNaN(price) || price < 0) {
+                    showNotification("يرجى ملء جميع حقول أسعار التوصيل بشكل صحيح (اسم المدينة والسعر يجب أن يكونا صالحين).", "error");
+                    isValidDeliveryPrices = false;
+                    break;
+                }
+                deliveryPricesByCity.push({ city, price });
+            }
+
+            if (!isValidDeliveryPrices) {
                 return;
             }
 
-            // Create a new settings object, preserving existing city prices
+            if (!storeName || !contactPhone || !contactWhatsapp || !contactEmail) {
+                showNotification("يرجى ملء جميع حقول الإعدادات المطلوبة.", "error");
+                return;
+            }
+            
             const settingsData = {
                 storeName,
                 contactPhone,
                 contactWhatsapp,
                 contactEmail,
-                defaultDeliveryPrice, // Save new field
-                thankYouMessage,
-                deliveryPricesByCity: window.adminData.settings.deliveryPricesByCity // Preserve city prices
+                deliveryPricesByCity, // Save as array of objects
+                thankYouMessage
             };
 
             try {
                 await set(settingsRef, settingsData);
-                window.adminData.settings = settingsData; // Update local data
                 showNotification("تم حفظ الإعدادات بنجاح", "success");
+                if (window.adminData.currentUser) {
+                    logActivity(window.adminData.currentUser.uid, 'updateSettings', `تم تحديث إعدادات المتجر`);
+                }
             } catch (error) {
                 console.error("Error saving settings:", error);
                 showNotification("فشل حفظ الإعدادات", "error");
             }
         };
+
+        /**
+         * Renders the homepage settings into the form.
+         */
+        function renderHomepageSettings() {
+            const hpSettings = window.adminData.homepageSettings;
+            if (!hpSettings) return;
+
+            // Main Banner
+            document.getElementById('hp-main-banner-enabled').checked = hpSettings.mainBanner?.enabled || false;
+            document.getElementById('hp-main-banner-image').value = hpSettings.mainBanner?.image || '';
+            document.getElementById('hp-main-banner-title').value = hpSettings.mainBanner?.title || '';
+            document.getElementById('hp-main-banner-description').value = hpSettings.mainBanner?.description || '';
+            document.getElementById('hp-main-banner-cta-text').value = hpSettings.mainBanner?.ctaText || '';
+            document.getElementById('hp-main-banner-cta-link').value = hpSettings.mainBanner?.ctaLink || '';
+
+            // Product Categories
+            document.getElementById('hp-categories-enabled').checked = hpSettings.productCategories?.enabled || false;
+            populateHomepageCategoryDropdown(hpSettings.productCategories?.selectedCategories || []);
+
+            // Featured Products
+            document.getElementById('hp-featured-products-enabled').checked = hpSettings.featuredProducts?.enabled || false;
+            const featuredType = hpSettings.featuredProducts?.type || 'most_selling';
+            document.querySelector(`input[name="hp-featured-products-type"][value="${featuredType}"]`).checked = true;
+
+            // Internal Banners
+            document.getElementById('hp-internal-banners-enabled').checked = hpSettings.internalBanners?.enabled || false;
+            const internalBannersContainer = document.getElementById('hp-internal-banners-container');
+            internalBannersContainer.innerHTML = ''; // Clear existing
+            if (hpSettings.internalBanners?.banners && hpSettings.internalBanners.banners.length > 0) {
+                hpSettings.internalBanners.banners.forEach(banner => {
+                    addInternalBannerRow(banner.image, banner.link);
+                });
+            } else {
+                addInternalBannerRow(); // Add an empty one if none exist
+            }
+
+            // Customer Reviews
+            document.getElementById('hp-reviews-enabled').checked = hpSettings.customerReviews?.enabled || false;
+
+            // Blog
+            document.getElementById('hp-blog-enabled').checked = hpSettings.blog?.enabled || false;
+
+            // Footer
+            document.getElementById('hp-footer-contact-enabled').checked = hpSettings.footer?.contactEnabled || false;
+            document.getElementById('hp-footer-social-enabled').checked = hpSettings.footer?.socialEnabled || false;
+            document.getElementById('hp-footer-custom-links-enabled').checked = hpSettings.footer?.customLinksEnabled || false;
+            document.getElementById('hp-footer-facebook').value = hpSettings.footer?.facebook || '';
+            document.getElementById('hp-footer-instagram').value = hpSettings.footer?.instagram || '';
+            document.getElementById('hp-footer-twitter').value = hpSettings.footer?.twitter || '';
+            document.getElementById('hp-footer-linkedin').value = hpSettings.footer?.linkedin || '';
+
+            const footerCustomLinksContainer = document.getElementById('hp-footer-custom-links-container');
+            footerCustomLinksContainer.innerHTML = ''; // Clear existing
+            if (hpSettings.footer?.customLinks && hpSettings.footer.customLinks.length > 0) {
+                hpSettings.footer.customLinks.forEach(link => {
+                    addFooterCustomLinkRow(link.text, link.link);
+                });
+            } else {
+                addFooterCustomLinkRow(); // Add an empty one if none exist
+            }
+        }
+
+        /**
+         * Populates the homepage category multi-select dropdown.
+         * @param {Array<string>} selectedCategoryIds - An array of category IDs that should be selected.
+         */
+        function populateHomepageCategoryDropdown(selectedCategoryIds = []) {
+            const selectElement = document.getElementById('hp-selected-categories');
+            if (!selectElement) return;
+
+            selectElement.innerHTML = ''; // Clear existing options
+            window.adminData.categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                if (selectedCategoryIds.includes(category.id)) {
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
+            });
+        }
+
+        /**
+         * Adds a new row for internal banner image and link.
+         * @param {string} [image=''] - Image URL to pre-fill.
+         * @param {string} [link=''] - Link URL to pre-fill.
+         */
+        window.addInternalBannerRow = function(image = '', link = '') {
+            const container = document.getElementById('hp-internal-banners-container');
+            const row = document.createElement('div');
+            row.className = 'flex flex-col md:flex-row gap-2 mb-3 items-end md:items-center p-3 border border-gray-200 rounded-md bg-gray-50';
+            row.innerHTML = `
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">رابط صورة البانر</label>
+                    <input type="url" class="hp-internal-banner-image mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${image}">
+                </div>
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">رابط البانر</label>
+                    <input type="url" class="hp-internal-banner-link mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${link}">
+                </div>
+                <button type="button" onclick="removeInternalBannerRow(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg flex-shrink-0 mt-2 md:mt-0">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(row);
+        };
+
+        /**
+         * Removes an internal banner row.
+         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
+         */
+        window.removeInternalBannerRow = function(buttonElement) {
+            buttonElement.closest('.flex.flex-col.md\\:flex-row.gap-2.mb-3').remove();
+        };
+
+        /**
+         * Adds a new row for footer custom link text and URL.
+         * @param {string} [text=''] - Link text to pre-fill.
+         * @param {string} [link=''] - Link URL to pre-fill.
+         */
+        window.addFooterCustomLinkRow = function(text = '', link = '') {
+            const container = document.getElementById('hp-footer-custom-links-container');
+            const row = document.createElement('div');
+            row.className = 'flex flex-col md:flex-row gap-2 mb-3 items-end md:items-center p-3 border border-gray-200 rounded-md bg-gray-50';
+            row.innerHTML = `
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">نص الرابط</label>
+                    <input type="text" class="hp-footer-custom-link-text mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${text}">
+                </div>
+                <div class="flex-1 w-full">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">رابط الصفحة</label>
+                    <input type="url" class="hp-footer-custom-link-url mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" value="${link}">
+                </div>
+                <button type="button" onclick="removeFooterCustomLinkRow(this)" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg flex-shrink-0 mt-2 md:mt-0">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+            container.appendChild(row);
+        };
+
+        /**
+         * Removes a footer custom link row.
+         * @param {HTMLElement} buttonElement - The remove button element that was clicked.
+         */
+        window.removeFooterCustomLinkRow = function(buttonElement) {
+            buttonElement.closest('.flex.flex-col.md\\:flex-row.gap-2.mb-3').remove();
+        };
+
+
+        /**
+         * Saves the homepage settings to Firebase.
+         */
+        window.saveHomepageSettings = async function() {
+            const hpSettings = {};
+
+            // Main Banner
+            hpSettings.mainBanner = {
+                enabled: document.getElementById('hp-main-banner-enabled').checked,
+                image: document.getElementById('hp-main-banner-image').value.trim(),
+                title: document.getElementById('hp-main-banner-title').value.trim(),
+                description: document.getElementById('hp-main-banner-description').value.trim(),
+                ctaText: document.getElementById('hp-main-banner-cta-text').value.trim(),
+                ctaLink: document.getElementById('hp-main-banner-cta-link').value.trim()
+            };
+
+            // Product Categories
+            const selectedCategories = Array.from(document.getElementById('hp-selected-categories').selectedOptions).map(option => option.value);
+            hpSettings.productCategories = {
+                enabled: document.getElementById('hp-categories-enabled').checked,
+                selectedCategories: selectedCategories
+            };
+
+            // Featured Products
+            hpSettings.featuredProducts = {
+                enabled: document.getElementById('hp-featured-products-enabled').checked,
+                type: document.querySelector('input[name="hp-featured-products-type"]:checked').value
+            };
+
+            // Internal Banners
+            const internalBanners = [];
+            document.querySelectorAll('#hp-internal-banners-container .flex.flex-col.md\\:flex-row.gap-2.mb-3').forEach(row => {
+                const imageInput = row.querySelector('.hp-internal-banner-image');
+                const linkInput = row.querySelector('.hp-internal-banner-link');
+                if (imageInput.value.trim() !== '' || linkInput.value.trim() !== '') {
+                    internalBanners.push({
+                        image: imageInput.value.trim(),
+                        link: linkInput.value.trim()
+                    });
+                }
+            });
+            hpSettings.internalBanners = {
+                enabled: document.getElementById('hp-internal-banners-enabled').checked,
+                banners: internalBanners
+            };
+
+            // Customer Reviews
+            hpSettings.customerReviews = {
+                enabled: document.getElementById('hp-reviews-enabled').checked
+            };
+
+            // Blog
+            hpSettings.blog = {
+                enabled: document.getElementById('hp-blog-enabled').checked
+            };
+
+            // Footer
+            const footerCustomLinks = [];
+            document.querySelectorAll('#hp-footer-custom-links-container .flex.flex-col.md\\:flex-row.gap-2.mb-3').forEach(row => {
+                const textInput = row.querySelector('.hp-footer-custom-link-text');
+                const urlInput = row.querySelector('.hp-footer-custom-link-url');
+                if (textInput.value.trim() !== '' || urlInput.value.trim() !== '') {
+                    footerCustomLinks.push({
+                        text: textInput.value.trim(),
+                        link: urlInput.value.trim()
+                    });
+                }
+            });
+
+            hpSettings.footer = {
+                contactEnabled: document.getElementById('hp-footer-contact-enabled').checked,
+                socialEnabled: document.getElementById('hp-footer-social-enabled').checked,
+                customLinksEnabled: document.getElementById('hp-footer-custom-links-enabled').checked,
+                facebook: document.getElementById('hp-footer-facebook').value.trim(),
+                instagram: document.getElementById('hp-footer-instagram').value.trim(),
+                twitter: document.getElementById('hp-footer-twitter').value.trim(),
+                linkedin: document.getElementById('hp-footer-linkedin').value.trim(),
+                customLinks: footerCustomLinks
+            };
+
+            try {
+                await set(homepageSettingsRef, hpSettings);
+                showNotification("تم حفظ إعدادات الصفحة الرئيسية بنجاح", "success");
+                if (window.adminData.currentUser) {
+                    logActivity(window.adminData.currentUser.uid, 'updateHomepage', `تم تحديث إعدادات الصفحة الرئيسية`);
+                }
+            } catch (error) {
+                console.error("Error saving homepage settings:", error);
+                showNotification("فشل حفظ إعدادات الصفحة الرئيسية", "error");
+            }
+        };
+
+        /**
+         * Renders the moderator logs into the table.
+         * @param {string} userFilter - Optional user ID to filter by.
+         * @param {string} actionFilter - Optional action type to filter by.
+         */
+        function renderModeratorLogsTable(userFilter = '', actionFilter = '') {
+            const tableBody = document.getElementById("moderator-logs-table-body");
+            if (!tableBody) return;
+
+            const filteredLogs = window.adminData.moderatorLogs.filter(log => {
+                const userMatch = userFilter === '' || log.userId === userFilter;
+                const actionMatch = actionFilter === '' || log.action === actionFilter;
+                return userMatch && actionMatch;
+            });
+
+            let html = '';
+            if (filteredLogs.length === 0) {
+                html = `<tr><td colspan="4" class="text-center py-4 text-gray-500">لا توجد سجلات مطابقة لبحثك.</td></tr>`;
+            } else {
+                filteredLogs.forEach(log => {
+                    const userName = window.adminData.users.find(u => u.id === log.userId)?.name || log.userName || 'مستخدم غير معروف';
+                    html += `
+                    <tr class="bg-white border-b hover:bg-gray-50">
+                        <td class="px-6 py-4" data-label="المشرف">${userName}</td>
+                        <td class="px-6 py-4" data-label="نوع العملية">${log.action || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500" data-label="الوقت">${log.timestamp || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500" data-label="التفاصيل">${log.details || 'لا توجد تفاصيل'}</td>
+                    </tr>
+                    `;
+                });
+            }
+            tableBody.innerHTML = html;
+        }
+
+        /**
+         * Populates the filter dropdowns for moderator logs.
+         */
+        function populateModeratorLogFilters() {
+            const userFilterSelect = document.getElementById('moderator-log-user-filter');
+            const actionFilterSelect = document.getElementById('moderator-log-action-filter');
+
+            // Clear previous options except "All"
+            userFilterSelect.innerHTML = '<option value="">جميع المشرفين</option>';
+            // Action filter options are static in HTML, no need to clear/repopulate
+
+            const uniqueModerators = new Set();
+            window.adminData.moderatorLogs.forEach(log => {
+                uniqueModerators.add(log.userId);
+            });
+
+            uniqueModerators.forEach(userId => {
+                const user = window.adminData.users.find(u => u.id === userId);
+                if (user) {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.name || user.email;
+                    userFilterSelect.appendChild(option);
+                }
+            });
+
+            // Add event listeners to filters
+            userFilterSelect.onchange = () => {
+                renderModeratorLogsTable(userFilterSelect.value, actionFilterSelect.value);
+            };
+            actionFilterSelect.onchange = () => {
+                renderModeratorLogsTable(userFilterSelect.value, actionFilterSelect.value);
+            };
+        }
+
 
         // --- UI Navigation ---
         /**
@@ -1640,20 +3256,49 @@
             });
             document.querySelector(`.nav-link[data-section="${sectionId}"]`).classList.remove('text-indigo-200', 'hover:bg-indigo-700');
             document.querySelector(`.nav-link[data-section="${sectionId}"]`).classList.add('bg-indigo-700', 'text-white');
+
+            // Special handling for homepage settings section to re-render categories
+            if (sectionId === 'homepage-settings-section') {
+                populateHomepageCategoryDropdown(window.adminData.homepageSettings.productCategories?.selectedCategories || []);
+            }
+            // Special handling for moderator logs section to re-render
+            if (sectionId === 'moderator-logs-section') {
+                renderModeratorLogsTable();
+                populateModeratorLogFilters();
+            }
         }
+
+        /**
+         * Updates the visibility of admin-specific UI elements based on the current user's role.
+         */
+        function updateAdminUIBasedOnRole() {
+            const moderatorLogsNavLink = document.getElementById('moderator-logs-nav-link');
+            if (window.adminData.currentUserRole === 'مدير') {
+                moderatorLogsNavLink.classList.remove('hidden');
+            } else {
+                moderatorLogsNavLink.classList.add('hidden');
+                // If the user is not an admin and is currently on the moderator logs page, redirect them
+                if (!document.getElementById('moderator-logs-section').classList.contains('hidden')) {
+                    showSection('orders-section'); // Redirect to a default safe page
+                }
+            }
+            // Add more role-based UI adjustments here as needed
+            // For example, disabling add/edit/delete buttons for non-moderators
+        }
+
 
         // --- Event Listeners and Initial Load ---
         document.addEventListener("DOMContentLoaded", function() {
             const correctPassword = "sgad2025sgad2025";
+            const adminEmail = "sgadbd321123@gmail.com"; // The specific admin email for Google login
+
             const passwordInput = document.getElementById("password-input");
             const loginButton = document.getElementById("login-button");
+            const googleLoginButton = document.getElementById("google-login-button");
             const loginPage = document.getElementById("login-page");
             const adminContent = document.getElementById("admin-content");
             const loginError = document.getElementById("login-error");
             const togglePasswordButton = document.getElementById("toggle-password");
-            const addImageUrlButton = document.getElementById('add-image-url-btn');
-            const calculateRoundSalePriceBtn = document.getElementById('calculate-round-sale-price-btn');
-
 
             // Search inputs and clear buttons
             const ordersSearchInput = document.getElementById("orders-search-input");
@@ -1662,31 +3307,204 @@
             const productsClearSearchButton = document.getElementById("products-clear-search");
             const categoriesSearchInput = document.getElementById("categories-search-input");
             const categoriesClearSearchButton = document.getElementById("categories-clear-search");
+            const usersSearchInput = document.getElementById("users-search-input");
+            const usersClearSearchButton = document.getElementById("users-clear-search");
 
+            // Product modal specific elements
+            const productIsSaleCheckbox = document.getElementById('product-is-sale');
+            const saleFieldsContainer = document.getElementById('sale-fields-container');
+            const productUseCustomDiscountCheckbox = document.getElementById('product-use-custom-discount');
+            const customDiscountPriceContainer = document.getElementById('custom-discount-price-container');
 
-            function attemptLogin() {
+            /**
+             * Initializes the admin panel after successful authentication.
+             */
+            function initializeAdminPanel() {
+                loginPage.classList.add("hidden");
+                adminContent.classList.remove("hidden");
+                // Load all data after successful login
+                loadSettings();
+                loadCategories();
+                loadProducts(); 
+                loadOrders(); // Orders are loaded first to create/update anonymous profiles
+                loadHomepageSettings();
+                loadUsers(); // Registered users are loaded after orders to ensure anonymous profiles are processed
+                loadAnonymousProfiles(); // Load anonymous guests
+                loadUserActivityLogs(); // Load all user activity logs
+                loadModeratorLogs(); // Load all moderator logs
+                // Set initial section to Orders
+                showSection('orders-section');
+            }
+
+            // Password-based login
+            function attemptPasswordLogin() {
                 if (passwordInput.value === correctPassword) {
-                    loginPage.classList.add("hidden");
-                    adminContent.classList.remove("hidden");
-                    // Load all data after successful login
-                    loadSettings(); // This now also loads city delivery prices
-                    loadCategories();
-                    loadProducts(); 
-                    loadOrders();
-                    // Set initial section to Orders
-                    showSection('orders-section');
+                    // For password login, we'll mock a user for activity logging
+                    // In a real system, this would be a specific admin user record
+                    window.adminData.currentUser = { uid: 'local_admin', displayName: 'مدير محلي' };
+                    window.adminData.currentUserRole = 'مدير'; // Assume local admin is 'مدير'
+                    initializeAdminPanel();
+                    logActivity('local_admin', 'login', 'تسجيل الدخول بكلمة المرور');
                 } else {
                     loginError.classList.remove("hidden");
                     passwordInput.value = ""; // Clear password input
                 }
             }
 
-            loginButton.addEventListener("click", attemptLogin);
+            loginButton.addEventListener("click", attemptPasswordLogin);
             passwordInput.addEventListener("keypress", function(event) {
                 if (event.key === "Enter") {
-                    attemptLogin();
+                    attemptPasswordLogin();
                 }
             });
+
+            // Google Sign-in
+            googleLoginButton.addEventListener("click", async () => {
+                try {
+                    const result = await signInWithPopup(auth, googleProvider);
+                    const user = result.user; // Firebase Auth User object
+
+                    // IMPORTANT SECURITY CHECK: Only allow the specific admin email
+                    if (user.email !== adminEmail) {
+                        showNotification("ليس لديك صلاحية للدخول بهذه الطريقة.", "error");
+                        await signOut(auth); // Sign out immediately
+                        return;
+                    }
+
+                    console.log("Google Sign-in successful:", user);
+                    window.adminData.currentUser = user; // Set current authenticated user
+
+                    // 1. Check if an anonymous profile exists for this newly logged-in user
+                    let anonymousProfileToConvertId = null;
+                    let anonymousProfileData = null;
+
+                    // Fetch all anonymous profiles once to search
+                    const anonymousProfilesSnapshot = await new Promise(resolve => {
+                        onValue(anonymousProfilesRef, resolve, { onlyOnce: true });
+                    });
+
+                    anonymousProfilesSnapshot.forEach((childSnapshot) => {
+                        const anonProfile = childSnapshot.val();
+                        // Try matching by email
+                        if (user.email && anonProfile.email && user.email.toLowerCase() === anonProfile.email.toLowerCase()) {
+                            anonymousProfileToConvertId = childSnapshot.key;
+                            anonymousProfileData = anonProfile;
+                            return true; // Stop iterating
+                        }
+                        // If no email match, try matching by phone number
+                        if (!anonymousProfileToConvertId && user.phoneNumber && anonProfile.phone && user.phoneNumber === anonProfile.phone) {
+                            anonymousProfileToConvertId = childSnapshot.key;
+                            anonymousProfileData = anonProfile;
+                            return true; // Stop iterating
+                        }
+                        // If no phone match, try matching by name (less reliable)
+                        if (!anonymousProfileToConvertId && user.displayName && anonProfile.name && user.displayName.toLowerCase() === anonProfile.name.toLowerCase()) {
+                             anonymousProfileToConvertId = childSnapshot.key;
+                             anonymousProfileData = anonProfile;
+                             return true; // Stop iterating
+                        }
+                    });
+
+                    // Now, handle the registered user profile in /users
+                    const userDbRef = ref(db, `users/${user.uid}`);
+                    onValue(userDbRef, async (snapshot) => {
+                        const existingUserProfile = snapshot.val();
+                        let userRole = 'عادي'; // Default role for new users
+
+                        if (!existingUserProfile) {
+                            // New user, create profile
+                            userRole = (user.email === adminEmail) ? 'مدير' : 'عادي'; // Assign 'مدير' role for the specific admin email
+                            await set(userDbRef, {
+                                name: user.displayName || 'مستخدم جديد',
+                                email: user.email || '',
+                                phone: user.phoneNumber || (anonymousProfileData?.phone || ''), // Use phone from anonymous profile if available
+                                address: '', // No address from Google by default
+                                status: 'active',
+                                role: userRole,
+                                createdAt: new Date().toLocaleString('ar-EG'),
+                                lastLogin: new Date().toLocaleString('ar-EG'),
+                                photoURL: user.photoURL || ''
+                            });
+                            showNotification("تم تسجيل مستخدم جديد عبر جوجل.", "success");
+                        } else {
+                            // Existing user, update last login and potentially role if it's the admin email
+                            userRole = existingUserProfile.role; // Keep existing role
+                            if (user.email === adminEmail && existingUserProfile.role !== 'مدير') {
+                                // If it's the admin email but role isn't admin, upgrade it
+                                userRole = 'مدير';
+                                await update(userDbRef, { role: 'مدير' });
+                            }
+                            await update(userDbRef, { lastLogin: new Date().toLocaleString('ar-EG') });
+                            showNotification("تم تسجيل الدخول عبر جوجل.", "success");
+                        }
+                        window.adminData.currentUserRole = userRole; // Update global role
+
+                        // If an anonymous profile was found, convert it
+                        if (anonymousProfileToConvertId) {
+                            // Update all orders associated with the anonymous ID to the new registered UID
+                            const ordersToUpdate = window.adminData.orders.filter(order => order.userId === anonymousProfileToConvertId);
+                            for (const order of ordersToUpdate) {
+                                await set(ref(db, `orders/${order.id}/userId`), user.uid);
+                            }
+                            // Delete the anonymous profile record
+                            await remove(ref(db, `anonymousProfiles/${anonymousProfileToConvertId}`));
+                            console.log(`Converted anonymous profile ${anonymousProfileToConvertId} to registered user ${user.uid}`);
+                            showNotification("تم نقل سجل الضيف إلى المستخدمين المسجلين.", "info");
+                        }
+
+                        initializeAdminPanel();
+                        logActivity(user.uid, 'login', `تسجيل الدخول بحساب جوجل (${user.email})`);
+                    }, { onlyOnce: true });
+
+                } catch (error) {
+                    console.error("Google Sign-in error:", error);
+                    showNotification(`خطأ في تسجيل الدخول بجوجل: ${error.message}`, "error");
+                }
+            });
+
+            // Listen for auth state changes (useful if user is already logged in)
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    // User is signed in, set current user and fetch their role
+                    window.adminData.currentUser = user;
+                    const userProfileSnapshot = await new Promise(resolve => onValue(ref(db, `users/${user.uid}`), resolve, { onlyOnce: true }));
+                    if (userProfileSnapshot.exists()) {
+                        window.adminData.currentUserRole = userProfileSnapshot.val().role || 'عادي';
+                        // Ensure the specific admin email always has 'مدير' role
+                        if (user.email === adminEmail && window.adminData.currentUserRole !== 'مدير') {
+                            await update(ref(db, `users/${user.uid}`), { role: 'مدير' });
+                            window.adminData.currentUserRole = 'مدير';
+                        }
+                    } else {
+                        // If user exists in Auth but not in DB (e.g., first time Google login)
+                        // This case should be handled by the googleLoginButton logic, but as a fallback:
+                        const userRole = (user.email === adminEmail) ? 'مدير' : 'عادي';
+                        await set(ref(db, `users/${user.uid}`), {
+                            name: user.displayName || 'مستخدم جديد',
+                            email: user.email || '',
+                            phone: user.phoneNumber || '',
+                            address: '',
+                            status: 'active',
+                            role: userRole,
+                            createdAt: new Date().toLocaleString('ar-EG'),
+                            lastLogin: new Date().toLocaleString('ar-EG'),
+                            photoURL: user.photoURL || ''
+                        });
+                        window.adminData.currentUserRole = userRole;
+                    }
+                    console.log("User already authenticated:", user.uid, "Role:", window.adminData.currentUserRole);
+                    initializeAdminPanel();
+                    updateAdminUIBasedOnRole(); // Update UI based on role
+                } else {
+                    // User is signed out, show login page
+                    window.adminData.currentUser = null;
+                    window.adminData.currentUserRole = 'عادي';
+                    loginPage.classList.remove("hidden");
+                    adminContent.classList.add("hidden");
+                    updateAdminUIBasedOnRole(); // Hide admin UI elements
+                }
+            });
+
 
             // Toggle password visibility
             togglePasswordButton.addEventListener("click", function() {
@@ -1714,70 +3532,35 @@
 
             // Close modal on outside click
             window.addEventListener('click', (e) => {
-                const cityDeliveryPriceModal = document.getElementById('city-delivery-price-modal');
-                if (e.target.classList.contains('modal-overlay') && !cityDeliveryPriceModal.classList.contains('hidden')) {
-                    cityDeliveryPriceModal.classList.add('hidden');
-                }
-                const productModal = document.getElementById('product-modal');
-                if (e.target.classList.contains('modal-overlay') && !productModal.classList.contains('hidden')) {
-                    productModal.classList.add('hidden');
-                }
-                const categoryModal = document.getElementById('category-modal');
-                if (e.target.classList.contains('modal-overlay') && !categoryModal.classList.contains('hidden')) {
-                    categoryModal.classList.add('hidden');
-                }
-                const orderDetailsModal = document.getElementById('order-details-modal');
-                if (e.target.classList.contains('modal-overlay') && !orderDetailsModal.classList.contains('hidden')) {
-                    orderDetailsModal.classList.add('hidden');
-                }
-                const confirmModal = document.getElementById('confirm-modal');
-                if (e.target.classList.contains('modal-overlay') && !confirmModal.classList.contains('hidden')) {
-                    confirmModal.classList.add('hidden');
+                if (e.target.classList.contains('modal-overlay')) {
+                    e.target.classList.add('hidden');
                 }
             });
 
             // Event listener for product-is-sale checkbox to toggle sale fields visibility
-            document.getElementById('product-is-sale').addEventListener('change', function() {
-                const saleFieldsContainer = document.getElementById('sale-fields-container');
+            productIsSaleCheckbox.addEventListener('change', function() {
                 if (this.checked) {
                     saleFieldsContainer.classList.remove('hidden');
                 } else {
                     saleFieldsContainer.classList.add('hidden');
                     // Clear sale fields when checkbox is unchecked
                     document.getElementById("product-discount-percentage").value = '';
-                    document.getElementById("product-sale-price").value = ''; // Clear new sale price field
                     document.getElementById("product-sale-start-date").value = '';
                     document.getElementById("product-sale-end-date").value = '';
+                    productUseCustomDiscountCheckbox.checked = false; // Also uncheck custom discount
+                    customDiscountPriceContainer.classList.add('hidden'); // Hide custom discount price field
+                    document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
                 }
             });
 
-            // Event listener for "Add Image URL" button
-            addImageUrlButton.addEventListener('click', () => window.addImageUrlField());
-
-            // Event listener for "Calculate & Round Sale Price" button
-            calculateRoundSalePriceBtn.addEventListener('click', function() {
-                const originalPriceInput = document.getElementById('product-price');
-                const discountPercentageInput = document.getElementById('product-discount-percentage');
-                const salePriceInput = document.getElementById('product-sale-price');
-
-                const originalPrice = parseFloat(originalPriceInput.value);
-                const discountPercentage = parseFloat(discountPercentageInput.value);
-
-                if (isNaN(originalPrice) || originalPrice <= 0) {
-                    showNotification("يرجى إدخال السعر الأصلي للمنتج أولاً.", "warning");
-                    return;
+            // Event listener for product-use-custom-discount checkbox to toggle custom discount price visibility
+            productUseCustomDiscountCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    customDiscountPriceContainer.classList.remove('hidden');
+                } else {
+                    customDiscountPriceContainer.classList.add('hidden');
+                    document.getElementById("product-custom-discount-price").value = ''; // Clear custom price
                 }
-                if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
-                    showNotification("يرجى إدخال نسبة تخفيض صحيحة بين 0 و 100.", "warning");
-                    return;
-                }
-
-                const calculatedSalePrice = originalPrice * (1 - discountPercentage / 100);
-                // Round up to the nearest whole number
-                const roundedSalePrice = Math.ceil(calculatedSalePrice); 
-
-                salePriceInput.value = roundedSalePrice; // Set the rounded value
-                showNotification("تم حساب وتقريب سعر العرض بنجاح.", "success");
             });
 
 
@@ -1825,6 +3608,21 @@
             categoriesClearSearchButton.addEventListener('click', function() {
                 categoriesSearchInput.value = '';
                 renderCategoriesTable('');
+                this.classList.add('hidden');
+            });
+
+            // Users Search (NEW)
+            usersSearchInput.addEventListener('input', function() {
+                renderUsersTable(this.value);
+                if (this.value.length > 0) {
+                    usersClearSearchButton.classList.remove('hidden');
+                } else {
+                    usersClearSearchButton.classList.add('hidden');
+                }
+            });
+            usersClearSearchButton.addEventListener('click', function() {
+                usersSearchInput.value = '';
+                renderUsersTable('');
                 this.classList.add('hidden');
             });
         });
