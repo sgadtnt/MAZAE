@@ -10,6 +10,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* Global Font: Cairo */
+        html, body {
+            height: 100%; /* Ensure html and body take full height */
+            /* overflow: hidden; */ /* Removed to allow scrolling of content */
+        }
         body {
             font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
             direction: rtl;
@@ -21,7 +25,7 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            overflow-x: hidden; /* Keep horizontal overflow hidden */
             position: relative; /* Needed for footer positioning */
             font-weight: 700; /* خط عريض لمعظم نصوص المتجر */
         }
@@ -1085,6 +1089,36 @@
                 visibility: visible;
             }
         }
+
+        /* Horizontal Scroll Specific Styles */
+        .horizontal-scroll-container {
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+            -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
+            padding-bottom: 10px; /* Space for potential scrollbar */
+            margin-bottom: 20px; /* Space below the section */
+            gap: 1rem; /* Spacing between items */
+        }
+
+        /* Hide scrollbar for Webkit browsers (Chrome, Safari) */
+        .horizontal-scroll-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Individual items within horizontal scroll */
+        .horizontal-scroll-item {
+            flex-shrink: 0; /* Prevent items from shrinking */
+            width: 250px; /* Fixed width for consistency */
+        }
+
+        /* Adjust for mobile sizing */
+        @media (max-width: 768px) {
+            .horizontal-scroll-item {
+                width: 180px; /* Smaller width for mobile */
+            }
+        }
     </style>
 </head>
 <body>
@@ -1117,6 +1151,18 @@
     </header>
 
     <div class="container">
+        <!-- Global Title for the main content area -->
+        <div id="global-content-title-container" class="flex items-center justify-between mb-6">
+            <button id="back-to-home-from-filtered-btn" class="back-to-home-btn hidden" onclick="showStoreSection('home-section', null, true)">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <h2 id="global-content-title" class="text-3xl font-bold text-gray-800 flex-grow text-center">
+                <span id="main-page-title">الرئيسية</span>
+                <span id="current-filtered-name" class="text-blue-700 mr-2 hidden"></span>
+            </h2>
+            <div class="w-10"></div> <!-- Placeholder for balance -->
+        </div>
+
         <!-- Search and Sort Controls -->
         <div id="search-sort-container" class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 search-sort-controls hidden">
             <div class="relative w-full sm:flex-grow"> <!-- Changed to flex-grow for search input -->
@@ -1157,7 +1203,7 @@
         <!-- Featured Categories Section (on homepage) -->
         <section id="homepage-categories-section" class="store-section hidden mb-8">
             <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">أقسام مختارة</h2>
-            <div id="homepage-categories-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div id="homepage-categories-grid" class="horizontal-scroll-container">
                 <!-- Selected categories will be loaded here -->
             </div>
         </section>
@@ -1165,7 +1211,7 @@
         <!-- Featured Products Section (on homepage) -->
         <section id="homepage-featured-products-section" class="store-section hidden mb-8">
             <h2 id="homepage-featured-products-title" class="text-3xl font-bold text-gray-800 text-center mb-6">منتجات مميزة</h2>
-            <div id="homepage-featured-products-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+            <div id="homepage-featured-products-grid" class="horizontal-scroll-container">
                 <!-- Featured products will be loaded here -->
             </div>
         </section>
@@ -1201,26 +1247,15 @@
 
         <!-- Home Section (Main Products Display - now also used for category filtering) -->
         <section id="home-section" class="store-section">
-            <div class="flex items-center justify-between mb-6">
-                <button id="back-to-categories-btn" class="back-to-home-btn hidden" onclick="showStoreSection('categories-page-section')">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">
-                    <span id="home-section-title">منتجاتنا</span>
-                    <span id="current-category-name" class="text-blue-700 mr-2 hidden"></span>
-                </h2>
-                <div class="w-10"></div> <!-- Placeholder for balance -->
-            </div>
             <div id="products-grid-home" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
                 <!-- Products will be loaded here by JS -->
-                <div class="col-span-full text-center py-10 text-gray-500">جاري تحميل المنتجات...</div>
             </div>
         </section>
 
         <!-- Sales Section (العروض) -->
         <section id="sales-section" class="store-section hidden">
             <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">عروضنا المميزة</h2>
@@ -1235,7 +1270,7 @@
         <!-- New Arrivals Section (الجديد) -->
         <section id="new-arrivals-section" class="store-section hidden">
             <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">وصل حديثاً</h2>
@@ -1250,7 +1285,7 @@
         <!-- Favorites Section -->
         <section id="favorites-section" class="store-section hidden">
             <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">منتجاتي المفضلة</h2>
@@ -1265,7 +1300,7 @@
         <!-- Categories Page Section -->
         <section id="categories-page-section" class="store-section hidden">
             <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">تصفح الأقسام</h2>
@@ -1280,7 +1315,7 @@
         <!-- My Account Section -->
         <section id="my-account-section" class="store-section hidden">
             <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">معلومات حسابي</h2>
@@ -1346,7 +1381,7 @@
         <!-- My Orders Section -->
         <section id="my-orders-section" class="store-section hidden">
             <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section')">
+                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
                     <i class="fas fa-arrow-left"></i>
                 </button>
                 <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">طلباتي</h2>
@@ -2128,7 +2163,7 @@
             renderProducts('products-grid-home', 'all');
             renderProducts('products-grid-sales', 'sales');
             renderProducts('products-grid-new-arrivals', 'new-arrivals'); // Update new arrivals section
-            renderProducts('homepage-featured-products-grid', 'featured');
+            renderProducts('homepage-featured-products-grid', 'featured', null, true); // Update featured products
         };
 
         /**
@@ -2410,10 +2445,8 @@
             document.getElementById('blog-section').classList.add('hidden');
             
             // Ensure the main 'home-section' is visible when rendering homepage content
+            // The global title is now managed separately.
             document.getElementById('home-section').classList.remove('hidden');
-            document.getElementById('home-section-title').textContent = 'منتجاتنا';
-            document.getElementById('current-category-name').classList.add('hidden');
-            document.getElementById('back-to-categories-btn').classList.add('hidden');
 
 
             // --- Render Main Banner ---
@@ -2437,7 +2470,7 @@
                 if (selectedCats.length > 0) {
                     selectedCats.forEach(category => {
                         const button = document.createElement('button');
-                        button.className = 'category-button-page';
+                        button.className = 'category-button-page horizontal-scroll-item'; // Added horizontal-scroll-item
                         button.setAttribute('data-category-id', category.id);
                         button.addEventListener('click', (e) => {
                             if (!e.target.closest('.info-button')) {
@@ -2470,6 +2503,8 @@
             if (hpSettings.featuredProducts?.enabled) {
                 document.getElementById('homepage-featured-products-section').classList.remove('hidden');
                 const featuredProductsTitle = document.getElementById('homepage-featured-products-title');
+                const homepageFeaturedProductsGrid = document.getElementById('homepage-featured-products-grid');
+                homepageFeaturedProductsGrid.innerHTML = ''; // Clear previous content
                 let productsToDisplay = [];
 
                 switch (hpSettings.featuredProducts.type) {
@@ -2508,7 +2543,8 @@
                         }
                         break;
                 }
-                renderProducts('homepage-featured-products-grid', 'none', productsToDisplay);
+                // Render products into the horizontal scroll container for featured products
+                renderProducts('homepage-featured-products-grid', 'none', productsToDisplay, true); // Pass true for horizontal scroll
             }
 
             // --- Render Internal Banners ---
@@ -2652,8 +2688,9 @@
          * @param {string} gridId - The ID of the product grid to render into (e.g., 'products-grid-home').
          * @param {string} filterType - 'all', 'sales', 'new-arrivals', 'favorites', 'featured' or a categoryId.
          * @param {Array} [productsToRender=null] - Optional array of products to render directly (e.g., after search or sort).
+         * @param {boolean} [isHorizontal=false] - True if rendering into a horizontal scroll container.
          */
-        function renderProducts(gridId, filterType, productsToRender = null) {
+        function renderProducts(gridId, filterType, productsToRender = null, isHorizontal = false) {
             const productsGrid = document.getElementById(gridId);
             if (!productsGrid) {
                 console.warn(`Product grid with ID "${gridId}" not found.`);
@@ -2726,8 +2763,11 @@
                     const isFavorited = window.storeData.favorites.includes(product.id);
                     const favoriteIconClass = isFavorited ? 'fas fa-heart active' : 'far fa-heart';
 
+                    // Add horizontal-scroll-item class if horizontal scrolling is enabled
+                    const itemClass = isHorizontal ? 'product-card horizontal-scroll-item' : 'product-card';
+
                     html += `
-                    <div class="product-card">
+                    <div class="${itemClass}">
                         <button class="favorite-toggle-btn ${isFavorited ? 'active' : ''}" data-product-id="${product.id}">
                             <i class="${favoriteIconClass}"></i>
                         </button>
@@ -2787,9 +2827,9 @@
          */
         function filterProductsByCategory(categoryId) {
             const category = window.storeData.categories.find(cat => cat.id === categoryId);
-            const homeSectionTitle = document.getElementById('home-section-title');
-            const currentCategoryName = document.getElementById('current-category-name');
-            const backToCategoriesBtn = document.getElementById('back-to-categories-btn');
+            const mainPageTitle = document.getElementById('main-page-title');
+            const currentFilteredName = document.getElementById('current-filtered-name');
+            const backToHomeFromFilteredBtn = document.getElementById('back-to-home-from-filtered-btn');
 
             // Hide all homepage specific sections when filtering by category
             document.getElementById('main-banner-section').classList.add('hidden');
@@ -2800,17 +2840,12 @@
             document.getElementById('blog-section').classList.add('hidden');
             document.getElementById('home-section').classList.remove('hidden'); // Ensure home section is visible for product display
 
+            // Update global title
+            mainPageTitle.textContent = 'منتجات القسم:';
+            currentFilteredName.textContent = category ? category.name : '';
+            currentFilteredName.classList.remove('hidden');
+            backToHomeFromFilteredBtn.classList.remove('hidden');
 
-            if (category) {
-                homeSectionTitle.textContent = 'منتجات القسم:';
-                currentCategoryName.textContent = category.name;
-                currentCategoryName.classList.remove('hidden');
-                backToCategoriesBtn.classList.remove('hidden');
-            } else {
-                homeSectionTitle.textContent = 'منتجاتنا';
-                currentCategoryName.classList.add('hidden');
-                backToCategoriesBtn.classList.add('hidden');
-            }
             renderProducts('products-grid-home', categoryId);
         }
 
@@ -2818,12 +2853,14 @@
          * Shows a specific store section and updates the navigation links.
          * @param {string} sectionId - The ID of the section to show (e.g., 'home-section', 'sales-section').
          * @param {Array} [itemsToDisplay=null] - Optional array of items to render directly (e.g., after search).
+         * @param {boolean} [resetHomepage=false] - If true, forces a reset to the default homepage view.
          */
-        window.showStoreSection = function(sectionId, itemsToDisplay = null) {
+        window.showStoreSection = function(sectionId, itemsToDisplay = null, resetHomepage = false) {
             document.querySelectorAll('.store-section').forEach(section => {
                 section.classList.add('hidden');
             });
             
+            // Hide all sections except the one being shown
             document.getElementById(sectionId).classList.remove('hidden');
 
             // Update active state for bottom navigation bar
@@ -2835,13 +2872,10 @@
                 bottomNavLink.classList.add('active');
             }
 
-            if (sectionId === 'my-account-section') {
-                renderProfileDetails(); // Call the defined function
-                loadUserAddresses();
-            } else if (sectionId === 'my-orders-section') {
-                loadUserOrders();
-            }
-
+            const globalContentTitleContainer = document.getElementById('global-content-title-container');
+            const mainPageTitle = document.getElementById('main-page-title');
+            const currentFilteredName = document.getElementById('current-filtered-name');
+            const backToHomeFromFilteredBtn = document.getElementById('back-to-home-from-filtered-btn');
 
             const searchSortContainer = document.getElementById('search-sort-container');
             const sortByContainer = document.getElementById('sort-by-container');
@@ -2850,58 +2884,94 @@
             searchInput.value = '';
             searchSuggestionsDiv.classList.add('hidden');
 
-            if (sectionId === 'categories-page-section') {
-                searchSortContainer.classList.remove('hidden');
-                sortByContainer.classList.add('hidden');
-                searchInput.placeholder = 'ابحث عن قسم...';
-                renderCategoryFilters();
-            } else if (['home-section', 'sales-section', 'new-arrivals-section', 'favorites-section'].includes(sectionId)) {
+            // Manage global title and search/sort visibility based on section
+            if (sectionId === 'home-section') {
+                globalContentTitleContainer.classList.remove('hidden');
                 searchSortContainer.classList.remove('hidden');
                 sortByContainer.classList.remove('hidden');
                 searchInput.placeholder = 'ابحث عن منتجات...';
-            } else {
-                searchSortContainer.classList.add('hidden');
-            }
 
-            const homeSectionTitle = document.getElementById('home-section-title');
-            const currentCategoryName = document.getElementById('current-category-name');
-            const backToCategoriesBtn = document.getElementById('back-to-categories-btn');
-
-            if (sectionId === 'home-section') {
-                // When home section is active, show homepage specific content
-                renderHomepageContent();
-                // If there are specific items to display (e.g., from search), override default homepage content
-                if (itemsToDisplay) {
+                if (resetHomepage) {
+                    mainPageTitle.textContent = 'الرئيسية';
+                    currentFilteredName.classList.add('hidden');
+                    backToHomeFromFilteredBtn.classList.add('hidden');
+                    renderHomepageContent(); // Re-render all homepage sub-sections
+                } else if (itemsToDisplay) {
+                    // Displaying search results
+                    mainPageTitle.textContent = 'نتائج البحث';
+                    currentFilteredName.classList.add('hidden');
+                    backToHomeFromFilteredBtn.classList.remove('hidden');
+                    renderProducts('products-grid-home', 'none', itemsToDisplay);
+                    // Hide specific homepage sections when showing search results
                     document.getElementById('main-banner-section').classList.add('hidden');
                     document.getElementById('homepage-categories-section').classList.add('hidden');
                     document.getElementById('homepage-featured-products-section').classList.add('hidden');
                     document.getElementById('internal-banners-section').classList.add('hidden');
                     document.getElementById('customer-reviews-section').classList.add('hidden');
                     document.getElementById('blog-section').classList.add('hidden');
-
-                    renderProducts('products-grid-home', 'none', itemsToDisplay);
-                    homeSectionTitle.textContent = 'نتائج البحث';
-                    currentCategoryName.classList.add('hidden');
-                    backToCategoriesBtn.classList.remove('hidden');
-                } else if (!currentCategoryName.classList.contains('hidden') && currentCategoryName.textContent && currentCategoryName.textContent !== 'منتجاتنا') {
-                    // If returning to home from a specific category, maintain that filter
-                    const category = window.storeData.categories.find(cat => cat.name === currentCategoryName.textContent);
-                    if (category) {
-                        renderProducts('products-grid-home', category.id);
-                    } else {
-                        // Fallback to full homepage content if category not found
-                        renderHomepageContent();
-                    }
                 } else {
-                    // Default home view
-                    renderHomepageContent();
+                    // Default home view (or returning from category filter, where currentFilteredName is already set)
+                    if (currentFilteredName.classList.contains('hidden')) { // Only reset if not already showing a category filter
+                        mainPageTitle.textContent = 'الرئيسية';
+                    }
+                    backToHomeFromFilteredBtn.classList.add('hidden'); // Hide if not in a filtered/search state
+                    renderHomepageContent(); // Render all homepage sub-sections
                 }
+            } else if (sectionId === 'categories-page-section') {
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'تصفح الأقسام';
+                currentFilteredName.classList.add('hidden');
+                backToHomeFromFilteredBtn.classList.remove('hidden'); // Can go back to home from categories page
+                searchSortContainer.classList.remove('hidden');
+                sortByContainer.classList.add('hidden'); // Hide sort for categories search
+                searchInput.placeholder = 'ابحث عن قسم...';
+                renderCategoryFilters();
             } else if (sectionId === 'sales-section') {
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'عروضنا المميزة';
+                currentFilteredName.classList.add('hidden');
+                backToHomeFromFilteredBtn.classList.remove('hidden');
+                searchSortContainer.classList.remove('hidden');
+                sortByContainer.classList.remove('hidden');
+                searchInput.placeholder = 'ابحث عن منتجات...';
                 renderProducts('products-grid-sales', 'sales');
             } else if (sectionId === 'new-arrivals-section') {
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'وصل حديثاً';
+                currentFilteredName.classList.add('hidden');
+                backToHomeFromFilteredBtn.classList.remove('hidden');
+                searchSortContainer.classList.remove('hidden');
+                sortByContainer.classList.remove('hidden');
+                searchInput.placeholder = 'ابحث عن منتجات...';
                 renderProducts('products-grid-new-arrivals', 'new-arrivals');
             } else if (sectionId === 'favorites-section') {
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'منتجاتي المفضلة';
+                currentFilteredName.classList.add('hidden');
+                backToHomeFromFilteredBtn.classList.remove('hidden');
+                searchSortContainer.classList.remove('hidden');
+                sortByContainer.classList.remove('hidden');
+                searchInput.placeholder = 'ابحث عن منتجات...';
                 renderFavorites();
+            } else if (sectionId === 'my-account-section') {
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'معلومات حسابي';
+                currentFilteredName.classList.add('hidden');
+                backToHomeFromFilteredBtn.classList.remove('hidden');
+                searchSortContainer.classList.add('hidden'); // Hide search/sort for account page
+                renderProfileDetails();
+                loadUserAddresses();
+            } else if (sectionId === 'my-orders-section') {
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'طلباتي';
+                currentFilteredName.classList.add('hidden');
+                backToHomeFromFilteredBtn.classList.remove('hidden');
+                searchSortContainer.classList.add('hidden'); // Hide search/sort for orders page
+                loadUserOrders();
+            } else {
+                // For any other section not explicitly handled, hide the global title and search/sort
+                globalContentTitleContainer.classList.add('hidden');
+                searchSortContainer.classList.add('hidden');
             }
         };
 
@@ -3815,7 +3885,6 @@
             }
         };
 
-
         // --- Event Listeners and Initial Load ---
         document.addEventListener("DOMContentLoaded", function() {
             window.scrollTo(0, 0);
@@ -3837,7 +3906,7 @@
             loadCart();
             loadFavorites();
 
-            showStoreSection('home-section'); // Default to home section
+            showStoreSection('home-section', null, true); // Default to home section with full reset
 
             // Event listeners for bottom navigation bar
             document.querySelectorAll('#bottom-nav-bar .nav-item').forEach(item => {
