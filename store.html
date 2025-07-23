@@ -12,7 +12,6 @@
         /* Global Font: Cairo */
         html, body {
             height: 100%; /* Ensure html and body take full height */
-            /* overflow: hidden; */ /* Removed to allow scrolling of content */
         }
         body {
             font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
@@ -21,7 +20,7 @@
             background-color: #f2f2f7; /* iOS light background */
             padding-top: 60px; /* Adjusted for fixed top header */
             padding-bottom: 70px; /* Adjusted for fixed bottom navigation */
-            font-size: 1.05rem;
+            font-size: 1rem; /* Slightly reduced base font size */
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -194,11 +193,11 @@
             right: 0;
             z-index: 1000;
             width: 100%;
-            height: 80px; /* Increased height for top bar */
+            height: 70px; /* Slightly reduced height for top bar */
         }
 
         .header h1 {
-            font-size: 1.5rem; /* Increased size */
+            font-size: 1.3rem; /* Reduced size */
             font-weight: 800; /* Even bolder */
             display: flex;
             align-items: center;
@@ -207,69 +206,37 @@
             color: #1c1c1e; /* Dark text */
         }
         .header h1 i {
-            font-size: 2.2rem; /* Larger store icon */
-            margin-left: 10px; /* Adjusted margin */
+            font-size: 1.8rem; /* Smaller store icon */
+            margin-left: 8px; /* Adjusted margin */
             color: #007AFF; /* Primary Blue */
         }
         .header-nav-main {
             display: flex; /* Always display */
             align-items: center;
-            gap: 0.75rem;
+            gap: 0.5rem; /* Reduced gap */
         }
-        .cart-icon-container {
-            display: flex;
-            flex-direction: column; /* Stack icon and text */
-            align-items: center;
-            padding: 6px 10px; /* Slightly larger touch targets */
-            border-radius: 8px; /* More rounded */
-            transition: background-color 0.2s ease, color 0.2s ease;
-            color: #007AFF; /* Primary Blue for links */
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 500;
-            white-space: nowrap;
-        }
-        .cart-icon-container i {
-            margin-left: 0; /* Remove margin-left for stacked layout */
-            font-size: 1.3rem; /* Larger icon */
-            margin-bottom: 3px; /* Space between icon and text */
-        }
-        .cart-icon-container:hover {
-            background-color: rgba(0, 122, 255, 0.1); /* Light blue highlight */
-            color: #007AFF;
-        }
-        .cart-count {
-            top: -1px;
-            right: 1px;
-            padding: 0px 4px;
-            font-size: 0.65rem;
-            background-color: #FF3B30; /* Primary Red */
-            color: white;
-            border-radius: 9999px; /* Fully rounded */
-        }
-
-        /* New styles for top bar icons */
-        .header-icon-btn {
+        .header-icon-btn { /* Combined cart-icon-container and header-icon-btn */
             display: flex;
             flex-direction: column; /* Stack icon and text */
             align-items: center;
             justify-content: center;
-            padding: 6px 10px;
-            border-radius: 8px;
+            padding: 4px 8px; /* Slightly smaller touch targets */
+            border-radius: 8px; /* More rounded */
             transition: background-color 0.2s ease, color 0.2s ease;
-            color: #007AFF;
+            color: #007AFF; /* Primary Blue for links */
             text-decoration: none;
-            font-size: 0.75rem; /* Smaller font for text below icon */
+            font-size: 0.7rem; /* Smaller font for text below icon */
             font-weight: 500;
             white-space: nowrap;
+            position: relative; /* Needed for cart-count positioning */
         }
         .header-icon-btn i {
             margin-left: 0; /* Remove margin-left for stacked layout */
-            font-size: 1.3rem; /* Larger icon */
-            margin-bottom: 3px; /* Space between icon and text */
+            font-size: 1.1rem; /* Smaller icon */
+            margin-bottom: 2px; /* Space between icon and text */
         }
         .header-icon-btn:hover {
-            background-color: rgba(0, 122, 255, 0.1);
+            background-color: rgba(0, 122, 255, 0.1); /* Light blue highlight */
             color: #007AFF;
         }
         body.dark-mode .header-icon-btn {
@@ -279,11 +246,29 @@
             background-color: rgba(0, 122, 255, 0.2);
             color: #e5e5ea;
         }
+        .cart-count {
+            position: absolute;
+            top: -5px; /* Adjusted top to be above the icon */
+            right: -5px; /* Adjusted right to be above the icon */
+            padding: 1px 5px; /* Smaller padding */
+            font-size: 0.6rem; /* Smaller font size */
+            background-color: #FF3B30; /* Primary Red */
+            color: white;
+            border-radius: 9999px; /* Fully rounded */
+            min-width: 18px; /* Ensure it's a small circle */
+            height: 18px; /* Ensure it's a small circle */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: translate(0%, 0%); /* No transform needed with adjusted top/right */
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2); /* Subtle shadow */
+        }
+
 
         .product-card {
             background-color: white;
-            border-radius: 12px; /* More rounded */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Softer shadow */
+            border-radius: 10px; /* Slightly less rounded */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06); /* Softer shadow */
             overflow: hidden;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             display: flex;
@@ -292,8 +277,8 @@
             position: relative;
         }
         .product-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 9px rgba(0,0,0,0.1);
         }
         .product-image {
             width: 100%;
@@ -312,7 +297,7 @@
             object-fit: cover;
         }
         .product-info {
-            padding: 16px; /* Increased padding */
+            padding: 12px; /* Reduced padding */
             flex-grow: 1;
             display: flex;
             flex-direction: column;
@@ -321,25 +306,25 @@
         }
         .product-name {
             font-weight: 600; /* Semi-bold */
-            font-size: 1.1rem;
+            font-size: 1rem; /* Reduced font size */
             color: #1c1c1e; /* Dark text */
-            margin-bottom: 8px;
+            margin-bottom: 6px; /* Reduced margin */
         }
         .product-price {
-            font-size: 1.2rem;
+            font-size: 1.1rem; /* Reduced font size */
             font-weight: 700;
             color: #007AFF; /* Primary Blue */
         }
         .product-original-price {
             text-decoration: line-through;
             color: #8e8e93; /* iOS Gray */
-            font-size: 0.9rem;
-            margin-right: 8px;
+            font-size: 0.8rem; /* Reduced font size */
+            margin-right: 6px; /* Reduced margin */
         }
         .product-description {
-            font-size: 0.95rem;
+            font-size: 0.9rem; /* Reduced font size */
             color: #636366; /* iOS Gray */
-            margin-top: 6px;
+            margin-top: 5px; /* Reduced margin */
             line-height: 1.5;
             flex-grow: 1;
         }
@@ -348,7 +333,7 @@
         .category-button-page {
             background-color: white;
             color: #1c1c1e; /* Dark text */
-            border-radius: 12px; /* More rounded */
+            border-radius: 10px; /* Slightly less rounded */
             font-weight: 600;
             transition: transform 0.2s ease, box-shadow 0.2s ease;
             cursor: pointer;
@@ -357,14 +342,14 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 130px; /* Slightly taller */
+            height: 120px; /* Slightly shorter */
             position: relative;
             overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
         }
         .category-button-page:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 9px rgba(0,0,0,0.1);
         }
 
         .category-main-image {
@@ -374,7 +359,7 @@
             position: absolute;
             top: 0;
             left: 0;
-            border-radius: 12px;
+            border-radius: 10px;
             z-index: 1;
         }
 
@@ -385,12 +370,12 @@
             width: 100%;
             background-color: rgba(0, 0, 0, 0.5); /* Darker overlay for contrast */
             color: white;
-            padding: 12px 18px; /* More padding */
+            padding: 10px 15px; /* Reduced padding */
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
             z-index: 2;
         }
         .dark-mode .category-overlay-strip {
@@ -398,12 +383,12 @@
         }
 
         .category-name-text {
-            font-size: 1.2rem; /* Larger font for category name */
+            font-size: 1.1rem; /* Reduced font for category name */
             font-weight: 700;
             color: white;
             flex-grow: 1;
             text-align: right;
-            margin-right: 15px;
+            margin-right: 10px; /* Reduced margin */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -415,12 +400,12 @@
         .info-button {
             background: rgba(255, 255, 255, 0.3); /* More translucent */
             border-radius: 50%;
-            width: 40px; /* Larger button */
-            height: 40px; /* Larger button */
+            width: 35px; /* Smaller button */
+            height: 35px; /* Smaller button */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1rem; /* Smaller icon */
             color: white;
             cursor: pointer;
             transition: background-color 0.2s ease;
@@ -454,11 +439,11 @@
             background-color: rgba(255, 255, 255, 0.9); /* Translucent background */
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            padding: 30px; /* More padding */
-            border-radius: 16px; /* More rounded */
-            box-shadow: 0 8px 24px rgba(0,0,0,0.25); /* Stronger, softer shadow */
+            padding: 25px; /* Reduced padding */
+            border-radius: 14px; /* Slightly less rounded */
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2); /* Stronger, softer shadow */
             width: 90%;
-            max-width: 750px; /* Increased max-width */
+            max-width: 700px; /* Reduced max-width */
             animation: slideIn 0.3s ease-out;
             max-height: 90vh;
             overflow-y: auto;
@@ -468,25 +453,25 @@
             to { opacity: 1; }
         }
         @keyframes slideIn {
-            from { transform: translateY(-40px); opacity: 0; }
+            from { transform: translateY(-30px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
         }
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 18px;
+            top: 15px; /* Reduced top margin */
+            right: 15px; /* Reduced right margin */
+            padding: 10px 15px; /* Reduced padding */
             border-radius: 8px;
             color: white;
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 1000;
             animation: slideInNotification 0.3s, fadeOutNotification 0.5s 2.5s forwards;
-            font-size: 0.95rem;
+            font-size: 0.9rem; /* Reduced font size */
         }
         @keyframes slideInNotification {
             from { right: -300px; opacity: 0; }
-            to { right: 20px; opacity: 1; }
+            to { right: 15px; opacity: 1; }
         }
         @keyframes fadeOutNotification {
             from { opacity: 1; }
@@ -499,16 +484,16 @@
 
         .favorite-toggle-btn {
             position: absolute;
-            top: 12px; /* Adjusted position */
-            left: 12px; /* Adjusted position */
+            top: 10px; /* Adjusted position */
+            left: 10px; /* Adjusted position */
             background-color: rgba(255, 255, 255, 0.8); /* More opaque */
             border-radius: 50%;
-            width: 36px; /* Larger size */
-            height: 36px; /* Larger size */
+            width: 32px; /* Smaller size */
+            height: 32px; /* Smaller size */
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem; /* Larger icon */
+            font-size: 1.1rem; /* Smaller icon */
             color: #ccc;
             transition: color 0.2s ease, background-color 0.2s ease;
             z-index: 10;
@@ -526,7 +511,7 @@
             border: none;
             cursor: pointer;
             padding: 0;
-            margin-left: 10px;
+            margin-left: 8px; /* Reduced margin */
             display: flex;
             align-items: center;
             justify-content: center;
@@ -537,21 +522,21 @@
             color: #0056b3; /* Darker Primary Blue */
         }
         .back-to-home-btn i {
-            font-size: 1.6rem; /* Larger icon */
+            font-size: 1.4rem; /* Reduced icon size */
         }
 
         /* Search suggestions styling */
         #search-suggestions {
             background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px; /* Slightly less rounded */
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08); /* Softer shadow */
             border: 1px solid #e0e0e0;
         }
         #search-suggestions div {
-            padding: 10px 15px; /* More padding */
+            padding: 8px 12px; /* Reduced padding */
             cursor: pointer;
             border-bottom: 1px solid #f0f0f0;
-            font-size: 0.95rem;
+            font-size: 0.9rem; /* Reduced font size */
             color: #1c1c1e;
         }
         #search-suggestions div:last-child {
@@ -563,21 +548,21 @@
 
         /* Search and Sort Controls */
         .search-sort-controls {
-            padding: 15px; /* More padding */
-            border-radius: 12px; /* More rounded */
-            margin-bottom: 20px; /* More margin */
+            padding: 12px; /* Reduced padding */
+            border-radius: 10px; /* Slightly less rounded */
+            margin-bottom: 15px; /* Reduced margin */
             background-color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
             display: flex; /* Ensure flex for alignment */
             flex-direction: row-reverse; /* RTL: search on right, sort on left */
             align-items: center;
-            gap: 1rem; /* Space between search and sort */
+            gap: 0.75rem; /* Reduced space */
         }
         .search-sort-controls input {
             flex-grow: 1; /* Search input takes available space */
-            padding: 10px 15px; /* More padding */
-            font-size: 1rem;
-            border-radius: 10px; /* More rounded */
+            padding: 8px 12px; /* Reduced padding */
+            font-size: 0.95rem; /* Reduced font size */
+            border-radius: 8px; /* Slightly less rounded */
             border: 1px solid #e0e0e0;
             background-color: #f9f9fb; /* Slightly off-white */
             color: #1c1c1e;
@@ -585,15 +570,15 @@
         .search-sort-controls .sort-controls-wrapper {
             display: flex;
             align-items: center;
-            gap: 0.5rem; /* Smaller gap between label and select */
+            gap: 0.4rem; /* Smaller gap between label and select */
             white-space: nowrap; /* Keep label and select on one line */
         }
         .search-sort-controls select {
             width: auto; /* Allow select to shrink */
-            min-width: 120px; /* Minimum width for sort dropdown */
-            padding: 8px 12px; /* Slightly less padding for smaller size */
-            font-size: 0.9rem; /* Smaller font size */
-            border-radius: 10px; /* More rounded */
+            min-width: 100px; /* Minimum width for sort dropdown */
+            padding: 7px 10px; /* Slightly less padding for smaller size */
+            font-size: 0.85rem; /* Smaller font size */
+            border-radius: 8px; /* Slightly less rounded */
             border: 1px solid #e0e0e0;
             background-color: #f9f9fb; /* Slightly off-white */
             color: #1c1c1e;
@@ -601,29 +586,30 @@
         .search-sort-controls input:focus,
         .search-sort-controls select:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3); /* Primary Blue glow */
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2); /* Primary Blue glow */
             border-color: #007AFF;
         }
 
         /* Profile picture styling */
         .profile-picture {
-            width: 100px;
-            height: 100px;
+            width: 90px; /* Slightly smaller */
+            height: 90px; /* Slightly smaller */
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid #007AFF; /* Primary Blue */
-            margin-bottom: 1rem;
+            border: 2px solid #007AFF; /* Primary Blue */
+            margin-bottom: 0.8rem; /* Reduced margin */
         }
 
         /* General Button Styles - iOS-like */
         .btn-primary {
             background-color: #007AFF; /* Primary Blue */
             color: white;
-            padding: 12px 20px;
-            border-radius: 10px; /* Rounded */
+            padding: 10px 18px; /* Reduced padding */
+            border-radius: 8px; /* Slightly less rounded */
             font-weight: 600;
             transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.95rem; /* Reduced font size */
         }
         .btn-primary:hover {
             background-color: #0056b3; /* Darker blue on hover */
@@ -638,11 +624,12 @@
         .btn-secondary {
             background-color: #e5e5ea; /* iOS light gray */
             color: #1c1c1e; /* Dark text */
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 10px 18px; /* Reduced padding */
+            border-radius: 8px;
             font-weight: 600;
             transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            font-size: 0.95rem; /* Reduced font size */
         }
         .btn-secondary:hover {
             background-color: #d1d1d6;
@@ -657,11 +644,12 @@
         .btn-success {
             background-color: #34c759; /* iOS Green - keeping for success */
             color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 10px 18px; /* Reduced padding */
+            border-radius: 8px;
             font-weight: 600;
             transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.95rem; /* Reduced font size */
         }
         .btn-success:hover {
             background-color: #30a84d; /* Darker green */
@@ -676,11 +664,12 @@
         .btn-danger {
             background-color: #FF3B30; /* Primary Red */
             color: white;
-            padding: 12px 20px;
-            border-radius: 10px;
+            padding: 10px 18px; /* Reduced padding */
+            border-radius: 8px;
             font-weight: 600;
             transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 0.95rem; /* Reduced font size */
         }
         .btn-danger:hover {
             background-color: #e02b20; /* Darker red */
@@ -694,18 +683,16 @@
         }
 
         /* Apply button styles to specific elements */
-        #add-to-cart-btn, #toggle-favorite-modal-btn {
-            @apply btn-success;
-            width: 100%;
-            font-size: 1.05rem;
-            padding: 14px 20px;
-        }
-        #toggle-favorite-modal-btn {
-            @apply btn-secondary; /* This one is secondary action */
+        /* #toggle-favorite-modal-btn {
+            @apply btn-secondary;
             color: #1c1c1e;
-        }
+            width: auto;
+            max-width: 250px;
+            display: block;
+            margin: 0 auto;
+        } */
         body.dark-mode #toggle-favorite-modal-btn {
-            @apply bg-gray-200; /* Revert to dark mode gray for secondary button */
+            /* @apply bg-gray-200; */ /* Removed for new gradient effect */
             background-color: #3a3a3c;
             color: #e5e5ea;
         }
@@ -713,12 +700,56 @@
             background-color: #545458;
         }
 
+        /* Fancy Add to Cart Button Style for product cards */
         .add-to-cart-btn-card {
-            @apply btn-success;
-            width: 100%;
-            font-size: 0.9rem;
-            padding: 10px 15px;
+            background: linear-gradient(135deg, #34c759 0%, #007AFF 100%); /* Green to Blue gradient */
+            color: white;
+            padding: 8px 12px; /* Smaller padding for card buttons */
+            border-radius: 8px; /* Slightly less rounded for cards */
+            font-weight: 700; /* Bolder text */
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.2);
+            font-size: 0.85rem; /* Smaller font for card buttons */
+            width: 100%; /* Full width */
+            border: none; /* No border */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
+
+        .add-to-cart-btn-card:hover {
+            background: linear-gradient(135deg, #007AFF 0%, #34c759 100%); /* Reverse gradient on hover */
+            transform: translateY(-2px); /* Lift effect */
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3); /* Stronger shadow */
+        }
+
+        .add-to-cart-btn-card:active {
+            transform: translateY(0); /* Press down effect */
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2); /* Inner shadow */
+            background: linear-gradient(135deg, #0056b3 0%, #278d40 100%); /* Darker gradient on active */
+        }
+
+        /* Dark mode specific for fancy button */
+        body.dark-mode .add-to-cart-btn-card {
+            background: linear-gradient(135deg, #30D158 0%, #0A84FF 100%); /* Dark mode friendly gradient */
+            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+        }
+        body.dark-mode .add-to-cart-btn-card:hover {
+            background: linear-gradient(135deg, #0A84FF 0%, #30D158 100%);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
+        }
+        body.dark-mode .add-to-cart-btn-card:active {
+            background: linear-gradient(135deg, #0056b3 0%, #278d40 100%);
+        }
+
+        /* For product card buttons, make their parent div a flex container to center them */
+        .product-card > div:last-child {
+            display: flex;
+            justify-content: center;
+        }
+
+
         #proceed-to-checkout-btn {
             @apply btn-primary;
         }
@@ -726,13 +757,6 @@
             @apply btn-success;
         }
         #profile-form button[type="submit"] {
-            @apply btn-primary;
-        }
-        /* Removed dark-mode-toggle-desktop styles from here, as it's moved */
-        #shipping-addresses-list + button { /* Add new address button */
-            @apply btn-success;
-        }
-        #address-form button[type="submit"] {
             @apply btn-primary;
         }
         #confirm-ok-btn {
@@ -743,8 +767,8 @@
         }
         .close-modal {
             @apply btn-secondary;
-            padding: 8px 12px;
-            font-size: 0.9rem;
+            padding: 7px 10px; /* Reduced padding */
+            font-size: 0.85rem; /* Reduced font size */
             border-radius: 8px;
         }
         .close-modal i {
@@ -768,7 +792,7 @@
             left: 0;
             right: 0;
             width: 100%;
-            height: 60px; /* Fixed height */
+            height: 55px; /* Slightly reduced height */
             background-color: rgba(255, 255, 255, 0.7); /* Translucent white */
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
@@ -786,19 +810,19 @@
             align-items: center;
             justify-content: center;
             flex: 1;
-            padding: 5px 0;
+            padding: 4px 0; /* Reduced padding */
             color: #8e8e93; /* iOS Gray for inactive text */
-            font-size: 0.75rem;
+            font-size: 0.7rem; /* Reduced font size */
             font-weight: 500; /* Default font weight for nav items */
             text-decoration: none;
             transition: color 0.2s ease, background-color 0.2s ease;
-            border-radius: 10px; /* Rounded items */
-            margin: 0 4px; /* Small margin between items */
+            border-radius: 8px; /* Slightly less rounded items */
+            margin: 0 3px; /* Reduced margin between items */
         }
 
         #bottom-nav-bar .nav-item i {
-            font-size: 1.3rem;
-            margin-bottom: 3px;
+            font-size: 1.2rem; /* Reduced icon size */
+            margin-bottom: 2px; /* Reduced margin */
             color: #8e8e93; /* Explicitly set icon color for inactive state */
             transition: color 0.2s ease; /* Add transition for icon color */
         }
@@ -850,6 +874,12 @@
         #bottom-nav-bar .nav-item[data-section="my-account-section"].active i {
             color: #AF52DE;
         }
+        #bottom-nav-bar .nav-item[data-section="cart-section"].active { /* New: Cart section active color */
+            color: #007AFF; /* Primary Blue */
+        }
+        #bottom-nav-bar .nav-item[data-section="cart-section"].active i {
+            color: #007AFF;
+        }
 
 
         /* Dark Mode specific active states for bottom nav */
@@ -897,8 +927,7 @@
         body.dark-mode #bottom-nav-bar .nav-item[data-section="my-account-section"].active i {
             color: #BF5AF2;
         }
-
-        #bottom-nav-bar .nav-item:hover {
+        body.dark-mode #bottom-nav-bar .nav-item:hover {
             background-color: rgba(0, 122, 255, 0.05);
         }
         body.dark-mode #bottom-nav-bar .nav-item:hover {
@@ -912,10 +941,10 @@
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
             box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-top: 30px;
-            border-top-left-radius: 12px;
-            border-top-right-radius: 12px;
+            padding: 15px; /* Reduced padding */
+            margin-top: 25px; /* Reduced margin */
+            border-top-left-radius: 10px; /* Slightly less rounded */
+            border-top-right-radius: 10px;
             color: #636366;
             text-align: center;
             transition: opacity 0.3s ease-in-out;
@@ -931,8 +960,8 @@
             margin: 0 auto;
         }
         .footer-content p {
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+            font-size: 0.85rem; /* Reduced font size */
+            margin-bottom: 4px; /* Reduced margin */
         }
         .footer-content a {
             color: #007AFF;
@@ -944,12 +973,12 @@
         .footer-social-links {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-top: 15px;
-            margin-bottom: 15px;
+            gap: 15px; /* Reduced gap */
+            margin-top: 12px; /* Reduced margin */
+            margin-bottom: 12px; /* Reduced margin */
         }
         .footer-social-links a {
-            font-size: 1.5rem;
+            font-size: 1.3rem; /* Reduced font size */
             color: #636366;
             transition: color 0.2s ease;
         }
@@ -960,8 +989,8 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px 20px;
-            font-size: 0.85rem;
+            gap: 6px 15px; /* Reduced gap */
+            font-size: 0.8rem; /* Reduced font size */
         }
         .footer-custom-links a {
             color: #007AFF;
@@ -971,51 +1000,59 @@
         /* Responsive adjustments */
         @media (max-width: 768px) {
             body {
-                font-size: 0.95rem;
-                padding-top: 80px; /* Top bar fixed height */
-                padding-bottom: 60px; /* Bottom nav fixed height */
+                font-size: 0.9rem; /* Further reduced for mobile */
+                padding-top: 70px; /* Top bar fixed height */
+                padding-bottom: 55px; /* Bottom nav fixed height */
             }
             .header {
-                padding: 8px 10px;
-                height: 80px; /* Ensure height is consistent on mobile */
+                padding: 6px 8px; /* Further reduced padding */
+                height: 70px; /* Ensure height is consistent on mobile */
             }
             .header h1 {
-                font-size: 1.2rem; /* Adjusted for mobile */
+                font-size: 1.1rem; /* Adjusted for mobile */
             }
             .header h1 i {
-                font-size: 1.8rem; /* Adjusted for mobile */
+                font-size: 1.6rem; /* Adjusted for mobile */
             }
             /* Ensure header nav main is always flex on mobile too */
             .header-nav-main {
                 display: flex;
                 flex-grow: 1; /* Allow it to take available space */
                 justify-content: flex-end; /* Push items to the right */
-                gap: 0.5rem; /* Smaller gap on mobile */
+                gap: 0.4rem; /* Smaller gap on mobile */
             }
-            .header-icon-btn, .cart-icon-container {
-                padding: 4px 8px; /* Smaller padding for mobile icons */
-                font-size: 0.7rem; /* Smaller font size */
+            .header-icon-btn {
+                padding: 3px 6px; /* Smaller padding for mobile icons */
+                font-size: 0.65rem; /* Smaller font size */
             }
-            .header-icon-btn i, .cart-icon-container i {
-                font-size: 1.2rem; /* Smaller icon size */
-                margin-bottom: 2px;
+            .header-icon-btn i {
+                font-size: 1.1rem; /* Smaller icon size */
+                margin-bottom: 1px;
+            }
+            .cart-count {
+                top: -4px;
+                right: -4px;
+                padding: 0px 4px;
+                font-size: 0.55rem;
+                min-width: 16px;
+                height: 16px;
             }
 
             .search-sort-controls {
                 flex-direction: column;
                 align-items: stretch;
-                gap: 8px;
-                padding: 12px;
-                margin-bottom: 15px;
+                gap: 6px;
+                padding: 10px;
+                margin-bottom: 12px;
             }
             .search-sort-controls input,
             .search-sort-controls select {
-                padding: 8px 12px;
-                font-size: 0.9rem;
-                border-radius: 8px;
+                padding: 7px 10px;
+                font-size: 0.85rem;
+                border-radius: 6px;
             }
             .product-image {
-                height: 120px;
+                height: 110px;
             }
             .product-name {
                 font-size: 0.9rem;
@@ -1024,69 +1061,54 @@
                 font-size: 1rem;
             }
             .add-to-cart-btn-card {
-                font-size: 0.8rem;
-                padding: 8px 12px;
+                font-size: 0.75rem;
+                padding: 7px 10px;
             }
             .modal-content {
-                padding: 20px;
-                border-radius: 12px;
-            }
-            .modal-content h3 {
-                font-size: 1.1rem;
-            }
-            .modal-content p {
-                font-size: 0.9rem;
-            }
-            #modal-product-price {
-                font-size: 1.8rem;
-            }
-            #add-to-cart-btn, #toggle-favorite-modal-btn {
-                font-size: 0.95rem;
-                padding: 12px 16px;
-                border-radius: 8px;
-            }
-            .category-button-page {
-                height: 110px;
+                padding: 18px;
                 border-radius: 10px;
             }
+            .modal-content h3 {
+                font-size: 1rem;
+            }
+            .modal-content p {
+                font-size: 0.85rem;
+            }
+            #modal-product-price {
+                font-size: 1.6rem;
+            }
+            #add-to-cart-btn {
+                font-size: 0.9rem;
+                padding: 10px 14px;
+                border-radius: 8px;
+            }
+            /* Specific adjustment for toggle-favorite-modal-btn on small screens */
+            #toggle-favorite-modal-btn {
+                font-size: 0.9rem; /* Keep font size consistent with other buttons */
+                padding: 10px 14px; /* Keep padding consistent */
+                border-radius: 8px; /* Keep border-radius consistent */
+                max-width: 200px; /* Adjust max-width for smaller screens */
+            }
+            .category-button-page {
+                height: 100px;
+                border-radius: 8px;
+            }
             .category-overlay-strip {
-                padding: 10px 15px;
-                border-top-left-radius: 10px;
-                border-top-right-radius: 10px;
+                padding: 8px 12px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
             }
             .category-name-text {
-                font-size: 1.05rem;
+                font-size: 1rem;
             }
             .info-button {
-                width: 35px;
-                height: 35px;
-                font-size: 1rem;
+                width: 30px;
+                height: 30px;
+                font-size: 0.9rem;
             }
             .dynamic-footer {
                 border-top-left-radius: 0;
                 border-top-right-radius: 0;
-            }
-        }
-
-        @media (min-width: 769px) {
-            /* On larger screens, ensure desktop layout is correct */
-            #bottom-nav-bar {
-                display: none; /* Hide bottom nav on desktop */
-            }
-            .header {
-                height: 80px; /* Consistent height for desktop */
-            }
-            .header-nav-main {
-                display: flex; /* Show desktop header links */
-            }
-            body {
-                padding-top: 80px; /* Only top header padding */
-                padding-bottom: 20px; /* No bottom nav */
-            }
-            .dynamic-footer {
-                position: static; /* Footer is part of normal flow on desktop */
-                opacity: 1;
-                visibility: visible;
             }
         }
 
@@ -1097,9 +1119,9 @@
             -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
             scrollbar-width: none; /* Hide scrollbar for Firefox */
             -ms-overflow-style: none;  /* Hide scrollbar for IE and Edge */
-            padding-bottom: 10px; /* Space for potential scrollbar */
-            margin-bottom: 20px; /* Space below the section */
-            gap: 1rem; /* Spacing between items */
+            padding-bottom: 8px; /* Space for potential scrollbar */
+            margin-bottom: 15px; /* Space below the section */
+            gap: 0.75rem; /* Spacing between items */
         }
 
         /* Hide scrollbar for Webkit browsers (Chrome, Safari) */
@@ -1110,15 +1132,297 @@
         /* Individual items within horizontal scroll */
         .horizontal-scroll-item {
             flex-shrink: 0; /* Prevent items from shrinking */
-            width: 250px; /* Fixed width for consistency */
+            width: 220px; /* Fixed width for consistency */
         }
 
         /* Adjust for mobile sizing */
         @media (max-width: 768px) {
             .horizontal-scroll-item {
-                width: 180px; /* Smaller width for mobile */
+                width: 160px; /* Smaller width for mobile */
             }
         }
+
+        /* Custom Styles for Animated Add to Cart Button (700ms effect) */
+        .button-700ms-gradient {
+            position: relative;
+            padding: 12px 20px; /* Adjusted to fit existing store button sizes */
+            font-size: 1rem; /* Adjusted to fit existing store button sizes */
+            font-weight: bold;
+            border: none;
+            border-radius: 10px; /* Adjusted to fit existing store button sizes */
+            cursor: pointer;
+            color: white; /* Changed to white for better contrast with gradient */
+            background: #007AFF; /* Default background, will be overridden by :before */
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.3s ease; /* Smooth transition for hover/active effects */
+            box-shadow: 
+                0 4px 10px rgba(0, 0, 0, 0.2), /* Adjusted shadow */
+                0 0 0 1px rgba(255, 255, 255, 0.1); /* Subtle white border */
+            letter-spacing: 0.5px;
+            outline: none;
+            display: flex; /* Ensure content is centered */
+            align-items: center;
+            justify-content: center;
+            width: 100%; /* Take full width of parent */
+        }
+        
+        .button-700ms-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                #ff0000, #ff9900, #ffff00, 
+                #00ff00, #00ffff, #0000ff, 
+                #9900ff, #ff00ff, #ff0000);
+            background-size: 600% 600%;
+            z-index: -1; /* Behind the button text */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease; /* Smooth fade-in */
+            border-radius: 10px; /* Match button border-radius */
+        }
+        
+        .button-700ms-gradient.active::before {
+            opacity: 1;
+            animation: gradientAnimation 0.7s linear forwards; /* 700ms animation on click */
+        }
+        
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+        
+        .button-700ms-gradient:hover {
+            transform: translateY(-2px); /* Slight lift on hover */
+            box-shadow: 
+                0 6px 15px rgba(0, 0, 0, 0.3),
+                0 0 0 2px rgba(255, 255, 255, 0.15);
+        }
+
+        .button-700ms-gradient:active {
+            transform: scale(0.98); /* Slight scale down on click */
+            box-shadow: 
+                0 3px 8px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        /* Dark Mode adjustments for the animated button */
+        body.dark-mode .button-700ms-gradient {
+            background: #0A84FF; /* Dark mode primary blue */
+            color: #e5e5ea;
+            box-shadow: 
+                0 4px 10px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+        body.dark-mode .button-700ms-gradient:hover {
+            box-shadow: 
+                0 6px 15px rgba(0, 0, 0, 0.5),
+                0 0 0 2px rgba(255, 255, 255, 0.25);
+        }
+        body.dark-mode .button-700ms-gradient.active::before {
+            /* Adjust gradient colors for dark mode if desired, or keep as is for vibrant effect */
+            background: linear-gradient(45deg, 
+                #00aaff, #00ddee, #00aaff, 
+                #ff00aa, #00aaff, #ff00aa);
+            background-size: 600% 600%;
+        }
+
+        /* Media queries for responsiveness of the animated button */
+        @media (max-width: 768px) {
+            .button-700ms-gradient {
+                padding: 10px 14px; /* Reduced padding for smaller screens */
+                font-size: 0.9rem; /* Reduced font size */
+                border-radius: 8px; /* Adjust border-radius */
+            }
+        }
+
+        /* New styles for the Favorite button with different gradient */
+        .button-favorite-gradient {
+            position: relative;
+            padding: 12px 20px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white; /* Text color for the button */
+            background: #AF52DE; /* Default background, will be overridden by :before */
+            overflow: hidden;
+            z-index: 1;
+            transition: all 0.3s ease;
+            box-shadow: 
+                0 4px 10px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.5px;
+            outline: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .button-favorite-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                #8a2be2, #4169e1, #00bfff, 
+                #00ced1, #20b2aa, #3cb371, 
+                #6a5acd, #8a2be2); /* Blue to purple gradient */
+            background-size: 600% 600%;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .button-favorite-gradient.active::before {
+            opacity: 1;
+            animation: gradientAnimation 0.7s linear forwards; /* Reusing same animation keyframe */
+        }
+
+        .button-favorite-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 6px 15px rgba(0, 0, 0, 0.3),
+                0 0 0 2px rgba(255, 255, 255, 0.15);
+        }
+
+        .button-favorite-gradient:active {
+            transform: scale(0.98);
+            box-shadow: 
+                0 3px 8px rgba(0, 0, 0, 0.2),
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+        }
+
+        /* Dark Mode adjustments for the favorite gradient button */
+        body.dark-mode .button-favorite-gradient {
+            background: #BF5AF2; /* Dark mode primary purple */
+            color: #e5e5ea;
+            box-shadow: 
+                0 4px 10px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+        }
+        body.dark-mode .button-favorite-gradient:hover {
+            box-shadow: 
+                0 6px 15px rgba(0, 0, 0, 0.5),
+                0 0 0 2px rgba(255, 255, 255, 0.25);
+        }
+        body.dark-mode .button-favorite-gradient.active::before {
+            background: linear-gradient(45deg, 
+                #6a5acd, #4169e1, #00bfff, 
+                #00ced1, #20b2aa, #3cb371, 
+                #6a5acd); /* Slightly adjusted for dark mode vibrancy */
+            background-size: 600% 600%;
+        }
+
+        @media (max-width: 768px) {
+            .button-favorite-gradient {
+                padding: 10px 14px;
+                font-size: 0.9rem;
+                border-radius: 8px;
+            }
+        }
+
+        /* Product Image Carousel Styles */
+        .product-image-carousel {
+            width: 100%;
+            padding-top: 100%; /* 1:1 Aspect Ratio */
+            position: relative;
+            overflow: hidden; /* Hide overflow for smooth transitions */
+            border-bottom: 1px solid #f0f0f0;
+            background-color: #f9f9fb; /* Light background for carousel */
+            border-radius: 8px; /* Slightly rounded corners */
+        }
+        .dark-mode .product-image-carousel {
+            background-color: #2c2c2e;
+            border-color: #3a3a3c;
+        }
+
+        #modal-product-images-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* width: 100%; <-- REMOVED THIS FROM CSS, now set by JS */
+            height: 100%;
+            display: flex;
+            transition: transform 0.3s ease-out; /* Smooth slide transition */
+            cursor: grab; /* Indicate draggable */
+        }
+        #modal-product-images-container.dragging {
+            cursor: grabbing;
+        }
+
+        #modal-product-images-container img {
+            width: 100%; /* Each image takes 100% of the dynamically set container width */
+            height: 100%;
+            object-fit: contain; /* Contain to show full image without cropping */
+            flex-shrink: 0; /* Prevent images from shrinking */
+            background-color: transparent; /* Ensure transparent background for image */
+        }
+
+        /* Navigation Buttons for Carousel */
+        .carousel-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.4); /* Dark translucent background */
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 1.5rem; /* Larger icon */
+            border-radius: 8px; /* Slightly rounded corners */
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            z-index: 20; /* Above images */
+            opacity: 0; /* Hidden by default, show on hover/active */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-nav-btn:hover {
+            background-color: rgba(0, 0, 0, 0.6);
+        }
+
+        .product-image-carousel:hover .carousel-nav-btn {
+            opacity: 1; /* Show buttons on hover over the carousel container */
+        }
+        
+        /* Always show buttons on touch devices */
+        @media (pointer: coarse) {
+            .carousel-nav-btn {
+                opacity: 1;
+            }
+        }
+
+        .carousel-nav-btn.hidden {
+            display: none; /* Explicitly hide when no more images */
+        }
+
+        .carousel-nav-btn.prev {
+            right: 10px; /* Position on the right for RTL */
+        }
+
+        .carousel-nav-btn.next {
+            left: 10px; /* Position on the left for RTL */
+        }
+
+        /* Dark mode specific for carousel buttons */
+        body.dark-mode .carousel-nav-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #e5e5ea;
+        }
+        body.dark-mode .carousel-nav-btn:hover {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
     </style>
 </head>
 <body>
@@ -1142,29 +1446,29 @@
                 <span>اتصل بنا</span>
             </a>
             <!-- Cart Icon -->
-            <div id="cart-icon-container" class="cart-icon-container" onclick="openCartModal()">
+            <a href="#" id="cart-icon-container" class="header-icon-btn" data-section="cart-section">
                 <i class="fas fa-shopping-cart"></i>
                 <span>السلة</span>
-                <span id="cart-count" class="cart-count relative -top-2 -right-1">0</span>
-            </div>
+                <span id="cart-count" class="cart-count">0</span>
+            </a>
         </nav>
     </header>
 
     <div class="container">
         <!-- Global Title for the main content area -->
-        <div id="global-content-title-container" class="flex items-center justify-between mb-6">
-            <button id="back-to-home-from-filtered-btn" class="back-to-home-btn hidden" onclick="showStoreSection('home-section', null, true)">
+        <div id="global-content-title-container" class="flex items-center justify-between mb-5">
+            <button id="back-to-home-from-filtered-btn" class="back-to-home-btn hidden" onclick="goBack()">
                 <i class="fas fa-arrow-left"></i>
             </button>
-            <h2 id="global-content-title" class="text-3xl font-bold text-gray-800 flex-grow text-center">
+            <h2 id="global-content-title" class="text-2xl font-bold text-gray-800 flex-grow text-center">
                 <span id="main-page-title">الرئيسية</span>
                 <span id="current-filtered-name" class="text-blue-700 mr-2 hidden"></span>
             </h2>
-            <div class="w-10"></div> <!-- Placeholder for balance -->
+            <div class="w-8"></div> <!-- Placeholder for balance -->
         </div>
 
         <!-- Search and Sort Controls -->
-        <div id="search-sort-container" class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 search-sort-controls hidden">
+        <div id="search-sort-container" class="bg-white p-3 rounded-lg shadow-md mb-5 flex flex-col sm:flex-row items-center justify-between gap-3 search-sort-controls hidden">
             <div class="relative w-full sm:flex-grow"> <!-- Changed to flex-grow for search input -->
                 <input type="text" id="search-input" placeholder="ابحث عن منتجات..." class="w-full border border-gray-300 rounded-md shadow-sm">
                 <div id="search-suggestions" class="absolute z-10 w-full bg-white border border-gray-300 rounded-md shadow-lg mt-1 hidden">
@@ -1180,20 +1484,19 @@
                     <option value="price-desc">السعر: من الأعلى للأقل</option>
                     <option value="quantity-asc">الكمية: من الأقل للأعلى</option>
                     <option value="quantity-desc">الكمية: من الأعلى للأقل</option>
-                    <option value="date-desc">التاريخ: الأحدث أولاً</option>
-                    <option value="date-asc">التاريخ: الأقدم أولاً</option>
+                    <!-- Removed date sorting options -->
                 </select>
             </div>
         </div>
 
         <!-- Main Banner Section -->
-        <section id="main-banner-section" class="store-section hidden mb-8">
-            <div id="main-banner-content" class="relative bg-blue-500 rounded-lg overflow-hidden shadow-lg text-white p-6 md:p-10 flex flex-col items-center justify-center text-center">
+        <section id="main-banner-section" class="store-section hidden mb-7">
+            <div id="main-banner-content" class="relative bg-blue-500 rounded-lg overflow-hidden shadow-lg text-white p-5 md:p-8 flex flex-col items-center justify-center text-center">
                 <img id="main-banner-image-display" src="https://placehold.co/1200x400/007AFF/FFFFFF?text=Main+Banner" alt="Main Banner" class="absolute inset-0 w-full h-full object-cover opacity-50">
                 <div class="relative z-10">
-                    <h2 id="main-banner-title-display" class="text-3xl md:text-5xl font-extrabold mb-4">عنوان البانر الرئيسي</h2>
-                    <p id="main-banner-description-display" class="text-lg md:text-xl mb-6 max-w-2xl">وصف جذاب للبانر الرئيسي هنا.</p>
-                    <a id="main-banner-cta-link-display" href="#" class="inline-block bg-white text-blue-700 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition duration-300">
+                    <h2 id="main-banner-title-display" class="text-2xl md:text-4xl font-extrabold mb-3">عنوان البانر الرئيسي</h2>
+                    <p id="main-banner-description-display" class="text-base md:text-lg mb-5 max-w-2xl">وصف جذاب للبانر الرئيسي هنا.</p>
+                    <a id="main-banner-cta-link-display" href="#" class="inline-block bg-white text-blue-700 font-bold py-2 px-6 rounded-full hover:bg-gray-100 transition duration-300 text-sm">
                         <span id="main-banner-cta-text-display">تسوق الآن</span> <i class="fas fa-arrow-left mr-2"></i>
                     </a>
                 </div>
@@ -1201,235 +1504,188 @@
         </section>
 
         <!-- Featured Categories Section (on homepage) -->
-        <section id="homepage-categories-section" class="store-section hidden mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">أقسام مختارة</h2>
+        <section id="homepage-categories-section" class="store-section hidden mb-7">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-5">أقسام مختارة</h2>
             <div id="homepage-categories-grid" class="horizontal-scroll-container">
                 <!-- Selected categories will be loaded here -->
             </div>
         </section>
 
         <!-- Featured Products Section (on homepage) -->
-        <section id="homepage-featured-products-section" class="store-section hidden mb-8">
-            <h2 id="homepage-featured-products-title" class="text-3xl font-bold text-gray-800 text-center mb-6">منتجات مميزة</h2>
+        <section id="homepage-featured-products-section" class="store-section hidden mb-7">
+            <h2 id="homepage-featured-products-title" class="text-2xl font-bold text-gray-800 text-center mb-5">منتجات مميزة</h2>
             <div id="homepage-featured-products-grid" class="horizontal-scroll-container">
                 <!-- Featured products will be loaded here -->
             </div>
         </section>
 
         <!-- Internal Banners Section -->
-        <section id="internal-banners-section" class="store-section hidden mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">إعلانات خاصة</h2>
-            <div id="internal-banners-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <section id="internal-banners-section" class="store-section hidden mb-7">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-5">إعلانات خاصة</h2>
+            <div id="internal-banners-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <!-- Internal banners will be loaded here -->
             </div>
         </section>
 
         <!-- Customer Reviews Section (Placeholder) -->
-        <section id="customer-reviews-section" class="store-section hidden mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">ماذا يقول عملاؤنا</h2>
-            <div class="bg-white p-6 rounded-lg shadow-md text-center text-gray-700">
-                <p class="mb-4 text-lg">"تجربة تسوق رائعة! منتجات عالية الجودة وخدمة عملاء ممتازة."</p>
-                <p class="font-semibold">- عميل سعيد</p>
+        <section id="customer-reviews-section" class="store-section hidden mb-7">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-5">ماذا يقول عملاؤنا</h2>
+            <div class="bg-white p-5 rounded-lg shadow-md text-center text-gray-700">
+                <p class="mb-3 text-base">"تجربة تسوق رائعة! منتجات عالية الجودة وخدمة عملاء ممتازة."</p>
+                <p class="font-semibold text-sm">- عميل سعيد</p>
                 <!-- More reviews could be dynamically loaded here -->
             </div>
         </section>
 
         <!-- Blog Section (Placeholder) -->
-        <section id="blog-section" class="store-section hidden mb-8">
-            <h2 class="text-3xl font-bold text-gray-800 text-center mb-6">آخر المقالات والأخبار</h2>
-            <div class="bg-white p-6 rounded-lg shadow-md text-gray-700">
-                <h3 class="font-bold text-xl mb-2">عنوان المقال الأول</h3>
-                <p class="text-sm text-gray-600 mb-3">نشر في: 15 يوليو 2025</p>
-                <p class="mb-4">هنا ستجد ملخصاً لأحدث مقالات المدونة أو الأخبار المتعلقة بمتجرنا أو منتجاتنا.</p>
-                <a href="#" class="text-blue-700 hover:underline">اقرأ المزيد <i class="fas fa-arrow-left mr-1"></i></a>
+        <section id="blog-section" class="store-section hidden mb-7">
+            <h2 class="text-2xl font-bold text-gray-800 text-center mb-5">آخر المقالات والأخبار</h2>
+            <div class="bg-white p-5 rounded-lg shadow-md text-gray-700">
+                <h3 class="font-bold text-lg mb-2">عنوان المقال الأول</h3>
+                <p class="text-xs text-gray-600 mb-2">نشر في: 15 يوليو 2025</p>
+                <p class="mb-3 text-sm">هنا ستجد ملخصاً لأحدث مقالات المدونة أو الأخبار المتعلقة بمتجرنا أو منتجاتنا.</p>
+                <a href="#" class="text-blue-700 hover:underline text-sm">اقرأ المزيد <i class="fas fa-arrow-left mr-1"></i></a>
             </div>
         </section>
 
         <!-- Home Section (Main Products Display - now also used for category filtering) -->
         <section id="home-section" class="store-section">
-            <div id="products-grid-home" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+            <div id="products-grid-home" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 product-grid">
                 <!-- Products will be loaded here by JS -->
             </div>
         </section>
 
         <!-- Sales Section (العروض) -->
         <section id="sales-section" class="store-section hidden">
-            <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">عروضنا المميزة</h2>
-                <div class="w-10"></div> <!-- Placeholder for balance -->
-            </div>
-            <div id="products-grid-sales" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+            <div id="products-grid-sales" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 product-grid">
                 <!-- Sales products will be loaded here by JS -->
-                <div class="col-span-full text-center py-10 text-gray-500">لا توجد عروض حالياً.</div>
+                <div class="col-span-full text-center py-8 text-gray-500 text-sm">لا توجد عروض حالياً.</div>
             </div>
         </section>
 
         <!-- New Arrivals Section (الجديد) -->
         <section id="new-arrivals-section" class="store-section hidden">
-            <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">وصل حديثاً</h2>
-                <div class="w-10"></div> <!-- Placeholder for balance -->
-            </div>
-            <div id="products-grid-new-arrivals" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+            <div id="products-grid-new-arrivals" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 product-grid">
                 <!-- New arrivals products will be loaded here by JS -->
-                <div class="col-span-full text-center py-10 text-gray-500">لا توجد منتجات جديدة حالياً.</div>
+                <div class="col-span-full text-center py-8 text-gray-500 text-sm">لا توجد منتجات جديدة حالياً.</div>
             </div>
         </section>
 
         <!-- Favorites Section -->
         <section id="favorites-section" class="store-section hidden">
-            <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">منتجاتي المفضلة</h2>
-                <div class="w-10"></div> <!-- Placeholder for balance -->
-            </div>
-            <div id="products-grid-favorites" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 product-grid">
+            <div id="products-grid-favorites" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 product-grid">
                 <!-- Favorite products will be loaded here by JS -->
-                <div class="col-span-full text-center py-10 text-gray-500">لم تقم بإضافة أي منتجات إلى المفضلة بعد.</div>
+                <div class="col-span-full text-center py-8 text-gray-500 text-sm">لم تقم بإضافة أي منتجات إلى المفضلة بعد.</div>
             </div>
         </section>
 
         <!-- Categories Page Section -->
         <section id="categories-page-section" class="store-section hidden">
-            <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">تصفح الأقسام</h2>
-                <div class="w-10"></div> <!-- Placeholder for balance -->
-            </div>
-            <div id="categories-grid-page" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div id="categories-grid-page" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 <!-- Categories will be loaded here by JS -->
-                <div class="col-span-full text-center py-10 text-gray-500">جاري تحميل الأقسام...</div>
+                <div class="col-span-full text-center py-8 text-gray-500 text-sm">جاري تحميل الأقسام...</div>
             </div>
         </section>
 
         <!-- My Account Section -->
         <section id="my-account-section" class="store-section hidden">
-            <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">معلومات حسابي</h2>
-                <div class="w-10"></div> <!-- Placeholder for balance -->
-            </div>
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h3 class="font-bold text-xl text-gray-800 mb-4">معلومات شخصية</h3>
-                <div class="flex flex-col items-center mb-4">
+            <div class="bg-white p-5 rounded-lg shadow-md mb-5">
+                <h3 class="font-bold text-lg text-gray-800 mb-3">معلومات شخصية</h3>
+                <div class="flex flex-col items-center mb-3">
                     <img id="profile-picture" class="profile-picture" src="https://placehold.co/100x100/007AFF/FFFFFF?text=User" alt="صورة المستخدم">
-                    <p id="profile-display-name" class="font-semibold text-lg text-gray-800"></p>
-                    <p id="profile-display-email" class="text-gray-600 text-sm"></p>
+                    <p id="profile-display-name" class="font-semibold text-base text-gray-800"></p>
+                    <p id="profile-display-email" class="text-gray-600 text-xs"></p>
                 </div>
                 <!-- Dark Mode Toggle moved here -->
-                <div class="flex justify-center gap-4 mb-4">
-                    <button id="dark-mode-toggle-account" class="btn-secondary">
+                <div class="flex justify-center gap-3 mb-3">
+                    <button id="dark-mode-toggle-account" class="btn-secondary text-sm">
                         <i class="fas fa-moon ml-2"></i> <span>الوضع الليلي</span>
                     </button>
                 </div>
                 <!-- Google Sign-in/Sign-out buttons -->
-                <div class="flex justify-center gap-4 mb-4">
-                    <button id="google-sign-in-btn" class="btn-primary">
+                <div class="flex justify-center gap-3 mb-3">
+                    <button id="google-sign-in-btn" class="btn-primary text-sm">
                         <i class="fab fa-google ml-2"></i> تسجيل الدخول بـ Google
                     </button>
-                    <button id="sign-out-btn" class="btn-danger hidden">
+                    <button id="sign-out-btn" class="btn-danger hidden text-sm">
                         <i class="fas fa-sign-out-alt ml-2"></i> تسجيل الخروج
                     </button>
                 </div>
                 <form id="profile-form" onsubmit="event.preventDefault(); saveUserProfile()" class="hidden">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
                         <div>
-                            <label for="profile-name" class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
-                            <input type="text" id="profile-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            <label for="profile-name" class="block text-xs font-medium text-gray-700 mb-1">الاسم الكامل</label>
+                            <input type="text" id="profile-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm" required>
                         </div>
                         <div>
-                            <label for="profile-email" class="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
-                            <input type="email" id="profile-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                            <label for="profile-email" class="block text-xs font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
+                            <input type="email" id="profile-email" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm">
                         </div>
                         <div class="md:col-span-2">
-                            <label for="profile-phone" class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
-                            <input type="tel" id="profile-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2">
+                            <label for="profile-phone" class="block text-xs font-medium text-gray-700 mb-1">رقم الهاتف</label>
+                            <input type="tel" id="profile-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm">
                         </div>
                     </div>
                     <div class="flex justify-end">
-                        <button type="submit" class="btn-primary">
+                        <button type="submit" class="btn-primary text-sm">
                             <i class="fas fa-save ml-2"></i> حفظ المعلومات
                         </button>
                     </div>
                 </form>
             </div>
-
-            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
-                <h3 class="font-bold text-xl text-gray-800 mb-4">عناوين الشحن</h3>
-                <div id="shipping-addresses-list" class="space-y-4 mb-4">
-                    <!-- Shipping addresses will be loaded here -->
-                    <p class="text-center text-gray-500">لا توجد عناوين محفوظة.</p>
-                </div>
-                <button onclick="openAddressModal()" class="btn-success">
-                    <i class="fas fa-plus ml-2"></i> إضافة عنوان جديد
-                </button>
-            </div>
         </section>
 
         <!-- My Orders Section -->
         <section id="my-orders-section" class="store-section hidden">
-            <div class="flex items-center justify-between mb-6">
-                <button class="back-to-home-btn" onclick="showStoreSection('home-section', null, true)">
-                    <i class="fas fa-arrow-left"></i>
-                </button>
-                <h2 class="text-3xl font-bold text-gray-800 flex-grow text-center">طلباتي</h2>
-                <div class="w-10"></div> <!-- Placeholder for balance -->
-            </div>
-            <div id="orders-list" class="space-y-4">
+            <div id="orders-list" class="space-y-3">
                 <!-- Orders will be loaded here by JS -->
-                <p class="text-center text-gray-500 py-10">جاري تحميل الطلبات...</p>
+                <p class="text-center text-gray-500 py-8 text-sm">جاري تحميل الطلبات...</p>
             </div>
         </section>
 
         <!-- Product Details Modal -->
         <div id="product-details-modal" class="modal-overlay hidden">
             <div class="modal-content">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 id="modal-product-name" class="font-bold text-xl text-gray-800">اسم المنتج</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                    <h3 id="modal-product-name" class="font-bold text-lg text-gray-800">اسم المنتج</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-base">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <div class="product-image">
-                            <img id="modal-product-image" src="" alt="Product Image" onerror="this.onerror=null; this.src='https://placehold.co/400x400/007AFF/FFFFFF?text=Product';">
+                        <!-- Product Image Carousel -->
+                        <div class="product-image-carousel relative w-full overflow-hidden rounded-md">
+                            <div id="modal-product-images-container" class="flex transition-transform duration-300 ease-out">
+                                <!-- Images will be dynamically loaded here -->
+                            </div>
+                            <!-- Navigation Buttons -->
+                            <button id="carousel-prev-btn" class="carousel-nav-btn prev">
+                                <i class="fas fa-chevron-right"></i> <!-- Right arrow for previous in RTL -->
+                            </button>
+                            <button id="carousel-next-btn" class="carousel-nav-btn next">
+                                <i class="fas fa-chevron-left"></i> <!-- Left arrow for next in RTL -->
+                            </button>
                         </div>
-                        <div class="flex items-baseline mb-2 mt-4">
-                            <p id="modal-product-price" class="text-3xl font-bold text-blue-700 ml-2">0 د.ع</p>
-                            <p id="modal-product-original-price" class="text-lg text-gray-500 line-through hidden">0 د.ع</p>
+                        <div class="flex items-baseline mb-2 mt-3">
+                            <p id="modal-product-price" class="text-2xl font-bold text-blue-700 ml-2">0 د.ع</p>
+                            <p id="modal-product-original-price" class="text-base text-gray-500 line-through hidden">0 د.ع</p>
                         </div>
-                        <p id="modal-product-category" class="text-sm text-gray-600 mb-2">القسم: عام</p>
-                        <p id="modal-product-inventory" class="text-sm text-gray-600 mb-4">المخزون: متوفر</p>
+                        <p id="modal-product-category" class="text-xs text-gray-600 mb-1">القسم: عام</p>
+                        <p id="modal-product-inventory" class="text-xs text-gray-600 mb-3">المخزون: متوفر</p>
                     </div>
-                    <div>
-                        <p id="modal-product-description" class="text-gray-700 leading-relaxed mb-6">وصف المنتج سيظهر هنا.</p>
-                        <button id="add-to-cart-btn" class="btn-success">
-                            <i class="fas fa-cart-plus ml-3"></i> أضف إلى السلة
-                        </button>
-                        <button id="toggle-favorite-modal-btn" class="btn-secondary mt-3">
+                    <div class="flex flex-col space-y-3"> <!-- Adjusted space-y for button spacing -->
+                        <p id="modal-product-description" class="text-gray-700 leading-relaxed mb-5 text-sm flex-grow">وصف المنتج سيظهر هنا.</p>
+                        <!-- Reordered buttons as requested -->
+                        <button id="toggle-favorite-modal-btn" class="button-favorite-gradient">
                             <i class="fas fa-heart ml-3"></i> <span id="favorite-text">أضف إلى المفضلة</span>
                         </button>
-                        <!-- New AI-powered button -->
-                        <button id="enhance-description-btn" class="btn-primary mt-3 w-full">
-                            <span id="enhance-description-text">✨ تحسين الوصف بالذكاء الاصطناعي</span>
-                            <i id="enhance-description-spinner" class="fas fa-spinner fa-spin ml-2 hidden"></i>
+                        <button id="add-to-cart-btn" class="button-700ms-gradient">
+                            <i class="fas fa-cart-plus ml-3"></i> أضف إلى السلة
                         </button>
                     </div>
                 </div>
-                <div class="mt-6 flex justify-end">
+                <div class="mt-5 flex justify-end">
                     <button class="close-modal">
                         إغلاق
                     </button>
@@ -1437,122 +1693,122 @@
             </div>
         </div>
 
-        <!-- Cart Modal -->
-        <div id="cart-modal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 class="font-bold text-xl text-gray-800">سلة التسوق</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div id="cart-items-list" class="space-y-4 mb-6 max-h-80 overflow-y-auto">
+        <!-- Cart Section (Now a full-screen section) -->
+        <section id="cart-section" class="store-section hidden">
+            <div class="bg-white p-5 rounded-lg shadow-md mb-5">
+                <div id="cart-items-list" class="space-y-3 mb-5 max-h-72 overflow-y-auto">
                     <!-- Cart items will be rendered here -->
-                    <p class="text-center text-gray-500 py-4">سلة التسوق فارغة.</p>
+                    <p class="text-center text-gray-500 py-3 text-sm">سلة التسوق فارغة.</p>
                 </div>
-                <div class="flex justify-between items-center text-lg font-bold text-gray-800 border-t pt-4">
+                <div class="mb-3">
+                    <label for="delivery-city-select" class="block text-sm font-medium text-gray-700 mb-1">اختر المدينة:</label>
+                    <select id="delivery-city-select" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm bg-white">
+                        <!-- Options will be populated by JS -->
+                    </select>
+                </div>
+                <div class="flex justify-between items-center text-base font-bold text-gray-800 border-t pt-3">
                     <span>الإجمالي الفرعي:</span>
                     <span id="cart-subtotal">0 د.ع</span>
                 </div>
-                <div class="flex justify-between items-center text-lg font-bold text-gray-800 mt-2">
+                <div class="flex justify-between items-center text-base font-bold text-gray-800 mt-2">
                     <span>سعر التوصيل:</span>
                     <span id="cart-delivery-price">0 د.ع</span>
                 </div>
-                <div class="flex justify-between items-center text-2xl font-bold text-blue-700 border-t pt-4 mt-4">
+                <div class="flex justify-between items-center text-xl font-bold text-blue-700 border-t pt-3 mt-3">
                     <span>الإجمالي الكلي:</span>
                     <span id="cart-total">0 د.ع</span>
                 </div>
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button class="close-modal ml-3">
+                <div class="mt-5 flex justify-end space-x-2">
+                    <button onclick="showStoreSection('home-section', null, true)" class="btn-secondary ml-2 text-sm">
                         متابعة التسوق
                     </button>
-                    <button id="proceed-to-checkout-btn" class="btn-primary">
+                    <button id="proceed-to-checkout-btn" class="btn-primary text-sm">
                         <i class="fas fa-money-check-alt ml-2"></i> إتمام الشراء
                     </button>
                 </div>
             </div>
-        </div>
+        </section>
 
-        <!-- Checkout Modal -->
-        <div id="checkout-modal" class="modal-overlay hidden">
-            <div class="modal-content">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 class="font-bold text-xl text-gray-800">إتمام الشراء</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
-                        <i class="fas fa-times"></i>
+        <!-- Checkout Section (Now a full-screen section) -->
+        <section id="checkout-section" class="store-section hidden">
+            <div class="bg-white p-5 rounded-lg shadow-md mb-5">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                    <h3 class="font-bold text-lg text-gray-800">إتمام الشراء</h3>
+                    <button onclick="showStoreSection('cart-section')" class="btn-secondary text-sm">
+                        <i class="fas fa-arrow-left ml-2"></i> العودة للسلة
                     </button>
                 </div>
                 <form id="checkout-form" onsubmit="event.preventDefault(); placeOrder()">
-                    <h4 class="font-bold text-lg mb-3">معلومات الشحن</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <!-- Shipping information input fields -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
                         <div>
-                            <label for="checkout-name" class="block text-sm font-medium text-gray-700 mb-1">الاسم الكامل</label>
-                            <input type="text" id="checkout-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            <label for="checkout-name" class="block text-xs font-medium text-gray-700 mb-1">الاسم الكامل</label>
+                            <input type="text" id="checkout-name" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm" required>
                         </div>
                         <div>
-                            <label for="checkout-phone" class="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف</label>
-                            <input type="tel" id="checkout-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
+                            <label for="checkout-phone" class="block text-xs font-medium text-gray-700 mb-1">رقم الهاتف</label>
+                            <input type="tel" id="checkout-phone" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm" required>
                         </div>
                         <div class="md:col-span-2">
-                            <label for="checkout-address" class="block text-sm font-medium text-gray-700 mb-1">العنوان الكامل</label>
-                            <textarea id="checkout-address" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required></textarea>
+                            <label for="checkout-address" class="block text-xs font-medium text-gray-700 mb-1">العنوان الكامل</label>
+                            <textarea id="checkout-address" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm" required></textarea>
                         </div>
                         <div class="md:col-span-2">
-                            <label for="checkout-notes" class="block text-sm font-medium text-gray-700 mb-1">ملاحظات إضافية (اختياري)</label>
-                            <textarea id="checkout-notes" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2"></textarea>
+                            <label for="checkout-notes" class="block text-xs font-medium text-gray-700 mb-1">ملاحظات إضافية (اختياري)</label>
+                            <textarea id="checkout-notes" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 text-sm"></textarea>
                         </div>
                     </div>
 
-                    <h4 class="font-bold text-lg mb-3">طريقة الدفع</h4>
-                    <div class="mb-6 p-3 bg-gray-100 rounded-md text-gray-700">
+                    <h4 class="font-bold text-base mb-2">طريقة الدفع</h4>
+                    <div class="mb-5 p-2 bg-gray-100 rounded-md text-gray-700 text-sm">
                         <p><i class="fas fa-money-bill-wave ml-2 text-green-600"></i> الدفع عند الاستلام فقط</p>
                     </div>
 
-                    <h4 class="font-bold text-lg mb-3">ملخص الطلب</h4>
-                    <div id="checkout-summary-list" class="space-y-2 mb-4 bg-gray-50 p-4 rounded-md max-h-40 overflow-y-auto">
+                    <h4 class="font-bold text-base mb-2">ملخص الطلب</h4>
+                    <div id="checkout-summary-list" class="space-y-2 mb-3 bg-gray-50 p-3 rounded-md max-h-36 overflow-y-auto text-sm">
                         <!-- Cart items summary will be rendered here -->
                     </div>
-                    <div class="flex justify-between items-center text-md font-medium text-gray-700">
+                    <div class="flex justify-between items-center text-sm font-medium text-gray-700">
                         <span>الإجمالي الفرعي:</span>
                         <span id="checkout-subtotal">0 د.ع</span>
                     </div>
-                    <div class="flex justify-between items-center text-md font-medium text-gray-700 mt-2">
-                        <span>سعر التوصيل:</span>
+                    <div class="flex justify-between items-center text-sm font-medium text-gray-700 mt-1">
+                        <span>سعر التوصيل (<span id="checkout-selected-city-summary"></span>):</span> <!-- Added city name here -->
                         <span id="checkout-delivery-price">0 د.ع</span>
                     </div>
-                    <div class="flex justify-between items-center text-xl font-bold text-blue-700 border-t pt-4 mt-4">
+                    <div class="flex justify-between items-center text-lg font-bold text-blue-700 border-t pt-3 mt-3">
                         <span>الإجمالي الكلي:</span>
                         <span id="checkout-total">0 د.ع</span>
                     </div>
 
-                    <div class="mt-6 flex justify-end space-x-3">
-                        <button type="button" class="close-modal ml-3">
+                    <div class="mt-5 flex justify-end space-x-2">
+                        <button type="button" onclick="showStoreSection('cart-section')" class="btn-secondary ml-2">
                             إلغاء
                         </button>
-                        <button type="submit" class="btn-success">
+                        <button type="submit" class="btn-success text-sm">
                             <i class="fas fa-check-circle ml-2"></i> تأكيد الطلب
                         </button>
                     </div>
                 </form>
             </div>
-        </div>
+        </section>
 
         <!-- Contact Us Modal -->
         <div id="contact-us-modal" class="modal-overlay hidden">
-            <div class="modal-content max-w-lg">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 class="font-bold text-xl text-gray-800">اتصل بنا</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+            <div class="modal-content max-w-sm">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                    <h3 class="font-bold text-lg text-gray-800">اتصل بنا</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-base">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="text-gray-700 space-y-3">
+                <div class="text-gray-700 space-y-2 text-sm">
                     <p class="flex items-center"><i class="fas fa-store ml-3 text-blue-700"></i> <span id="contact-store-name"></span></p>
                     <p class="flex items-center"><i class="fas fa-phone ml-3 text-blue-700"></i> <a id="contact-phone-link" href="#" class="text-blue-700 hover:underline"></a></p>
                     <p class="flex items-center"><i class="fab fa-whatsapp ml-3 text-green-600"></i> <a id="contact-whatsapp-link" href="#" target="_blank" class="text-green-600 hover:underline"></a></p>
                     <p class="flex items-center"><i class="fas fa-envelope ml-3 text-blue-700"></i> <a id="contact-email-link" href="#" class="text-blue-700 hover:underline"></a></p>
                 </div>
-                <div class="mt-6 flex justify-end">
+                <div class="mt-5 flex justify-end">
                     <button class="close-modal">
                         إغلاق
                     </button>
@@ -1560,49 +1816,18 @@
             </div>
         </div>
 
-        <!-- Address Modal for Add/Edit -->
-        <div id="address-modal" class="modal-overlay hidden">
-            <div class="modal-content max-w-md">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 id="address-modal-title" class="font-bold text-xl text-gray-800">إضافة عنوان جديد</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <form id="address-form" onsubmit="event.preventDefault(); saveAddress()">
-                    <input type="hidden" id="address-id">
-                    <div class="mb-4">
-                        <label for="address-label" class="block text-sm font-medium text-gray-700 mb-1">اسم العنوان (مثال: المنزل، العمل)</label>
-                        <input type="text" id="address-label" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required>
-                    </div>
-                    <div class="mb-4">
-                        <label for="address-full" class="block text-sm font-medium text-gray-700 mb-1">العنوان الكامل</label>
-                        <textarea id="address-full" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" required></textarea>
-                    </div>
-                    <div class="flex justify-end">
-                        <button type="button" class="close-modal ml-3">
-                            إلغاء
-                        </button>
-                        <button type="submit" class="btn-primary">
-                            <i class="fas fa-save ml-2"></i> حفظ
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <!-- Generic Confirmation Modal -->
         <div id="confirm-modal" class="modal-overlay hidden">
-            <div class="modal-content max-w-sm text-center">
-                <div class="flex justify-center mb-4">
-                    <i class="fas fa-question-circle text-yellow-500 text-5xl"></i>
+            <div class="modal-content max-w-xs text-center">
+                <div class="flex justify-center mb-3">
+                    <i class="fas fa-question-circle text-yellow-500 text-4xl"></i>
                 </div>
-                <h3 id="confirm-message" class="font-bold text-xl text-gray-800 mb-4">هل أنت متأكد؟</h3>
-                <div class="flex justify-center space-x-4">
-                    <button id="confirm-cancel-btn" class="btn-secondary">
+                <h3 id="confirm-message" class="font-bold text-base text-gray-800 mb-3">هل أنت متأكد؟</h3>
+                <div class="flex justify-center space-x-3">
+                    <button id="confirm-cancel-btn" class="btn-secondary text-sm">
                         إلغاء
                     </button>
-                    <button id="confirm-ok-btn" class="btn-danger">
+                    <button id="confirm-ok-btn" class="btn-danger text-sm">
                         تأكيد
                     </button>
                 </div>
@@ -1612,34 +1837,34 @@
         <!-- Order Details Modal -->
         <div id="order-details-modal" class="modal-overlay hidden">
             <div class="modal-content">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 class="font-bold text-xl text-gray-800">تفاصيل الطلب <span id="modal-order-number"></span></h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                    <h3 class="font-bold text-lg text-gray-800">تفاصيل الطلب <span id="modal-order-number"></span></h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-base">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="space-y-4 mb-6">
+                <div class="space-y-3 mb-5 text-sm">
                     <p><strong>تاريخ الطلب:</strong> <span id="modal-order-date"></span></p>
                     <p><strong>الحالة:</strong> <span id="modal-order-status"></span></p>
                     <p><strong>الاسم:</strong> <span id="modal-order-name"></span></p>
                     <p><strong>الهاتف:</strong> <span id="modal-order-phone"></span></p>
                     <p><strong>العنوان:</strong> <span id="modal-order-address"></span></p>
                     <p><strong>ملاحظات:</strong> <span id="modal-order-notes"></span></p>
-                    <h4 class="font-bold text-lg mt-4 mb-2">المنتجات:</h4>
-                    <div id="modal-order-products-list" class="space-y-2 bg-gray-50 p-3 rounded-md">
+                    <h4 class="font-bold text-base mt-3 mb-2">المنتجات:</h4>
+                    <div id="modal-order-products-list" class="space-y-2 bg-gray-50 p-2 rounded-md">
                         <!-- Products will be listed here -->
                     </div>
-                    <div class="text-right mt-4">
+                    <div class="text-right mt-3">
                         <p><strong>الإجمالي الفرعي:</strong> <span id="modal-order-subtotal"></span> د.ع</p>
                         <p><strong>سعر التوصيل:</strong> <span id="modal-order-delivery-price"></span> د.ع</p>
-                        <p class="text-xl font-bold text-blue-700"><strong>الإجمالي الكلي:</strong> <span id="modal-order-total"></span> د.ع</p>
+                        <p class="text-lg font-bold text-blue-700"><strong>الإجمالي الكلي:</strong> <span id="modal-order-total"></span> د.ع</p>
                     </div>
                 </div>
-                <div class="flex justify-end space-x-3">
-                    <button id="order-details-contact-support-btn" class="btn-primary">
+                <div class="flex justify-end space-x-2">
+                    <button id="order-details-contact-support-btn" class="btn-primary text-sm">
                         <i class="fas fa-headset ml-2"></i> التواصل مع الدعم
                     </button>
-                    <button class="close-modal">
+                    <button class="close-modal text-sm">
                         إغلاق
                     </button>
                 </div>
@@ -1648,16 +1873,16 @@
 
         <!-- Category Description Modal -->
         <div id="category-description-modal" class="modal-overlay hidden">
-            <div class="modal-content max-w-lg">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b">
-                    <h3 id="modal-category-name" class="font-bold text-xl text-gray-800">اسم القسم</h3>
-                    <button class="close-modal text-gray-500 hover:text-gray-700 text-lg">
+            <div class="modal-content max-w-sm">
+                <div class="flex justify-between items-center mb-3 pb-2 border-b">
+                    <h3 id="modal-category-name" class="font-bold text-lg text-gray-800">اسم القسم</h3>
+                    <button class="close-modal text-gray-500 hover:text-gray-700 text-base">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <p id="modal-category-description" class="text-gray-700 leading-relaxed mb-6">وصف القسم سيظهر هنا.</p>
-                <div class="mt-6 flex justify-end">
-                    <button class="close-modal">
+                <p id="modal-category-description" class="text-gray-700 leading-relaxed mb-5 text-sm">وصف القسم سيظهر هنا.</p>
+                <div class="mt-5 flex justify-end">
+                    <button class="close-modal text-sm">
                         إغلاق
                     </button>
                 </div>
@@ -1665,14 +1890,14 @@
         </div>
 
         <!-- Sentinel for Footer Visibility -->
-        <div id="footer-sentinel" style="height: 1px; margin-top: 50px;"></div>
+        <div id="footer-sentinel" style="height: 1px; margin-top: 40px;"></div>
 
     </div> <!-- End of container -->
 
     <!-- Dynamic Footer -->
     <footer id="dynamic-footer" class="dynamic-footer">
         <div class="footer-content">
-            <div id="footer-contact-info" class="mb-4">
+            <div id="footer-contact-info" class="mb-3">
                 <p class="font-bold" id="footer-store-name-info"></p>
                 <p id="footer-phone-info"></p>
                 <p id="footer-email-info"></p>
@@ -1764,7 +1989,6 @@
             cart: [],
             favorites: [],
             userProfile: null,
-            userAddresses: [],
             userOrders: []
         };
 
@@ -1773,13 +1997,16 @@
         window.currentUserId = null;
 
         // Telegram Bot Configuration
-        const TELEGRAM_BOT_TOKEN = '7912718787:AAH7QxTF2XMH4O3carYa5yGSqyjGz3n89Tc';
+        const TELEGRAM_BOT_TOKEN = '7912718787:AAH7QxTF2XMH4O3carYa5yGSyqjGz3n89Tc';
         const TELEGRAM_CHAT_ID = '708957775';
 
         // Global unsubscribe variables for Firebase listeners
         let unsubscribeUserProfile = null;
-        let unsubscribeUserAddresses = null;
         let unsubscribeUserOrders = null;
+
+        // Navigation history stack
+        window.navigationHistory = [];
+        window.currentSection = 'home-section'; // Initialize with the default section
 
         /**
          * Renders the user profile details in the 'My Account' section.
@@ -1884,10 +2111,6 @@
                 unsubscribeUserProfile();
                 unsubscribeUserProfile = null;
             }
-            if (unsubscribeUserAddresses) {
-                unsubscribeUserAddresses();
-                unsubscribeUserAddresses = null;
-            }
             if (unsubscribeUserOrders) {
                 unsubscribeUserOrders();
                 unsubscribeUserOrders = null;
@@ -1899,7 +2122,6 @@
 
                 // Load/listen when a user is authenticated
                 loadUserProfile(user);
-                loadUserAddresses();
                 loadUserOrders();
             } else {
                 // User is signed out, sign in anonymously
@@ -1910,7 +2132,6 @@
 
                     // Load/listen for anonymous user
                     loadUserProfile(anonymousUserCredential.user);
-                    loadUserAddresses();
                     loadUserOrders();
                 } catch (error) {
                     console.error("Error signing in anonymously:", error);
@@ -2146,24 +2367,44 @@
             const existingFavoriteIndex = window.storeData.favorites.findIndex(id => id === product.id);
 
             if (existingFavoriteIndex > -1) {
-                window.storeData.favorites.splice(existingFavoriteIndex, 1);
-                showNotification(`تمت إزالة "${product.name}" من المفضلة.`, "info");
+                // If product is already favorited, confirm removal
+                showConfirmModal(`هل أنت متأكد أنك تريد إزالة "${product.name}" من المفضلة؟`, (confirmed) => {
+                    if (confirmed) {
+                        window.storeData.favorites.splice(existingFavoriteIndex, 1);
+                        saveFavorites();
+                        showNotification(`تمت إزالة "${product.name}" من المفضلة.`, "info");
+                        // Re-render relevant sections to update favorite icons
+                        if (!document.getElementById('favorites-section').classList.contains('hidden')) {
+                            renderFavorites();
+                        }
+                        if (!document.getElementById('product-details-modal').classList.contains('hidden')) {
+                            updateModalFavoriteButton(productId);
+                        }
+                        renderProducts('products-grid-home', 'all');
+                        renderProducts('products-grid-sales', 'sales');
+                        renderProducts('products-grid-new-arrivals', 'new-arrivals'); // Update new arrivals section
+                        renderProducts('homepage-featured-products-grid', 'featured', null, true); // Update featured products
+                    } else {
+                        showNotification(`تم إلغاء إزالة "${product.name}" من المفضلة.`, "info");
+                    }
+                });
             } else {
+                // If product is not favorited, add directly
                 window.storeData.favorites.push(product.id);
+                saveFavorites();
                 showNotification(`تمت إضافة "${product.name}" إلى المفضلة!`, "success");
+                // Re-render relevant sections to update favorite icons
+                if (!document.getElementById('favorites-section').classList.contains('hidden')) {
+                    renderFavorites();
+                }
+                if (!document.getElementById('product-details-modal').classList.contains('hidden')) {
+                    updateModalFavoriteButton(productId);
+                }
+                renderProducts('products-grid-home', 'all');
+                renderProducts('products-grid-sales', 'sales');
+                renderProducts('products-grid-new-arrivals', 'new-arrivals'); // Update new arrivals section
+                renderProducts('homepage-featured-products-grid', 'featured', null, true); // Update featured products
             }
-            saveFavorites();
-            // Re-render relevant sections to update favorite icons
-            if (!document.getElementById('favorites-section').classList.contains('hidden')) {
-                renderFavorites();
-            }
-            if (!document.getElementById('product-details-modal').classList.contains('hidden')) {
-                updateModalFavoriteButton(productId);
-            }
-            renderProducts('products-grid-home', 'all');
-            renderProducts('products-grid-sales', 'sales');
-            renderProducts('products-grid-new-arrivals', 'new-arrivals'); // Update new arrivals section
-            renderProducts('homepage-featured-products-grid', 'featured', null, true); // Update featured products
         };
 
         /**
@@ -2186,6 +2427,119 @@
             toggleFavoriteModalBtn.onclick = () => toggleFavorite(productId);
         }
 
+        // --- Product Image Carousel Logic ---
+        let currentImageIndex = 0;
+        let isDragging = false;
+        let startPos = 0;
+        let currentTranslate = 0;
+        let prevTranslate = 0;
+        let animationFrameId;
+
+        const modalProductImageContainer = document.getElementById('modal-product-images-container');
+        const carouselPrevBtn = document.getElementById('carousel-prev-btn');
+        const carouselNextBtn = document.getElementById('carousel-next-btn');
+        let imagesToDisplay = []; // To store product images for the carousel
+
+        function setCarouselTransform() {
+            if (modalProductImageContainer) {
+                modalProductImageContainer.style.transform = `translateX(${currentTranslate}px)`;
+            }
+        }
+
+        function animateCarousel() {
+            setCarouselTransform();
+            if (isDragging) {
+                animationFrameId = requestAnimationFrame(animateCarousel);
+            }
+        }
+
+        function getPositionX(e) {
+            return e.type.includes('mouse') ? e.pageX : e.touches[0].clientX;
+        }
+
+        function touchStart(e) {
+            isDragging = true;
+            startPos = getPositionX(e);
+            // Ensure prevTranslate is set to the current *actual* transform value
+            const transformMatrix = window.getComputedStyle(modalProductImageContainer).transform;
+            if (transformMatrix !== 'none') {
+                prevTranslate = parseFloat(transformMatrix.split(',')[4]);
+            } else {
+                prevTranslate = 0;
+            }
+            
+            cancelAnimationFrame(animationFrameId); // Stop any ongoing animation/transition
+            if (modalProductImageContainer) {
+                modalProductImageContainer.style.transition = 'none'; // Disable transition during drag
+                modalProductImageContainer.classList.add('dragging');
+            }
+            animateCarousel(); // Start animation loop for smooth dragging
+        }
+
+        function touchMove(e) {
+            if (!isDragging) return;
+            e.preventDefault(); // Prevent vertical scrolling on touch devices
+            const currentPosition = getPositionX(e);
+            currentTranslate = prevTranslate + (currentPosition - startPos);
+        }
+
+        function touchEnd() {
+            isDragging = false;
+            cancelAnimationFrame(animationFrameId);
+            if (modalProductImageContainer) {
+                modalProductImageContainer.classList.remove('dragging');
+                modalProductImageContainer.style.transition = 'transform 0.3s ease-out'; // Re-enable transition
+            }
+
+            const containerWidth = modalProductImageContainer.parentElement.offsetWidth; // Width of the visible area (one image)
+            if (containerWidth === 0) return; // Avoid division by zero
+
+            const currentOffset = -currentTranslate; // Positive value of how much we've scrolled
+            currentImageIndex = Math.round(currentOffset / containerWidth);
+
+            // Clamp index to valid range
+            if (currentImageIndex < 0) currentImageIndex = 0;
+            if (currentImageIndex >= imagesToDisplay.length) currentImageIndex = imagesToDisplay.length - 1;
+
+            // Snap to the new image
+            updateCarouselUI();
+        }
+
+        /**
+         * Navigates the carousel.
+         * @param {number} direction - 1 for next, -1 for previous.
+         */
+        function navigateCarousel(direction) {
+            currentImageIndex += direction;
+            if (currentImageIndex < 0) currentImageIndex = 0;
+            if (currentImageIndex >= imagesToDisplay.length) currentImageIndex = imagesToDisplay.length - 1;
+            updateCarouselUI();
+        }
+
+        function updateCarouselUI() {
+            if (!modalProductImageContainer || imagesToDisplay.length === 0) return;
+
+            const containerWidth = modalProductImageContainer.parentElement.offsetWidth; // This is the width of one image viewport
+            currentTranslate = -currentImageIndex * containerWidth;
+            setCarouselTransform(); // Apply the transform
+
+            // Update button visibility
+            if (carouselPrevBtn) {
+                carouselPrevBtn.classList.toggle('hidden', currentImageIndex === 0);
+            }
+            if (carouselNextBtn) {
+                carouselNextBtn.classList.toggle('hidden', currentImageIndex === imagesToDisplay.length - 1);
+            }
+            // If only one image, hide both buttons
+            if (imagesToDisplay.length <= 1) {
+                if (carouselPrevBtn) carouselPrevBtn.classList.add('hidden');
+                if (carouselNextBtn) carouselNextBtn.classList.add('hidden');
+            }
+        }
+
+        // Attach event listeners for carousel (ensure these are inside DOMContentLoaded or after elements exist)
+        // These are now attached in DOMContentLoaded
+        
         /**
          * Opens the product details modal with information for the given product ID.
          * @param {string} productId - The ID of the product to display.
@@ -2201,9 +2555,32 @@
 
             document.getElementById('modal-product-name').textContent = product.name || 'اسم المنتج';
             
-            const modalImage = document.getElementById('modal-product-image');
-            modalImage.src = product.image || 'https://placehold.co/400x400/007AFF/FFFFFF?text=Product';
-            modalImage.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x400/007AFF/FFFFFF?text=Image+Not+Found'; };
+            // Clear previous images
+            if (modalProductImageContainer) modalProductImageContainer.innerHTML = '';
+
+            // Determine images to display (prioritize 'images' array, fallback to single 'image')
+            imagesToDisplay = (product.images && product.images.length > 0) ? product.images : [product.image || 'https://placehold.co/400x400/007AFF/FFFFFF?text=Product'];
+
+            // Set the width of the container to accommodate all images
+            if (modalProductImageContainer) {
+                modalProductImageContainer.style.width = `${imagesToDisplay.length * 100}%`;
+            }
+
+            // Render images
+            imagesToDisplay.forEach(imgSrc => {
+                const img = document.createElement('img');
+                img.src = imgSrc;
+                img.alt = product.name || 'Product Image';
+                img.onerror = function() { this.onerror=null; this.src='https://placehold.co/400x400/007AFF/FFFFFF?text=Image+Not+Found'; };
+                if (modalProductImageContainer) modalProductImageContainer.appendChild(img);
+            });
+
+            currentImageIndex = 0; // Reset to first image
+            // Use a small timeout to allow modal to render before calculating width
+            setTimeout(() => {
+                updateCarouselUI();
+            }, 50); // Small delay
+
 
             document.getElementById('modal-product-price').textContent = `${(product.price || 0).toLocaleString('ar-EG')} د.ع`;
             
@@ -2239,14 +2616,6 @@
             addToCartBtn.onclick = () => addToCart(product.id);
             
             updateModalFavoriteButton(product.id);
-
-            // Set up the AI enhancement button
-            const enhanceDescriptionBtn = document.getElementById('enhance-description-btn');
-            enhanceDescriptionBtn.onclick = () => enhanceProductDescriptionWithAI(product.id);
-            enhanceDescriptionBtn.disabled = false; // Enable button when modal opens
-            document.getElementById('enhance-description-text').textContent = '✨ تحسين الوصف بالذكاء الاصطناعي';
-            document.getElementById('enhance-description-spinner').classList.add('hidden');
-
 
             document.getElementById('product-details-modal').classList.remove('hidden');
         };
@@ -2284,7 +2653,11 @@
                         contactPhone: "+964 782 305 3419",
                         contactWhatsapp: "+964 782 305 3419",
                         contactEmail: "info@zioshop.com",
-                        deliveryPricesByCity: [],
+                        deliveryPricesByCity: [
+                            { city: "بغداد", price: 5000 },
+                            { city: "البصرة", price: 7000 },
+                            { city: "اربيل", price: 10000 }
+                        ], // Default delivery prices
                         thankYouMessage: "شكراً لثقتك بنا! سيتواصل معك فريقنا قريباً لتأكيد طلبك."
                     };
                     const storeNameElement = document.getElementById('store-name');
@@ -2300,6 +2673,12 @@
                 }
                 console.log("Store settings loaded:", window.storeData.settings);
                 showNotification("تم تحميل إعدادات المتجر", "info");
+                
+                // After settings are loaded, if cart section is active, re-render it
+                // This ensures delivery cities are populated before rendering cart.
+                if (!document.getElementById('cart-section').classList.contains('hidden')) {
+                    renderCart();
+                }
             }, (error) => {
                 console.error("Error loading settings:", error);
                 showNotification("خطأ في تحميل إعدادات المتجر", "error");
@@ -2495,7 +2874,7 @@
                         homepageCategoriesGrid.appendChild(button);
                     });
                 } else {
-                    homepageCategoriesGrid.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">لا توجد أقسام مختارة للعرض.</div>`;
+                    homepageCategoriesGrid.innerHTML = `<div class="col-span-full text-center py-8 text-gray-500 text-sm">لا توجد أقسام مختارة للعرض.</div>`;
                 }
             }
 
@@ -2656,13 +3035,13 @@
                             <span class="category-name-text">${category.name}</span>
                             <button class="info-button" onclick="openCategoryDescriptionModal('${category.id}')">
                                 <i class="fas fa-info-circle"></i>
-                            </button>
-                        </div>
-                    `;
+                                </button>
+                            </div>
+                        `;
                     categoriesGridPage.appendChild(button);
                 });
             } else {
-                categoriesGridPage.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">لا توجد أقسام متاحة حالياً.</div>`;
+                categoriesGridPage.innerHTML = `<div class="col-span-full text-center py-8 text-gray-500 text-sm">لا توجد أقسام متاحة حالياً.</div>`;
             }
         }
 
@@ -2739,7 +3118,7 @@
                 else if (filterType === 'all' || filterType === 'none' || filterType === 'featured') message = 'لا توجد منتجات حالياً.';
                 else message = 'لا توجد منتجات في هذا القسم حالياً.';
 
-                html = `<div class="col-span-full text-center py-10 text-gray-500">${message}</div>`;
+                html = `<div class="col-span-full text-center py-8 text-gray-500 text-sm">${message}</div>`;
             } else {
                 displayProducts.forEach(product => {
                     const today = new Date();
@@ -2777,15 +3156,15 @@
                         <div class="product-info" data-product-id="${product.id}">
                             <div>
                                 <h3 class="product-name">${product.name || 'منتج غير معروف'}</h3>
-                                <p class="text-sm text-gray-500 mb-2">${product.category || 'عام'}</p>
-                                <p class="text-sm text-gray-600">المخزون: ${product.inventory != null ? product.inventory : 'غير متوفر'}</p>
+                                <p class="text-xs text-gray-500 mb-1">${product.category || 'عام'}</p>
+                                <p class="text-xs text-gray-600">المخزون: ${product.inventory != null ? product.inventory : 'غير متوفر'}</p>
                             </div>
                             <div class="flex items-baseline justify-end mt-auto">
                                 ${originalPriceHtml}
                                 <p class="product-price">${(displayPrice || 0).toLocaleString('ar-EG')} د.ع</p>
                             </div>
                         </div>
-                        <div class="p-3 pt-0">
+                        <div class="p-2 pt-0">
                             <button class="add-to-cart-btn-card">
                                 <i class="fas fa-cart-plus ml-2"></i> أضف للسلة
                             </button>
@@ -2854,8 +3233,15 @@
          * @param {string} sectionId - The ID of the section to show (e.g., 'home-section', 'sales-section').
          * @param {Array} [itemsToDisplay=null] - Optional array of items to render directly (e.g., after search).
          * @param {boolean} [resetHomepage=false] - If true, forces a reset to the default homepage view.
+         * @param {boolean} [isBack=false] - True if this navigation is a 'back' action.
          */
-        window.showStoreSection = function(sectionId, itemsToDisplay = null, resetHomepage = false) {
+        window.showStoreSection = function(sectionId, itemsToDisplay = null, resetHomepage = false, isBack = false) {
+            // Push current section to history only if not a back action and not navigating to the same section
+            if (!isBack && window.currentSection !== sectionId) {
+                window.navigationHistory.push(window.currentSection);
+            }
+            window.currentSection = sectionId;
+
             document.querySelectorAll('.store-section').forEach(section => {
                 section.classList.add('hidden');
             });
@@ -2914,14 +3300,12 @@
                     if (currentFilteredName.classList.contains('hidden')) { // Only reset if not already showing a category filter
                         mainPageTitle.textContent = 'الرئيسية';
                     }
-                    backToHomeFromFilteredBtn.classList.add('hidden'); // Hide if not in a filtered/search state
-                    renderHomepageContent(); // Render all homepage sub-sections
+                    // The back button visibility is now managed by the history stack length
                 }
             } else if (sectionId === 'categories-page-section') {
                 globalContentTitleContainer.classList.remove('hidden');
                 mainPageTitle.textContent = 'تصفح الأقسام';
                 currentFilteredName.classList.add('hidden');
-                backToHomeFromFilteredBtn.classList.remove('hidden'); // Can go back to home from categories page
                 searchSortContainer.classList.remove('hidden');
                 sortByContainer.classList.add('hidden'); // Hide sort for categories search
                 searchInput.placeholder = 'ابحث عن قسم...';
@@ -2930,7 +3314,6 @@
                 globalContentTitleContainer.classList.remove('hidden');
                 mainPageTitle.textContent = 'عروضنا المميزة';
                 currentFilteredName.classList.add('hidden');
-                backToHomeFromFilteredBtn.classList.remove('hidden');
                 searchSortContainer.classList.remove('hidden');
                 sortByContainer.classList.remove('hidden');
                 searchInput.placeholder = 'ابحث عن منتجات...';
@@ -2939,7 +3322,6 @@
                 globalContentTitleContainer.classList.remove('hidden');
                 mainPageTitle.textContent = 'وصل حديثاً';
                 currentFilteredName.classList.add('hidden');
-                backToHomeFromFilteredBtn.classList.remove('hidden');
                 searchSortContainer.classList.remove('hidden');
                 sortByContainer.classList.remove('hidden');
                 searchInput.placeholder = 'ابحث عن منتجات...';
@@ -2948,7 +3330,6 @@
                 globalContentTitleContainer.classList.remove('hidden');
                 mainPageTitle.textContent = 'منتجاتي المفضلة';
                 currentFilteredName.classList.add('hidden');
-                backToHomeFromFilteredBtn.classList.remove('hidden');
                 searchSortContainer.classList.remove('hidden');
                 sortByContainer.classList.remove('hidden');
                 searchInput.placeholder = 'ابحث عن منتجات...';
@@ -2957,21 +3338,46 @@
                 globalContentTitleContainer.classList.remove('hidden');
                 mainPageTitle.textContent = 'معلومات حسابي';
                 currentFilteredName.classList.add('hidden');
-                backToHomeFromFilteredBtn.classList.remove('hidden');
                 searchSortContainer.classList.add('hidden'); // Hide search/sort for account page
                 renderProfileDetails();
-                loadUserAddresses();
             } else if (sectionId === 'my-orders-section') {
                 globalContentTitleContainer.classList.remove('hidden');
                 mainPageTitle.textContent = 'طلباتي';
                 currentFilteredName.classList.add('hidden');
-                backToHomeFromFilteredBtn.classList.remove('hidden');
                 searchSortContainer.classList.add('hidden'); // Hide search/sort for orders page
                 loadUserOrders();
-            } else {
+            } else if (sectionId === 'cart-section') { // New: Cart section
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'سلة التسوق';
+                currentFilteredName.classList.add('hidden');
+                searchSortContainer.classList.add('hidden'); // Hide search/sort for cart page
+                renderCart();
+            } else if (sectionId === 'checkout-section') { // New: Checkout section
+                globalContentTitleContainer.classList.remove('hidden');
+                mainPageTitle.textContent = 'إتمام الشراء';
+                currentFilteredName.classList.add('hidden');
+                searchSortContainer.classList.add('hidden'); // Hide search/sort for checkout page
+                showCheckoutSection(); // Call the function to populate checkout details
+            }
+            else {
                 // For any other section not explicitly handled, hide the global title and search/sort
                 globalContentTitleContainer.classList.add('hidden');
                 searchSortContainer.classList.add('hidden');
+            }
+            // Always update back button visibility based on history length
+            backToHomeFromFilteredBtn.classList.toggle('hidden', window.navigationHistory.length === 0 && sectionId === 'home-section');
+        };
+
+        /**
+         * Navigates back in the history.
+         */
+        window.goBack = function() {
+            if (window.navigationHistory.length > 0) {
+                const prevSectionId = window.navigationHistory.pop();
+                showStoreSection(prevSectionId, null, false, true); // Pass true for isBack
+            } else {
+                // If no history, go to home and reset it
+                showStoreSection('home-section', null, true, true);
             }
         };
 
@@ -2980,11 +3386,18 @@
          */
         function renderCart() {
             const cartItemsList = document.getElementById('cart-items-list');
+            const deliveryCitySelect = document.getElementById('delivery-city-select');
+            console.log("renderCart called. deliveryCitySelect:", deliveryCitySelect);
+            if (!deliveryCitySelect) {
+                console.error("delivery-city-select element not found in renderCart.");
+                return;
+            }
+
             let html = '';
             let subtotal = 0;
 
             if (window.storeData.cart.length === 0) {
-                html = `<p class="text-center text-gray-500 py-4">سلة التسوق فارغة.</p>`;
+                html = `<p class="text-center text-gray-500 py-3 text-sm">سلة التسوق فارغة.</p>`;
                 document.getElementById('proceed-to-checkout-btn').disabled = true;
                 document.getElementById('proceed-to-checkout-btn').classList.add('opacity-50', 'cursor-not-allowed');
             } else {
@@ -3008,17 +3421,17 @@
                     html += `
                     <div class="flex items-center justify-between bg-gray-50 p-3 rounded-lg shadow-sm">
                         <div class="flex items-center">
-                            <img src="${item.image || 'https://placehold.co/50x50/007AFF/FFFFFF?text=Item'}" alt="${item.name}" class="w-12 h-12 object-cover rounded-md ml-3">
+                            <img src="${item.image || 'https://placehold.co/50x50/007AFF/FFFFFF?text=Item'}" alt="${item.name}" class="w-10 h-10 object-cover rounded-md ml-2">
                             <div>
-                                <h4 class="font-semibold text-gray-800">${item.name}</h4>
-                                <p class="text-sm text-gray-600">${(itemDisplayPrice || 0).toLocaleString('ar-EG')} د.ع</p>
+                                <h4 class="font-semibold text-gray-800 text-sm">${item.name}</h4>
+                                <p class="text-xs text-gray-600">${(itemDisplayPrice || 0).toLocaleString('ar-EG')} د.ع</p>
                             </div>
                         </div>
                         <div class="flex items-center">
-                            <button onclick="updateCartItemQuantity('${item.id}', -1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300">-</button>
-                            <span class="mx-2 text-lg font-medium">${item.quantity}</span>
-                            <button onclick="updateCartItemQuantity('${item.id}', 1)" class="bg-gray-200 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-300">+</button>
-                            <button onclick="updateCartItemQuantity('${item.id}', -${item.quantity})" class="text-red-600 hover:text-red-800 mr-3">
+                            <button onclick="updateCartItemQuantity('${item.id}', -1)" class="bg-gray-200 text-gray-700 w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-300 text-sm">-</button>
+                            <span class="mx-2 text-base font-medium">${item.quantity}</span>
+                            <button onclick="updateCartItemQuantity('${item.id}', 1)" class="bg-gray-200 text-gray-700 w-7 h-7 rounded-full flex items-center justify-center hover:bg-gray-300 text-sm">+</button>
+                            <button onclick="updateCartItemQuantity('${item.id}', -${item.quantity})" class="text-red-600 hover:text-red-800 mr-2 text-base">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -3030,32 +3443,53 @@
             }
             cartItemsList.innerHTML = html;
 
-            let deliveryPrice = 0;
-            if (window.storeData.settings.deliveryPricesByCity && window.storeData.settings.deliveryPricesByCity.length > 0) {
-                deliveryPrice = window.storeData.settings.deliveryPricesByCity[0]?.price || 0;
-            } else {
-                deliveryPrice = 5000;
-            }
+            // Populate city selection and calculate delivery price
+            let deliveryOptionsHtml = '';
+            const deliveryCities = window.storeData.settings.deliveryPricesByCity || [];
+            let storedSelectedCity = localStorage.getItem('selectedDeliveryCity');
+            let selectedDeliveryPrice = 0;
 
-            const total = subtotal + deliveryPrice;
+            console.log("renderCart - Delivery Cities from settings:", deliveryCities); // Debug log
+            console.log("renderCart - Stored Selected City:", storedSelectedCity); // Debug log
+
+            if (deliveryCities.length > 0) {
+                deliveryCities.forEach((city) => {
+                    deliveryOptionsHtml += `<option value="${city.city}">${city.city} (${city.price.toLocaleString('ar-EG')} د.ع)</option>`;
+                });
+                deliveryCitySelect.innerHTML = deliveryOptionsHtml;
+                
+                if (storedSelectedCity && deliveryCities.some(city => city.city === storedSelectedCity)) {
+                    deliveryCitySelect.value = storedSelectedCity;
+                    console.log("renderCart - Setting dropdown to stored city:", storedSelectedCity);
+                } else {
+                    deliveryCitySelect.value = deliveryCities[0].city;
+                    localStorage.setItem('selectedDeliveryCity', deliveryCities[0].city);
+                    console.log("renderCart - Setting dropdown to first city:", deliveryCities[0].city);
+                }
+                
+                deliveryCitySelect.disabled = false; 
+
+                const currentSelectedCityObject = deliveryCities.find(city => city.city === deliveryCitySelect.value);
+                selectedDeliveryPrice = currentSelectedCityObject ? currentSelectedCityObject.price : 0;
+                console.log("renderCart - Calculated selected delivery price:", selectedDeliveryPrice);
+            } else {
+                deliveryCitySelect.innerHTML = '<option value="default">لا توجد مدن توصيل متاحة</option>';
+                deliveryCitySelect.disabled = true;
+                selectedDeliveryPrice = 0;
+                console.log("renderCart - No delivery cities available, dropdown disabled.");
+            }
+            
+            const total = subtotal + selectedDeliveryPrice;
 
             document.getElementById('cart-subtotal').textContent = `${subtotal.toLocaleString('ar-EG')} د.ع`;
-            document.getElementById('cart-delivery-price').textContent = `${deliveryPrice.toLocaleString('ar-EG')} د.ع`;
+            document.getElementById('cart-delivery-price').textContent = `${selectedDeliveryPrice.toLocaleString('ar-EG')} د.ع`;
             document.getElementById('cart-total').textContent = `${total.toLocaleString('ar-EG')} د.ع`;
         }
 
         /**
-         * Opens the cart modal.
+         * Prepares and displays the checkout section.
          */
-        window.openCartModal = function() {
-            renderCart();
-            document.getElementById('cart-modal').classList.remove('hidden');
-        };
-
-        /**
-         * Opens the checkout modal and populates it with order summary.
-         */
-        window.openCheckoutModal = function() {
+        window.showCheckoutSection = function() {
             let subtotal = 0;
             const today = new Date();
 
@@ -3075,14 +3509,18 @@
             });
             
             let deliveryPrice = 0;
-            // The `address` variable is not defined here. It should be retrieved from the checkout form.
-            // For now, using a default or the first delivery price if available.
-            if (window.storeData.settings.deliveryPricesByCity && window.storeData.settings.deliveryPricesByCity.length > 0) {
-                // If you want to dynamically set delivery price based on city, you'd need to get the city from the address input.
-                // For simplicity, let's just use the first available delivery price or a default.
-                deliveryPrice = window.storeData.settings.deliveryPricesByCity[0]?.price || 5000;
+            // Get selected city from cart-section's dropdown
+            const deliveryCitySelect = document.getElementById('delivery-city-select');
+            const selectedCityName = deliveryCitySelect ? deliveryCitySelect.value : null;
+
+            if (selectedCityName && window.storeData.settings.deliveryPricesByCity && window.storeData.settings.deliveryPricesByCity.length > 0) {
+                const selectedCity = window.storeData.settings.deliveryPricesByCity.find(city => city.city === selectedCityName);
+                deliveryPrice = selectedCity ? selectedCity.price : (window.storeData.settings.deliveryPricesByCity[0]?.price || 0);
+            } else if (window.storeData.settings.deliveryPricesByCity && window.storeData.settings.deliveryPricesByCity.length > 0) {
+                // Fallback to first city if no selection is made (e.g., if cart was empty and then items added)
+                deliveryPrice = window.storeData.settings.deliveryPricesByCity[0]?.price || 0;
             } else {
-                deliveryPrice = 5000;
+                deliveryPrice = 0;
             }
             
             const total = subtotal + deliveryPrice;
@@ -3090,7 +3528,7 @@
             const checkoutSummaryList = document.getElementById('checkout-summary-list');
             let summaryHtml = '';
             if (window.storeData.cart.length === 0) {
-                summaryHtml = `<p class="text-center text-gray-500 py-4">سلة التسوق فارغة.</p>`;
+                summaryHtml = `<p class="text-center text-gray-500 py-3 text-sm">سلة التسوق فارغة.</p>`;
             } else {
                 window.storeData.cart.forEach(item => {
                     const isDiscountSale = item.isSale && item.discountPercentage != null &&
@@ -3115,11 +3553,14 @@
             checkoutSummaryList.innerHTML = summaryHtml;
 
             document.getElementById('checkout-subtotal').textContent = `${subtotal.toLocaleString('ar-EG')} د.ع`;
+            // Update selected city in checkout summary
+            document.getElementById('checkout-selected-city-summary').textContent = selectedCityName || '';
             document.getElementById('checkout-delivery-price').textContent = `${deliveryPrice.toLocaleString('ar-EG')} د.ع`;
             document.getElementById('checkout-total').textContent = `${total.toLocaleString('ar-EG')} د.ع`;
 
-            document.getElementById('cart-modal').classList.add('hidden');
-            document.getElementById('checkout-modal').classList.remove('hidden');
+            // This function is now called by showStoreSection('checkout-section')
+            // No need to hide cart-section here, showStoreSection handles it.
+            // document.getElementById('checkout-section').classList.remove('hidden'); // This is handled by showStoreSection
         };
 
         /**
@@ -3165,11 +3606,16 @@
             });
 
             let deliveryPrice = 0;
-            if (window.storeData.settings.deliveryPricesByCity && window.storeData.settings.deliveryPricesByCity.length > 0) {
-                const matchedCity = window.storeData.settings.deliveryPricesByCity.find(city => address.toLowerCase().includes(city.city.toLowerCase()));
-                deliveryPrice = matchedCity ? matchedCity.price : window.storeData.settings.deliveryPricesByCity[0]?.price || 5000;
+            const deliveryCitySelect = document.getElementById('delivery-city-select');
+            const selectedCityName = deliveryCitySelect ? deliveryCitySelect.value : null;
+
+            if (selectedCityName && window.storeData.settings.deliveryPricesByCity && window.storeData.settings.deliveryPricesByCity.length > 0) {
+                const selectedCity = window.storeData.settings.deliveryPricesByCity.find(city => city.city === selectedCityName);
+                deliveryPrice = selectedCity ? selectedCity.price : (window.storeData.settings.deliveryPricesByCity[0]?.price || 0);
+            } else if (window.storeData.settings.deliveryPricesByCity && window.storeData.settings.deliveryPricesByCity.length > 0) {
+                deliveryPrice = window.storeData.settings.deliveryPricesByCity[0]?.price || 0;
             } else {
-                deliveryPrice = 5000;
+                deliveryPrice = 0;
             }
             
             const total = subtotal + deliveryPrice;
@@ -3216,7 +3662,8 @@
 
                 window.storeData.cart = [];
                 saveCart();
-                document.getElementById('checkout-modal').classList.add('hidden');
+                // After successful order, navigate back to home section
+                showStoreSection('home-section', null, true);
                 document.getElementById('checkout-form').reset();
             } catch (error) {
                 console.error("Error placing order:", error);
@@ -3303,135 +3750,6 @@
             }
         };
 
-
-        function loadUserAddresses() {
-            if (!window.currentUserId) {
-                console.log("Skipping loadUserAddresses: No user ID.");
-                return;
-            }
-            const addressesCollectionRef = collection(firestoreDb, "users", window.currentUserId, "addresses");
-            unsubscribeUserAddresses = onSnapshot(addressesCollectionRef, (snapshot) => {
-                const addresses = [];
-                snapshot.forEach(doc => {
-                    addresses.push({ id: doc.id, ...doc.data() });
-                });
-                window.storeData.userAddresses = addresses;
-                console.log("User addresses loaded:", window.storeData.userAddresses);
-                renderAddresses();
-            }, (error) => {
-                console.error("Error loading user addresses:", error);
-                if (error.code === 'unavailable') {
-                    console.warn("Firestore: Client is offline. User addresses will be loaded from cache if available.");
-                    showNotification("لا يوجد اتصال بالإنترنت. سيتم تحميل العناوين من الذاكرة المؤقتة.", "warning");
-                } else {
-                    showNotification("خطأ في تحميل العناوين.", "error");
-                }
-            });
-        }
-
-        function renderAddresses() {
-            const addressesList = document.getElementById('shipping-addresses-list');
-            let html = '';
-            if (window.storeData.userAddresses.length === 0) {
-                html = `<p class="text-center text-gray-500">لا توجد عناوين محفوظة.</p>`;
-            } else {
-                window.storeData.userAddresses.forEach(address => {
-                    html += `
-                        <div class="bg-gray-50 p-4 rounded-lg shadow-sm flex justify-between items-center">
-                            <div>
-                                <h4 class="font-semibold text-gray-800">${address.label}</h4>
-                                <p class="text-sm text-gray-600">${address.fullAddress}</p>
-                            </div>
-                            <div class="flex space-x-2">
-                                <button onclick="openAddressModal('${address.id}')" class="text-blue-700 hover:text-blue-800">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button onclick="deleteAddress('${address.id}')" class="text-red-600 hover:text-red-800">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-            addressesList.innerHTML = html;
-        }
-
-        window.openAddressModal = function(addressId = null) {
-            const addressModal = document.getElementById('address-modal');
-            const addressModalTitle = document.getElementById('address-modal-title');
-            const addressIdField = document.getElementById('address-id');
-            const addressLabelField = document.getElementById('address-label');
-            const addressFullField = document.getElementById('address-full');
-
-            addressIdField.value = '';
-            addressLabelField.value = '';
-            addressFullField.value = '';
-
-            if (addressId) {
-                addressModalTitle.textContent = 'تعديل العنوان';
-                const addressToEdit = window.storeData.userAddresses.find(addr => addr.id === addressId);
-                if (addressToEdit) {
-                    addressIdField.value = addressToEdit.id;
-                    addressLabelField.value = addressToEdit.label;
-                    addressFullField.value = addressToEdit.fullAddress;
-                }
-            } else {
-                addressModalTitle.textContent = 'إضافة عنوان جديد';
-            }
-            addressModal.classList.remove('hidden');
-        };
-
-        window.saveAddress = async function() {
-            if (!window.currentUserId) {
-                showNotification("يرجى تسجيل الدخول لحفظ العناوين.", "warning");
-                return;
-            }
-            const addressId = document.getElementById('address-id').value;
-            const label = document.getElementById('address-label').value.trim();
-            const fullAddress = document.getElementById('address-full').value.trim();
-
-            if (!label || !fullAddress) {
-                showNotification("يرجى ملء جميع حقول العنوان.", "error");
-                return;
-            }
-
-            const addressesCollectionRef = collection(firestoreDb, "users", window.currentUserId, "addresses");
-            try {
-                if (addressId) {
-                    const addressDocRef = doc(addressesCollectionRef, addressId);
-                    await updateDoc(addressDocRef, { label, fullAddress });
-                    showNotification("تم تحديث العنوان بنجاح!", "success");
-                } else {
-                    await addDoc(addressesCollectionRef, { label, fullAddress });
-                    showNotification("تمت إضافة العنوان بنجاح!", "success");
-                }
-                document.getElementById('address-modal').classList.add('hidden');
-            } catch (error) {
-                console.error("Error saving address:", error);
-                showNotification("خطأ في حفظ العنوان.", "error");
-            }
-        };
-
-        window.deleteAddress = async function(addressId) {
-            if (!window.currentUserId) {
-                showNotification("يرجى تسجيل الدخول لحذف العناوين.", "warning");
-                return;
-            }
-            showConfirmModal("هل أنت متأكد أنك تريد حذف هذا العنوان؟", async (confirmed) => {
-                if (confirmed) {
-                    const addressDocRef = doc(firestoreDb, "users", window.currentUserId, "addresses", addressId);
-                    try {
-                        await deleteDoc(addressDocRef);
-                        showNotification("تم حذف العنوان بنجاح!", "success");
-                    } catch (error) {
-                        console.error("Error deleting address:", error);
-                        showNotification("خطأ في حذف العنوان.", "error");
-                    }
-                }
-            });
-        };
-
         // --- My Orders Functions ---
         function loadUserOrders() {
             if (!window.currentUserId) {
@@ -3439,7 +3757,7 @@
                 // Ensure the orders-list div exists before trying to set its innerHTML
                 const ordersListDiv = document.getElementById('orders-list');
                 if (ordersListDiv) {
-                    ordersListDiv.innerHTML = `<p class="text-center text-gray-500 py-10">يرجى تسجيل الدخول لعرض طلباتك.</p>`;
+                    ordersListDiv.innerHTML = `<p class="text-center text-gray-500 py-8 text-sm">يرجى تسجيل الدخول لعرض طلباتك.</p>`;
                 }
                 return;
             }
@@ -3475,7 +3793,7 @@
             let html = '';
 
             if (window.storeData.userOrders.length === 0) {
-                html = `<p class="text-center text-gray-500 py-10">لا توجد طلبات سابقة.</p>`;
+                html = `<p class="text-center text-gray-500 py-8 text-sm">لا توجد طلبات سابقة.</p>`;
             } else {
                 window.storeData.userOrders.forEach(order => {
                     let statusClass = '';
@@ -3489,14 +3807,14 @@
                     }
 
                     html += `
-                        <div class="bg-white p-4 rounded-lg shadow-md flex justify-between items-center cursor-pointer hover:bg-gray-50" onclick="openOrderDetailsModal('${order.id}')">
+                        <div class="bg-white p-3 rounded-lg shadow-md flex justify-between items-center cursor-pointer hover:bg-gray-50">
                             <div>
-                                <h4 class="font-semibold text-gray-800">طلب رقم: ${order.invoiceNumber}</h4>
-                                <p class="text-sm text-gray-600">التاريخ: ${order.createdAt}</p>
+                                <h4 class="font-semibold text-gray-800 text-sm">طلب رقم: ${order.invoiceNumber}</h4>
+                                <p class="text-xs text-gray-600">التاريخ: ${order.createdAt}</p>
                             </div>
                             <div class="text-right">
-                                <p class="font-bold ${statusClass}">${order.status}</p>
-                                <p class="text-lg font-semibold text-blue-700">${(order.total || 0).toLocaleString('ar-EG')} د.ع</p>
+                                <p class="font-bold ${statusClass} text-sm">${order.status}</p>
+                                <p class="text-base font-semibold text-blue-700">${(order.total || 0).toLocaleString('ar-EG')} د.ع</p>
                             </div>
                         </div>
                     `;
@@ -3524,12 +3842,12 @@
             document.getElementById('modal-order-total').textContent = (order.total || 0).toLocaleString('ar-EG');
 
             const productsListHtml = order.products.map(p => `
-                <div class="flex justify-between items-center text-sm text-gray-700">
+                <div class="flex justify-between items-center text-xs text-gray-700">
                     <span>${p.name} (x${p.quantity})</span>
                     <span>${(p.price * p.quantity).toLocaleString('ar-EG')} د.ع</span>
                 </div>
             `).join('');
-            document.getElementById('modal-order-products-list').innerHTML = productsListHtml || '<p class="text-center text-gray-500">لا توجد منتجات في هذا الطلب.</p>';
+            document.getElementById('modal-order-products-list').innerHTML = productsListHtml || '<p class="text-center text-gray-500 text-xs">لا توجد منتجات في هذا الطلب.</p>';
 
             document.getElementById('order-details-modal').classList.remove('hidden');
             
@@ -3576,10 +3894,6 @@
                         return (a.inventory || 0) - (b.inventory || 0);
                     case 'quantity-desc':
                         return (b.inventory || 0) - (a.inventory || 0);
-                    case 'date-desc':
-                        return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
-                    case 'date-asc':
-                        return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
                     default:
                         return 0;
                 }
@@ -3688,7 +4002,7 @@
                     categoriesGridPage.appendChild(button);
                 });
             } else {
-                categoriesGridPage.innerHTML = `<div class="col-span-full text-center py-10 text-gray-500">لا توجد أقسام مطابقة لبحثك.</div>`;
+                categoriesGridPage.innerHTML = `<div class="col-span-full text-center py-8 text-gray-500 text-sm">لا توجد أقسام مطابقة لبحثك.</div>`;
             }
         }
 
@@ -3822,69 +4136,6 @@
             }
         }
 
-        /**
-         * Enhances the product description using Gemini API (LLM).
-         * @param {string} productId - The ID of the product to enhance.
-         */
-        window.enhanceProductDescriptionWithAI = async function(productId) {
-            const product = window.storeData.products.find(p => p.id === productId);
-            if (!product) {
-                showNotification("المنتج غير موجود.", "error");
-                return;
-            }
-
-            const enhanceDescriptionBtn = document.getElementById('enhance-description-btn');
-            const enhanceDescriptionText = document.getElementById('enhance-description-text');
-            const enhanceDescriptionSpinner = document.getElementById('enhance-description-spinner');
-            const modalProductDescription = document.getElementById('modal-product-description');
-
-            // Show loading state
-            enhanceDescriptionBtn.disabled = true;
-            enhanceDescriptionText.textContent = 'جاري التحسين...';
-            enhanceDescriptionSpinner.classList.remove('hidden');
-
-            try {
-                const category = window.storeData.categories.find(cat => cat.id === product.categoryId);
-                const categoryName = category ? category.name : 'عام';
-
-                const prompt = `أنت مساعد تسوق ذكي. بناءً على معلومات المنتج التالية، قم بإنشاء وصف جذاب ومفصل للمنتج في 3-5 جمل. ركز على الميزات الرئيسية والفوائد التي تعود على العميل. المنتج: ${product.name}, القسم: ${categoryName}, الوصف الحالي: ${product.description || 'لا يوجد وصف.'}`;
-
-                let chatHistory = [];
-                chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-
-                const payload = { contents: chatHistory };
-                const apiKey = ""; // Canvas will provide this at runtime
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const enhancedText = result.candidates[0].content.parts[0].text;
-                    modalProductDescription.innerHTML = enhancedText.replace(/\n/g, '<br>');
-                    showNotification("تم تحسين الوصف بنجاح!", "success");
-                } else {
-                    console.error("Gemini API response structure unexpected:", result);
-                    showNotification("فشل تحسين الوصف. يرجى المحاولة مرة أخرى.", "error");
-                }
-            } catch (error) {
-                console.error("Error calling Gemini API:", error);
-                showNotification("حدث خطأ أثناء الاتصال بالذكاء الاصطناعي.", "error");
-            } finally {
-                // Reset button state
-                enhanceDescriptionBtn.disabled = false;
-                enhanceDescriptionText.textContent = '✨ تحسين الوصف بالذكاء الاصطناعي';
-                enhanceDescriptionSpinner.classList.add('hidden');
-            }
-        };
-
         // --- Event Listeners and Initial Load ---
         document.addEventListener("DOMContentLoaded", function() {
             window.scrollTo(0, 0);
@@ -3892,11 +4143,6 @@
             const savedDarkMode = localStorage.getItem('darkMode');
             if (savedDarkMode === 'true') {
                 document.body.classList.add('dark-mode');
-                // Ensure the dark mode toggle in the account section is updated on load
-                // This will be handled by the event listener attachment below
-            } else {
-                // Ensure the dark mode toggle in the account section is updated on load
-                // This will be handled by the event listener attachment below
             }
 
             loadSettings();
@@ -3944,9 +4190,19 @@
                 }
             });
 
-            document.getElementById('proceed-to-checkout-btn').addEventListener('click', openCheckoutModal);
+            // Changed to call showStoreSection for checkout
+            document.getElementById('proceed-to-checkout-btn').addEventListener('click', () => showStoreSection('checkout-section'));
 
             document.getElementById('sort-by-select').addEventListener('change', applySortAndRender);
+
+            // Add event listener for city selection in cart
+            const deliveryCitySelect = document.getElementById('delivery-city-select');
+            if (deliveryCitySelect) {
+                deliveryCitySelect.addEventListener('change', function() {
+                    localStorage.setItem('selectedDeliveryCity', this.value); // Save selected city
+                    renderCart(); // Re-render cart to update prices
+                });
+            }
 
             // Google Sign-in/Sign-out buttons
             document.getElementById('google-sign-in-btn').addEventListener('click', window.signInWithGoogle);
@@ -3956,6 +4212,48 @@
             adjustBodyPaddingTop(); // Initial adjustment
 
             setupFooterVisibility(); // Setup the dynamic footer visibility
+
+            // Apply the new 700ms gradient effect to the "Add to Cart" button in the modal
+            const addToCartButtonModal = document.getElementById('add-to-cart-btn');
+            if (addToCartButtonModal) {
+                addToCartButtonModal.addEventListener('click', function() {
+                    this.classList.add('active');
+                    setTimeout(() => {
+                        this.classList.remove('active');
+                    }, 700);
+                });
+            }
+
+            // Apply the new 700ms gradient effect to the "Add to Favorite" button in the modal
+            const toggleFavoriteModalBtn = document.getElementById('toggle-favorite-modal-btn');
+            if (toggleFavoriteModalBtn) {
+                toggleFavoriteModalBtn.addEventListener('click', function() {
+                    this.classList.add('active');
+                    setTimeout(() => {
+                        this.classList.remove('active');
+                    }, 700);
+                });
+            }
+
+            // Attach event listeners for carousel navigation buttons
+            if (carouselPrevBtn) {
+                carouselPrevBtn.addEventListener('click', () => navigateCarousel(-1));
+            }
+            if (carouselNextBtn) {
+                carouselNextBtn.addEventListener('click', () => navigateCarousel(1));
+            }
+
+            // Attach touch/mouse listeners for carousel swipe
+            if (modalProductImageContainer) {
+                modalProductImageContainer.addEventListener('mousedown', touchStart);
+                modalProductImageContainer.addEventListener('mouseup', touchEnd);
+                modalProductImageContainer.addEventListener('mouseleave', touchEnd);
+                modalProductImageContainer.addEventListener('mousemove', touchMove);
+
+                modalProductImageContainer.addEventListener('touchstart', touchStart);
+                modalProductImageContainer.addEventListener('touchend', touchEnd);
+                modalProductImageContainer.addEventListener('touchmove', touchMove);
+            }
         });
     </script>
 </body>
