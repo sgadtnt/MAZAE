@@ -3,477 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مرحبًا بكم في متجر مزار</title>
+    <title>المتجر الإلكتروني</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* Global Reset & Base Styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            /* Solid white background */
-            background-color: white; 
-            
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-            font-family: 'Tajawal', sans-serif;
-            color: #343a40; /* Dark text color for white background */
-            overflow: hidden; /* Hide scrollbars if any */
-        }
-
-        /* Main Container Styling */
-        .container {
-            width: 100%;
-            max-width: 520px;
-            background: white; /* Solid white background */
-            border-radius: 28px;
-            /* Softer, more modern shadow */
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-            position: relative;
-            z-index: 1; /* Ensure it's above the canvas */
-            animation: fadeIn 0.8s ease-out forwards;
-            color: #343a40; /* Dark text for container content */
-        }
-        
-        /* Fade-in Animation for Container */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Header Section Styling */
-        .header {
-            /* Vibrant blue gradient */
-            background: linear-gradient(to right, #1a56db, #3b82f6);
-            padding: 55px 35px 40px;
-            text-align: center;
-            position: relative;
-            clip-path: ellipse(140% 100% at 50% 0%); /* Creates the curved bottom effect */
-        }
-        
-        /* Logo and Text Container */
-        .logo-container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 30px;
-            gap: 18px;
-        }
-        
-        /* Logo Icon Styling */
-        .logo-icon {
-            width: 85px;
-            height: 85px;
-            background: rgba(255, 255, 255, 0.15); /* Slightly transparent white */
-            border-radius: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            backdrop-filter: blur(6px);
-            border: 2px solid rgba(255, 255, 255, 0.25); /* Softer border */
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Softer shadow */
-        }
-        
-        .logo-icon i {
-            font-size: 44px;
-            color: white;
-        }
-        
-        /* Store Name Text Styling */
-        .logo-text {
-            font-size: 3.4rem;
-            font-weight: 800;
-            color: white;
-            letter-spacing: -1px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); /* Softer text shadow */
-            position: relative;
-            top: 3px;
-        }
-        
-        /* Welcome Text Styling */
-        .welcome-text {
-            font-size: 2.1rem;
-            font-weight: 800;
-            color: white;
-            line-height: 1.35;
-            margin-bottom: 15px;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); /* Softer text shadow */
-        }
-        
-        /* Sub-text Styling */
-        .sub-text {
-            color: rgba(255, 255, 255, 0.9); /* Slightly darker for better contrast */
-            font-size: 1.05rem;
-            line-height: 1.7;
-            max-width: 420px;
-            margin: 0 auto;
-            font-weight: 500;
-        }
-        
-        /* Content Section Styling */
-        .content {
-            padding: 45px 45px 35px;
-            text-align: center;
-        }
-        
-        /* Action Buttons Styling */
-        .action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            padding: 22px 55px;
-            font-size: 1.4rem;
-            font-weight: 800;
-            border-radius: 18px;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
-            border: none;
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            margin: 15px 0;
-            width: 100%;
-            max-width: 320px;
-            text-decoration: none;
-        }
-
-        .action-btn.green {
-            /* Vibrant green gradient */
-            background: linear-gradient(to right, #28a745, #218838);
-            box-shadow: 0 8px 20px rgba(40, 167, 69, 0.25);
-        }
-
-        .action-btn.blue {
-            /* Vibrant blue gradient */
-            background: linear-gradient(to right, #007bff, #0056b3);
-            box-shadow: 0 8px 20px rgba(0, 123, 255, 0.25);
-        }
-        
-        .action-btn:hover {
-            transform: translateY(-5px); /* More pronounced lift */
-        }
-        .action-btn.green:hover {
-            box-shadow: 0 12px 25px rgba(40, 167, 69, 0.35);
-        }
-        .action-btn.blue:hover {
-            box-shadow: 0 12px 25px rgba(0, 123, 255, 0.35);
-        }
-        
-        .action-btn:active {
-            transform: translateY(-1px); /* Slight push down */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Reset shadow to smaller on active */
-        }
-        
-        .action-btn i {
-            margin-left: 15px;
-            transition: transform 0.3s ease;
-            font-size: 1.2em;
-        }
-        
-        .action-btn:hover i {
-            transform: translateX(-8px);
-        }
-        
-        /* Modal Overlay Styling */
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.5); /* Standard overlay opacity */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        /* Modal Content Styling */
-        .modal-content {
-            background: white;
-            padding: 35px;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-            width: 90%;
-            max-width: 450px;
-            transform: translateY(20px);
-            opacity: 0;
-            transition: transform 0.3s ease, opacity 0.3s ease;
-            text-align: right; /* RTL alignment */
-            position: relative;
-            color: #343a40; /* Dark text for modal content */
-        }
-
-        .modal-overlay.visible .modal-content {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        /* Modal Close Button */
-        .modal-close-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: none;
-            border: none;
-            font-size: 1.8rem;
-            color: #6c757d; /* Standard gray */
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
-        .modal-close-btn:hover {
-            color: #495057;
-        }
-
-        /* Modal Title Styling */
-        .modal-content h3 {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #28a745; /* Vibrant green for modal title */
-            margin-bottom: 25px;
-            text-align: center;
-            position: relative;
-        }
-        .modal-content h3::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 4px;
-            background: #28a745; /* Vibrant green underline */
-            margin: 10px auto 0;
-            border-radius: 2px;
-        }
-
-        /* Modal Contact Item Styling */
-        .modal-contact-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 20px;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #495057; /* Darker gray for contact info */
-        }
-        /* Make the whole link area clickable including icon */
-        .modal-contact-item a {
-            display: flex; /* Use flex to align icon and text within the link */
-            align-items: center;
-            color: #007bff; /* Vibrant blue for links */
-            text-decoration: none;
-            transition: color 0.3s ease;
-            text-align: left; /* Align contact details left */
-            flex-grow: 1;
-            flex-direction: row-reverse; /* Place icon on the right of text */
-            justify-content: flex-end; /* Align content to the right */
-            gap: 15px; /* Space between icon and text */
-        }
-        .modal-contact-item a:hover {
-            color: #0056b3;
-            text-decoration: underline;
-        }
-        .modal-contact-item a.whatsapp-link {
-            color: #25D366;
-        }
-        .modal-contact-item a.whatsapp-link:hover {
-            color: #1DA851;
-        }
-
-        .modal-contact-item a i { /* Style for icon *inside* the link */
-            font-size: 1.6rem;
-            color: #007bff; /* Vibrant blue for modal icons */
-            width: 40px; /* Fixed width for icon */
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .modal-contact-item a.whatsapp-link i {
-            color: #25D366; /* WhatsApp green for WhatsApp icon */
-        }
-
-        .modal-contact-item a span { /* Style for the text part of the link */
-            direction: ltr; /* Ensure numbers are LTR */
-            flex-grow: 1;
-            text-align: right; /* Align text right (next to icon) */
-        }
-        
-        /* Footer Styling */
-        .footer {
-            text-align: center;
-            padding: 30px 0 25px;
-            color: #6c757d;
-            font-size: 1rem;
-            background: white;
-            border-top: 1px solid #e9ecef;
-            font-weight: 700;
-        }
-        
-        .copyright {
-            font-weight: 800;
-            color: #343a40;
-            font-size: 1.1rem;
-        }
-        
-        /* Responsive Adjustments for Mobile */
-        @media (max-width: 600px) {
-            body {
-                padding: 15px;
-            }
-            .header {
-                padding: 35px 20px 30px;
-            }
-            
-            .logo-icon {
-                width: 65px;
-                height: 65px;
-                border-radius: 20px;
-            }
-            
-            .logo-icon i {
-                font-size: 34px;
-            }
-            
-            .logo-text {
-                font-size: 2.4rem;
-                top: 2px;
-            }
-            
-            .welcome-text {
-                font-size: 1.5rem;
-            }
-            
-            .sub-text {
-                font-size: 0.85rem;
-            }
-            
-            .content {
-                padding: 30px 25px 25px;
-            }
-            
-            .action-btn { 
-                padding: 18px 40px;
-                font-size: 1.15rem;
-                max-width: 260px;
-            }
-            
-            .action-btn i {
-                margin-left: 10px;
-                font-size: 1.1em;
-            }
-            
-            .modal-content {
-                padding: 25px;
-                border-radius: 15px;
-            }
-            .modal-content h3 {
-                font-size: 1.8rem;
-                margin-bottom: 20px;
-            }
-            .modal-contact-item {
-                font-size: 1rem;
-                margin-bottom: 15px;
-            }
-            .modal-contact-item a i { /* Adjusted selector for icon inside link */
-                font-size: 1.4rem;
-                /* Removed margin, using gap */
-            }
-
-            .footer {
-                padding: 25px 0 20px;
-            }
-            .copyright {
-                font-size: 1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="logo-container">
-                <div class="logo-icon">
-                    <i class="fas fa-store"></i>
-                </div>
-                <h1 class="logo-text" id="store-name-header">مزار</h1>
-            </div>
-            
-            <h2 class="welcome-text">مرحبًا بكم</h2>
-            <p class="sub-text">اكتشف تجربة تسوق استثنائية مع آلاف المنتجات المميزة بأسعار تنافسية وخدمة توصيل سريعة</p>
-        </div>
-        
-        <div class="content">
-            <!-- زر الانتقال إلى صفحة تسجيل الدخول -->
-            <a href="login.html" class="action-btn green">
-                انتقل إلى صفحة تسجيل الدخول
-                <i class="fas fa-arrow-left"></i>
-            </a>
-            
-            <!-- زر فتح نافذة التواصل -->
-            <button id="open-contact-modal-btn" class="action-btn blue">
-                تواصل معنا
-                <i class="fas fa-headset"></i>
-            </button>
-        </div>
-        
-        <div class="footer">
-            <div class="copyright">جميع الحقوق محفوظة © 2025 <span id="footer-store-name">متجر مزار</span></div>
-        </div>
-    </div>
-
-    <!-- Contact Info Modal -->
-    <div id="contact-info-modal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="modal-close-btn" onclick="window.closeModal('contact-info-modal')">
-                <i class="fas fa-times"></i>
-            </button>
-            <h3>تواصل معنا</h3>
-            <div class="contact-details">
-                <div class="modal-contact-item">
-                    <a id="modal-contact-phone-link" href="#">
-                        <i class="fas fa-phone"></i>
-                        <span>+964771234567</span>
-                    </a>
-                </div>
-                <div class="modal-contact-item">
-                    <a id="modal-contact-whatsapp-link" href="#" target="_blank" class="whatsapp-link">
-                        <i class="fab fa-whatsapp"></i>
-                        <span>+964771234567</span>
-                    </a>
-                </div>
-                <div class="modal-contact-item">
-                    <a id="modal-contact-email-link" href="#">
-                        <i class="fas fa-envelope"></i>
-                        <span>info@mazar-store.com</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Updated Firebase SDK imports for version 9+ modular SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        // تم تحديث روابط Firebase SDK إلى الإصدار 9.23.0
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+        import { getDatabase, ref as dbRef, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-        // Your web app's Firebase configuration (replace with your actual config)
+
+        // Global variables provided by the Canvas environment (appId is still used for collection paths)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Your web app's Firebase configuration (provided by the user)
         const firebaseConfig = {
             apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
             authDomain: "zio3-8ffdd.firebaseapp.com",
             databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
             projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebaseapp.com",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
             messagingSenderId: "560939348415",
             appId: "1:560939348415:web:c854e9e214e498ad2d310a",
             measurementId: "G-CVN2B2D0RD"
@@ -481,116 +33,1259 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app); // Realtime Database
-        const settingsRef = ref(db, "settings");
+        // Using Realtime Database for data as per the provided admin panel code
+        const db = getDatabase(app); 
+        const auth = getAuth(app);
+        const storage = getStorage(app); // Storage is generally for files, not directly used for data in RTDB
 
-        // Global data storage for settings
-        window.storeData = {
-            settings: {}
+        // Realtime Database references
+        const settingsRef = dbRef(db, "settings");
+        const categoriesRef = dbRef(db, "categories");
+        const productsRef = dbRef(db, "products");
+        const homepageSettingsRef = dbRef(db, "homepageSettings");
+        const reviewsRef = dbRef(db, "reviews"); // Assuming reviews are in RTDB
+
+        // Global data storage for frontend
+        window.frontendData = {
+            settings: {},
+            homepageSettings: {},
+            categories: [],
+            products: [],
+            reviews: []
         };
+        
+        // وظيفة عرض البانر الرئيسي
+        function renderMainBanner(bannerData) {
+            const bannerContainer = document.getElementById('mainBanner');
+            // Check if main banner is enabled in homepage settings
+            if (window.frontendData.homepageSettings.mainBanner?.enabled && bannerData) {
+                bannerContainer.innerHTML = `
+                    <div class="banner-content">
+                        <h1 class="banner-title">${bannerData.title || 'عنوان البانر'}</h1>
+                        <p class="banner-description">${bannerData.description || 'وصف جذاب للبانر الرئيسي هنا.'}</p>
+                        <a href="${bannerData.ctaLink || '#'}" class="banner-btn">${bannerData.ctaText || 'تسوق الآن'}</a>
+                    </div>
+                `;
+                bannerContainer.style.backgroundImage = `url(${bannerData.image || 'https://via.placeholder.com/1200x400/4A90E2/ffffff?text=صورة+البانر'})`;
+                bannerContainer.style.display = 'flex'; // Ensure it's visible
+            } else {
+                bannerContainer.innerHTML = '';
+                bannerContainer.style.backgroundImage = 'none';
+                bannerContainer.style.display = 'none'; // Hide if not enabled or no data
+            }
+        }
 
-        /**
-         * Loads store settings from Firebase and updates the UI.
-         */
-        function loadSettings() {
-            onValue(settingsRef, (snapshot) => {
-                const settings = snapshot.val();
-                if (settings) {
-                    window.storeData.settings = settings;
-                    console.log("Store settings loaded:", window.storeData.settings);
+        // وظيفة عرض الأقسام
+        function renderCategories(categoriesData) {
+            const categoriesSection = document.getElementById('categories-section');
+            const categoriesContainer = document.getElementById('categoriesContainer');
+            categoriesContainer.innerHTML = ''; // Clear existing content
 
-                    // Update store names
-                    document.getElementById('store-name-header').textContent = settings.storeName || 'مزار';
-                    document.getElementById('footer-store-name').textContent = settings.storeName || 'متجر مزار';
+            // Check if categories section is enabled in homepage settings
+            if (window.frontendData.homepageSettings.productCategories?.enabled && categoriesData && categoriesData.length > 0) {
+                const selectedCategoryIds = window.frontendData.homepageSettings.productCategories.selectedCategories || [];
+                const filteredCategories = categoriesData.filter(cat => cat.isActive && (selectedCategoryIds.length === 0 || selectedCategoryIds.includes(cat.id)));
 
-                    // Helper function to format phone numbers for display (starts with +)
-                    const formatNumberForDisplay = (num) => {
-                        if (!num) return 'N/A';
-                        // Remove all non-digit characters and any existing '+'
-                        let cleanNum = num.replace(/[^\d]/g, '');
-                        // Add '+' at the beginning
-                        return `+${cleanNum}`;
-                    };
-
-                    // Helper function to format phone numbers for href (starts with +)
-                    const formatNumberForHref = (num) => {
-                        if (!num) return '';
-                        // Remove all non-digit characters
-                        let cleanNum = num.replace(/[^\d]/g, '');
-                        // Ensure it starts with '+' for tel: and wa.me links
-                        return cleanNum.startsWith('+') ? cleanNum : `+${cleanNum}`;
-                    };
-
-                    // Update contact info in the modal
-                    const modalContactPhoneLink = document.getElementById('modal-contact-phone-link');
-                    modalContactPhoneLink.querySelector('span').textContent = formatNumberForDisplay(settings.contactPhone);
-                    modalContactPhoneLink.href = `tel:${formatNumberForHref(settings.contactPhone)}`;
-
-                    const modalContactWhatsappLink = document.getElementById('modal-contact-whatsapp-link');
-                    modalContactWhatsappLink.querySelector('span').textContent = formatNumberForDisplay(settings.contactWhatsapp);
-                    modalContactWhatsappLink.href = `https://wa.me/${formatNumberForHref(settings.contactWhatsapp).replace(/\+/g, '')}`; // wa.me does not need the + prefix
-
-                    const modalContactEmailLink = document.getElementById('modal-contact-email-link');
-                    modalContactEmailLink.querySelector('span').textContent = settings.contactEmail || 'info@mazar-store.com';
-                    modalContactEmailLink.href = `mailto:${settings.contactEmail || 'info@mazar-store.com'}`;
-
+                if (filteredCategories.length > 0) {
+                    filteredCategories.forEach(category => {
+                        categoriesContainer.innerHTML += `
+                            <a href="#" class="category-item">
+                                <img src="${category.image || 'https://placehold.co/120x120/4A90E2/ffffff?text=Category'}" 
+                                     onerror="this.onerror=null;this.src='https://placehold.co/120x120/4A90E2/ffffff?text=Category';"
+                                     alt="${category.name}" class="category-image">
+                                <span>${category.name}</span>
+                            </a>
+                        `;
+                    });
+                    categoriesSection.style.display = 'block'; // Show the section
                 } else {
-                    // Default settings if none exist
-                    window.storeData.settings = {
-                        storeName: "مزار",
-                        contactPhone: "964771234567", 
-                        contactWhatsapp: "964771234567",
-                        contactEmail: "info@mazar-store.com",
-                        deliveryPrice: 5000,
-                        thankYouMessage: "شكراً لثقتك بنا! سيتواصل معك فريقنا قريباً لتأكيد طلبك."
-                    };
-                    // Apply default settings to UI
-                    document.getElementById('store-name-header').textContent = "مزار";
-                    document.getElementById('footer-store-name').textContent = "متجر مزار";
-                    document.getElementById('modal-contact-phone-link').querySelector('span').textContent = "+964771234567";
-                    document.getElementById('modal-contact-phone-link').href = "tel:+964771234567";
-                    document.getElementById('modal-contact-whatsapp-link').querySelector('span').textContent = "+964771234567";
-                    document.getElementById('modal-contact-whatsapp-link').href = "https://wa.me/964771234567";
-                    document.getElementById('modal-contact-email-link').querySelector('span').textContent = "info@mazar-store.com";
-                    document.getElementById('modal-contact-email-link').href = "mailto:info@mazar-store.com";
+                    categoriesContainer.innerHTML = '<p class="no-content-message">لا توجد أقسام لعرضها حالياً.</p>';
+                    categoriesSection.style.display = 'block'; // Still show section with no content message
                 }
-            }, (error) => {
-                console.error("Error loading settings:", error);
-                // Optionally show a notification to the user
-            });
+            } else {
+                categoriesSection.style.display = 'none'; // Hide the entire section if not enabled
+            }
         }
 
-        /**
-         * Opens a modal by adding 'visible' class.
-         * @param {string} modalId - The ID of the modal to open.
-         */
-        window.openModal = function(modalId) {
-            document.getElementById(modalId).classList.add('visible');
+        // وظيفة عرض المنتجات
+        function renderProducts(productsData, containerId, type = 'all') {
+            const productsSection = document.getElementById(containerId).closest('section');
+            const productsContainer = document.getElementById(containerId);
+            productsContainer.innerHTML = ''; // Clear existing content
+
+            // Check if featured products section is enabled in homepage settings
+            if (window.frontendData.homepageSettings.featuredProducts?.enabled) {
+                let filteredProducts = productsData.filter(p => p.isActive);
+
+                if (type === 'most_selling') {
+                    // Assuming 'isFeatured' from admin panel means "الأكثر مبيعاً" or "featured"
+                    filteredProducts = filteredProducts.filter(p => p.isFeatured);
+                } else if (type === 'new_products') {
+                    filteredProducts = filteredProducts.filter(p => p.isNew);
+                } else if (type === 'discounts') {
+                    filteredProducts = filteredProducts.filter(p => p.isSale);
+                }
+
+                if (filteredProducts.length > 0) {
+                    filteredProducts.forEach(product => {
+                        let displayedPrice = product.price || 0;
+                        let oldPriceHtml = '';
+
+                        // Calculate sale price based on admin panel logic
+                        if (product.isSale) {
+                            if (product.useCustomDiscountPrice && product.customDiscountPrice != null) {
+                                displayedPrice = product.customDiscountPrice;
+                                oldPriceHtml = `<span class="product-old-price">${(product.price || 0).toLocaleString('ar-EG')} د.ع</span>`;
+                            } else if (product.discountPercentage != null) {
+                                displayedPrice = product.price * (1 - product.discountPercentage / 100);
+                                oldPriceHtml = `<span class="product-old-price">${(product.price || 0).toLocaleString('ar-EG')} د.ع</span>`;
+                            }
+                        }
+
+                        productsContainer.innerHTML += `
+                            <div class="product-card">
+                                <img src="${product.image || 'https://placehold.co/300x200/50B3A2/ffffff?text=صورة+المنتج'}" 
+                                     onerror="this.onerror=null;this.src='https://placehold.co/300x200/50B3A2/ffffff?text=صورة+المنتج';"
+                                     alt="${product.name}" class="product-image">
+                                <div class="product-info">
+                                    <h4 class="product-name">${product.name}</h4>
+                                    <div class="product-prices">
+                                        <span class="product-price">${displayedPrice.toLocaleString('ar-EG')} د.ع</span>
+                                        ${oldPriceHtml}
+                                    </div>
+                                    <button class="add-to-cart-btn"><i class="fas fa-shopping-cart"></i> أضف للسلة</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    productsSection.style.display = 'block'; // Show the section
+                } else {
+                    productsContainer.innerHTML = '<p class="no-content-message">لا توجد منتجات لعرضها حالياً.</p>';
+                    productsSection.style.display = 'block'; // Still show section with no content message
+                }
+            } else {
+                productsSection.style.display = 'none'; // Hide the entire section if not enabled
+            }
         }
 
-        /**
-         * Closes a modal by removing 'visible' class.
-         * @param {string} modalId - The ID of the modal to close.
-         */
-        window.closeModal = function(modalId) {
-            document.getElementById(modalId).classList.remove('visible');
+        // وظيفة عرض البانرات الداخلية
+        function renderInternalBanners(bannersData) {
+            const internalBannersSection = document.getElementById('internal-banners-section');
+            const internalBannersContainer = document.getElementById('internalBannersContainer');
+            internalBannersContainer.innerHTML = ''; // Clear existing content
+
+            // Check if internal banners section is enabled in homepage settings
+            if (window.frontendData.homepageSettings.internalBanners?.enabled && bannersData && bannersData.length > 0) {
+                const homepageBanners = window.frontendData.homepageSettings.internalBanners.banners || [];
+                
+                if (homepageBanners.length > 0) {
+                    homepageBanners.forEach(banner => {
+                        internalBannersContainer.innerHTML += `
+                            <a href="${banner.link || '#'}" class="internal-banner-item">
+                                <img src="${banner.image || 'https://placehold.co/600x200/FF6B6B/ffffff?text=بانر+داخلي'}" 
+                                     onerror="this.onerror=null;this.src='https://placehold.co/600x200/FF6B6B/ffffff?text=بانر+داخلي';"
+                                     alt="${banner.title || 'Internal Banner'}">
+                                <h3>${banner.title || 'عنوان البانر الداخلي'}</h3>
+                            </a>
+                        `;
+                    });
+                    internalBannersSection.style.display = 'block'; // Show the section
+                } else {
+                    internalBannersContainer.innerHTML = '<p class="no-content-message">لا توجد بانرات داخلية لعرضها حالياً.</p>';
+                    internalBannersSection.style.display = 'block'; // Still show section with no content message
+                }
+            } else {
+                internalBannersSection.style.display = 'none'; // Hide the entire section if not enabled
+            }
+        }
+
+        // وظيفة عرض آراء العملاء
+        function renderReviews(reviewsData) {
+            const reviewsSection = document.getElementById('reviews-section');
+            const reviewsContainer = document.getElementById('reviewsContainer');
+            reviewsContainer.innerHTML = ''; // Clear existing content
+
+            // Check if customer reviews section is enabled in homepage settings
+            if (window.frontendData.homepageSettings.customerReviews?.enabled && reviewsData && reviewsData.length > 0) {
+                reviewsData.forEach(review => {
+                    reviewsContainer.innerHTML += `
+                        <div class="review-card">
+                            <p class="review-text">"${review.text}"</p>
+                            <p class="reviewer-name">- ${review.name}</p>
+                        </div>
+                    `;
+                });
+                reviewsSection.style.display = 'block'; // Show the section
+            } else {
+                reviewsSection.style.display = 'none'; // Hide the entire section if not enabled
+            }
+        }
+
+        // وظيفة عرض التذييل
+        function renderFooter(settings) {
+            const footer = document.getElementById('mainFooter');
+            const hpSettings = window.frontendData.homepageSettings.footer || {};
+            
+            // Construct contact info HTML conditionally
+            let contactInfoHtml = '';
+            if (hpSettings.contactEnabled && settings) {
+                if (settings.contactPhone) contactInfoHtml += `<p><i class="fas fa-phone"></i> ${settings.contactPhone}</p>`;
+                if (settings.contactEmail) contactInfoHtml += `<p><i class="fas fa-envelope"></i> ${settings.contactEmail}</p>`;
+                // Address is not in settings in admin panel, using a placeholder if needed
+                // if (settings.address) contactInfoHtml += `<p><i class="fas fa-map-marker-alt"></i> ${settings.address}</p>`;
+            }
+
+            // Construct social links HTML conditionally
+            let socialLinksHtml = '';
+            if (hpSettings.socialEnabled) {
+                const socialLinks = [];
+                if (hpSettings.facebook) socialLinks.push({ platform: 'facebook', url: hpSettings.facebook });
+                if (hpSettings.instagram) socialLinks.push({ platform: 'instagram', url: hpSettings.instagram });
+                if (hpSettings.twitter) socialLinks.push({ platform: 'twitter', url: hpSettings.twitter });
+                if (hpSettings.linkedin) socialLinks.push({ platform: 'linkedin', url: hpSettings.linkedin });
+
+                if (socialLinks.length > 0) {
+                    socialLinksHtml = `
+                        <div class="social-links">
+                            ${socialLinks.map(link => `
+                                <a href="${link.url}" class="social-link" target="_blank">
+                                    <i class="fab fa-${link.platform}"></i>
+                                </a>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            // Construct footer links HTML conditionally
+            let footerLinksHtml = '';
+            if (hpSettings.customLinksEnabled && hpSettings.customLinks && hpSettings.customLinks.length > 0) {
+                footerLinksHtml = `
+                    <ul class="footer-links">
+                        ${hpSettings.customLinks.map(link => `
+                            <li>
+                                <a href="${link.link}" target="_blank">
+                                    <i class="fas fa-arrow-left"></i> ${link.text}
+                                </a>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+            
+            // Construct about section HTML conditionally (using storeName as a placeholder for "About")
+            const aboutHtml = settings && settings.storeName ? `<p>مرحباً بك في ${settings.storeName}. نحن نقدم أفضل المنتجات لعملائنا الكرام.</p>` : '';
+            
+            // Construct copyright text (using storeName for copyright if available)
+            const copyrightText = settings && settings.storeName ? `&copy; ${new Date().getFullYear()} ${settings.storeName}. جميع الحقوق محفوظة.` : `&copy; ${new Date().getFullYear()} المتجر الإلكتروني. جميع الحقوق محفوظة.`;
+
+            footer.innerHTML = `
+                <div class="footer-content">
+                    ${contactInfoHtml.trim() || socialLinksHtml.trim() ? `
+                    <div class="footer-section">
+                        <h3>اتصل بنا</h3>
+                        <div class="contact-info">
+                            ${contactInfoHtml}
+                        </div>
+                        ${socialLinksHtml}
+                    </div>` : ''}
+                    
+                    ${footerLinksHtml.trim() ? `
+                    <div class="footer-section">
+                        <h3>روابط مهمة</h3>
+                        ${footerLinksHtml}
+                    </div>` : ''}
+                    
+                    ${aboutHtml.trim() ? `
+                    <div class="footer-section">
+                        <h3>حول المتجر</h3>
+                        ${aboutHtml}
+                    </div>` : ''}
+                </div>
+                <div class="copyright">
+                    <p>${copyrightText}</p>
+                </div>
+            `;
         }
         
-        document.addEventListener("DOMContentLoaded", function() {
-            loadSettings(); // Load settings on page load
+        // وظيفة تحميل بيانات الواجهة الأمامية من Realtime Database
+        async function loadFrontendData() {
+            try {
+                // Load Settings
+                onValue(settingsRef, (snapshot) => {
+                    window.frontendData.settings = snapshot.val() || {};
+                    renderFooter(window.frontendData.settings);
+                    document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
+                    // Assuming logoUrl is also in settings, if not, it will be placeholder
+                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر';
+                });
 
-            // Event listener for "تواصل معنا" button
-            document.getElementById('open-contact-modal-btn').addEventListener('click', function() {
-                window.openModal('contact-info-modal');
-            });
+                // Load Homepage Settings
+                onValue(homepageSettingsRef, (snapshot) => {
+                    window.frontendData.homepageSettings = snapshot.val() || {};
+                    // Re-render all sections after homepage settings are loaded
+                    renderMainBanner(window.frontendData.homepageSettings.mainBanner);
+                    renderCategories(window.frontendData.categories); // Re-render categories with new settings
+                    
+                    const featuredType = window.frontendData.homepageSettings.featuredProducts?.type || 'most_selling';
+                    renderProducts(window.frontendData.products, 'bestSellingProductsContainer', featuredType);
+                    
+                    // Note: The admin panel has internal banners as an array within homepageSettings.
+                    // So we pass homepageSettings.internalBanners.banners directly.
+                    renderInternalBanners(window.frontendData.homepageSettings.internalBanners?.banners);
+                    renderReviews(window.frontendData.reviews); // Re-render reviews with new settings
+                    renderFooter(window.frontendData.settings); // Re-render footer with new settings
+                });
 
-            // Close modal when clicking outside its content
-            document.getElementById('contact-info-modal').addEventListener('click', function(event) {
-                if (event.target === this) { // Only close if clicked directly on the overlay
-                    window.closeModal('contact-info-modal');
+                // Load Categories
+                onValue(categoriesRef, (snapshot) => {
+                    const categories = [];
+                    snapshot.forEach((childSnapshot) => {
+                        categories.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    });
+                    window.frontendData.categories = categories;
+                    renderCategories(window.frontendData.categories);
+                });
+
+                // Load Products
+                onValue(productsRef, (snapshot) => {
+                    const products = [];
+                    snapshot.forEach((childSnapshot) => {
+                        products.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    });
+                    window.frontendData.products = products;
+                    const featuredType = window.frontendData.homepageSettings.featuredProducts?.type || 'most_selling';
+                    renderProducts(window.frontendData.products, 'bestSellingProductsContainer', featuredType);
+                });
+
+                // Load Reviews
+                onValue(reviewsRef, (snapshot) => {
+                    const reviews = [];
+                    snapshot.forEach((childSnapshot) => {
+                        reviews.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    });
+                    window.frontendData.reviews = reviews;
+                    renderReviews(window.frontendData.reviews);
+                });
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.innerHTML = '<p>حدث خطأ في تحميل البيانات. يرجى تحديث الصفحة.</p>';
+                });
+            }
+            
+            // تعيين حالة التنقل النشطة
+            const navItems = document.querySelectorAll('.bottom-nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+            
+            navItems.forEach(item => {
+                const itemHref = item.getAttribute('href');
+                if (itemHref === currentPath || (currentPath === '' && itemHref === 'index.html')) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
                 }
+            });
+        }
+        
+        // تهيئة الصفحة
+        document.addEventListener('DOMContentLoaded', () => {
+            // التحقق من حالة تسجيل الدخول (لضمان عمل Firebase بشكل صحيح)
+            onAuthStateChanged(auth, async (user) => {
+                // For a frontend-only store, we might still want to sign in anonymously
+                // to allow read access to public data if security rules permit.
+                if (!user) {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } catch (error) {
+                            console.error("Error signing in with custom token:", error);
+                            // Fallback to anonymous sign-in if custom token fails
+                            await signInAnonymously(auth);
+                        }
+                    } else {
+                        // If no token at all, sign in anonymously
+                        await signInAnonymously(auth);
+                    }
+                }
+                loadFrontendData(); // Load frontend data after auth state is determined
             });
         });
     </script>
+    <style>
+        :root {
+            --primary: #4A90E2; /* أزرق فاتح */
+            --secondary: #50B3A2; /* أخضر مائي */
+            --accent: #FF6B6B; /* أحمر وردي */
+            --light: #F0F4F8; /* رمادي فاتح جداً */
+            --dark: #2C3E50; /* أزرق داكن */
+            --success: #2ECC71; /* أخضر */
+            --warning: #F1C40F; /* أصفر */
+            --border: #DCE4EC; /* رمادي فاتح للحدود */
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* ظل أكثر بروزاً */
+            --radius: 16px; /* حواف دائرية أكبر */
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال سلس وممتد */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 80px 0 100px; /* زيادة المساحة لشريط التنقل العلوي والسفلي */
+            direction: rtl; 
+            display: flex;
+            flex-direction: column;
+            font-family: 'Cairo', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 20px; /* زيادة المساحة الداخلية */
+            height: 80px; /* ارتفاع أكبر */
+            box-shadow: var(--shadow);
+            z-index: 1000;
+        }
+        
+        .top-left {
+            display: flex;
+            align-items: center; 
+            gap: 15px; /* زيادة المسافة بين العناصر */
+            height: 100%;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px; 
+            text-decoration: none; 
+            color: white; 
+            transition: var(--transition);
+            height: 100%;
+        }
+        
+        .logo-container:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
+        .store-logo {
+            height: 100%;
+            width: auto;
+            object-fit: contain; 
+            background-color: transparent;
+            padding: 8px 0; /* زيادة المساحة الداخلية */
+        }
+        
+        .store-name {
+            font-size: 20px; /* حجم خط أكبر */
+            font-weight: 800; /* خط أثقل */
+            letter-spacing: 0.5px;
+        }
+        
+        .top-right-group {
+            display: flex;
+            align-items: center;
+            gap: 20px; /* زيادة المسافة بين الأيقونات */
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px; /* حجم أيقونة أكبر */
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: var(--transition);
+            padding: 8px 12px; /* زيادة المساحة الداخلية */
+            text-decoration: none; 
+            border-radius: var(--radius); /* حواف دائرية */
+        }
+        
+        .icon-btn:hover {
+            transform: translateY(-5px) scale(1.05); /* تأثير رفع وتكبير */
+            background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
+        }
+        
+        .icon-label {
+            font-size: 13px; /* حجم خط أكبر قليلاً */
+            margin-top: 6px;
+            font-weight: 700; 
+        }
+        
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15); /* ظل أكثر بروزاً */
+            z-index: 1000;
+            border-top-left-radius: 30px; /* حواف دائرية أكبر */
+            border-top-right-radius: 30px; /* حواف دائرية أكبر */
+            height: 100px; /* ارتفاع أكبر */
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            font-size: 14px; /* حجم خط أكبر قليلاً */
+            text-decoration: none;
+            transition: var(--transition);
+            flex: 1;
+            padding: 12px 0; /* زيادة المساحة الداخلية */
+            font-weight: 700; 
+            position: relative;
+        }
+        
+        .bottom-nav-item i {
+            font-size: 24px; /* حجم أيقونة أكبر */
+            margin-bottom: 6px;
+            transition: var(--transition);
+        }
+        
+        .bottom-nav-item:hover, .bottom-nav-item.active {
+            color: var(--accent);
+            transform: translateY(-8px) scale(1.1); /* تأثير رفع وتكبير أكثر وضوحاً */
+        }
+        
+        .bottom-nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background-color: var(--accent);
+            border-radius: 2px;
+            animation: fadeInLine 0.5s ease-out;
+        }
+
+        @keyframes fadeInLine {
+            from { width: 0; opacity: 0; }
+            to { width: 40px; opacity: 1; }
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px; /* زيادة المساحة الداخلية */
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            background-color: white; /* خلفية بيضاء للمحتوى الرئيسي */
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-top: 20px; /* مسافة من الشريط العلوي */
+            margin-bottom: 20px; /* مسافة من الشريط السفلي */
+            min-height: calc(100vh - 180px); /* Adjust height to fill space between bars */
+        }
+        
+        /* Main Banner Styling */
+        .main-banner {
+            width: 100%;
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .main-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4); /* تراكب داكن لجعل النص مقروءًا */
+            z-index: 1;
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+            max-width: 800px;
+        }
+
+        .banner-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .banner-description {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            line-height: 1.5;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .banner-btn {
+            display: inline-block;
+            background-color: var(--accent);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .banner-btn:hover {
+            background-color: #D64545;
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Sections Styling */
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            color: var(--dark);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .section-header p {
+            font-size: 1.1rem;
+            color: #777;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+            border-radius: 2px;
+        }
+
+        /* Categories Section */
+        .categories-section {
+            margin-bottom: 50px;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 20px;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .category-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--dark);
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: var(--transition);
+            font-weight: 600;
+        }
+
+        .category-item:hover {
+            transform: translateY(-5px) scale(1.03);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+            color: var(--primary);
+        }
+
+        .category-item i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: var(--primary);
+            transition: var(--transition);
+        }
+        .category-item .category-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            border: 2px solid var(--primary);
+            transition: var(--transition);
+        }
+
+        .category-item:hover i, .category-item:hover .category-image {
+            color: var(--secondary);
+            border-color: var(--secondary);
+        }
+
+        /* Products Section */
+        .products-section {
+            margin-bottom: 50px;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .product-card {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .product-info {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .product-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .product-prices {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .product-price {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .product-old-price {
+            font-size: 1rem;
+            color: #888;
+            text-decoration: line-through;
+        }
+
+        .add-to-cart-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-top: auto; /* يدفع الزر للأسفل */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .add-to-cart-btn:hover {
+            background-color: #439E8E;
+            transform: translateY(-2px);
+        }
+
+        /* Internal Banners Section */
+        .internal-banners-section {
+            margin-bottom: 50px;
+        }
+
+        .internal-banners-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .internal-banner-item {
+            display: block;
+            text-decoration: none;
+            color: var(--dark);
+            background-color: white;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: var(--transition);
+        }
+
+        .internal-banner-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .internal-banner-item img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            display: block;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .internal-banner-item h3 {
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Reviews Section */
+        .reviews-section {
+            margin-bottom: 50px;
+        }
+
+        .reviews-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .review-card {
+            background-color: white;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .review-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .review-text {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .reviewer-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+
+        /* Footer Styling */
+        #mainFooter {
+            background-color: var(--dark);
+            color: white;
+            padding: 40px 20px;
+            border-top-left-radius: var(--radius);
+            border-top-right-radius: var(--radius);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            margin-top: auto; /* يدفع التذييل للأسفل */
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto 30px auto;
+        }
+
+        .footer-section h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-section h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--accent);
+            border-radius: 1px;
+        }
+
+        .footer-section p, .footer-links li {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: #E0E0E0;
+        }
+
+        .contact-info p {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .contact-info i {
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-link {
+            color: white;
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            color: var(--accent);
+            transform: translateY(-3px) scale(1.1);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            color: #E0E0E0;
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-links i {
+            font-size: 0.8rem;
+        }
+
+        .copyright {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #B0B0B0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .no-content-message {
+            text-align: center;
+            color: #888;
+            font-size: 1.2rem;
+            padding: 30px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 70px 0 90px;
+            }
+            .top-bar {
+                height: 60px;
+                padding: 0 10px;
+            }
+            .store-name {
+                font-size: 16px;
+            }
+            .icon-btn {
+                font-size: 14px;
+                padding: 5px 8px;
+            }
+            .icon-label {
+                font-size: 10px;
+            }
+            .bottom-bar {
+                height: 80px;
+                padding: 10px 0;
+            }
+            .bottom-nav-item i {
+                font-size: 20px;
+            }
+            .bottom-nav-item span {
+                font-size: 12px;
+            }
+            .main-content {
+                padding: 15px;
+                min-height: calc(100vh - 150px);
+            }
+            .main-banner {
+                height: 300px;
+            }
+            .banner-title {
+                font-size: 2.5rem;
+            }
+            .banner-description {
+                font-size: 1.2rem;
+            }
+            .banner-btn {
+                padding: 12px 25px;
+                font-size: 1rem;
+            }
+            .section-header h2 {
+                font-size: 2rem;
+            }
+            .section-header p {
+                font-size: 1rem;
+            }
+            .categories-grid {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 15px;
+            }
+            .category-item i {
+                font-size: 2.5rem;
+            }
+            .products-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+            }
+            .product-name {
+                font-size: 1.1rem;
+            }
+            .product-price {
+                font-size: 1.2rem;
+            }
+            .product-old-price {
+                font-size: 0.9rem;
+            }
+            .add-to-cart-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+            .internal-banners-grid {
+                grid-template-columns: 1fr;
+            }
+            .internal-banner-item img {
+                height: 150px;
+            }
+            .internal-banner-item h3 {
+                font-size: 1.1rem;
+            }
+            .reviews-grid {
+                grid-template-columns: 1fr;
+            }
+            .review-text {
+                font-size: 1.rem;
+            }
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .footer-section h3::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            .contact-info p, .footer-links a {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .top-right-group {
+                gap: 10px;
+            }
+            .bottom-nav-item {
+                font-size: 11px;
+                padding: 8px 0;
+            }
+            .bottom-nav-item i {
+                font-size: 18px;
+            }
+            .main-banner {
+                height: 250px;
+            }
+            .banner-title {
+                font-size: 2rem;
+            }
+            .banner-description {
+                font-size: 1rem;
+            }
+            .banner-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-left">
+            <a href="index.html" class="logo-container">
+                <img id="storeLogo" src="https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                <div id="storeName" class="store-name">متجر إلكتروني</div>
+            </a>
+        </div>
+        
+        <div class="top-right-group">
+            <a href="support.html" class="icon-btn">
+                <i class="fas fa-headset"></i>
+                <span class="icon-label">الدعم الفني</span>
+            </a>
+            
+            <a href="account.html" class="icon-btn">
+                <i class="fas fa-user-circle"></i>
+                <span class="icon-label">حسابي</span>
+            </a>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Main Banner Section -->
+        <section class="main-banner" id="mainBanner">
+            <!-- Content will be loaded by JavaScript -->
+        </section>
+
+        <!-- Categories Section -->
+        <section class="categories-section" id="categories-section">
+            <div class="section-header">
+                <h2>تصفح الأقسام</h2>
+                <p>اكتشف مجموعتنا الواسعة من المنتجات</p>
+            </div>
+            <div class="categories-grid" id="categoriesContainer">
+                <!-- Categories will be loaded by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Featured Products Section (will dynamically show Most Selling, New, or Discounts based on admin settings) -->
+        <section class="products-section" id="featured-products-section">
+            <div class="section-header">
+                <h2>المنتجات المختارة</h2>
+                <p>اكتشف أحدث منتجاتنا وعروضنا</p>
+            </div>
+            <div class="products-grid" id="bestSellingProductsContainer">
+                <!-- Featured products will be loaded by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Internal Banners Section -->
+        <section class="internal-banners-section" id="internal-banners-section">
+            <div class="section-header">
+                <h2>عروض خاصة</h2>
+                <p>لا تفوت أحدث عروضنا الحصرية</p>
+            </div>
+            <div class="internal-banners-grid" id="internalBannersContainer">
+                <!-- Internal banners will be loaded by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Customer Reviews Section -->
+        <section class="reviews-section" id="reviews-section">
+            <div class="section-header">
+                <h2>ماذا يقول عملاؤنا؟</h2>
+                <p>آراء حقيقية من عملائنا الراضين</p>
+            </div>
+            <div class="reviews-grid" id="reviewsContainer">
+                <!-- Reviews will be loaded by JavaScript -->
+            </div>
+        </section>
+    </div>
+    
+    <!-- Footer -->
+    <footer id="mainFooter">
+        <div class="loading">
+            <div class="spinner"></div>
+        </div>
+    </footer>
+    
+    <!-- Fixed Bottom Bar -->
+    <nav class="bottom-bar">
+        <a href="index.html" class="bottom-nav-item active">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="categories.html" class="bottom-nav-item">
+            <i class="fas fa-list"></i>
+            <span>الأقسام</span>
+        </a>
+        <a href="favorites.html" class="bottom-nav-item">
+            <i class="fas fa-heart"></i>
+            <span>المفضلة</span>
+        </a>
+        <a href="cart.html" class="bottom-nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>السلة</span>
+        </a>
+        <a href="orders.html" class="bottom-nav-item">
+            <i class="fas fa-shopping-bag"></i>
+            <span>الطلبات</span>
+        </a>
+        <a href="offers.html" class="bottom-nav-item">
+            <i class="fas fa-tag"></i>
+            <span>العروض</span>
+        </a>
+    </nav>
+    
 </body>
 </html>
