@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أقسام المتجر</title>
+    <title>الأقسام</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Updated Firebase SDK imports for version 9+ modular SDK -->
@@ -13,7 +13,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-        import { getDatabase, ref as dbRef, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref as dbRef, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 
         // Global variables provided by the Canvas environment (appId is still used for collection paths)
@@ -33,48 +33,29 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        // Using Realtime Database for data as per the provided admin panel code
         const db = getDatabase(app); 
         const auth = getAuth(app);
-        const storage = getStorage(app); // Storage is generally for files, not directly used for data in RTDB
+        const storage = getStorage(app); 
 
         // Realtime Database references
         const settingsRef = dbRef(db, "settings");
-        const categoriesRef = dbRef(db, "categories");
-        const homepageSettingsRef = dbRef(db, "homepageSettings"); // Needed for footer settings
+        const homepageSettingsRef = dbRef(db, "homepageSettings"); 
+        const categoriesRef = dbRef(db, "categories"); // مرجع للأقسام
+        const productsRef = dbRef(db, "products"); // مرجع للمنتجات
+        const usersRef = dbRef(db, "users"); // مرجع لبيانات المستخدمين (للسلة والمفضلة)
+
 
         // Global data storage for frontend
         window.frontendData = {
             settings: {},
             homepageSettings: {},
-            categories: []
+            categories: [],
+            products: [],
+            currentUser: null // لتخزين بيانات المستخدم الحالي من Firebase Auth
         };
-        
-        // وظيفة عرض الأقسام
-        function renderCategories(categoriesData) {
-            const categoriesContainer = document.getElementById('categoriesContainer');
-            categoriesContainer.innerHTML = ''; // Clear existing content
 
-            if (categoriesData && categoriesData.length > 0) {
-                const activeCategories = categoriesData.filter(cat => cat.isActive);
-                if (activeCategories.length > 0) {
-                    activeCategories.forEach(category => {
-                        categoriesContainer.innerHTML += `
-                            <a href="#" class="category-item">
-                                <img src="${category.image || 'https://placehold.co/120x120/4A90E2/ffffff?text=Category'}" 
-                                     onerror="this.onerror=null;this.src='https://placehold.co/120x120/4A90E2/ffffff?text=Category';"
-                                     alt="${category.name}" class="category-image">
-                                <span>${category.name}</span>
-                            </a>
-                        `;
-                    });
-                } else {
-                    categoriesContainer.innerHTML = '<p class="no-content-message">لا توجد أقسام لعرضها حالياً.</p>';
-                }
-            } else {
-                categoriesContainer.innerHTML = '<p class="no-content-message">لا توجد أقسام لعرضها حالياً.</p>';
-            }
-        }
+        let currentView = 'categories'; // 'categories' or 'products'
+        let selectedCategory = null; // Stores the name of the selected category
 
         // وظيفة عرض التذييل
         function renderFooter(settings) {
@@ -126,10 +107,7 @@
                 `;
             }
             
-            // Removed "حول المتجر" section entirely
             const aboutHtml = ''; 
-            
-            // Removed copyright text
             const copyrightText = '';
 
             footer.innerHTML = `
@@ -169,7 +147,6 @@
                     window.frontendData.settings = snapshot.val() || {};
                     renderFooter(window.frontendData.settings);
                     document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
-                    // Assuming logoUrl is also in settings, if not, it will be placeholder
                     document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر';
                 });
 
@@ -186,7 +163,21 @@
                         categories.push({ id: childSnapshot.key, ...childSnapshot.val() });
                     });
                     window.frontendData.categories = categories;
-                    renderCategories(window.frontendData.categories);
+                    if (currentView === 'categories') {
+                        renderCategories(); // Render categories if currently in categories view
+                    }
+                });
+
+                // Load Products
+                onValue(productsRef, (snapshot) => {
+                    const products = [];
+                    snapshot.forEach((childSnapshot) => {
+                        products.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    });
+                    window.frontendData.products = products;
+                    if (currentView === 'products' && selectedCategory) {
+                        renderProductsForCategory(selectedCategory); // Re-render products if in products view
+                    }
                 });
                 
             } catch (error) {
@@ -208,30 +199,250 @@
                     item.classList.remove('active');
                 }
             });
+
+            // Set active state for top bar account link (if applicable)
+            const accountLink = document.querySelector('.top-right-group a[href="account.html"]');
+            if (accountLink && currentPath === 'account.html') {
+                accountLink.classList.add('active');
+            } else if (accountLink) {
+                accountLink.classList.remove('active');
+            }
         }
-        
-        // تهيئة الصفحة
-        document.addEventListener('DOMContentLoaded', () => {
-            // التحقق من حالة تسجيل الدخول (لضمان عمل Firebase بشكل صحيح)
-            onAuthStateChanged(auth, async (user) => {
-                // For a frontend-only store, we might still want to sign in anonymously
-                // to allow read access to public data if security rules permit.
-                if (!user) {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } catch (error) {
-                            console.error("Error signing in with custom token:", error);
-                            // Fallback to anonymous sign-in if custom token fails
-                            await signInAnonymously(auth);
+
+        // وظيفة لعرض الأقسام
+        function renderCategories() {
+            currentView = 'categories';
+            selectedCategory = null;
+            document.getElementById('categoriesGrid').style.display = 'grid';
+            document.getElementById('productsByCategory').style.display = 'none';
+            document.getElementById('backToCategoriesBtn').style.display = 'none';
+            document.getElementById('sectionHeaderTitle').textContent = 'أقسام المتجر';
+            document.getElementById('sectionHeaderSubtitle').textContent = 'تصفح منتجاتنا حسب الفئة.';
+
+
+            const categoriesGrid = document.getElementById('categoriesGrid');
+            categoriesGrid.innerHTML = ''; // Clear existing content
+
+            if (window.frontendData.categories && window.frontendData.categories.length > 0) {
+                window.frontendData.categories.forEach(category => {
+                    const categoryCard = document.createElement('div');
+                    categoryCard.classList.add('category-card');
+                    categoryCard.innerHTML = `
+                        <i class="fas fa-folder"></i>
+                        <h3>${category.name}</h3>
+                    `;
+                    categoryCard.addEventListener('click', () => {
+                        renderProductsForCategory(category.name);
+                    });
+                    categoriesGrid.appendChild(categoryCard);
+                });
+            } else {
+                categoriesGrid.innerHTML = `
+                    <div class="empty-message">
+                        <i class="fas fa-box-open fa-3x"></i>
+                        <p>لا توجد أقسام متاحة حالياً.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // وظيفة لعرض المنتجات حسب القسم
+        function renderProductsForCategory(categoryName) {
+            currentView = 'products';
+            selectedCategory = categoryName;
+            document.getElementById('categoriesGrid').style.display = 'none';
+            document.getElementById('productsByCategory').style.display = 'grid';
+            document.getElementById('backToCategoriesBtn').style.display = 'inline-flex';
+            document.getElementById('sectionHeaderTitle').textContent = `منتجات قسم ${categoryName}`;
+            document.getElementById('sectionHeaderSubtitle').textContent = `استكشف أحدث المنتجات في ${categoryName}.`;
+
+            const productsContainer = document.getElementById('productsByCategory');
+            productsContainer.innerHTML = ''; // Clear existing content
+
+            const filteredProducts = window.frontendData.products.filter(product => 
+                product.category === categoryName && product.isActive
+            );
+
+            if (filteredProducts && filteredProducts.length > 0) {
+                filteredProducts.forEach(product => {
+                    let displayedPrice = product.price || 0;
+                    let oldPriceHtml = '';
+
+                    if (product.isSale) {
+                        if (product.useCustomDiscountPrice && product.customDiscountPrice != null) {
+                            displayedPrice = product.customDiscountPrice;
+                            oldPriceHtml = `<span class="product-old-price">${(product.price || 0).toLocaleString('ar-EG')} د.ع</span>`;
+                        } else if (product.discountPercentage != null) {
+                            displayedPrice = product.price * (1 - product.discountPercentage / 100);
+                            oldPriceHtml = `<span class="product-old-price">${(product.price || 0).toLocaleString('ar-EG')} د.ع</span>`;
                         }
+                    }
+
+                    productsContainer.innerHTML += `
+                        <div class="product-card">
+                            <img src="${product.image || 'https://placehold.co/300x200/4A90E2/ffffff?text=Product'}" 
+                                 onerror="this.onerror=null;this.src='https://placehold.co/300x200/4A90E2/ffffff?text=Product';"
+                                 alt="${product.name}" class="product-image">
+                            <div class="product-info">
+                                <h4 class="product-name">${product.name}</h4>
+                                <p class="product-description">${product.description || 'لا يوجد وصف.'}</p>
+                                <div class="product-prices">
+                                    <span class="product-price">${displayedPrice.toLocaleString('ar-EG')} د.ع</span>
+                                    ${oldPriceHtml}
+                                </div>
+                                <div class="product-actions">
+                                    <button class="add-to-cart-btn" data-product-id="${product.id}">
+                                        <i class="fas fa-cart-plus"></i> أضف للسلة
+                                    </button>
+                                    <button class="add-to-favorites-btn" data-product-id="${product.id}">
+                                        <i class="far fa-heart"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                // Attach event listeners to newly created buttons
+                productsContainer.querySelectorAll('.add-to-cart-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const productId = event.currentTarget.dataset.productId;
+                        addToCart(productId);
+                    });
+                });
+
+                productsContainer.querySelectorAll('.add-to-favorites-btn').forEach(button => {
+                    button.addEventListener('click', (event) => {
+                        const productId = event.currentTarget.dataset.productId;
+                        addToFavorites(productId);
+                    });
+                });
+
+            } else {
+                productsContainer.innerHTML = `
+                    <div class="empty-message">
+                        <i class="fas fa-box-open fa-3x"></i>
+                        <p>لا توجد منتجات متاحة في هذا القسم حالياً.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // وظيفة لإضافة المنتج إلى السلة (وظيفة وهمية)
+        async function addToCart(productId) {
+            if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
+                alert('الرجاء تسجيل الدخول لإضافة المنتجات إلى السلة.');
+                return;
+            }
+            const userId = window.frontendData.currentUser.uid;
+            const cartItemRef = dbRef(db, `users/${userId}/cart/${productId}`);
+            
+            try {
+                // Check if item already exists in cart
+                const snapshot = await get(cartItemRef);
+                const existingItem = snapshot.val();
+
+                if (existingItem) {
+                    // Update quantity
+                    await update(cartItemRef, { quantity: existingItem.quantity + 1 });
+                    alert('تم تحديث كمية المنتج في السلة!');
+                } else {
+                    // Add new item to cart
+                    const product = window.frontendData.products.find(p => p.id === productId);
+                    if (product) {
+                        await set(cartItemRef, {
+                            id: productId,
+                            name: product.name,
+                            price: product.price, // Use original price for cart calculation
+                            image: product.image,
+                            quantity: 1
+                        });
+                        alert('تمت إضافة المنتج إلى السلة!');
                     } else {
-                        // If no token at all, sign in anonymously
-                        await signInAnonymously(auth);
+                        alert('لم يتم العثور على المنتج.');
                     }
                 }
-                loadFrontendData(); // Load frontend data after auth state is determined
+            } catch (error) {
+                console.error("Error adding to cart:", error);
+                alert('حدث خطأ أثناء إضافة المنتج إلى السلة.');
+            }
+        }
+
+        // وظيفة لإضافة المنتج إلى المفضلة (وظيفة وهمية)
+        async function addToFavorites(productId) {
+            if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
+                alert('الرجاء تسجيل الدخول لإضافة المنتجات إلى المفضلة.');
+                return;
+            }
+            const userId = window.frontendData.currentUser.uid;
+            const favoriteItemRef = dbRef(db, `users/${userId}/favorites/${productId}`);
+
+            try {
+                const snapshot = await get(favoriteItemRef);
+                if (snapshot.exists()) {
+                    // Item is already a favorite, so remove it
+                    await remove(favoriteItemRef);
+                    alert('تمت إزالة المنتج من المفضلة!');
+                } else {
+                    // Add to favorites
+                    const product = window.frontendData.products.find(p => p.id === productId);
+                    if (product) {
+                        await set(favoriteItemRef, {
+                            id: productId,
+                            name: product.name,
+                            image: product.image,
+                            timestamp: serverTimestamp()
+                        });
+                        alert('تمت إضافة المنتج إلى المفضلة!');
+                    } else {
+                        alert('لم يتم العثور على المنتج.');
+                    }
+                }
+            } catch (error) {
+                console.error("Error adding/removing from favorites:", error);
+                alert('حدث خطأ أثناء تحديث المفضلة.');
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // تهيئة الصفحة
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    window.frontendData.currentUser = user;
+                } else {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try {
+                            const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                            window.frontendData.currentUser = userCredential.user;
+                        } catch (error) {
+                            if (error.code !== 'auth/custom-token-mismatch') {
+                                console.error("Error signing in with custom token:", error);
+                            } else {
+                                console.warn("Custom token mismatch detected, falling back to anonymous sign-in.");
+                            }
+                            try {
+                                const userCredential = await signInAnonymously(auth);
+                                window.frontendData.currentUser = userCredential.user;
+                            } catch (anonError) {
+                                console.error("Error signing in anonymously:", anonError);
+                            }
+                        }
+                    } else {
+                        try {
+                            const userCredential = await signInAnonymously(auth);
+                            window.frontendData.currentUser = userCredential.user;
+                        } catch (anonError) {
+                            console.error("Error signing in anonymously:", anonError);
+                        }
+                    }
+                }
+                loadFrontendData(); // تحميل بيانات الواجهة الأمامية الأخرى
+                renderCategories(); // Render categories initially
             });
+
+            // Event listener for back button
+            document.getElementById('backToCategoriesBtn').addEventListener('click', renderCategories);
         });
     </script>
     <style>
@@ -345,6 +556,12 @@
             transform: translateY(-5px) scale(1.05); /* تأثير رفع وتكبير */
             background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
         }
+        /* Added active state for top bar icons */
+        .icon-btn.active {
+            color: var(--accent); /* Highlight active icon */
+            transform: translateY(-5px) scale(1.05);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
         
         .icon-label {
             font-size: 13px; /* حجم خط أكبر قليلاً */
@@ -428,75 +645,6 @@
             min-height: calc(100vh - 180px); /* Adjust height to fill space between bars */
         }
         
-        /* Main Banner Styling */
-        .main-banner {
-            width: 100%;
-            height: 400px;
-            background-size: cover;
-            background-position: center;
-            border-radius: var(--radius);
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            color: white;
-            position: relative;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-        }
-
-        .main-banner::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.4); /* تراكب داكن لجعل النص مقروءًا */
-            z-index: 1;
-        }
-
-        .banner-content {
-            position: relative;
-            z-index: 2;
-            padding: 20px;
-            max-width: 800px;
-        }
-
-        .banner-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-        }
-
-        .banner-description {
-            font-size: 1.5rem;
-            margin-bottom: 30px;
-            line-height: 1.5;
-            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
-        }
-
-        .banner-btn {
-            display: inline-block;
-            background-color: var(--accent);
-            color: white;
-            padding: 15px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.1rem;
-            transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        .banner-btn:hover {
-            background-color: #D64545;
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
-        }
-
         /* Sections Styling */
         .section-header {
             text-align: center;
@@ -529,69 +677,56 @@
             border-radius: 2px;
         }
 
-        /* Categories Section */
-        .categories-section {
-            margin-bottom: 50px;
-        }
-
+        /* Categories Grid */
         .categories-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
             justify-content: center;
-            text-align: center;
+            padding: 20px;
         }
 
-        .category-item {
+        .category-card {
+            background-color: var(--light);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            text-decoration: none;
+            justify-content: center;
+            min-height: 180px;
+        }
+
+        .category-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+            background-color: #E6EEF5; /* Slightly darker light color on hover */
+        }
+
+        .category-card i {
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .category-card h3 {
+            font-size: 1.4rem;
             color: var(--dark);
-            background-color: white;
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: var(--transition);
-            font-weight: 600;
+            font-weight: 700;
         }
 
-        .category-item:hover {
-            transform: translateY(-5px) scale(1.03);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-            color: var(--primary);
-        }
-
-        .category-item i {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            color: var(--primary);
-            transition: var(--transition);
-        }
-        .category-item .category-image {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 50%;
-            margin-bottom: 10px;
-            border: 2px solid var(--primary);
-            transition: var(--transition);
-        }
-
-        .category-item:hover i, .category-item:hover .category-image {
-            color: var(--secondary);
-            border-color: var(--secondary);
-        }
-
-        /* Products Section */
-        .products-section {
-            margin-bottom: 50px;
-        }
-
-        .products-grid {
+        /* Products Grid (reused from index.html but with specific ID) */
+        .products-by-category-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 30px;
+            justify-content: center;
+            padding: 20px;
+            display: none; /* Hidden by default */
         }
 
         .product-card {
@@ -626,8 +761,20 @@
         .product-name {
             font-size: 1.3rem;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             color: var(--dark);
+        }
+
+        .product-description {
+            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 15px;
+            flex-grow: 1; /* Allows description to take available space */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* Limit to 3 lines */
+            -webkit-box-orient: vertical;
         }
 
         .product-prices {
@@ -649,17 +796,24 @@
             text-decoration: line-through;
         }
 
+        .product-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: auto; /* Pushes buttons to the bottom */
+            justify-content: space-between;
+        }
+
         .add-to-cart-btn {
             background-color: var(--secondary);
             color: white;
             border: none;
-            padding: 12px 20px;
+            padding: 10px 15px;
             border-radius: 8px;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem;
+            font-weight: 600;
+            font-size: 0.9rem;
             transition: var(--transition);
-            margin-top: auto; /* يدفع الزر للأسفل */
+            flex-grow: 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -671,87 +825,74 @@
             transform: translateY(-2px);
         }
 
-        /* Internal Banners Section */
-        .internal-banners-section {
-            margin-bottom: 50px;
-        }
-
-        .internal-banners-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-        }
-
-        .internal-banner-item {
-            display: block;
-            text-decoration: none;
-            color: var(--dark);
-            background-color: white;
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transition: var(--transition);
-        }
-
-        .internal-banner-item:hover {
-            transform: translateY(-5px) scale(1.02);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-        }
-
-        .internal-banner-item img {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            display: block;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .internal-banner-item h3 {
-            padding: 15px 20px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        /* Reviews Section */
-        .reviews-section {
-            margin-bottom: 50px;
-        }
-
-        .reviews-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-        }
-
-        .review-card {
-            background-color: white;
-            border-radius: var(--radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 25px;
-            text-align: center;
-            transition: var(--transition);
-        }
-
-        .review-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-        }
-
-        .review-text {
+        .add-to-favorites-btn {
+            background-color: var(--light);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
             font-size: 1.1rem;
-            color: #555;
-            margin-bottom: 15px;
-            font-style: italic;
+            transition: var(--transition);
+            flex-shrink: 0; /* Prevents shrinking */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .reviewer-name {
-            font-size: 0.95rem;
+        .add-to-favorites-btn:hover {
+            background-color: var(--accent);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .back-button-container {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        #backToCategoriesBtn {
+            background-color: #6c757d; /* Gray for back button */
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
             font-weight: 600;
-            color: var(--secondary);
+            font-size: 1rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none; /* Hidden by default */
         }
 
-        /* Footer Styling */
+        #backToCategoriesBtn:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .empty-message {
+            padding: 50px;
+            text-align: center;
+            color: #888;
+            font-size: 1.3rem;
+            grid-column: 1 / -1; /* Span full width in grid */
+        }
+
+        .empty-message i {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        .empty-message p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+
+        /* Footer Styling (reused from other pages) */
         #mainFooter {
             background-color: var(--dark);
             color: white;
@@ -897,63 +1038,61 @@
                 padding: 15px;
                 min-height: calc(100vh - 150px);
             }
-            .main-banner {
-                height: 300px;
-            }
-            .banner-title {
-                font-size: 2.5rem;
-            }
-            .banner-description {
-                font-size: 1.2rem;
-            }
-            .banner-btn {
-                padding: 12px 25px;
-                font-size: 1rem;
-            }
             .section-header h2 {
                 font-size: 2rem;
             }
             .section-header p {
                 font-size: 1rem;
             }
-            .categories-grid {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-                gap: 15px;
-            }
-            .category-item i {
-                font-size: 2.5rem;
-            }
-            .products-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            .categories-grid, .products-by-category-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
                 gap: 20px;
+            }
+            .category-card {
+                min-height: 150px;
+            }
+            .category-card i {
+                font-size: 2.8rem;
+            }
+            .category-card h3 {
+                font-size: 1.2rem;
+            }
+            .product-card {
+                padding: 15px;
+            }
+            .product-image {
+                height: 150px;
             }
             .product-name {
                 font-size: 1.1rem;
+            }
+            .product-description {
+                font-size: 0.85rem;
             }
             .product-price {
                 font-size: 1.2rem;
             }
             .product-old-price {
-                font-size: 0.9rem;
+                font-size: 0.8rem;
             }
             .add-to-cart-btn {
-                padding: 10px 15px;
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+            .add-to-favorites-btn {
+                padding: 8px 10px;
+                font-size: 1rem;
+            }
+            #backToCategoriesBtn {
+                padding: 8px 15px;
                 font-size: 0.9rem;
             }
-            .internal-banners-grid {
-                grid-template-columns: 1fr;
-            }
-            .internal-banner-item img {
-                height: 150px;
-            }
-            .internal-banner-item h3 {
+            .empty-message {
                 font-size: 1.1rem;
+                padding: 30px;
             }
-            .reviews-grid {
-                grid-template-columns: 1fr;
-            }
-            .review-text {
-                font-size: 1.rem;
+            .empty-message i {
+                font-size: 3rem;
             }
             .footer-content {
                 grid-template-columns: 1fr;
@@ -978,22 +1117,6 @@
             }
             .bottom-nav-item i {
                 font-size: 18px;
-            }
-            .main-banner {
-                height: 250px;
-            }
-            .banner-title {
-                font-size: 2rem;
-            }
-            .banner-description {
-                font-size: 1rem;
-            }
-            .banner-btn {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-            .section-header h2 {
-                font-size: 1.8rem;
             }
         }
     </style>
@@ -1025,12 +1148,27 @@
     <div class="main-content">
         <section class="categories-section">
             <div class="section-header">
-                <h2>جميع الأقسام</h2>
-                <p>تصفح جميع أقسام المنتجات المتوفرة في متجرنا.</p>
+                <button id="backToCategoriesBtn" class="back-button-container">
+                    <i class="fas fa-arrow-right"></i> العودة للأقسام
+                </button>
+                <h2 id="sectionHeaderTitle">أقسام المتجر</h2>
+                <p id="sectionHeaderSubtitle">تصفح منتجاتنا حسب الفئة.</p>
             </div>
-            <div class="categories-grid" id="categoriesContainer">
+            
+            <div class="categories-grid" id="categoriesGrid">
                 <!-- Categories will be loaded by JavaScript -->
-                <p class="no-content-message">جاري تحميل الأقسام...</p>
+                <div class="empty-message">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p>جاري تحميل الأقسام...</p>
+                </div>
+            </div>
+
+            <div class="products-by-category-grid" id="productsByCategory">
+                <!-- Products for selected category will be loaded here by JavaScript -->
+                <div class="empty-message">
+                    <i class="fas fa-spinner fa-spin fa-3x"></i>
+                    <p>جاري تحميل المنتجات...</p>
+                </div>
             </div>
         </section>
     </div>
