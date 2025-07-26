@@ -153,7 +153,7 @@
                                         <span class="product-price">${displayedPrice.toLocaleString('ar-EG')} د.ع</span>
                                         ${oldPriceHtml}
                                     </div>
-                                    <button class="add-to-cart-btn"><i class="fas fa-shopping-cart"></i> أضف للسلة</button>
+                                    <button class="add-to-cart-btn"><i class="fas fa-shopping-cart"></i></button>
                                 </div>
                             </div>
                         `;
@@ -231,8 +231,6 @@
             if (hpSettings.contactEnabled && settings) {
                 if (settings.contactPhone) contactInfoHtml += `<p><i class="fas fa-phone"></i> ${settings.contactPhone}</p>`;
                 if (settings.contactEmail) contactInfoHtml += `<p><i class="fas fa-envelope"></i> ${settings.contactEmail}</p>`;
-                // Address is not in settings in admin panel, using a placeholder if needed
-                // if (settings.address) contactInfoHtml += `<p><i class="fas fa-map-marker-alt"></i> ${settings.address}</p>`;
             }
 
             // Construct social links HTML conditionally
@@ -273,11 +271,11 @@
                 `;
             }
             
-            // Construct about section HTML conditionally (using storeName as a placeholder for "About")
-            const aboutHtml = settings && settings.storeName ? `<p>مرحباً بك في ${settings.storeName}. نحن نقدم أفضل المنتجات لعملائنا الكرام.</p>` : '';
+            // Removed "حول المتجر" section entirely
+            const aboutHtml = ''; 
             
-            // Construct copyright text (using storeName for copyright if available)
-            const copyrightText = settings && settings.storeName ? `&copy; ${new Date().getFullYear()} ${settings.storeName}. جميع الحقوق محفوظة.` : `&copy; ${new Date().getFullYear()} المتجر الإلكتروني. جميع الحقوق محفوظة.`;
+            // Removed copyright text
+            const copyrightText = '';
 
             footer.innerHTML = `
                 <div class="footer-content">
