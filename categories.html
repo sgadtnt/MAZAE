@@ -15,7 +15,6 @@
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
         import { getDatabase, ref as dbRef, onValue, push, serverTimestamp, get, set, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
-
         // Global variables provided by the Canvas environment (appId is still used for collection paths)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         
@@ -44,14 +43,14 @@
         const productsRef = dbRef(db, "products"); // مرجع للمنتجات
         const usersRef = dbRef(db, "users"); // مرجع لبيانات المستخدمين (للسلة والمفضلة)
 
-
         // Global data storage for frontend
         window.frontendData = {
             settings: {},
             homepageSettings: {},
             categories: [],
             products: [],
-            currentUser: null // لتخزين بيانات المستخدم الحالي من Firebase Auth
+            currentUser: null, // لتخزين بيانات المستخدم الحالي من Firebase Auth
+            authReady: false // لتتبع حالة جاهزية المصادقة
         };
 
         let currentView = 'categories'; // 'categories' or 'products'
@@ -219,7 +218,6 @@
             document.getElementById('sectionHeaderTitle').textContent = 'أقسام المتجر';
             document.getElementById('sectionHeaderSubtitle').textContent = 'تصفح منتجاتنا حسب الفئة.';
 
-
             const categoriesGrid = document.getElementById('categoriesGrid');
             categoriesGrid.innerHTML = ''; // Clear existing content
 
@@ -328,89 +326,133 @@
             }
         }
 
-        // وظيفة لإضافة المنتج إلى السلة (وظيفة وهمية)
+        // وظيفة لإضافة المنتج إلى السلة
         async function addToCart(productId) {
-            if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
-                alert('الرجاء تسجيل الدخول لإضافة المنتجات إلى السلة.');
-                return;
-            }
-            const userId = window.frontendData.currentUser.uid;
-            const cartItemRef = dbRef(db, `users/${userId}/cart/${productId}`);
-            
             try {
-                // Check if item already exists in cart
-                const snapshot = await get(cartItemRef);
-                const existingItem = snapshot.val();
-
+                // تحقق من جاهزية المصادقة
+                if (!window.frontendData.authReady) {
+                    showNotification('جاري تحميل النظام، يرجى الانتظار لحظات...');
+                    return;
+                }
+                
+                // تحقق من وجود مستخدم مسجل
+                if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
+                    showNotification('الرجاء تسجيل الدخول لإضافة المنتجات إلى السلة');
+                    // توجيه المستخدم إلى صفحة الحساب بعد تأخير
+                    setTimeout(() => {
+                        window.location.href = 'account.html';
+                    }, 2000);
+                    return;
+                }
+                
+                const userId = window.frontendData.currentUser.uid;
+                const cartItemRef = dbRef(db, `users/${userId}/cart/${productId}`);
+                
                 const product = window.frontendData.products.find(p => p.id === productId);
                 if (!product) {
-                    alert('لم يتم العثور على المنتج.');
+                    console.error("Product not found for ID:", productId);
+                    showNotification('لم يتم العثور على المنتج لإضافته إلى السلة');
                     return;
                 }
 
-                // Ensure image is always a string, use placeholder if missing
+                // التأكد من أن الصورة هي نص
                 const productImage = product.image || 'https://placehold.co/300x200/4A90E2/ffffff?text=Product';
 
+                const snapshot = await get(cartItemRef);
+                const existingItem = snapshot.val();
+
                 if (existingItem) {
-                    // Update quantity
+                    // تحديث الكمية
                     await update(cartItemRef, { quantity: existingItem.quantity + 1 });
-                    alert('تم تحديث كمية المنتج في السلة!');
+                    showNotification('تم تحديث كمية المنتج في السلة!');
                 } else {
-                    // Add new item to cart
+                    // إضافة عنصر جديد إلى السلة
                     await set(cartItemRef, {
                         id: productId,
                         name: product.name,
-                        price: product.price, // Use original price for cart calculation
-                        image: productImage, // Use the guaranteed string image URL
+                        price: product.price, // استخدام السعر الأصلي
+                        image: productImage,
                         quantity: 1
                     });
-                    alert('تمت إضافة المنتج إلى السلة!');
+                    showNotification('تمت إضافة المنتج إلى السلة!');
                 }
             } catch (error) {
                 console.error("Error adding to cart:", error);
-                alert('حدث خطأ أثناء إضافة المنتج إلى السلة.');
+                showNotification('حدث خطأ أثناء إضافة المنتج إلى السلة');
             }
         }
 
-        // وظيفة لإضافة المنتج إلى المفضلة (وظيفة وهمية)
+        // وظيفة لإضافة المنتج إلى المفضلة
         async function addToFavorites(productId) {
-            if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
-                alert('الرجاء تسجيل الدخول لإضافة المنتجات إلى المفضلة.');
-                return;
-            }
-            const userId = window.frontendData.currentUser.uid;
-            const favoriteItemRef = dbRef(db, `users/${userId}/favorites/${productId}`);
-
             try {
+                // تحقق من جاهزية المصادقة
+                if (!window.frontendData.authReady) {
+                    showNotification('جاري تحميل النظام، يرجى الانتظار لحظات...');
+                    return;
+                }
+                
+                // تحقق من وجود مستخدم مسجل
+                if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
+                    showNotification('الرجاء تسجيل الدخول لإضافة المنتجات إلى المفضلة');
+                    // توجيه المستخدم إلى صفحة الحساب بعد تأخير
+                    setTimeout(() => {
+                        window.location.href = 'account.html';
+                    }, 2000);
+                    return;
+                }
+                
+                const userId = window.frontendData.currentUser.uid;
+                const favoriteItemRef = dbRef(db, `users/${userId}/favorites/${productId}`);
+
+                const product = window.frontendData.products.find(p => p.id === productId);
+                if (!product) {
+                    console.error("Product not found for ID:", productId);
+                    showNotification('لم يتم العثور على المنتج لإضافته إلى المفضلة');
+                    return;
+                }
+
+                // التأكد من أن الصورة هي نص
+                const productImage = product.image || 'https://placehold.co/300x200/4A90E2/ffffff?text=Product';
+
                 const snapshot = await get(favoriteItemRef);
                 if (snapshot.exists()) {
-                    // Item is already a favorite, so remove it
+                    // العنصر موجود في المفضلة، إزالته
                     await remove(favoriteItemRef);
-                    alert('تمت إزالة المنتج من المفضلة!');
+                    showNotification('تمت إزالة المنتج من المفضلة!');
                 } else {
-                    // Add to favorites
-                    const product = window.frontendData.products.find(p => p.id === productId);
-                    if (product) {
-                        // Ensure image is always a string, use placeholder if missing
-                        const productImage = product.image || 'https://placehold.co/300x200/4A90E2/ffffff?text=Product';
-
-                        await set(favoriteItemRef, {
-                            id: productId,
-                            name: product.name,
-                            image: productImage, // Use the guaranteed string image URL
-                            timestamp: serverTimestamp()
-                        });
-                        alert('تمت إضافة المنتج إلى المفضلة!');
-                    } else {
-                        alert('لم يتم العثور على المنتج.');
-                    }
+                    // إضافة إلى المفضلة
+                    await set(favoriteItemRef, {
+                        id: productId,
+                        name: product.name,
+                        image: productImage,
+                        timestamp: serverTimestamp()
+                    });
+                    showNotification('تمت إضافة المنتج إلى المفضلة!');
                 }
             } catch (error) {
                 console.error("Error adding/removing from favorites:", error);
-                alert('حدث خطأ أثناء تحديث المفضلة.');
+                showNotification('حدث خطأ أثناء تحديث المفضلة');
             }
         }
 
+        // وظيفة لعرض الإشعارات
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
             // تهيئة الصفحة
@@ -444,6 +486,7 @@
                         }
                     }
                 }
+                window.frontendData.authReady = true; // وضع علامة جاهزية المصادقة
                 loadFrontendData(); // تحميل بيانات الواجهة الأمامية الأخرى
                 renderCategories(); // Render categories initially
             });
@@ -853,6 +896,11 @@
             transform: translateY(-2px);
         }
 
+        .add-to-favorites-btn.favorited {
+            background-color: var(--accent);
+            color: white;
+        }
+
         .back-button-container {
             text-align: right;
             margin-bottom: 20px;
@@ -898,6 +946,27 @@
             line-height: 1.6;
         }
 
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #50B3A2;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 2000;
+            font-weight: bold;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
 
         /* Footer Styling (reused from other pages) */
         #mainFooter {
