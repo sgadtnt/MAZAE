@@ -13,8 +13,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-        import { getDatabase, ref as dbRef, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
+        import { getDatabase, ref as dbRef, onValue, get, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         // Global variables provided by the Canvas environment (appId is still used for collection paths)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -41,26 +40,53 @@
         // Realtime Database references
         const settingsRef = dbRef(db, "settings");
         const homepageSettingsRef = dbRef(db, "homepageSettings"); // Needed for footer settings
-        const cartRef = dbRef(db, "users"); // Placeholder for user-specific cart
+        const productsRef = dbRef(db, "products"); // مرجع للمنتجات
 
         // Global data storage for frontend
         window.frontendData = {
             settings: {},
             homepageSettings: {},
-            cart: [] // This will hold cart product data
+            cart: [], // This will hold cart product data
+            currentUser: null,
+            authReady: false
         };
         
-        // وظيفة عرض عناصر سلة التسوق (يمكنك تطويرها لاحقاً لجلب البيانات الفعلية)
+        // وظيفة جلب بيانات سلة المستخدم
+        async function loadUserCart(userId) {
+            try {
+                const userCartRef = dbRef(db, `users/${userId}/cart`);
+                const snapshot = await get(userCartRef);
+                
+                if (snapshot.exists()) {
+                    const cartData = snapshot.val();
+                    // تحويل البيانات إلى مصفوفة
+                    window.frontendData.cart = Object.keys(cartData).map(key => ({
+                        id: key,
+                        ...cartData[key]
+                    }));
+                } else {
+                    window.frontendData.cart = [];
+                }
+                
+                renderCart(window.frontendData.cart);
+            } catch (error) {
+                console.error("Error loading cart:", error);
+                renderCart([]);
+            }
+        }
+
+        // وظيفة عرض عناصر سلة التسوق
         function renderCart(cartData) {
             const cartContainer = document.getElementById('cartContainer');
             cartContainer.innerHTML = ''; // Clear existing content
 
             if (cartData && cartData.length > 0) {
-                // هنا يمكنك عرض عناصر سلة التسوق فعلياً
                 let totalPrice = 0;
+                
                 cartData.forEach(item => {
                     const itemPrice = (item.price || 0) * (item.quantity || 1);
                     totalPrice += itemPrice;
+                    
                     cartContainer.innerHTML += `
                         <div class="cart-item-card">
                             <img src="${item.image || 'https://placehold.co/100x100/50B3A2/ffffff?text=Product'}" 
@@ -68,28 +94,125 @@
                                  alt="${item.name}" class="cart-item-image">
                             <div class="cart-item-details">
                                 <h4 class="cart-item-name">${item.name}</h4>
-                                <p class="cart-item-price">${(item.price || 0).toLocaleString('ar-EG')} د.ع x ${item.quantity || 1}</p>
+                                <div class="cart-item-quantity">
+                                    <button class="quantity-btn decrease" data-product-id="${item.id}">-</button>
+                                    <span class="quantity">${item.quantity || 1}</span>
+                                    <button class="quantity-btn increase" data-product-id="${item.id}">+</button>
+                                </div>
+                                <p class="cart-item-price">السعر: ${(item.price || 0).toLocaleString('ar-EG')} د.ع</p>
                                 <p class="cart-item-total">الإجمالي: ${(itemPrice).toLocaleString('ar-EG')} د.ع</p>
                             </div>
-                            <button class="remove-from-cart-btn"><i class="fas fa-trash"></i></button>
+                            <button class="remove-from-cart-btn" data-product-id="${item.id}"><i class="fas fa-trash"></i></button>
                         </div>
                     `;
                 });
+                
                 cartContainer.innerHTML += `
                     <div class="cart-summary">
                         <h3>إجمالي السلة: <span class="total-price">${totalPrice.toLocaleString('ar-EG')} د.ع</span></h3>
                         <button class="checkout-btn">إتمام الشراء <i class="fas fa-arrow-left"></i></button>
                     </div>
                 `;
+                
+                // إضافة مستمعات الأحداث للأزرار
+                document.querySelectorAll('.remove-from-cart-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const productId = e.currentTarget.dataset.productId;
+                        removeFromCart(productId);
+                    });
+                });
+                
+                document.querySelectorAll('.quantity-btn.decrease').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const productId = e.currentTarget.dataset.productId;
+                        updateCartQuantity(productId, -1);
+                    });
+                });
+                
+                document.querySelectorAll('.quantity-btn.increase').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const productId = e.currentTarget.dataset.productId;
+                        updateCartQuantity(productId, 1);
+                    });
+                });
+                
             } else {
                 cartContainer.innerHTML = `
                     <div class="empty-cart-message">
                         <i class="fas fa-shopping-cart fa-3x"></i>
                         <p>سلة التسوق فارغة حالياً.</p>
                         <p>ابدأ بالتسوق لإضافة منتجاتك المفضلة هنا!</p>
+                        <a href="categories.html" class="browse-btn">تصفح الأقسام</a>
                     </div>
                 `;
             }
+        }
+
+        // وظيفة حذف منتج من السلة
+        async function removeFromCart(productId) {
+            if (!window.frontendData.currentUser) {
+                showNotification('الرجاء تسجيل الدخول لتعديل السلة');
+                return;
+            }
+            
+            const userId = window.frontendData.currentUser.uid;
+            const cartItemRef = dbRef(db, `users/${userId}/cart/${productId}`);
+            
+            try {
+                await remove(cartItemRef);
+                showNotification('تم حذف المنتج من السلة');
+                // تحديث السلة بعد الحذف
+                loadUserCart(userId);
+            } catch (error) {
+                console.error("Error removing from cart:", error);
+                showNotification('حدث خطأ أثناء حذف المنتج من السلة');
+            }
+        }
+
+        // وظيفة تحديث كمية المنتج في السلة
+        async function updateCartQuantity(productId, change) {
+            if (!window.frontendData.currentUser) {
+                showNotification('الرجاء تسجيل الدخول لتعديل السلة');
+                return;
+            }
+            
+            const userId = window.frontendData.currentUser.uid;
+            const cartItemRef = dbRef(db, `users/${userId}/cart/${productId}`);
+            
+            try {
+                const snapshot = await get(cartItemRef);
+                if (snapshot.exists()) {
+                    const item = snapshot.val();
+                    const newQuantity = Math.max(1, (item.quantity || 1) + change);
+                    
+                    await update(cartItemRef, { quantity: newQuantity });
+                    showNotification('تم تحديث كمية المنتج');
+                    // تحديث السلة بعد التعديل
+                    loadUserCart(userId);
+                }
+            } catch (error) {
+                console.error("Error updating cart quantity:", error);
+                showNotification('حدث خطأ أثناء تحديث كمية المنتج');
+            }
+        }
+
+        // وظيفة عرض الإشعارات
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
         }
 
         // وظيفة عرض التذييل
@@ -193,9 +316,6 @@
                     window.frontendData.homepageSettings = snapshot.val() || {};
                     renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
                 });
-
-                // For now, render an empty cart list with a message
-                renderCart([]);
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -220,11 +340,15 @@
         
         // تهيئة الصفحة
         document.addEventListener('DOMContentLoaded', () => {
-            // التحقق من حالة تسجيل الدخول (لضمان عمل Firebase بشكل صحيح)
+            // التحقق من حالة تسجيل الدخول
             onAuthStateChanged(auth, async (user) => {
-                // For a frontend-only store, we might still want to sign in anonymously
-                // to allow read access to public data if security rules permit.
-                if (!user) {
+                window.frontendData.currentUser = user;
+                window.frontendData.authReady = true;
+                
+                if (user) {
+                    // تحميل سلة المستخدم
+                    loadUserCart(user.uid);
+                } else {
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         try {
                             await signInWithCustomToken(auth, __initial_auth_token);
@@ -238,6 +362,7 @@
                         await signInAnonymously(auth);
                     }
                 }
+                
                 loadFrontendData(); // Load frontend data after auth state is determined
             });
         });
@@ -483,8 +608,41 @@
         .cart-item-name {
             font-size: 1.2rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
             color: var(--dark);
+        }
+
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .quantity-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .quantity-btn:hover {
+            background-color: #3a7bc8;
+            transform: scale(1.1);
+        }
+
+        .quantity {
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
         }
 
         .cart-item-price {
@@ -585,6 +743,45 @@
         .empty-cart-message p {
             margin-bottom: 10px;
             line-height: 1.6;
+        }
+        
+        .browse-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            margin-top: 20px;
+            transition: var(--transition);
+        }
+        
+        .browse-btn:hover {
+            background-color: #3a7bc8;
+            transform: translateY(-3px);
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #50B3A2;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            z-index: 2000;
+            font-weight: bold;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
         }
 
 
