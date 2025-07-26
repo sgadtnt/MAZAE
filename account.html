@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حسابي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Updated Firebase SDK imports for version 9+ modular SDK -->
+    <script type="module">
+        // تم تحديث روابط Firebase SDK إلى الإصدار 9.23.0
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+        import { getDatabase, ref as dbRef, onValue, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+
+        // Global variables provided by the Canvas environment (appId is still used for collection paths)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Your web app's Firebase configuration (provided by the user)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app); 
+        const auth = getAuth(app);
+        const storage = getStorage(app); 
+
+        // Realtime Database references
+        const settingsRef = dbRef(db, "settings");
+        const homepageSettingsRef = dbRef(db, "homepageSettings"); 
+        const usersDbRef = dbRef(db, "users"); // مرجع لبيانات المستخدمين في Realtime Database
+
+        // Global data storage for frontend
+        window.frontendData = {
+            settings: {},
+            homepageSettings: {},
+            currentUser: null, // لتخزين بيانات المستخدم الحالي من Firebase Auth
+            userProfile: {} // لتخزين بيانات ملف تعريف المستخدم من Realtime Database
+        };
+
+        // وظيفة عرض التذييل
+        function renderFooter(settings) {
+            const footer = document.getElementById('mainFooter');
+            const hpSettings = window.frontendData.homepageSettings.footer || {};
+            
+            // Construct contact info HTML conditionally
+            let contactInfoHtml = '';
+            if (hpSettings.contactEnabled && settings) {
+                if (settings.contactPhone) contactInfoHtml += `<p><i class="fas fa-phone"></i> ${settings.contactPhone}</p>`;
+                if (settings.contactEmail) contactInfoHtml += `<p><i class="fas fa-envelope"></i> ${settings.contactEmail}</p>`;
+            }
+
+            // Construct social links HTML conditionally
+            let socialLinksHtml = '';
+            if (hpSettings.socialEnabled) {
+                const socialLinks = [];
+                if (hpSettings.facebook) socialLinks.push({ platform: 'facebook', url: hpSettings.facebook });
+                if (hpSettings.instagram) socialLinks.push({ platform: 'instagram', url: hpSettings.instagram });
+                if (hpSettings.twitter) socialLinks.push({ platform: 'twitter', url: hpSettings.twitter });
+                if (hpSettings.linkedin) socialLinks.push({ platform: 'linkedin', url: hpSettings.linkedin });
+
+                if (socialLinks.length > 0) {
+                    socialLinksHtml = `
+                        <div class="social-links">
+                            ${socialLinks.map(link => `
+                                <a href="${link.url}" class="social-link" target="_blank">
+                                    <i class="fab fa-${link.platform}"></i>
+                                </a>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+            }
+
+            // Construct footer links HTML conditionally
+            let footerLinksHtml = '';
+            if (hpSettings.customLinksEnabled && hpSettings.customLinks && hpSettings.customLinks.length > 0) {
+                footerLinksHtml = `
+                    <ul class="footer-links">
+                        ${hpSettings.customLinks.map(link => `
+                            <li>
+                                <a href="${link.link}" target="_blank">
+                                    <i class="fas fa-arrow-left"></i> ${link.text}
+                                </a>
+                            </li>
+                        `).join('')}
+                    </ul>
+                `;
+            }
+            
+            // Removed "حول المتجر" section entirely
+            const aboutHtml = ''; 
+            
+            // Removed copyright text
+            const copyrightText = '';
+
+            footer.innerHTML = `
+                <div class="footer-content">
+                    ${contactInfoHtml.trim() || socialLinksHtml.trim() ? `
+                    <div class="footer-section">
+                        <h3>اتصل بنا</h3>
+                        <div class="contact-info">
+                            ${contactInfoHtml}
+                        </div>
+                        ${socialLinksHtml}
+                    </div>` : ''}
+                    
+                    ${footerLinksHtml.trim() ? `
+                    <div class="footer-section">
+                        <h3>روابط مهمة</h3>
+                        ${footerLinksHtml}
+                    </div>` : ''}
+                    
+                    ${aboutHtml.trim() ? `
+                    <div class="footer-section">
+                        <h3>حول المتجر</h3>
+                        ${aboutHtml}
+                    </div>` : ''}
+                </div>
+                <div class="copyright">
+                    <p>${copyrightText}</p>
+                </div>
+            `;
+        }
+        
+        // وظيفة تحميل بيانات الواجهة الأمامية من Realtime Database
+        async function loadFrontendData() {
+            try {
+                // Load Settings
+                onValue(settingsRef, (snapshot) => {
+                    window.frontendData.settings = snapshot.val() || {};
+                    renderFooter(window.frontendData.settings);
+                    document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
+                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر';
+                });
+
+                // Load Homepage Settings (needed for footer rendering)
+                onValue(homepageSettingsRef, (snapshot) => {
+                    window.frontendData.homepageSettings = snapshot.val() || {};
+                    renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
+                });
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.innerHTML = '<p>حدث خطأ في تحميل البيانات. يرجى تحديث الصفحة.</p>';
+                });
+            }
+            
+            // تعيين حالة التنقل النشطة
+            const navItems = document.querySelectorAll('.bottom-nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+            
+            navItems.forEach(item => {
+                const itemHref = item.getAttribute('href');
+                if (itemHref === currentPath || (currentPath === '' && itemHref === 'index.html')) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Set active state for top bar account link
+            const accountLink = document.querySelector('.top-right-group a[href="account.html"]');
+            if (accountLink && currentPath === 'account.html') {
+                accountLink.classList.add('active');
+            } else if (accountLink) {
+                accountLink.classList.remove('active');
+            }
+        }
+
+        // وظيفة عرض معلومات المستخدم
+        function renderUserInfo(user) {
+            const userInfoContainer = document.getElementById('userInfoContainer');
+            if (user) {
+                const userProfile = window.frontendData.userProfile || {};
+                userInfoContainer.innerHTML = `
+                    <div class="user-info-group">
+                        <p><strong>معرف المستخدم (UID):</strong> ${user.uid}</p>
+                        <p><strong>البريد الإلكتروني:</strong> ${user.email || 'غير متوفر'}</p>
+                        <p><strong>حالة المصادقة:</strong> ${user.isAnonymous ? 'مجهول' : 'مسجل'}</p>
+                    </div>
+                    
+                    <div class="user-profile-form">
+                        <h3>معلومات الملف الشخصي</h3>
+                        <div class="form-group">
+                            <label for="fullName">الاسم الكامل:</label>
+                            <input type="text" id="fullName" value="${userProfile.fullName || ''}" placeholder="أدخل اسمك الكامل">
+                        </div>
+                        <div class="form-group">
+                            <label for="phoneNumber">رقم الهاتف:</label>
+                            <input type="tel" id="phoneNumber" value="${userProfile.phoneNumber || ''}" placeholder="أدخل رقم هاتفك">
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingAddress">عنوان الشحن:</label>
+                            <textarea id="shippingAddress" placeholder="أدخل عنوان الشحن الكامل">${userProfile.shippingAddress || ''}</textarea>
+                        </div>
+                        <button id="saveProfileBtn" class="save-profile-btn">حفظ التغييرات <i class="fas fa-save"></i></button>
+                    </div>
+
+                    <button id="signOutBtn" class="sign-out-btn">تسجيل الخروج <i class="fas fa-sign-out-alt"></i></button>
+                `;
+
+                // Add event listener for saving profile
+                document.getElementById('saveProfileBtn').addEventListener('click', async () => {
+                    const fullName = document.getElementById('fullName').value;
+                    const phoneNumber = document.getElementById('phoneNumber').value;
+                    const shippingAddress = document.getElementById('shippingAddress').value;
+
+                    if (user && user.uid) {
+                        try {
+                            await set(dbRef(db, `users/${user.uid}/profile`), {
+                                fullName: fullName,
+                                phoneNumber: phoneNumber,
+                                shippingAddress: shippingAddress
+                            });
+                            alert('تم حفظ التغييرات بنجاح!'); // Use a custom modal in a real app
+                        } catch (error) {
+                            console.error("خطأ في حفظ معلومات الملف الشخصي:", error);
+                            alert('حدث خطأ أثناء حفظ التغييرات.'); // Use a custom modal
+                        }
+                    }
+                });
+
+                // Add event listener for signing out
+                document.getElementById('signOutBtn').addEventListener('click', async () => {
+                    try {
+                        await signOut(auth);
+                        console.log("تم تسجيل الخروج بنجاح.");
+                        renderUserInfo(null); // مسح معلومات المستخدم
+                    } catch (error) {
+                        console.error("خطأ في تسجيل الخروج:", error);
+                    }
+                });
+            } else {
+                userInfoContainer.innerHTML = `
+                    <div class="not-logged-in-message">
+                        <i class="fas fa-user-slash fa-3x"></i>
+                        <p>أنت غير مسجل الدخول حالياً.</p>
+                        <p>يمكنك تسجيل الدخول أو إنشاء حساب للوصول إلى ميزات الحساب.</p>
+                        <!-- يمكنك إضافة أزرار لتسجيل الدخول/التسجيل هنا -->
+                    </div>
+                `;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // تهيئة الصفحة
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    window.frontendData.currentUser = user;
+                    // Listen for user profile data from Realtime Database
+                    onValue(dbRef(db, `users/${user.uid}/profile`), (snapshot) => {
+                        window.frontendData.userProfile = snapshot.val() || {};
+                        renderUserInfo(user); // Render with updated profile data
+                    }, (error) => {
+                        console.error("Error fetching user profile:", error);
+                        renderUserInfo(user); // Render even if profile fetch fails
+                    });
+                } else {
+                    // لا يوجد مستخدم مسجل الدخول، حاول المصادقة
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        try {
+                            const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                            window.frontendData.currentUser = userCredential.user;
+                            // Listen for user profile data for the newly signed-in user
+                            onValue(dbRef(db, `users/${userCredential.user.uid}/profile`), (snapshot) => {
+                                window.frontendData.userProfile = snapshot.val() || {};
+                                renderUserInfo(userCredential.user);
+                            }, (error) => {
+                                console.error("Error fetching user profile:", error);
+                                renderUserInfo(userCredential.user);
+                            });
+                        } catch (error) {
+                            if (error.code !== 'auth/custom-token-mismatch') {
+                                console.error("Error signing in with custom token:", error);
+                            } else {
+                                console.warn("Custom token mismatch detected, falling back to anonymous sign-in.");
+                            }
+                            // إذا فشل الرمز المميز المخصص، قم بتسجيل الدخول كمجهول
+                            try {
+                                const userCredential = await signInAnonymously(auth);
+                                window.frontendData.currentUser = userCredential.user;
+                                // Listen for user profile data for the anonymous user (if any)
+                                onValue(dbRef(db, `users/${userCredential.user.uid}/profile`), (snapshot) => {
+                                    window.frontendData.userProfile = snapshot.val() || {};
+                                    renderUserInfo(userCredential.user);
+                                }, (error) => {
+                                    console.error("Error fetching user profile:", error);
+                                    renderUserInfo(userCredential.user);
+                                });
+                            } catch (anonError) {
+                                console.error("Error signing in anonymously:", anonError);
+                                renderUserInfo(null); // عرض رسالة عدم تسجيل الدخول
+                            }
+                        }
+                    } else {
+                        // إذا لم يتوفر رمز مميز مخصص، قم بتسجيل الدخول كمجهول مباشرة
+                        try {
+                            const userCredential = await signInAnonymously(auth);
+                            window.frontendData.currentUser = userCredential.user;
+                            // Listen for user profile data for the anonymous user (if any)
+                            onValue(dbRef(db, `users/${userCredential.user.uid}/profile`), (snapshot) => {
+                                window.frontendData.userProfile = snapshot.val() || {};
+                                renderUserInfo(userCredential.user);
+                            }, (error) => {
+                                console.error("Error fetching user profile:", error);
+                                renderUserInfo(userCredential.user);
+                            });
+                        } catch (anonError) {
+                            console.error("Error signing in anonymously:", anonError);
+                            renderUserInfo(null); // عرض رسالة عدم تسجيل الدخول
+                        }
+                    }
+                }
+                loadFrontendData(); // تحميل بيانات الواجهة الأمامية الأخرى
+            });
+        });
+    </script>
+    <style>
+        :root {
+            --primary: #4A90E2; /* أزرق فاتح */
+            --secondary: #50B3A2; /* أخضر مائي */
+            --accent: #FF6B6B; /* أحمر وردي */
+            --light: #F0F4F8; /* رمادي فاتح جداً */
+            --dark: #2C3E50; /* أزرق داكن */
+            --success: #2ECC71; /* أخضر */
+            --warning: #F1C40F; /* أصفر */
+            --border: #DCE4EC; /* رمادي فاتح للحدود */
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* ظل أكثر بروزاً */
+            --radius: 16px; /* حواف دائرية أكبر */
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال سلس وممتد */
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 80px 0 100px; /* زيادة المساحة لشريط التنقل العلوي والسفلي */
+            direction: rtl; 
+            display: flex;
+            flex-direction: column;
+            font-family: 'Cairo', sans-serif;
+            line-height: 1.6;
+        }
+        
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0 20px; /* زيادة المساحة الداخلية */
+            height: 80px; /* ارتفاع أكبر */
+            box-shadow: var(--shadow);
+            z-index: 1000;
+        }
+        
+        .top-left {
+            display: flex;
+            align-items: center; 
+            gap: 15px; /* زيادة المسافة بين العناصر */
+            height: 100%;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px; 
+            text-decoration: none; 
+            color: white; 
+            transition: var(--transition);
+            height: 100%;
+        }
+        
+        .logo-container:hover {
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+
+        .store-logo {
+            height: 100%;
+            width: auto;
+            object-fit: contain; 
+            background-color: transparent;
+            padding: 8px 0; /* زيادة المساحة الداخلية */
+        }
+        
+        .store-name {
+            font-size: 20px; /* حجم خط أكبر */
+            font-weight: 800; /* خط أثقل */
+            letter-spacing: 0.5px;
+        }
+        
+        .top-right-group {
+            display: flex;
+            align-items: center;
+            gap: 20px; /* زيادة المسافة بين الأيقونات */
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 18px; /* حجم أيقونة أكبر */
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            transition: var(--transition);
+            padding: 8px 12px; /* زيادة المساحة الداخلية */
+            text-decoration: none; 
+            border-radius: var(--radius); /* حواف دائرية */
+        }
+        
+        .icon-btn:hover {
+            transform: translateY(-5px) scale(1.05); /* تأثير رفع وتكبير */
+            background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
+        }
+        /* Added active state for top bar icons */
+        .icon-btn.active {
+            color: var(--accent); /* Highlight active icon */
+            transform: translateY(-5px) scale(1.05);
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        
+        .icon-label {
+            font-size: 13px; /* حجم خط أكبر قليلاً */
+            margin-top: 6px;
+            font-weight: 700; 
+        }
+        
+        .bottom-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15); /* ظل أكثر بروزاً */
+            z-index: 1000;
+            border-top-left-radius: 30px; /* حواف دائرية أكبر */
+            border-top-right-radius: 30px; /* حواف دائرية أكبر */
+            height: 100px; /* ارتفاع أكبر */
+        }
+        
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: white;
+            font-size: 14px; /* حجم خط أكبر قليلاً */
+            text-decoration: none;
+            transition: var(--transition);
+            flex: 1;
+            padding: 12px 0; /* زيادة المساحة الداخلية */
+            font-weight: 700; 
+            position: relative;
+        }
+        
+        .bottom-nav-item i {
+            font-size: 24px; /* حجم أيقونة أكبر */
+            margin-bottom: 6px;
+            transition: var(--transition);
+        }
+        
+        .bottom-nav-item:hover, .bottom-nav-item.active {
+            color: var(--accent);
+            transform: translateY(-8px) scale(1.1); /* تأثير رفع وتكبير أكثر وضوحاً */
+        }
+        
+        .bottom-nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 4px;
+            background-color: var(--accent);
+            border-radius: 2px;
+            animation: fadeInLine 0.5s ease-out;
+        }
+
+        @keyframes fadeInLine {
+            from { width: 0; opacity: 0; }
+            to { width: 40px; opacity: 1; }
+        }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px 20px; /* زيادة المساحة الداخلية */
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            background-color: white; /* خلفية بيضاء للمحتوى الرئيسي */
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-top: 20px; /* مسافة من الشريط العلوي */
+            margin-bottom: 20px; /* مسافة من الشريط السفلي */
+            min-height: calc(100vh - 180px); /* Adjust height to fill space between bars */
+        }
+        
+        /* Account Section Specific Styles */
+        .account-section {
+            margin-bottom: 50px;
+            text-align: center;
+        }
+
+        .account-info-card {
+            background-color: var(--light);
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            max-width: 600px;
+            margin: 30px auto;
+            text-align: right; /* Align text to the right for RTL */
+        }
+
+        .account-info-card p {
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: #444;
+        }
+
+        .account-info-card p strong {
+            color: var(--dark);
+        }
+
+        .user-info-group {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .user-profile-form {
+            margin-bottom: 30px;
+        }
+
+        .user-profile-form h3 {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            text-align: right;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="tel"],
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--dark);
+            background-color: white;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group input[type="tel"]:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+            outline: none;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .save-profile-btn {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-top: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .save-profile-btn:hover {
+            background-color: #439E8E;
+            transform: translateY(-2px);
+        }
+
+        .sign-out-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sign-out-btn:hover {
+            background-color: #D64545;
+            transform: translateY(-2px);
+        }
+
+        .not-logged-in-message {
+            padding: 50px;
+            text-align: center;
+            color: #888;
+            font-size: 1.3rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px; /* Ensure it takes up some space */
+        }
+
+        .not-logged-in-message i {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        .not-logged-in-message p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+
+        /* Footer Styling (reused from other pages) */
+        #mainFooter {
+            background-color: var(--dark);
+            color: white;
+            padding: 40px 20px;
+            border-top-left-radius: var(--radius);
+            border-top-right-radius: var(--radius);
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            margin-top: auto; /* يدفع التذييل للأسفل */
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto 30px auto;
+        }
+
+        .footer-section h3 {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            color: var(--primary);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-section h3::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 50px;
+            height: 2px;
+            background-color: var(--accent);
+            border-radius: 1px;
+        }
+
+        .footer-section p, .footer-links li {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            color: #E0E0E0;
+        }
+
+        .contact-info p {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .contact-info i {
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .social-link {
+            color: white;
+            font-size: 1.5rem;
+            transition: var(--transition);
+        }
+
+        .social-link:hover {
+            color: var(--accent);
+            transform: translateY(-3px) scale(1.1);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 8px;
+        }
+
+        .footer-links a {
+            color: #E0E0E0;
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+            transform: translateX(-5px);
+        }
+
+        .footer-links i {
+            font-size: 0.8rem;
+        }
+
+        .copyright {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #B0B0B0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .no-content-message {
+            text-align: center;
+            color: #888;
+            font-size: 1.2rem;
+            padding: 30px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 70px 0 90px;
+            }
+            .top-bar {
+                height: 60px;
+                padding: 0 10px;
+            }
+            .store-name {
+                font-size: 16px;
+            }
+            .icon-btn {
+                font-size: 14px;
+                padding: 5px 8px;
+            }
+            .icon-label {
+                font-size: 10px;
+            }
+            .bottom-bar {
+                height: 80px;
+                padding: 10px 0;
+            }
+            .bottom-nav-item i {
+                font-size: 20px;
+            }
+            .bottom-nav-item span {
+                font-size: 12px;
+            }
+            .main-content {
+                padding: 15px;
+                min-height: calc(100vh - 150px);
+            }
+            .section-header h2 {
+                font-size: 2rem;
+            }
+            .section-header p {
+                font-size: 1rem;
+            }
+            .account-info-card {
+                padding: 20px;
+                margin: 20px auto;
+            }
+            .account-info-card p {
+                font-size: 1rem;
+            }
+            .user-profile-form h3 {
+                font-size: 1.2rem;
+            }
+            .form-group label {
+                font-size: 0.85rem;
+            }
+            .form-group input, .form-group textarea {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            .save-profile-btn, .sign-out-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            .not-logged-in-message {
+                font-size: 1.1rem;
+                padding: 30px;
+            }
+            .not-logged-in-message i {
+                font-size: 3rem;
+            }
+            .footer-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            .footer-section h3::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            .contact-info p, .footer-links a {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .top-right-group {
+                gap: 10px;
+            }
+            .bottom-nav-item {
+                font-size: 11px;
+                padding: 8px 0;
+            }
+            .bottom-nav-item i {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Bar -->
+    <header class="top-bar">
+        <div class="top-left">
+            <a href="index.html" class="logo-container">
+                <img id="storeLogo" src="https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                <div id="storeName" class="store-name">متجر إلكتروني</div>
+            </a>
+        </div>
+        
+        <div class="top-right-group">
+            <a href="support.html" class="icon-btn">
+                <i class="fas fa-headset"></i>
+                <span class="icon-label">الدعم الفني</span>
+            </a>
+            
+            <a href="account.html" class="icon-btn active"> <!-- Active state for account link -->
+                <i class="fas fa-user-circle"></i>
+                <span class="icon-label">حسابي</span>
+            </a>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+        <section class="account-section">
+            <div class="section-header">
+                <h2>حسابي</h2>
+                <p>إدارة معلومات حسابك.</p>
+            </div>
+            <div class="account-info-card" id="userInfoContainer">
+                <!-- User info will be loaded by JavaScript -->
+                <p>جاري تحميل معلومات الحساب...</p>
+            </div>
+        </section>
+    </div>
+    
+    <!-- Footer -->
+    <footer id="mainFooter">
+        <div class="loading">
+            <div class="spinner"></div>
+        </div>
+    </footer>
+    
+    <!-- Fixed Bottom Bar -->
+    <nav class="bottom-bar">
+        <a href="index.html" class="bottom-nav-item">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </a>
+        <a href="categories.html" class="bottom-nav-item">
+            <i class="fas fa-list"></i>
+            <span>الأقسام</span>
+        </a>
+        <a href="favorites.html" class="bottom-nav-item">
+            <i class="fas fa-heart"></i>
+            <span>المفضلة</span>
+        </a>
+        <a href="cart.html" class="bottom-nav-item">
+            <i class="fas fa-shopping-cart"></i>
+            <span>السلة</span>
+        </a>
+        <a href="orders.html" class="bottom-nav-item">
+            <i class="fas fa-shopping-bag"></i>
+            <span>الطلبات</span>
+        </a>
+        <a href="offers.html" class="bottom-nav-item">
+            <i class="fas fa-tag"></i>
+            <span>العروض</span>
+        </a>
+    </nav>
+    
+</body>
+</html>
