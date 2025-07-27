@@ -13,7 +13,7 @@
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-        import { getDatabase, ref as dbRef, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref as dbRef, onValue, get, update, remove, set, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
 
         // Global variables provided by the Canvas environment (appId is still used for collection paths)
@@ -33,58 +33,115 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        // Using Realtime Database for data as per the provided admin panel code
         const db = getDatabase(app); 
         const auth = getAuth(app);
-        const storage = getStorage(app); // Storage is generally for files, not directly used for data in RTDB
+        const storage = getStorage(app); 
 
         // Realtime Database references
         const settingsRef = dbRef(db, "settings");
-        const homepageSettingsRef = dbRef(db, "homepageSettings"); // Needed for footer settings
-        const ordersRef = dbRef(db, "users"); // Placeholder for user-specific orders
+        const homepageSettingsRef = dbRef(db, "homepageSettings"); 
+        const usersRef = dbRef(db, "users"); // مرجع لبيانات المستخدمين (للسلة والمفضلة)
 
         // Global data storage for frontend
         window.frontendData = {
             settings: {},
             homepageSettings: {},
-            orders: [] // This will hold order data
+            orders: [], // This will hold order data
+            currentUser: null, // لتخزين بيانات المستخدم الحالي من Firebase Auth
+            authReady: false // لتتبع حالة جاهزية المصادقة
         };
         
-        // وظيفة عرض الطلبات (يمكنك تطويرها لاحقاً لجلب البيانات الفعلية)
+        // Function to show loading spinner
+        function showLoading() {
+            document.getElementById('ordersLoadingSpinner').style.display = 'flex';
+            document.getElementById('ordersContainer').style.display = 'none';
+        }
+
+        // Function to hide loading spinner
+        function hideLoading() {
+            document.getElementById('ordersLoadingSpinner').style.display = 'none';
+            document.getElementById('ordersContainer').style.display = 'grid'; // Or block, depending on layout
+        }
+
+        // Function to load user orders data
+        async function loadUserOrders(userId) {
+            showLoading();
+            try {
+                if (userId) {
+                    const userOrdersRef = dbRef(db, `users/${userId}/orders`);
+                    onValue(userOrdersRef, (snapshot) => {
+                        const ordersData = snapshot.val();
+                        if (ordersData) {
+                            // Convert object of orders to array, sort by timestamp descending
+                            window.frontendData.orders = Object.keys(ordersData).map(key => ({
+                                id: key,
+                                ...ordersData[key]
+                            })).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)); // Sort by timestamp
+                        } else {
+                            window.frontendData.orders = [];
+                        }
+                        renderOrders(window.frontendData.orders);
+                        hideLoading();
+                    }, (error) => {
+                        console.error("Error listening to orders:", error);
+                        showNotification('حدث خطأ في تحميل الطلبات.', 'error');
+                        renderOrders([]);
+                        hideLoading();
+                    });
+                } else {
+                    // For guest users, orders are not stored, so show empty
+                    window.frontendData.orders = [];
+                    renderOrders([]);
+                    hideLoading();
+                }
+            } catch (error) {
+                console.error("Error setting up orders listener:", error);
+                showNotification('حدث خطأ غير متوقع في تحميل الطلبات.', 'error');
+                renderOrders([]);
+                hideLoading();
+            }
+        }
+
+        // وظيفة عرض الطلبات
         function renderOrders(ordersData) {
             const ordersContainer = document.getElementById('ordersContainer');
+            let ordersHtml = []; // Use an array to build HTML strings
             ordersContainer.innerHTML = ''; // Clear existing content
 
             if (ordersData && ordersData.length > 0) {
-                // هنا يمكنك عرض الطلبات فعلياً
                 ordersData.forEach(order => {
-                    ordersContainer.innerHTML += `
+                    const orderDate = order.timestamp ? new Date(order.timestamp).toLocaleDateString('ar-EG', {
+                        year: 'numeric', month: 'long', day: 'numeric'
+                    }) : 'غير متوفر';
+
+                    ordersHtml.push(`
                         <div class="order-card">
                             <div class="order-header">
-                                <h4>الطلب رقم: ${order.orderId}</h4>
-                                <span class="order-status ${order.status}">${order.statusText || 'قيد المعالجة'}</span>
+                                <h4>الطلب رقم: ${order.id.substring(0, 8)}...</h4> <!-- Displaying a short ID -->
+                                <span class="order-status ${order.status || 'pending'}">${order.statusText || 'قيد المعالجة'}</span>
                             </div>
                             <div class="order-details">
-                                <p>تاريخ الطلب: ${order.date || 'غير متوفر'}</p>
+                                <p>تاريخ الطلب: ${orderDate}</p>
                                 <p>الإجمالي: ${(order.total || 0).toLocaleString('ar-EG')} د.ع</p>
-                                <p>عدد المنتجات: ${order.itemCount || 0}</p>
+                                <p>عدد المنتجات: ${order.items ? order.items.length : 0}</p>
                             </div>
                             <div class="order-items">
                                 <!-- Loop through order.items to display products -->
                                 ${order.items && order.items.length > 0 ? order.items.map(item => `
                                     <div class="order-item">
-                                        <img src="${item.image || 'https://placehold.co/50x50/50B3A2/ffffff?text=P'}" 
-                                             onerror="this.onerror=null;this.src='https://placehold.co/50x50/50B3A2/ffffff?text=P';"
-                                             alt="${item.name}" class="order-item-image">
+                                        <img src="${item.image || 'https://placehold.co/50x50/1A237E/FFD700?text=P'}" 
+                                             onerror="this.onerror=null;this.src='https://placehold.co/50x50/1A237E/FFD700?text=P';"
+                                             alt="${item.name}" class="order-item-image" loading="lazy">
                                         <span>${item.name} x ${item.quantity}</span>
-                                        <span>${(item.price * item.quantity).toLocaleString('ar-EG')} د.ع</span>
+                                        <span>${((item.price || 0) * (item.quantity || 1)).toLocaleString('ar-EG')} د.ع</span>
                                     </div>
                                 `).join('') : '<p>لا توجد منتجات في هذا الطلب.</p>'}
                             </div>
-                            <button class="view-order-details-btn">عرض التفاصيل <i class="fas fa-arrow-left"></i></button>
+                            <button class="view-order-details-btn" data-order-id="${order.id}">عرض التفاصيل <i class="fas fa-arrow-left"></i></button>
                         </div>
-                    `;
+                    `);
                 });
+                ordersContainer.innerHTML = ordersHtml.join(''); // Set innerHTML once
             } else {
                 ordersContainer.innerHTML = `
                     <div class="empty-orders-message">
@@ -146,10 +203,7 @@
                 `;
             }
             
-            // Removed "حول المتجر" section entirely
             const aboutHtml = ''; 
-            
-            // Removed copyright text
             const copyrightText = '';
 
             footer.innerHTML = `
@@ -189,7 +243,7 @@
                     window.frontendData.settings = snapshot.val() || {};
                     renderFooter(window.frontendData.settings);
                     document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
-                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر';
+                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
                 });
 
                 // Load Homepage Settings (needed for footer rendering)
@@ -197,9 +251,6 @@
                     window.frontendData.homepageSettings = snapshot.val() || {};
                     renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
                 });
-
-                // For now, render an empty orders list with a message
-                renderOrders([]);
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -220,45 +271,124 @@
                     item.classList.remove('active');
                 }
             });
+
+            // Set active state for top bar account link (if applicable)
+            const accountLink = document.querySelector('.top-right-group a[href="account.html"]');
+            if (accountLink && currentPath === 'account.html') {
+                accountLink.classList.add('active');
+            } else if (accountLink) {
+                accountLink.classList.remove('active');
+            }
         }
-        
-        // تهيئة الصفحة
+
+        // وظيفة لعرض الإشعارات
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`; // Add type for styling (success, info, warning, error)
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Force reflow to ensure transition plays
+            void notification.offsetWidth;
+
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300); // Match CSS transition duration
+            }, 3000); // Notification visible for 3 seconds
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // التحقق من حالة تسجيل الدخول (لضمان عمل Firebase بشكل صحيح)
+            showLoading(); // Show loading spinner initially
+            // تهيئة الصفحة
             onAuthStateChanged(auth, async (user) => {
-                // For a frontend-only store, we might still want to sign in anonymously
-                // to allow read access to public data if security rules permit.
-                if (!user) {
+                window.frontendData.currentUser = user;
+                window.frontendData.authReady = true; // Set auth ready flag
+                
+                if (user) {
+                    loadUserOrders(user.uid); // Load user orders if logged in
+                } else {
+                    // Try to sign in with custom token or anonymously
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         try {
-                            await signInWithCustomToken(auth, __initial_auth_token);
+                            const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
+                            window.frontendData.currentUser = userCredential.user;
+                            loadUserOrders(userCredential.user.uid); // Load orders after successful custom token sign-in
                         } catch (error) {
-                            console.error("Error signing in with custom token:", error);
+                            if (error.code !== 'auth/custom-token-mismatch') {
+                                console.error("Error signing in with custom token:", error);
+                            } else {
+                                console.warn("Custom token mismatch detected, falling back to anonymous sign-in.");
+                            }
                             // Fallback to anonymous sign-in if custom token fails
-                            await signInAnonymously(auth);
+                            try {
+                                const userCredential = await signInAnonymously(auth);
+                                window.frontendData.currentUser = userCredential.user;
+                                loadUserOrders(userCredential.user.uid); // Load orders for anonymous user
+                            } catch (anonError) {
+                                console.error("Error signing in anonymously:", anonError);
+                                loadUserOrders(null); // Show empty orders if anonymous sign-in also fails (unlikely)
+                            }
                         }
                     } else {
                         // If no token at all, sign in anonymously
-                        await signInAnonymously(auth);
+                        try {
+                            const userCredential = await signInAnonymously(auth);
+                            window.frontendData.currentUser = userCredential.user;
+                            loadUserOrders(userCredential.user.uid); // Load orders for anonymous user
+                        } catch (anonError) {
+                            console.error("Error signing in anonymously:", anonError);
+                            loadUserOrders(null); // Show empty orders if anonymous sign-in also fails
+                        }
                     }
                 }
-                loadFrontendData(); // Load frontend data after auth state is determined
+                
+                loadFrontendData(); // Load other frontend data after auth state is determined
+            });
+
+            // Event listener for view order details button (if needed in the future)
+            document.getElementById('ordersContainer').addEventListener('click', (e) => {
+                const target = e.target;
+                const viewDetailsBtn = target.closest('.view-order-details-btn');
+                if (viewDetailsBtn) {
+                    const orderId = viewDetailsBtn.dataset.orderId;
+                    console.log('View details for order:', orderId);
+                    // Implement logic to show order details (e.g., open a modal or navigate to a new page)
+                    showNotification(`عرض تفاصيل الطلب رقم: ${orderId}...`, 'info');
+                }
             });
         });
     </script>
     <style>
         :root {
-            --primary: #4A90E2; /* أزرق فاتح */
-            --secondary: #50B3A2; /* أخضر مائي */
-            --accent: #FF6B6B; /* أحمر وردي */
-            --light: #F0F4F8; /* رمادي فاتح جداً */
-            --dark: #2C3E50; /* أزرق داكن */
-            --success: #2ECC71; /* أخضر */
-            --warning: #F1C40F; /* أصفر */
-            --border: #DCE4EC; /* رمادي فاتح للحدود */
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* ظل أكثر بروزاً */
-            --radius: 16px; /* حواف دائرية أكبر */
-            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال سلس وممتد */
+            /* Main Colors */
+            --color-primary-dark-blue: #1A237E; /* Primary */
+            --color-secondary-gold: #FFD700; /* Secondary / Accent */
+            
+            /* Derived Colors */
+            --color-background-light: #E8EAF6; /* Light Indigo for body background */
+            --color-text-dark: #212121; /* Dark Gray for main text */
+            --color-border-medium-blue: #9FA8DA; /* Medium Indigo for borders/subtle elements */
+
+            /* Mapped to general variables for consistency */
+            --primary: var(--color-primary-dark-blue);
+            --secondary: var(--color-secondary-gold);
+            --accent: var(--color-secondary-gold); /* Using secondary as accent */
+            --light: var(--color-background-light); /* General body background */
+            --dark: var(--color-text-dark); /* Main text color */
+            --success: #2ECC71; /* Standard Green */
+            --warning: #FFC107; /* Standard Amber for warnings */
+            --error: #E74C3C; /* Standard Red */
+            --border: var(--color-border-medium-blue); /* Solid border color */
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Standard shadow */
+            --radius: 12px; /* Standard rounded corners */
+            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
+
+            /* Font size base */
+            font-size: 14px; /* Overall base font size reduced */
         }
         
         * {
@@ -268,15 +398,16 @@
         }
         
         body {
-            background-color: var(--light);
+            background-color: var(--light); /* Solid light background */
             color: var(--dark);
             min-height: 100vh;
-            padding: 80px 0 100px; /* زيادة المساحة لشريط التنقل العلوي والسفلي */
+            padding: 70px 0 90px;
             direction: rtl; 
             display: flex;
             flex-direction: column;
             font-family: 'Cairo', sans-serif;
             line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll */
         }
         
         .top-bar {
@@ -284,28 +415,29 @@
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-color: var(--primary); /* Solid Dark Blue */
             color: white;
             display: flex;
             justify-content: space-between; 
             align-items: center; 
-            padding: 0 20px; /* زيادة المساحة الداخلية */
-            height: 80px; /* ارتفاع أكبر */
-            box-shadow: var(--shadow);
+            padding: 0 15px;
+            height: 65px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             z-index: 1000;
+            border-bottom: 1px solid var(--color-border-medium-blue); /* Solid border */
         }
         
         .top-left {
             display: flex;
             align-items: center; 
-            gap: 15px; /* زيادة المسافة بين العناصر */
+            gap: 10px;
             height: 100%;
         }
         
         .logo-container {
             display: flex;
             align-items: center;
-            gap: 10px; 
+            gap: 8px;
             text-decoration: none; 
             color: white; 
             transition: var(--transition);
@@ -313,54 +445,55 @@
         }
         
         .logo-container:hover {
-            transform: scale(1.02);
-            opacity: 0.9;
+            transform: scale(1.01);
+            opacity: 0.95;
         }
 
         .store-logo {
-            height: 100%;
+            height: 90%;
             width: auto;
             object-fit: contain; 
             background-color: transparent;
-            padding: 8px 0; /* زيادة المساحة الداخلية */
+            padding: 5px 0;
         }
         
         .store-name {
-            font-size: 20px; /* حجم خط أكبر */
-            font-weight: 800; /* خط أثقل */
+            font-size: 1.1rem;
+            font-weight: 800;
             letter-spacing: 0.5px;
+            color: var(--accent); /* Accent for store name */
         }
         
         .top-right-group {
             display: flex;
             align-items: center;
-            gap: 20px; /* زيادة المسافة بين الأيقونات */
+            gap: 15px;
         }
 
         .icon-btn {
             background: transparent;
             border: none;
             color: white;
-            font-size: 18px; /* حجم أيقونة أكبر */
+            font-size: 1rem;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
             transition: var(--transition);
-            padding: 8px 12px; /* زيادة المساحة الداخلية */
+            padding: 6px 10px;
             text-decoration: none; 
-            border-radius: var(--radius); /* حواف دائرية */
+            border-radius: var(--radius);
         }
         
         .icon-btn:hover {
-            transform: translateY(-5px) scale(1.05); /* تأثير رفع وتكبير */
-            background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
+            transform: translateY(-2px) scale(1.03);
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
         .icon-label {
-            font-size: 13px; /* حجم خط أكبر قليلاً */
-            margin-top: 6px;
+            font-size: 0.75rem;
+            margin-top: 4px;
             font-weight: 700; 
         }
         
@@ -369,16 +502,17 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-color: var(--primary); /* Solid Dark Blue */
             color: white;
             display: flex;
             justify-content: space-around;
-            padding: 15px 0;
-            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15); /* ظل أكثر بروزاً */
+            padding: 10px 0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
             z-index: 1000;
-            border-top-left-radius: 30px; /* حواف دائرية أكبر */
-            border-top-right-radius: 30px; /* حواف دائرية أكبر */
-            height: 100px; /* ارتفاع أكبر */
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            height: 80px;
+            border-top: 1px solid var(--color-border-medium-blue); /* Solid border */
         }
         
         .bottom-nav-item {
@@ -386,24 +520,24 @@
             flex-direction: column;
             align-items: center;
             color: white;
-            font-size: 14px; /* حجم خط أكبر قليلاً */
+            font-size: 0.85rem;
             text-decoration: none;
             transition: var(--transition);
             flex: 1;
-            padding: 12px 0; /* زيادة المساحة الداخلية */
+            padding: 8px 0;
             font-weight: 700; 
             position: relative;
         }
         
         .bottom-nav-item i {
-            font-size: 24px; /* حجم أيقونة أكبر */
-            margin-bottom: 6px;
+            font-size: 1.3rem;
+            margin-bottom: 4px;
             transition: var(--transition);
         }
         
         .bottom-nav-item:hover, .bottom-nav-item.active {
-            color: var(--accent);
-            transform: translateY(-8px) scale(1.1); /* تأثير رفع وتكبير أكثر وضوحاً */
+            color: var(--accent); /* Accent for active/hover */
+            transform: translateY(-3px) scale(1.05);
         }
         
         .bottom-nav-item.active::after {
@@ -412,37 +546,64 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
-            height: 4px;
-            background-color: var(--accent);
-            border-radius: 2px;
-            animation: fadeInLine 0.5s ease-out;
-        }
-
-        @keyframes fadeInLine {
-            from { width: 0; opacity: 0; }
-            to { width: 40px; opacity: 1; }
+            width: 30px;
+            height: 3px;
+            background-color: var(--accent); /* Accent underline */
+            border-radius: 1.5px;
         }
 
         .main-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            padding: 30px 20px; /* زيادة المساحة الداخلية */
-            max-width: 1200px;
+            padding: 20px 15px;
+            max-width: 1000px;
             margin: 0 auto;
             width: 100%;
-            background-color: white; /* خلفية بيضاء للمحتوى الرئيسي */
+            background-color: white; /* Solid white background for content */
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            margin-top: 20px; /* مسافة من الشريط العلوي */
-            margin-bottom: 20px; /* مسافة من الشريط السفلي */
-            min-height: calc(100vh - 180px); /* Adjust height to fill space between bars */
+            margin-top: 15px;
+            margin-bottom: 15px;
+            min-height: calc(100vh - 160px);
+            border: 1px solid var(--border); /* Solid border */
         }
         
+        /* Sections Styling */
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem; /* Adjusted for consistency with cart page */
+            color: var(--dark);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .section-header p {
+            font-size: 0.9rem; /* Adjusted for consistency with cart page */
+            color: #777;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+            border-radius: 2px;
+        }
+
         /* Orders Section Specific Styles */
         .orders-section {
-            margin-bottom: 50px;
+            margin-bottom: 30px; /* Consistent with other sections */
             text-align: center;
         }
 
@@ -452,16 +613,18 @@
             gap: 20px;
             max-width: 800px; /* Limit width for better readability */
             margin: 0 auto;
+            padding: 10px; /* Consistent with other grids */
         }
 
         .order-card {
-            background-color: white;
+            background-color: white; /* Solid white background */
             border-radius: var(--radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             padding: 20px;
             transition: var(--transition);
             text-align: right; /* Align text to the right for RTL */
+            border: 1px solid var(--border); /* Solid border */
         }
 
         .order-card:hover {
@@ -479,7 +642,7 @@
         }
 
         .order-header h4 {
-            font-size: 1.3rem;
+            font-size: 1.1rem; /* Adjusted for consistency */
             font-weight: 700;
             color: var(--dark);
         }
@@ -487,7 +650,7 @@
         .order-status {
             padding: 5px 10px;
             border-radius: 5px;
-            font-size: 0.9rem;
+            font-size: 0.85rem; /* Adjusted for consistency */
             font-weight: 600;
             color: white;
         }
@@ -499,7 +662,7 @@
         .order-status.cancelled { background-color: #e74c3c; } /* Accent red */
 
         .order-details p {
-            font-size: 1rem;
+            font-size: 0.95rem; /* Adjusted for consistency */
             color: #555;
             margin-bottom: 8px;
         }
@@ -515,7 +678,7 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
-            font-size: 0.95rem;
+            font-size: 0.9rem; /* Adjusted for consistency */
             color: #444;
             justify-content: space-between; /* Distribute items */
         }
@@ -539,54 +702,102 @@
         }
 
         .view-order-details-btn {
-            background-color: var(--primary);
+            background-color: var(--primary); /* Primary color */
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 15px; /* Consistent with other buttons */
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.85rem; /* Consistent with other buttons */
             transition: var(--transition);
             margin-top: 15px;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* Consistent with other buttons */
         }
 
         .view-order-details-btn:hover {
-            background-color: #3A7EC2;
+            background-color: #151C6B; /* Darker primary on hover */
             transform: translateY(-2px);
         }
 
         .empty-orders-message {
-            padding: 50px;
+            padding: 40px; /* Consistent with other empty messages */
             text-align: center;
             color: #888;
-            font-size: 1.3rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 300px; /* Ensure it takes up some space */
+            font-size: 1.1rem; /* Consistent with other empty messages */
+            grid-column: 1 / -1; /* Span full width in grid */
         }
 
         .empty-orders-message i {
-            font-size: 4rem;
+            font-size: 3rem; /* Consistent with other empty messages */
             color: var(--primary);
-            margin-bottom: 20px;
+            margin-bottom: 15px; /* Consistent with other empty messages */
         }
         .empty-orders-message p {
-            margin-bottom: 10px;
+            margin-bottom: 8px; /* Consistent with other empty messages */
             line-height: 1.6;
         }
 
+        /* Loading Spinner Styles */
+        .loading-spinner-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 150px;
+            flex-direction: column;
+            gap: 10px;
+        }
 
-        /* Footer Styling (reused from other pages) */
-        #mainFooter {
-            background-color: var(--dark);
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top: 3px solid var(--primary);
+            width: 30px;
+            height: 30px;
+            animation: spin 0.8s linear infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 70px; /* Adjusted to be below top bar */
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--primary); /* Solid Dark Blue */
             color: white;
-            padding: 40px 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            z-index: 2000;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.info { background-color: var(--primary); }
+        .notification.warning { background-color: var(--warning); } /* Standard Amber for warning */
+        .notification.error { background-color: var(--error); } /* Standard Red for error */
+
+        /* Footer Styling */
+        #mainFooter {
+            background-color: var(--primary); /* Primary color for footer */
+            color: white;
+            padding: 30px 20px; /* Adjusted padding */
             border-top-left-radius: var(--radius);
             border-top-right-radius: var(--radius);
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
@@ -595,18 +806,18 @@
 
         .footer-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto 30px auto;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjusted min-width */
+            gap: 20px; /* Reduced gap */
+            max-width: 1000px; /* Adjusted max-width */
+            margin: 0 auto 20px auto; /* Adjusted margin */
         }
 
         .footer-section h3 {
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            color: var(--primary);
+            font-size: 1.2rem; /* Adjusted font size */
+            margin-bottom: 15px; /* Adjusted margin */
+            color: var(--secondary); /* Secondary color for headings */
             position: relative;
-            padding-bottom: 10px;
+            padding-bottom: 8px; /* Adjusted padding */
         }
 
         .footer-section h3::after {
@@ -614,45 +825,45 @@
             position: absolute;
             left: 0;
             bottom: 0;
-            width: 50px;
+            width: 40px; /* Adjusted width */
             height: 2px;
-            background-color: var(--accent);
+            background-color: var(--secondary); /* Secondary color for underline */
             border-radius: 1px;
         }
 
         .footer-section p, .footer-links li {
-            font-size: 0.95rem;
-            line-height: 1.8;
+            font-size: 0.85rem; /* Adjusted font size */
+            line-height: 1.6;
             color: #E0E0E0;
         }
 
         .contact-info p {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 6px; /* Reduced margin */
         }
 
         .contact-info i {
-            color: var(--secondary);
-            font-size: 1.1rem;
+            color: var(--secondary); /* Secondary color for icons */
+            font-size: 1rem; /* Adjusted font size */
         }
 
         .social-links {
             display: flex;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 10px; /* Reduced gap */
+            margin-top: 10px; /* Reduced margin */
         }
 
         .social-link {
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.2rem; /* Adjusted font size */
             transition: var(--transition);
         }
 
         .social-link:hover {
-            color: var(--accent);
-            transform: translateY(-3px) scale(1.1);
+            color: var(--secondary); /* Secondary color on hover */
+            transform: translateY(-2px) scale(1.1);
         }
 
         .footer-links {
@@ -660,7 +871,7 @@
         }
 
         .footer-links li {
-            margin-bottom: 8px;
+            margin-bottom: 6px; /* Reduced margin */
         }
 
         .footer-links a {
@@ -669,70 +880,70 @@
             transition: var(--transition);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* Reduced gap */
         }
 
         .footer-links a:hover {
-            color: var(--primary);
-            transform: translateX(-5px);
+            color: var(--secondary); /* Secondary color on hover */
+            transform: translateX(-3px);
         }
 
         .footer-links i {
-            font-size: 0.8rem;
+            font-size: 0.7rem; /* Adjusted font size */
         }
 
         .copyright {
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.75rem; /* Adjusted font size */
             color: #B0B0B0;
-            padding-top: 20px;
+            padding-top: 15px; /* Adjusted padding */
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .no-content-message {
             text-align: center;
             color: #888;
-            font-size: 1.2rem;
-            padding: 30px;
+            font-size: 1rem; /* Adjusted font size */
+            padding: 20px; /* Adjusted padding */
         }
 
         @media (max-width: 768px) {
             body {
-                padding: 70px 0 90px;
+                padding: 60px 0 80px;
             }
             .top-bar {
-                height: 60px;
+                height: 55px;
                 padding: 0 10px;
             }
             .store-name {
-                font-size: 16px;
+                font-size: 1rem;
             }
             .icon-btn {
-                font-size: 14px;
-                padding: 5px 8px;
+                font-size: 0.9rem;
+                padding: 4px 8px;
             }
             .icon-label {
-                font-size: 10px;
+                font-size: 0.7rem;
             }
             .bottom-bar {
-                height: 80px;
-                padding: 10px 0;
+                height: 70px;
+                padding: 8px 0;
             }
             .bottom-nav-item i {
-                font-size: 20px;
+                font-size: 1.2rem;
             }
             .bottom-nav-item span {
-                font-size: 12px;
+                font-size: 0.75rem;
             }
             .main-content {
-                padding: 15px;
-                min-height: calc(100vh - 150px);
+                padding: 10px;
+                min-height: calc(100vh - 135px);
             }
             .section-header h2 {
-                font-size: 2rem;
+                font-size: 1.6rem;
             }
             .section-header p {
-                font-size: 1rem;
+                font-size: 0.8rem;
             }
             .orders-grid {
                 gap: 15px;
@@ -742,33 +953,33 @@
                 padding: 15px;
             }
             .order-header h4 {
-                font-size: 1.1rem;
+                font-size: 1rem;
             }
             .order-status {
-                font-size: 0.8rem;
-                padding: 4px 8px;
+                font-size: 0.75rem;
+                padding: 3px 6px;
             }
             .order-details p {
-                font-size: 0.9rem;
+                font-size: 0.85rem;
             }
             .order-item {
-                font-size: 0.85rem;
-                gap: 8px;
+                font-size: 0.8rem;
+                gap: 5px;
             }
             .order-item-image {
-                width: 40px;
-                height: 40px;
+                width: 35px;
+                height: 35px;
             }
             .view-order-details-btn {
-                padding: 8px 15px;
-                font-size: 0.85rem;
+                padding: 6px 12px;
+                font-size: 0.75rem;
             }
             .empty-orders-message {
-                font-size: 1.1rem;
-                padding: 30px;
+                font-size: 1rem;
+                padding: 20px;
             }
             .empty-orders-message i {
-                font-size: 3rem;
+                font-size: 2.5rem;
             }
             .footer-content {
                 grid-template-columns: 1fr;
@@ -788,14 +999,14 @@
                 gap: 10px;
             }
             .bottom-nav-item {
-                font-size: 11px;
-                padding: 8px 0;
+                font-size: 0.7rem;
+                padding: 6px 0;
             }
             .bottom-nav-item i {
-                font-size: 18px;
+                font-size: 1.1rem;
             }
             .section-header h2 {
-                font-size: 1.8rem;
+                font-size: 1.5rem;
             }
         }
     </style>
@@ -805,7 +1016,7 @@
     <header class="top-bar">
         <div class="top-left">
             <a href="index.html" class="logo-container">
-                <img id="storeLogo" src="https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
                 <div id="storeName" class="store-name">متجر إلكتروني</div>
             </a>
         </div>
@@ -830,9 +1041,14 @@
                 <h2>طلباتي</h2>
                 <p>تتبع حالة طلباتك السابقة.</p>
             </div>
-            <div class="orders-grid" id="ordersContainer">
+            <!-- Loading Spinner -->
+            <div class="loading-spinner-container" id="ordersLoadingSpinner">
+                <div class="spinner"></div>
+                <p>جاري تحميل الطلبات...</p>
+            </div>
+            <div class="orders-grid" id="ordersContainer" style="display: none;">
                 <!-- Orders will be loaded by JavaScript -->
-                <p class="no-content-message">جاري تحميل الطلبات...</p>
+                <!-- Initial content will be replaced by JS -->
             </div>
         </section>
     </div>
