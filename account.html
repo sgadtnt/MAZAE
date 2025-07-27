@@ -50,6 +50,26 @@
             userProfile: {} // لتخزين بيانات ملف تعريف المستخدم من Realtime Database
         };
 
+        // Function to show notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`; // Add type for styling (success, info, warning, error)
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Force reflow to ensure transition plays
+            void notification.offsetWidth;
+
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300); // Match CSS transition duration
+            }, 3000); // Notification visible for 3 seconds
+        }
+
         // وظيفة عرض التذييل
         function renderFooter(settings) {
             const footer = document.getElementById('mainFooter');
@@ -143,7 +163,7 @@
                     window.frontendData.settings = snapshot.val() || {};
                     renderFooter(window.frontendData.settings);
                     document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
-                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر';
+                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
                 });
 
                 // Load Homepage Settings (needed for footer rendering)
@@ -154,9 +174,7 @@
                 
             } catch (error) {
                 console.error('Error loading data:', error);
-                document.querySelectorAll('.loading').forEach(el => {
-                    el.innerHTML = '<p>حدث خطأ في تحميل البيانات. يرجى تحديث الصفحة.</p>';
-                });
+                // No need for a spinner here, as it's handled by the main content loading
             }
             
             // تعيين حالة التنقل النشطة
@@ -179,6 +197,17 @@
             } else if (accountLink) {
                 accountLink.classList.remove('active');
             }
+        }
+
+        // Function to show loading spinner for user info
+        function showUserInfoLoading() {
+            const userInfoContainer = document.getElementById('userInfoContainer');
+            userInfoContainer.innerHTML = `
+                <div class="loading-spinner-container">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل معلومات الحساب...</p>
+                </div>
+            `;
         }
 
         // وظيفة عرض معلومات المستخدم
@@ -226,10 +255,10 @@
                                 phoneNumber: phoneNumber,
                                 shippingAddress: shippingAddress
                             });
-                            alert('تم حفظ التغييرات بنجاح!'); // Use a custom modal in a real app
+                            showNotification('تم حفظ التغييرات بنجاح!', 'success');
                         } catch (error) {
                             console.error("خطأ في حفظ معلومات الملف الشخصي:", error);
-                            alert('حدث خطأ أثناء حفظ التغييرات.'); // Use a custom modal
+                            showNotification('حدث خطأ أثناء حفظ التغييرات.', 'error');
                         }
                     }
                 });
@@ -239,9 +268,11 @@
                     try {
                         await signOut(auth);
                         console.log("تم تسجيل الخروج بنجاح.");
+                        showNotification('تم تسجيل الخروج بنجاح.', 'success');
                         renderUserInfo(null); // مسح معلومات المستخدم
                     } catch (error) {
                         console.error("خطأ في تسجيل الخروج:", error);
+                        showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
                     }
                 });
             } else {
@@ -250,13 +281,15 @@
                         <i class="fas fa-user-slash fa-3x"></i>
                         <p>أنت غير مسجل الدخول حالياً.</p>
                         <p>يمكنك تسجيل الدخول أو إنشاء حساب للوصول إلى ميزات الحساب.</p>
-                        <!-- يمكنك إضافة أزرار لتسجيل الدخول/التسجيل هنا -->
+                        <!-- يمكنك إضافة أزرار لتسجيل الدخول/التسجيل هنا إذا كانت هناك صفحات منفصلة لذلك -->
                     </div>
                 `;
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            showUserInfoLoading(); // Show loading spinner initially for user info
+
             // تهيئة الصفحة
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
@@ -267,6 +300,7 @@
                         renderUserInfo(user); // Render with updated profile data
                     }, (error) => {
                         console.error("Error fetching user profile:", error);
+                        showNotification('حدث خطأ في تحميل ملف تعريف المستخدم.', 'error');
                         renderUserInfo(user); // Render even if profile fetch fails
                     });
                 } else {
@@ -281,6 +315,7 @@
                                 renderUserInfo(userCredential.user);
                             }, (error) => {
                                 console.error("Error fetching user profile:", error);
+                                showNotification('حدث خطأ في تحميل ملف تعريف المستخدم بعد تسجيل الدخول.', 'error');
                                 renderUserInfo(userCredential.user);
                             });
                         } catch (error) {
@@ -299,10 +334,12 @@
                                     renderUserInfo(userCredential.user);
                                 }, (error) => {
                                     console.error("Error fetching user profile:", error);
+                                    showNotification('حدث خطأ في تحميل ملف تعريف المستخدم المجهول.', 'error');
                                     renderUserInfo(userCredential.user);
                                 });
                             } catch (anonError) {
                                 console.error("Error signing in anonymously:", anonError);
+                                showNotification('خطأ في تسجيل الدخول المجهول. يرجى المحاولة لاحقاً.', 'error');
                                 renderUserInfo(null); // عرض رسالة عدم تسجيل الدخول
                             }
                         }
@@ -317,10 +354,12 @@
                                 renderUserInfo(userCredential.user);
                             }, (error) => {
                                 console.error("Error fetching user profile:", error);
+                                showNotification('حدث خطأ في تحميل ملف تعريف المستخدم المجهول.', 'error');
                                 renderUserInfo(userCredential.user);
                             });
                         } catch (anonError) {
                             console.error("Error signing in anonymously:", anonError);
+                            showNotification('خطأ في تسجيل الدخول المجهول. يرجى المحاولة لاحقاً.', 'error');
                             renderUserInfo(null); // عرض رسالة عدم تسجيل الدخول
                         }
                     }
@@ -331,17 +370,31 @@
     </script>
     <style>
         :root {
-            --primary: #4A90E2; /* أزرق فاتح */
-            --secondary: #50B3A2; /* أخضر مائي */
-            --accent: #FF6B6B; /* أحمر وردي */
-            --light: #F0F4F8; /* رمادي فاتح جداً */
-            --dark: #2C3E50; /* أزرق داكن */
-            --success: #2ECC71; /* أخضر */
-            --warning: #F1C40F; /* أصفر */
-            --border: #DCE4EC; /* رمادي فاتح للحدود */
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* ظل أكثر بروزاً */
-            --radius: 16px; /* حواف دائرية أكبر */
-            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال سلس وممتد */
+            /* Main Colors */
+            --color-primary-dark-blue: #1A237E; /* Primary */
+            --color-secondary-gold: #FFD700; /* Secondary / Accent */
+            
+            /* Derived Colors */
+            --color-background-light: #E8EAF6; /* Light Indigo for body background */
+            --color-text-dark: #212121; /* Dark Gray for main text */
+            --color-border-medium-blue: #9FA8DA; /* Medium Indigo for borders/subtle elements */
+
+            /* Mapped to general variables for consistency */
+            --primary: var(--color-primary-dark-blue);
+            --secondary: var(--color-secondary-gold);
+            --accent: var(--color-secondary-gold); /* Using secondary as accent */
+            --light: var(--color-background-light); /* General body background */
+            --dark: var(--color-text-dark); /* Main text color */
+            --success: #2ECC71; /* Standard Green */
+            --warning: #FFC107; /* Standard Amber for warnings */
+            --error: #E74C3C; /* Standard Red */
+            --border: var(--color-border-medium-blue); /* Solid border color */
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Standard shadow */
+            --radius: 12px; /* Standard rounded corners */
+            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
+
+            /* Font size base */
+            font-size: 14px; /* Overall base font size reduced */
         }
         
         * {
@@ -351,15 +404,16 @@
         }
         
         body {
-            background-color: var(--light);
+            background-color: var(--light); /* Solid light background */
             color: var(--dark);
             min-height: 100vh;
-            padding: 80px 0 100px; /* زيادة المساحة لشريط التنقل العلوي والسفلي */
+            padding: 70px 0 90px;
             direction: rtl; 
             display: flex;
             flex-direction: column;
             font-family: 'Cairo', sans-serif;
             line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll */
         }
         
         .top-bar {
@@ -367,28 +421,29 @@
             top: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-color: var(--primary); /* Solid Dark Blue */
             color: white;
             display: flex;
             justify-content: space-between; 
             align-items: center; 
-            padding: 0 20px; /* زيادة المساحة الداخلية */
-            height: 80px; /* ارتفاع أكبر */
-            box-shadow: var(--shadow);
+            padding: 0 15px;
+            height: 65px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             z-index: 1000;
+            border-bottom: 1px solid var(--color-border-medium-blue); /* Solid border */
         }
         
         .top-left {
             display: flex;
             align-items: center; 
-            gap: 15px; /* زيادة المسافة بين العناصر */
+            gap: 10px;
             height: 100%;
         }
         
         .logo-container {
             display: flex;
             align-items: center;
-            gap: 10px; 
+            gap: 8px;
             text-decoration: none; 
             color: white; 
             transition: var(--transition);
@@ -396,60 +451,61 @@
         }
         
         .logo-container:hover {
-            transform: scale(1.02);
-            opacity: 0.9;
+            transform: scale(1.01);
+            opacity: 0.95;
         }
 
         .store-logo {
-            height: 100%;
+            height: 90%;
             width: auto;
             object-fit: contain; 
             background-color: transparent;
-            padding: 8px 0; /* زيادة المساحة الداخلية */
+            padding: 5px 0;
         }
         
         .store-name {
-            font-size: 20px; /* حجم خط أكبر */
-            font-weight: 800; /* خط أثقل */
+            font-size: 1.1rem;
+            font-weight: 800;
             letter-spacing: 0.5px;
+            color: var(--accent); /* Accent for store name */
         }
         
         .top-right-group {
             display: flex;
             align-items: center;
-            gap: 20px; /* زيادة المسافة بين الأيقونات */
+            gap: 15px;
         }
 
         .icon-btn {
             background: transparent;
             border: none;
             color: white;
-            font-size: 18px; /* حجم أيقونة أكبر */
+            font-size: 1rem;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
             transition: var(--transition);
-            padding: 8px 12px; /* زيادة المساحة الداخلية */
+            padding: 6px 10px;
             text-decoration: none; 
-            border-radius: var(--radius); /* حواف دائرية */
+            border-radius: var(--radius);
         }
         
         .icon-btn:hover {
-            transform: translateY(-5px) scale(1.05); /* تأثير رفع وتكبير */
-            background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
+            transform: translateY(-2px) scale(1.03);
+            background-color: rgba(255, 255, 255, 0.1);
         }
         /* Added active state for top bar icons */
         .icon-btn.active {
             color: var(--accent); /* Highlight active icon */
-            transform: translateY(-5px) scale(1.05);
-            background-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px) scale(1.03);
+            background-color: rgba(255, 255, 255, 0.1);
         }
         
         .icon-label {
-            font-size: 13px; /* حجم خط أكبر قليلاً */
-            margin-top: 6px;
+            font-size: 0.75rem;
+            margin-top: 4px;
             font-weight: 700; 
         }
         
@@ -458,16 +514,17 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-color: var(--primary); /* Solid Dark Blue */
             color: white;
             display: flex;
             justify-content: space-around;
-            padding: 15px 0;
-            box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.15); /* ظل أكثر بروزاً */
+            padding: 10px 0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
             z-index: 1000;
-            border-top-left-radius: 30px; /* حواف دائرية أكبر */
-            border-top-right-radius: 30px; /* حواف دائرية أكبر */
-            height: 100px; /* ارتفاع أكبر */
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            height: 80px;
+            border-top: 1px solid var(--color-border-medium-blue); /* Solid border */
         }
         
         .bottom-nav-item {
@@ -475,24 +532,24 @@
             flex-direction: column;
             align-items: center;
             color: white;
-            font-size: 14px; /* حجم خط أكبر قليلاً */
+            font-size: 0.85rem;
             text-decoration: none;
             transition: var(--transition);
             flex: 1;
-            padding: 12px 0; /* زيادة المساحة الداخلية */
+            padding: 8px 0;
             font-weight: 700; 
             position: relative;
         }
         
         .bottom-nav-item i {
-            font-size: 24px; /* حجم أيقونة أكبر */
-            margin-bottom: 6px;
+            font-size: 1.3rem;
+            margin-bottom: 4px;
             transition: var(--transition);
         }
         
         .bottom-nav-item:hover, .bottom-nav-item.active {
-            color: var(--accent);
-            transform: translateY(-8px) scale(1.1); /* تأثير رفع وتكبير أكثر وضوحاً */
+            color: var(--accent); /* Accent for active/hover */
+            transform: translateY(-3px) scale(1.05);
         }
         
         .bottom-nav-item.active::after {
@@ -501,53 +558,80 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 40px;
-            height: 4px;
+            width: 30px;
+            height: 3px;
             background-color: var(--accent);
-            border-radius: 2px;
-            animation: fadeInLine 0.5s ease-out;
-        }
-
-        @keyframes fadeInLine {
-            from { width: 0; opacity: 0; }
-            to { width: 40px; opacity: 1; }
+            border-radius: 1.5px;
         }
 
         .main-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            padding: 30px 20px; /* زيادة المساحة الداخلية */
-            max-width: 1200px;
+            padding: 20px 15px;
+            max-width: 1000px;
             margin: 0 auto;
             width: 100%;
-            background-color: white; /* خلفية بيضاء للمحتوى الرئيسي */
+            background-color: white; /* Solid white background for content */
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            margin-top: 20px; /* مسافة من الشريط العلوي */
-            margin-bottom: 20px; /* مسافة من الشريط السفلي */
-            min-height: calc(100vh - 180px); /* Adjust height to fill space between bars */
+            margin-top: 15px;
+            margin-bottom: 15px;
+            min-height: calc(100vh - 160px);
+            border: 1px solid var(--border); /* Solid border */
         }
         
         /* Account Section Specific Styles */
         .account-section {
-            margin-bottom: 50px;
+            margin-bottom: 30px; /* Consistent margin */
             text-align: center;
         }
 
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem; /* Adjusted for consistency with other pages */
+            color: var(--dark);
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        .section-header p {
+            font-size: 0.9rem; /* Adjusted for consistency with other pages */
+            color: #777;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--secondary);
+            border-radius: 2px;
+        }
+
         .account-info-card {
-            background-color: var(--light);
+            background-color: white; /* Solid white background */
             border-radius: var(--radius);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            padding: 30px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07); /* Reduced shadow */
+            padding: 25px; /* Reduced padding */
             max-width: 600px;
-            margin: 30px auto;
+            margin: 20px auto; /* Reduced margin */
             text-align: right; /* Align text to the right for RTL */
+            border: 1px solid var(--border); /* Solid border */
         }
 
         .account-info-card p {
-            font-size: 1.1rem;
-            margin-bottom: 10px;
+            font-size: 1rem; /* Reduced font size */
+            margin-bottom: 8px; /* Reduced margin */
             color: #444;
         }
 
@@ -556,20 +640,33 @@
         }
 
         .user-info-group {
-            margin-bottom: 30px;
-            padding-bottom: 20px;
+            margin-bottom: 25px; /* Reduced margin */
+            padding-bottom: 15px; /* Reduced padding */
             border-bottom: 1px solid var(--border);
         }
 
         .user-profile-form {
-            margin-bottom: 30px;
+            margin-bottom: 25px; /* Reduced margin */
         }
 
         .user-profile-form h3 {
-            font-size: 1.4rem;
+            font-size: 1.3rem; /* Reduced font size */
             color: var(--primary);
             margin-bottom: 20px;
             text-align: center;
+            position: relative;
+            padding-bottom: 10px;
+        }
+        .user-profile-form h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 3px;
+            background-color: var(--secondary);
+            border-radius: 1.5px;
         }
 
         .form-group {
@@ -589,21 +686,22 @@
         .form-group input[type="tel"],
         .form-group textarea {
             width: 100%;
-            padding: 12px 15px;
+            padding: 10px 12px; /* Reduced padding */
             border: 1px solid var(--border);
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.9rem; /* Reduced font size */
             color: var(--dark);
-            background-color: white;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #F8F8F8; /* Slightly off-white for inputs */
+            transition: var(--transition);
         }
 
         .form-group input[type="text"]:focus,
         .form-group input[type="tel"]:focus,
         .form-group textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
             outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.4); /* Gold shadow */
+            background-color: white;
         }
 
         .form-group textarea {
@@ -613,51 +711,55 @@
 
         .save-profile-btn {
             background-color: var(--secondary);
-            color: white;
+            color: var(--dark); /* Dark text for contrast */
             border: none;
-            padding: 12px 25px;
+            padding: 12px 25px; /* Consistent padding */
             border-radius: 50px;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 1rem; /* Consistent font size */
             transition: var(--transition);
             margin-top: 10px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         }
 
         .save-profile-btn:hover {
-            background-color: #439E8E;
-            transform: translateY(-2px);
+            background-color: #DAA520; /* Darker gold on hover */
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         }
 
         .sign-out-btn {
-            background-color: var(--accent);
+            background-color: var(--error);
             color: white;
             border: none;
-            padding: 12px 25px;
+            padding: 12px 25px; /* Consistent padding */
             border-radius: 50px;
             cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
+            font-weight: 700;
+            font-size: 1rem; /* Consistent font size */
             transition: var(--transition);
             margin-top: 20px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
         }
 
         .sign-out-btn:hover {
-            background-color: #D64545;
-            transform: translateY(-2px);
+            background-color: #C0392B;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
         }
 
         .not-logged-in-message {
-            padding: 50px;
+            padding: 40px; /* Reduced padding */
             text-align: center;
             color: #888;
-            font-size: 1.3rem;
+            font-size: 1.1rem; /* Reduced font size */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -666,21 +768,73 @@
         }
 
         .not-logged-in-message i {
-            font-size: 4rem;
+            font-size: 3rem; /* Reduced icon size */
             color: var(--primary);
-            margin-bottom: 20px;
+            margin-bottom: 15px; /* Reduced margin */
         }
         .not-logged-in-message p {
-            margin-bottom: 10px;
-            line-height: 1.6;
+            margin-bottom: 8px; /* Reduced margin */
+            line-height: 1.5;
         }
 
+        /* Loading Spinner Styles */
+        .loading-spinner-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px; /* Adjust height for account page */
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top: 3px solid var(--primary);
+            width: 30px;
+            height: 30px;
+            animation: spin 0.8s linear infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 70px; /* Adjusted to be below top bar */
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--primary); /* Solid Dark Blue */
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            z-index: 2000;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.info { background-color: var(--primary); }
+        .notification.warning { background-color: var(--warning); } /* Standard Amber for warning */
+        .notification.error { background-color: var(--error); } /* Standard Red for error */
 
         /* Footer Styling (reused from other pages) */
         #mainFooter {
-            background-color: var(--dark);
+            background-color: var(--primary); /* Primary color for footer */
             color: white;
-            padding: 40px 20px;
+            padding: 30px 20px; /* Adjusted padding */
             border-top-left-radius: var(--radius);
             border-top-right-radius: var(--radius);
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
@@ -689,18 +843,18 @@
 
         .footer-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            max-width: 1200px;
-            margin: 0 auto 30px auto;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjusted min-width */
+            gap: 20px; /* Reduced gap */
+            max-width: 1000px; /* Adjusted max-width */
+            margin: 0 auto 20px auto; /* Adjusted margin */
         }
 
         .footer-section h3 {
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            color: var(--primary);
+            font-size: 1.2rem; /* Adjusted font size */
+            margin-bottom: 15px; /* Adjusted margin */
+            color: var(--secondary); /* Secondary color for headings */
             position: relative;
-            padding-bottom: 10px;
+            padding-bottom: 8px; /* Adjusted padding */
         }
 
         .footer-section h3::after {
@@ -708,45 +862,45 @@
             position: absolute;
             left: 0;
             bottom: 0;
-            width: 50px;
+            width: 40px; /* Adjusted width */
             height: 2px;
-            background-color: var(--accent);
+            background-color: var(--secondary); /* Secondary color for underline */
             border-radius: 1px;
         }
 
         .footer-section p, .footer-links li {
-            font-size: 0.95rem;
-            line-height: 1.8;
+            font-size: 0.85rem; /* Adjusted font size */
+            line-height: 1.6;
             color: #E0E0E0;
         }
 
         .contact-info p {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 8px;
+            gap: 8px; /* Reduced gap */
+            margin-bottom: 6px; /* Reduced margin */
         }
 
         .contact-info i {
-            color: var(--secondary);
-            font-size: 1.1rem;
+            color: var(--secondary); /* Secondary color for icons */
+            font-size: 1rem; /* Adjusted font size */
         }
 
         .social-links {
             display: flex;
-            gap: 15px;
-            margin-top: 15px;
+            gap: 10px; /* Reduced gap */
+            margin-top: 10px; /* Reduced margin */
         }
 
         .social-link {
             color: white;
-            font-size: 1.5rem;
+            font-size: 1.2rem; /* Adjusted font size */
             transition: var(--transition);
         }
 
         .social-link:hover {
-            color: var(--accent);
-            transform: translateY(-3px) scale(1.1);
+            color: var(--secondary); /* Secondary color on hover */
+            transform: translateY(-2px) scale(1.1);
         }
 
         .footer-links {
@@ -754,7 +908,7 @@
         }
 
         .footer-links li {
-            margin-bottom: 8px;
+            margin-bottom: 6px; /* Reduced margin */
         }
 
         .footer-links a {
@@ -763,98 +917,98 @@
             transition: var(--transition);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px; /* Reduced gap */
         }
 
         .footer-links a:hover {
-            color: var(--primary);
-            transform: translateX(-5px);
+            color: var(--secondary); /* Secondary color on hover */
+            transform: translateX(-3px);
         }
 
         .footer-links i {
-            font-size: 0.8rem;
+            font-size: 0.7rem; /* Adjusted font size */
         }
 
         .copyright {
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.75rem; /* Adjusted font size */
             color: #B0B0B0;
-            padding-top: 20px;
+            padding-top: 15px; /* Adjusted padding */
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .no-content-message {
             text-align: center;
             color: #888;
-            font-size: 1.2rem;
-            padding: 30px;
+            font-size: 1rem; /* Adjusted font size */
+            padding: 20px; /* Adjusted padding */
         }
 
         @media (max-width: 768px) {
             body {
-                padding: 70px 0 90px;
+                padding: 60px 0 80px;
             }
             .top-bar {
-                height: 60px;
+                height: 55px;
                 padding: 0 10px;
             }
             .store-name {
-                font-size: 16px;
+                font-size: 1rem;
             }
             .icon-btn {
-                font-size: 14px;
-                padding: 5px 8px;
+                font-size: 0.9rem;
+                padding: 4px 8px;
             }
             .icon-label {
-                font-size: 10px;
+                font-size: 0.7rem;
             }
             .bottom-bar {
-                height: 80px;
-                padding: 10px 0;
+                height: 70px;
+                padding: 8px 0;
             }
             .bottom-nav-item i {
-                font-size: 20px;
+                font-size: 1.2rem;
             }
             .bottom-nav-item span {
-                font-size: 12px;
+                font-size: 0.75rem;
             }
             .main-content {
-                padding: 15px;
-                min-height: calc(100vh - 150px);
+                padding: 10px;
+                min-height: calc(100vh - 135px);
             }
             .section-header h2 {
-                font-size: 2rem;
+                font-size: 1.6rem;
             }
             .section-header p {
-                font-size: 1rem;
+                font-size: 0.8rem;
             }
             .account-info-card {
                 padding: 20px;
-                margin: 20px auto;
+                margin: 15px auto;
             }
             .account-info-card p {
-                font-size: 1rem;
+                font-size: 0.9rem;
             }
             .user-profile-form h3 {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
             }
             .form-group label {
                 font-size: 0.85rem;
             }
             .form-group input, .form-group textarea {
-                padding: 10px 12px;
-                font-size: 0.9rem;
+                padding: 8px 10px;
+                font-size: 0.8rem;
             }
             .save-profile-btn, .sign-out-btn {
                 padding: 10px 20px;
                 font-size: 0.9rem;
             }
             .not-logged-in-message {
-                font-size: 1.1rem;
+                font-size: 1rem;
                 padding: 30px;
             }
             .not-logged-in-message i {
-                font-size: 3rem;
+                font-size: 2.5rem;
             }
             .footer-content {
                 grid-template-columns: 1fr;
@@ -867,6 +1021,11 @@
             .contact-info p, .footer-links a {
                 justify-content: center;
             }
+            .notification {
+                top: 60px;
+                padding: 10px 15px;
+                font-size: 0.8rem;
+            }
         }
         
         @media (max-width: 576px) {
@@ -874,11 +1033,11 @@
                 gap: 10px;
             }
             .bottom-nav-item {
-                font-size: 11px;
-                padding: 8px 0;
+                font-size: 0.7rem;
+                padding: 6px 0;
             }
             .bottom-nav-item i {
-                font-size: 18px;
+                font-size: 1.1rem;
             }
         }
     </style>
@@ -888,7 +1047,7 @@
     <header class="top-bar">
         <div class="top-left">
             <a href="index.html" class="logo-container">
-                <img id="storeLogo" src="https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
                 <div id="storeName" class="store-name">متجر إلكتروني</div>
             </a>
         </div>
