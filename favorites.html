@@ -41,12 +41,14 @@
         const settingsRef = dbRef(db, "settings");
         const homepageSettingsRef = dbRef(db, "homepageSettings"); 
         const usersRef = dbRef(db, "users"); // مرجع لبيانات المستخدمين (للسلة والمفضلة)
+        const productsRef = dbRef(db, "products"); // مرجع للمنتجات لجلب تفاصيلها
 
         // Global data storage for frontend
         window.frontendData = {
             settings: {},
             homepageSettings: {},
             favorites: [], // This will hold favorite product data
+            allProducts: [], // To store all products to get their details (like price)
             currentUser: null, // لتخزين بيانات المستخدم الحالي من Firebase Auth
             authReady: false // لتتبع حالة جاهزية المصادقة
         };
@@ -108,18 +110,26 @@
             favoritesContainer.innerHTML = ''; // Clear existing content
 
             if (favoritesData && favoritesData.length > 0) {
-                favoritesData.forEach(product => {
+                favoritesData.forEach(favItem => {
+                    // Find the full product details from allProducts
+                    const productDetails = window.frontendData.allProducts.find(p => p.id === favItem.id);
+                    
+                    // Use details from productDetails if available, otherwise fallback to favItem
+                    const productName = productDetails ? productDetails.name : favItem.name || 'منتج غير معروف';
+                    const productImage = productDetails ? productDetails.image : favItem.image || 'https://placehold.co/300x200/1A237E/FFD700?text=Favorite+Product';
+                    const productPrice = productDetails ? productDetails.price : favItem.price || 0; // Use actual price from productDetails
+
                     favoritesHtml.push(`
                         <div class="product-card">
-                            <img src="${product.image || 'https://placehold.co/300x200/1A237E/FFD700?text=Favorite+Product'}" 
+                            <img src="${productImage}" 
                                  onerror="this.onerror=null;this.src='https://placehold.co/300x200/1A237E/FFD700?text=Favorite+Product';"
-                                 alt="${product.name}" class="product-image" loading="lazy">
+                                 alt="${productName}" class="product-image" loading="lazy">
                             <div class="product-info">
-                                <h4 class="product-name">${product.name}</h4>
+                                <h4 class="product-name">${productName}</h4>
                                 <div class="product-prices">
-                                    <span class="product-price">${(product.price || 0).toLocaleString('ar-EG')} د.ع</span>
+                                    <span class="product-price">${productPrice.toLocaleString('ar-EG')} د.ع</span>
                                 </div>
-                                <button class="remove-from-favorites-btn" data-product-id="${product.id}">
+                                <button class="remove-from-favorites-btn" data-product-id="${favItem.id}">
                                     <i class="fas fa-heart-broken"></i> إزالة من المفضلة
                                 </button>
                             </div>
@@ -140,22 +150,25 @@
 
         // وظيفة لإزالة المنتج من المفضلة
         async function removeFromFavorites(productId) {
-            if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
-                showNotification('الرجاء تسجيل الدخول لإزالة المنتجات من المفضلة.');
-                return;
-            }
-            
-            const userId = window.frontendData.currentUser.uid;
-            const favoriteItemRef = dbRef(db, `users/${userId}/favorites/${productId}`);
-            
-            try {
-                await remove(favoriteItemRef);
-                showNotification('تمت إزالة المنتج من المفضلة!');
-                // onValue listener will handle re-rendering for authenticated users
-            } catch (error) {
-                console.error("Error removing from favorites:", error);
-                showNotification('حدث خطأ أثناء إزالة المنتج من المفضلة.');
-            }
+            // Show confirmation dialog before removing
+            showConfirmDialog('هل أنت متأكد أنك تريد إزالة هذا المنتج من المفضلة؟', async () => {
+                if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
+                    showNotification('الرجاء تسجيل الدخول لإزالة المنتجات من المفضلة.');
+                    return;
+                }
+                
+                const userId = window.frontendData.currentUser.uid;
+                const favoriteItemRef = dbRef(db, `users/${userId}/favorites/${productId}`);
+                
+                try {
+                    await remove(favoriteItemRef);
+                    showNotification('تمت إزالة المنتج من المفضلة!');
+                    // onValue listener will handle re-rendering for authenticated users
+                } catch (error) {
+                    console.error("Error removing from favorites:", error);
+                    showNotification('حدث خطأ أثناء إزالة المنتج من المفضلة.');
+                }
+            });
         }
 
         // وظيفة عرض التذييل
@@ -256,6 +269,19 @@
                     window.frontendData.homepageSettings = snapshot.val() || {};
                     renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
                 });
+
+                // Load All Products (for product details like price)
+                onValue(productsRef, (snapshot) => {
+                    const products = [];
+                    snapshot.forEach((childSnapshot) => {
+                        products.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    });
+                    window.frontendData.allProducts = products;
+                    // Re-render favorites if products data changes and favorites are already loaded
+                    if (window.frontendData.authReady && window.frontendData.currentUser) {
+                        loadUserFavorites(window.frontendData.currentUser.uid);
+                    }
+                });
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -303,6 +329,50 @@
                     document.body.removeChild(notification);
                 }, 300);
             }, 3000);
+        }
+
+        // Custom Confirmation Dialog (reused from cart.html)
+        function showConfirmDialog(message, onConfirm) {
+            const dialogOverlay = document.createElement('div');
+            dialogOverlay.className = 'dialog-overlay';
+
+            const dialogBox = document.createElement('div');
+            dialogBox.className = 'dialog-box';
+
+            dialogBox.innerHTML = `
+                <p>${message}</p>
+                <div class="dialog-buttons">
+                    <button id="confirmYes" class="dialog-btn confirm-yes">نعم</button>
+                    <button id="confirmNo" class="dialog-btn confirm-no">إلغاء</button>
+                </div>
+            `;
+
+            dialogOverlay.appendChild(dialogBox);
+            document.body.appendChild(dialogOverlay);
+
+            // Force reflow for dialog entry animation
+            void dialogOverlay.offsetWidth;
+            dialogOverlay.classList.add('show');
+            void dialogBox.offsetWidth;
+            dialogBox.classList.add('show');
+
+
+            document.getElementById('confirmYes').addEventListener('click', () => {
+                onConfirm();
+                dialogBox.classList.remove('show');
+                dialogOverlay.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(dialogOverlay);
+                }, 300); // Match CSS transition duration
+            });
+
+            document.getElementById('confirmNo').addEventListener('click', () => {
+                dialogBox.classList.remove('show');
+                dialogOverlay.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(dialogOverlay);
+                }, 300); // Match CSS transition duration
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -729,6 +799,117 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 70px; /* Adjusted to be below top bar */
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--primary); /* Solid Dark Blue */
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            z-index: 2000;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.info { background-color: var(--primary); }
+        .notification.warning { background-color: var(--warning); } /* Standard Amber for warning */
+        .notification.error { background-color: var(--error); } /* Standard Red for error */
+
+        /* Custom Dialog Styles (reused from cart.html) */
+        .dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2001;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+        .dialog-overlay.show {
+            opacity: 1;
+        }
+
+        .dialog-box {
+            background-color: white; /* Solid white background */
+            color: var(--dark);
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            transform: translateY(-20px);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            border: 1px solid var(--border); /* Solid border */
+        }
+        .dialog-overlay.show .dialog-box {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .dialog-box p {
+            font-size: 1.1rem;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .dialog-btn {
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .dialog-btn.confirm-yes {
+            background-color: var(--error);
+            color: white;
+            border: 1px solid var(--error);
+        }
+        .dialog-btn.confirm-yes:hover {
+            background-color: #C0392B;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        .dialog-btn.confirm-no {
+            background-color: transparent;
+            color: var(--dark);
+            border: 1px solid var(--border); /* Solid border */
+        }
+        .dialog-btn.confirm-no:hover {
+            background-color: var(--border); /* Solid border color on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.08);
         }
 
         /* Footer Styling */
