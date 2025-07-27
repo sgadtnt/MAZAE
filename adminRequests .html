@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - الطلبات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js"; // getAuth is still needed for signOut if used
+        import { getDatabase, ref as dbRef, onValue, set, get, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        // Global variables provided by the Canvas environment (not used for auth anymore)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Your web app's Firebase configuration (replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app); // Still initialize auth for signOut function
+        const db = getDatabase(app);
+
+        // Realtime Database references
+        const ordersRef = dbRef(db, "orders"); // Orders node
+        const generalSettingsRef = dbRef(db, "settings"); // General settings node for header info
+        const adminLogsRef = dbRef(db, "adminLogs"); // Admin logs node
+
+        // Global data storage for frontend
+        window.adminData = {
+            orders: [],
+            generalSettings: {},
+            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
+            authReady: true // Always ready as no auth is required
+        };
+
+        // Function to show notifications (reused from client-side)
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            void notification.offsetWidth;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Function to load general settings for header (store name/logo)
+        async function loadGeneralSettingsForHeader() {
+            try {
+                const snapshot = await get(generalSettingsRef);
+                const settings = snapshot.val() || {};
+                window.adminData.generalSettings = settings;
+
+                // Update header live
+                document.getElementById('storeName').textContent = settings.storeName || 'لوحة تحكم المتجر';
+                document.getElementById('storeLogo').src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+            } catch (error) {
+                console.error("Error loading general settings for header:", error);
+            }
+        }
+
+        // Function to format timestamp
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'غير متوفر';
+            const date = new Date(timestamp);
+            return date.toLocaleString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Function to get status badge class
+        function getStatusBadgeClass(status) {
+            switch (status) {
+                case 'pending': return 'status-pending';
+                case 'processing': return 'status-processing';
+                case 'shipped': return 'status-shipped';
+                case 'delivered': return 'status-delivered';
+                case 'cancelled': return 'status-cancelled';
+                default: return '';
+            }
+        }
+
+        // Function to render orders list
+        function renderOrders(orders) {
+            const ordersContainer = document.getElementById('ordersContainer');
+            ordersContainer.innerHTML = ''; // Clear previous orders
+
+            if (orders.length === 0) {
+                ordersContainer.innerHTML = '<p class="no-content-message">لا توجد طلبات لعرضها.</p>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.className = 'order-card';
+                orderCard.innerHTML = `
+                    <div class="order-header-summary">
+                        <h3>الطلب رقم: #${order.orderId}</h3>
+                        <span class="order-status ${getStatusBadgeClass(order.status)}">${order.status === 'pending' ? 'قيد الانتظار' : order.status === 'processing' ? 'قيد المعالجة' : order.status === 'shipped' ? 'تم الشحن' : order.status === 'delivered' ? 'تم التسليم' : order.status === 'cancelled' ? 'ملغى' : order.status}</span>
+                    </div>
+                    <div class="order-details-summary">
+                        <p><strong>المبلغ الكلي:</strong> ${order.totalAmount || 0} د.ع</p>
+                        <p><strong>تاريخ الطلب:</strong> ${formatTimestamp(order.timestamp)}</p>
+                        <p><strong>المستخدم:</strong> ${order.contactInfo?.name || 'غير معروف'} (${order.userId || 'N/A'})</p>
+                    </div>
+                    <div class="order-actions">
+                        <button class="btn btn-primary view-details-btn" data-order-id="${order.orderId}">
+                            <i class="fas fa-eye"></i> عرض التفاصيل
+                        </button>
+                    </div>
+                `;
+                ordersContainer.appendChild(orderCard);
+            });
+
+            // Add event listeners for view details buttons
+            document.querySelectorAll('.view-details-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const orderId = event.target.dataset.orderId;
+                    const order = window.adminData.orders.find(o => o.orderId === orderId);
+                    if (order) {
+                        displayOrderDetails(order);
+                    } else {
+                        showNotification('لم يتم العثور على تفاصيل الطلب.', 'error');
+                    }
+                });
+            });
+        }
+
+        // Function to display order details in a modal
+        function displayOrderDetails(order) {
+            const modal = document.getElementById('orderDetailsModal');
+            document.getElementById('modalOrderId').textContent = order.orderId;
+            document.getElementById('modalOrderTimestamp').textContent = formatTimestamp(order.timestamp);
+            document.getElementById('modalOrderTotalAmount').textContent = `${order.totalAmount || 0} د.ع`;
+            document.getElementById('modalUserName').textContent = order.contactInfo?.name || 'غير معروف';
+            document.getElementById('modalUserPhone').textContent = order.contactInfo?.phone || 'غير متوفر';
+            document.getElementById('modalUserEmail').textContent = order.contactInfo?.email || 'غير متوفر';
+            document.getElementById('modalShippingAddress').textContent = order.shippingAddress || 'غير متوفر';
+
+            // Populate overall order status dropdown
+            const orderStatusSelect = document.getElementById('modalOrderStatusSelect');
+            orderStatusSelect.value = order.status;
+            orderStatusSelect.dataset.orderId = order.orderId; // Store order ID for update
+
+            const productsList = document.getElementById('modalOrderProductsList');
+            productsList.innerHTML = ''; // Clear previous products
+
+            if (order.products && order.products.length > 0) {
+                order.products.forEach((product, index) => {
+                    const productItem = document.createElement('div');
+                    productItem.className = 'product-item';
+                    productItem.innerHTML = `
+                        <div class="product-info">
+                            <h4>${product.name}</h4>
+                            <p>الكمية: ${product.quantity} | السعر: ${product.price} د.ع</p>
+                        </div>
+                        <div class="product-status-control">
+                            <label for="productStatus_${order.orderId}_${index}">الحالة:</label>
+                            <select id="productStatus_${order.orderId}_${index}" class="product-status-select"
+                                data-order-id="${order.orderId}" data-product-index="${index}" data-product-id="${product.productId}">
+                                <option value="pending" ${product.status === 'pending' ? 'selected' : ''}>قيد الانتظار</option>
+                                <option value="processing" ${product.status === 'processing' ? 'selected' : ''}>قيد المعالجة</option>
+                                <option value="shipped" ${product.status === 'shipped' ? 'selected' : ''}>تم الشحن</option>
+                                <option value="delivered" ${product.status === 'delivered' ? 'selected' : ''}>تم التسليم</option>
+                                <option value="cancelled" ${product.status === 'cancelled' ? 'selected' : ''}>ملغى</option>
+                            </select>
+                        </div>
+                    `;
+                    productsList.appendChild(productItem);
+                });
+
+                // Add event listeners for individual product status changes
+                document.querySelectorAll('.product-status-select').forEach(select => {
+                    select.addEventListener('change', updateProductStatus);
+                });
+            } else {
+                productsList.innerHTML = '<p>لا توجد منتجات في هذا الطلب.</p>';
+            }
+
+            modal.style.display = 'block'; // Show the modal
+        }
+
+        // Function to close the order details modal
+        function closeOrderDetailsModal() {
+            document.getElementById('orderDetailsModal').style.display = 'none';
+        }
+
+        // Function to update overall order status
+        async function updateOrderStatus(event) {
+            const orderId = event.target.dataset.orderId;
+            const newStatus = event.target.value;
+            const orderToUpdate = window.adminData.orders.find(o => o.orderId === orderId);
+
+            if (!orderToUpdate) {
+                showNotification('خطأ: لم يتم العثور على الطلب.', 'error');
+                return;
+            }
+
+            const oldStatus = orderToUpdate.status;
+
+            try {
+                await update(dbRef(db, `orders/${orderId}`), { status: newStatus });
+                showNotification(`تم تحديث حالة الطلب #${orderId} إلى: ${newStatus}`, 'success');
+
+                // Log admin activity (using a simulated user ID)
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_ORDER_STATUS',
+                    adminId: window.adminData.currentUser.uid,
+                    orderId: orderId,
+                    oldStatus: oldStatus,
+                    newStatus: newStatus,
+                    timestamp: new Date().toISOString()
+                });
+                console.log(`Admin activity logged: Order #${orderId} status updated.`);
+
+            } catch (error) {
+                console.error("Error updating order status:", error);
+                showNotification('حدث خطأ أثناء تحديث حالة الطلب.', 'error');
+            }
+        }
+
+        // Function to update individual product status within an order
+        async function updateProductStatus(event) {
+            const orderId = event.target.dataset.orderId;
+            const productIndex = parseInt(event.target.dataset.productIndex);
+            const productId = event.target.dataset.productId;
+            const newStatus = event.target.value;
+
+            const orderToUpdate = window.adminData.orders.find(o => o.orderId === orderId);
+
+            if (!orderToUpdate || !orderToUpdate.products || !orderToUpdate.products[productIndex]) {
+                showNotification('خطأ: لم يتم العثور على المنتج في الطلب.', 'error');
+                return;
+            }
+
+            const oldProductStatus = orderToUpdate.products[productIndex].status;
+            const productName = orderToUpdate.products[productIndex].name;
+
+            // Create a copy of the products array to update
+            const updatedProducts = [...orderToUpdate.products];
+            updatedProducts[productIndex].status = newStatus;
+
+            try {
+                // Update only the products array in the specific order
+                await update(dbRef(db, `orders/${orderId}`), { products: updatedProducts });
+                showNotification(`تم تحديث حالة المنتج "${productName}" في الطلب #${orderId} إلى: ${newStatus}`, 'success');
+
+                // Log admin activity (using a simulated user ID)
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_PRODUCT_STATUS_IN_ORDER',
+                    adminId: window.adminData.currentUser.uid,
+                    orderId: orderId,
+                    productId: productId,
+                    productName: productName,
+                    oldStatus: oldProductStatus,
+                    newStatus: newStatus,
+                    timestamp: new Date().toISOString()
+                });
+                console.log(`Admin activity logged: Product "${productName}" in Order #${orderId} status updated.`);
+
+            } catch (error) {
+                console.error("Error updating product status:", error);
+                showNotification('حدث خطأ أثناء تحديث حالة المنتج.', 'error');
+            }
+        }
+
+
+        // Function to handle logout (will just redirect as no Firebase auth session)
+        async function handleLogout() {
+            // In a no-auth scenario, signOut might not be strictly necessary
+            // as there's no active Firebase user session to end.
+            // However, keeping it for consistency if Firebase auth is re-enabled later.
+            try {
+                // Attempt to sign out if there was an anonymous session or similar
+                if (auth.currentUser) {
+                    await signOut(auth);
+                }
+                showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
+                // Redirect to a placeholder login page or home page
+                window.location.replace(window.location.origin + '/admin_login.html'); 
+            } catch (error) {
+                console.error("Error during logout (no active session expected):", error);
+                showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
+            }
+        }
+
+        // Removed Token Refresh Mechanism and Idle Timer as they rely on authentication.
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Directly load general settings for header
+            loadGeneralSettingsForHeader(); 
+
+            // Directly listen for real-time updates to orders
+            onValue(ordersRef, (snapshot) => {
+                const ordersData = snapshot.val();
+                const ordersList = [];
+                for (let id in ordersData) {
+                    ordersList.push({ orderId: id, ...ordersData[id] });
+                }
+                // Sort orders by timestamp, newest first
+                ordersList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                window.adminData.orders = ordersList;
+                renderOrders(ordersList);
+                showNotification('تم تحديث قائمة الطلبات.', 'info');
+            });
+            console.log("Admin panel loaded without authentication.");
+
+
+            // Set active navigation link in header
+            const navLinks = document.querySelectorAll('.admin-nav-link');
+            const currentPath = window.location.pathname.split('/').pop();
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Add logout event listener
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            // Add event listener for overall order status change in modal
+            document.getElementById('modalOrderStatusSelect').addEventListener('change', updateOrderStatus);
+
+            // Close modal when clicking outside or on close button
+            document.querySelector('.close-button').addEventListener('click', closeOrderDetailsModal);
+            window.addEventListener('click', (event) => {
+                const modal = document.getElementById('orderDetailsModal');
+                if (event.target === modal) {
+                    closeOrderDetailsModal();
+                }
+            });
+        });
+    </script>
+    <style>
+        :root {
+            /* Main Colors - Adjusted for Admin Panel */
+            --color-primary-dark-blue: #1A237E; /* Primary */
+            --color-secondary-gold: #FFD700; /* Secondary / Accent */
+            --color-admin-bg: #F8F9FA; /* Lighter background for admin */
+            --color-admin-card-bg: #FFFFFF; /* White cards */
+            --color-admin-text: #343A40; /* Darker text for readability */
+            --color-admin-border: #E9ECEF; /* Light border */
+
+            /* Mapped to general variables for consistency */
+            --primary: var(--color-primary-dark-blue);
+            --secondary: var(--color-secondary-gold);
+            --accent: var(--color-secondary-gold);
+            --light: var(--color-admin-bg);
+            --dark: var(--color-admin-text);
+            --success: #28A745; /* Bootstrap green */
+            --warning: #FFC107; /* Bootstrap yellow */
+            --error: #DC3545; /* Bootstrap red */
+            --info: #17A2B8; /* Bootstrap info blue */
+            --border: #DEE2E6; /* Slightly darker border for better contrast */
+            --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Lighter, smaller shadow */
+            --radius: 0.4rem; /* Slightly smaller rounded corners */
+            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
+
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px; /* Base font size reduced */
+            direction: rtl;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding-top: 80px; /* Increased space for fixed header */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Admin Header (Top Bar) */
+        .admin-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--primary); /* Solid Dark Blue */
+            color: white;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0.8rem 1.5rem; /* Increased padding */
+            height: 80px; /* Increased height */
+            box-shadow: var(--shadow);
+            z-index: 1000;
+        }
+
+        .admin-header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem; /* Increased gap */
+            text-decoration: none; 
+            color: white; 
+            transition: var(--transition);
+        }
+
+        .admin-header .logo-container:hover {
+            opacity: 0.9;
+        }
+
+        .admin-header .store-logo {
+            height: 45px; /* Increased logo size */
+            width: auto;
+            object-fit: contain; 
+            border-radius: var(--radius);
+        }
+
+        .admin-header .store-name {
+            font-size: 1.3rem; /* Increased font size */
+            font-weight: 700;
+            color: var(--accent); /* Accent for store name */
+        }
+
+        .admin-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Increased gap */
+        }
+
+        .admin-actions .logout-btn {
+            background-color: var(--error);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem; /* Increased padding */
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem; /* Increased font size */
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* Increased gap */
+        }
+
+        .admin-actions .logout-btn:hover {
+            background-color: #C82333;
+            transform: translateY(-2px); /* Increased transform */
+        }
+
+        /* Admin Nav */
+        .admin-nav {
+            display: flex;
+            gap: 1.8rem; /* Increased gap for nav links */
+        }
+
+        .admin-nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.6rem 0.9rem; /* Increased padding */
+            border-radius: var(--radius);
+            transition: var(--transition);
+            position: relative;
+            font-size: 0.95rem; /* Increased font size */
+        }
+
+        .admin-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .admin-nav-link.active {
+            color: var(--accent);
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        /* Main Content Area */
+        .admin-main-content {
+            flex-grow: 1;
+            padding: 1.5rem; /* Reduced padding */
+            max-width: 1000px; /* Adjusted max-width for orders */
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Reduced gap */
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 1.5rem; /* Reduced margin */
+            position: relative;
+            padding-bottom: 0.75rem; /* Reduced padding */
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem; /* Reduced heading size */
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 0.5rem; /* Reduced margin */
+        }
+
+        .section-header p {
+            font-size: 0.9rem; /* Reduced font size */
+            color: #6C757D;
+            max-width: 500px; /* Reduced max-width */
+            margin: 0 auto;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px; /* Reduced width */
+            height: 3px; /* Reduced thickness */
+            background-color: var(--secondary);
+            border-radius: 1.5px;
+        }
+
+        /* Orders List Styles */
+        .orders-list {
+            display: grid;
+            gap: 1rem;
+        }
+
+        .order-card {
+            background-color: var(--color-admin-card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1rem;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+            transition: var(--transition);
+        }
+
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+
+        .order-header-summary {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .order-header-summary h3 {
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+
+        .order-status {
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: white;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .status-pending { background-color: var(--warning); }
+        .status-processing { background-color: var(--primary); }
+        .status-shipped { background-color: var(--info); }
+        .status-delivered { background-color: var(--success); }
+        .status-cancelled { background-color: var(--error); }
+
+        .order-details-summary p {
+            font-size: 0.85rem;
+            margin-bottom: 0.2rem;
+        }
+        .order-details-summary p strong {
+            color: var(--dark);
+        }
+
+        .order-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 0.5rem;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #151B6B;
+            transform: translateY(-1px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 2000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
+            padding-top: 90px; /* Increased space for header */
+        }
+
+        .modal-content {
+            background-color: var(--color-admin-card-bg);
+            margin: 5% auto; /* 5% from the top and centered */
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 90%; /* Could be more responsive */
+            max-width: 700px; /* Max width */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-button {
+            color: #aaa;
+            float: left; /* Align to the right in RTL */
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px; /* Adjust for RTL */
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--error);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-header {
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .modal-section {
+            background-color: #FDFDFD;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+        }
+
+        .modal-section h4 {
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .modal-section p {
+            font-size: 0.9rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .modal-section p strong {
+            color: var(--dark);
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed #EEE;
+        }
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+        .product-info h4 {
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 0.2rem;
+        }
+        .product-info p {
+            font-size: 0.85rem;
+            color: #6C757D;
+        }
+
+        .product-status-control select,
+        .modal-order-status-control select {
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+            background-color: white;
+        }
+
+        .product-status-control select:focus,
+        .modal-order-status-control select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+        }
+
+        .no-content-message {
+            text-align: center;
+            color: #6C757D;
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Admin Footer */
+        .admin-footer {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.8rem 1rem; /* Reduced padding */
+            text-align: center;
+            font-size: 0.8rem; /* Reduced font size */
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            margin-top: auto;
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 90px; /* Adjusted below new header height */
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px; /* Reduced padding */
+            border-radius: 6px; /* Slightly smaller radius */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            z-index: 2000;
+            font-weight: bold;
+            font-size: 0.8rem; /* Reduced font size */
+            min-width: 180px; /* Reduced min-width */
+            text-align: center;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.info { background-color: var(--info); }
+        .notification.warning { background-color: var(--warning); }
+        .notification.error { background-color: var(--error); }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px; /* Adjust for smaller header */
+            }
+            .admin-header {
+                height: 70px;
+                padding: 0.6rem 1rem;
+            }
+            .admin-header .store-logo {
+                height: 40px;
+            }
+            .admin-header .store-name {
+                font-size: 1.1rem;
+            }
+            .admin-actions .logout-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            .admin-nav-link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            .admin-main-content {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .section-header h2 {
+                font-size: 1.6rem;
+            }
+            .section-header p {
+                font-size: 0.8rem;
+            }
+            .section-header::after {
+                width: 50px;
+                height: 2px;
+            }
+            .order-card {
+                padding: 0.8rem;
+            }
+            .order-header-summary h3 {
+                font-size: 1rem;
+            }
+            .order-status {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.5rem;
+            }
+            .order-details-summary p {
+                font-size: 0.8rem;
+            }
+            .btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            .modal {
+                padding-top: 80px; /* Adjust for smaller header */
+            }
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+                padding: 1rem;
+            }
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+            .modal-section h4 {
+                font-size: 1rem;
+            }
+            .modal-section p {
+                font-size: 0.8rem;
+            }
+            .product-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.5rem;
+            }
+            .product-status-control {
+                width: 100%;
+                display: flex;
+                justify-content: flex-end;
+            }
+            .product-status-control select {
+                width: auto;
+            }
+            .admin-footer {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            .notification {
+                top: 80px;
+                font-size: 0.75rem;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="logo-container">
+            <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+            <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
+        </div>
+        
+        <nav class="admin-nav">
+            <a href="admin_hub.html" class="admin-nav-link">
+                <i class="fas fa-tachometer-alt"></i> الرئيسية
+            </a>
+            <a href="orders.html" class="admin-nav-link active">
+                <i class="fas fa-shopping-bag"></i> الطلبات
+            </a>
+            <a href="products.html" class="admin-nav-link">
+                <i class="fas fa-box"></i> المنتجات
+            </a>
+            <a href="users.html" class="admin-nav-link">
+                <i class="fas fa-users"></i> المستخدمون
+            </a>
+            <a href="settings.html" class="admin-nav-link">
+                <i class="fas fa-cogs"></i> الإعدادات
+            </a>
+            <a href="homepage_settings.html" class="admin-nav-link">
+                <i class="fas fa-home"></i> إعدادات الصفحة الرئيسية
+            </a>
+            <a href="admin_logs.html" class="admin-nav-link">
+                <i class="fas fa-clipboard-list"></i> سجل المشرفين
+            </a>
+        </nav>
+
+        <div class="admin-actions">
+            <button id="logoutBtn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
+    </header>
+    
+    <!-- Main Content for Orders -->
+    <main class="admin-main-content">
+        <section class="orders-section">
+            <div class="section-header">
+                <h2>إدارة الطلبات</h2>
+                <p>عرض وتتبع وإدارة جميع طلبات العملاء.</p>
+            </div>
+            
+            <div class="orders-list" id="ordersContainer">
+                <!-- Orders will be loaded here by JavaScript -->
+                <p class="no-content-message">جاري تحميل الطلبات...</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Order Details Modal -->
+    <div id="orderDetailsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <div class="modal-header">
+                <h2>تفاصيل الطلب: #<span id="modalOrderId"></span></h2>
+                <p>تاريخ الطلب: <span id="modalOrderTimestamp"></span></p>
+            </div>
+            <div class="modal-body">
+                <div class="modal-section">
+                    <h4>معلومات العميل</h4>
+                    <p><strong>الاسم:</strong> <span id="modalUserName"></span></p>
+                    <p><strong>الهاتف:</strong> <span id="modalUserPhone"></span></p>
+                    <p><strong>البريد الإلكتروني:</strong> <span id="modalUserEmail"></span></p>
+                    <p><strong>عنوان الشحن:</strong> <span id="modalShippingAddress"></span></p>
+                </div>
+
+                <div class="modal-section">
+                    <h4>حالة الطلب الكلية</h4>
+                    <div class="modal-order-status-control">
+                        <label for="modalOrderStatusSelect">الحالة:</label>
+                        <select id="modalOrderStatusSelect">
+                            <option value="pending">قيد الانتظار</option>
+                            <option value="processing">قيد المعالجة</option>
+                            <option value="shipped">تم الشحن</option>
+                            <option value="delivered">تم التسليم</option>
+                            <option value="cancelled">ملغى</option>
+                        </select>
+                    </div>
+                    <p style="margin-top: 10px;"><strong>المبلغ الإجمالي للطلب:</strong> <span id="modalOrderTotalAmount"></span></p>
+                </div>
+
+                <div class="modal-section">
+                    <h4>المنتجات في الطلب</h4>
+                    <div id="modalOrderProductsList">
+                        <!-- Products will be loaded here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Footer -->
+    <footer class="admin-footer">
+        <p>&copy; 2025 لوحة تحكم المتجر. جميع الحقوق محفوظة.</p>
+    </footer>
+    
+</body>
+</html>
