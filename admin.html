@@ -10,7 +10,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, get, remove, query, orderByChild, limitToLast, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"; // Ensure 'set' is imported here
+        import { getDatabase, ref as dbRef, onValue, get, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -112,15 +112,17 @@
         // Function to load and display recent activities
         function loadRecentActivities() {
             // Query last 10 activities by timestamp
-            const recentLogsQuery = query(adminLogsRef, orderByChild('timestamp'), limitToLast(10));
-            onValue(recentLogsQuery, (snapshot) => {
+            // Note: Removed orderByChild from here to avoid index error, sorting in JS
+            onValue(adminLogsRef, (snapshot) => {
                 const activities = [];
                 snapshot.forEach((childSnapshot) => {
                     activities.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 // Sort in descending order for display (newest first)
                 activities.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                renderRecentActivities(activities);
+                // Limit to last 10 activities after sorting
+                const recentActivities = activities.slice(0, 10);
+                renderRecentActivities(recentActivities);
             });
         }
 
@@ -213,15 +215,17 @@
         // Function to manage the size of admin logs in Firebase
         async function manageAdminLogsSize(maxLogs = 10) {
             try {
-                const snapshot = await get(query(adminLogsRef, orderByChild('timestamp')));
+                // Fetch all logs without orderByChild to avoid index error
+                const snapshot = await get(adminLogsRef); 
                 const logs = [];
                 snapshot.forEach(childSnapshot => {
                     logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
                 });
 
+                // Sort logs by timestamp in JavaScript
+                logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
                 if (logs.length > maxLogs) {
-                    // Sort by timestamp ascending (oldest first)
-                    logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
                     const logsToDelete = logs.slice(0, logs.length - maxLogs);
 
                     for (const log of logsToDelete) {
@@ -233,9 +237,6 @@
                 console.error("Error managing admin logs size:", error);
             }
         }
-
-        // The problematic 'window.setWithLog' override has been removed as it's not needed here
-        // and was causing the 'set is not defined' error in this module context.
 
         // Function to handle logout (will just redirect as no Firebase auth session)
         async function handleLogout() {
@@ -261,6 +262,7 @@
             const currentPath = window.location.pathname.split('/').pop();
             navItems.forEach(item => {
                 // Change 'admin_hub.html' to 'admin.html' for the active check
+                // Also ensure the 'orders' link points to 'requestsadmin.html'
                 if (item.getAttribute('href') === 'admin.html' && currentPath === 'admin_hub.html') {
                     item.classList.add('active');
                 } else if (item.getAttribute('href') === currentPath) {
@@ -274,7 +276,6 @@
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
             // Periodically manage log size (e.g., every 30 seconds)
-            // In a real application, this might be triggered by a Cloud Function on write.
             setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
         });
     </script>
@@ -837,7 +838,7 @@
                 <a href="admin.html" class="nav-item active">
                     <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
                 </a>
-                <a href="orders.html" class="nav-item">
+                <a href="requestsadmin.html" class="nav-item">
                     <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
                 </a>
                 <a href="products.html" class="nav-item">
@@ -868,7 +869,7 @@
             </div>
 
             <div class="dashboard-widgets-grid">
-                <a href="orders.html" class="widget-card">
+                <a href="requestsadmin.html" class="widget-card">
                     <div class="widget-icon primary-bg"><i class="fas fa-shopping-bag"></i></div>
                     <div class="widget-details">
                         <div class="widget-value" id="ordersCount">0</div>
