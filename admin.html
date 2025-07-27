@@ -72,8 +72,14 @@
                 const snapshot = await get(generalSettingsRef);
                 const settings = snapshot.val() || {};
                 window.adminData.generalSettings = settings;
-                document.getElementById('storeName').textContent = settings.storeName || 'لوحة تحكم المتجر';
-                document.getElementById('storeLogo').src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                const storeNameElement = document.getElementById('storeName');
+                if (storeNameElement) {
+                    storeNameElement.textContent = settings.storeName || 'لوحة تحكم المتجر';
+                }
+                const storeLogoElement = document.getElementById('storeLogo');
+                if (storeLogoElement) {
+                    storeLogoElement.src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                }
             } catch (error) {
                 console.error("Error loading general settings:", error);
             }
@@ -84,13 +90,19 @@
             // Orders count
             onValue(ordersRef, (snapshot) => {
                 window.adminData.ordersCount = snapshot.size; // Number of children
-                document.getElementById('ordersCount').textContent = window.adminData.ordersCount;
+                const ordersCountElement = document.getElementById('ordersCount');
+                if (ordersCountElement) {
+                    ordersCountElement.textContent = window.adminData.ordersCount;
+                }
             });
 
             // Products count
             onValue(productsRef, (snapshot) => {
                 window.adminData.productsCount = snapshot.size;
-                document.getElementById('productsCount').textContent = window.adminData.productsCount;
+                const productsCountElement = document.getElementById('productsCount');
+                if (productsCountElement) {
+                    productsCountElement.textContent = window.adminData.productsCount;
+                }
             });
 
             // Users count (excluding anonymous if desired)
@@ -103,7 +115,10 @@
                     }
                 });
                 window.adminData.usersCount = count;
-                document.getElementById('usersCount').textContent = window.adminData.usersCount;
+                const usersCountElement = document.getElementById('usersCount');
+                if (usersCountElement) {
+                    usersCountElement.textContent = window.adminData.usersCount;
+                }
             });
 
             showNotification('تم تحديث بيانات لوحة التحكم.', 'info');
@@ -172,6 +187,10 @@
         // Function to render recent activities
         function renderRecentActivities(activities) {
             const activityListContainer = document.getElementById('activityList');
+            if (!activityListContainer) { // Add null check here
+                console.error("Error: 'activityList' element not found.");
+                return;
+            }
             activityListContainer.innerHTML = ''; // Clear previous activities
 
             if (activities.length === 0) {
@@ -614,7 +633,7 @@
         /* Notification Styles */
         .notification {
             position: fixed;
-            top: 20px; /* Adjusted top for notification */
+            top: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
@@ -643,7 +662,7 @@
         /* Responsive adjustments */
         @media (max-width: 992px) {
             .admin-sidebar {
-                width: 200px; /* Smaller sidebar on tablets */
+                width: 200px;
                 padding: 1rem 0;
             }
             .sidebar-header {
@@ -846,6 +865,9 @@
                 </a>
                 <a href="users.html" class="nav-item">
                     <i class="fas fa-users"></i> <span>المستخدمون</span>
+                </a>
+                <a href="categories_admin.html" class="nav-item">
+                    <i class="fas fa-list"></i> <span>الأقسام</span>
                 </a>
                 <a href="settings.html" class="nav-item">
                     <i class="fas fa-cogs"></i> <span>الإعدادات</span>
