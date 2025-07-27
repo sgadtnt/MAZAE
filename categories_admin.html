@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - الأقسام</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app); 
+        const db = getDatabase(app);
+
+        // Realtime Database references
+        const categoriesRef = dbRef(db, "categories");
+        const generalSettingsRef = dbRef(db, "settings");
+        const adminLogsRef = dbRef(db, "adminLogs");
+
+        // Global data storage for frontend
+        window.adminData = {
+            categories: [],
+            generalSettings: {},
+            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
+            authReady: true // Always ready as no auth is required
+        };
+
+        let editingCategoryId = null; // To store the ID of the category being edited
+
+        // Function to show notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            void notification.offsetWidth;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Function to load general settings (for sidebar header)
+        async function loadGeneralSettings() {
+            try {
+                const snapshot = await get(generalSettingsRef);
+                const settings = snapshot.val() || {};
+                window.adminData.generalSettings = settings;
+                const storeNameElement = document.getElementById('storeName');
+                if (storeNameElement) {
+                    storeNameElement.textContent = settings.storeName || 'لوحة تحكم المتجر';
+                }
+                const storeLogoElement = document.getElementById('storeLogo');
+                if (storeLogoElement) {
+                    storeLogoElement.src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                }
+            } catch (error) {
+                console.error("Error loading general settings:", error);
+            }
+        }
+
+        // Function to load categories from Firebase
+        function loadCategories() {
+            onValue(categoriesRef, (snapshot) => {
+                const categories = [];
+                snapshot.forEach((childSnapshot) => {
+                    categories.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                });
+                window.adminData.categories = categories;
+                renderCategoriesTable(categories);
+                showNotification('تم تحديث قائمة الأقسام.', 'info');
+            });
+        }
+
+        // Function to render categories table
+        function renderCategoriesTable(categoriesToRender) {
+            const categoriesTableBody = document.getElementById('categoriesTableBody');
+            categoriesTableBody.innerHTML = ''; // Clear previous rows
+
+            if (categoriesToRender.length === 0) {
+                categoriesTableBody.innerHTML = `<tr><td colspan="3" class="no-content-message">لا توجد أقسام لعرضها.</td></tr>`;
+                return;
+            }
+
+            categoriesToRender.forEach(category => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${category.id}</td>
+                    <td>${category.name}</td>
+                    <td>
+                        <button class="btn btn-info edit-category-btn" data-category-id="${category.id}" data-category-name="${category.name}">
+                            <i class="fas fa-edit"></i> تعديل
+                        </button>
+                        <button class="btn btn-danger delete-category-btn" data-category-id="${category.id}" data-category-name="${category.name}">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </td>
+                `;
+                categoriesTableBody.appendChild(row);
+            });
+
+            // Add event listeners for edit buttons
+            document.querySelectorAll('.edit-category-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const categoryId = event.target.dataset.categoryId || event.target.closest('[data-category-id]')?.dataset.categoryId;
+                    const categoryName = event.target.dataset.categoryName || event.target.closest('[data-category-name]')?.dataset.categoryName;
+                    if (categoryId && categoryName) {
+                        openEditCategoryModal(categoryId, categoryName);
+                    }
+                });
+            });
+
+            // Add event listeners for delete buttons
+            document.querySelectorAll('.delete-category-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const categoryId = event.target.dataset.categoryId || event.target.closest('[data-category-id]')?.dataset.categoryId;
+                    const categoryName = event.target.dataset.categoryName || event.target.closest('[data-category-name]')?.dataset.categoryName;
+                    if (categoryId) {
+                        deleteCategory(categoryId, categoryName);
+                    }
+                });
+            });
+        }
+
+        // Function to add a new category
+        async function addCategory() {
+            const categoryNameInput = document.getElementById('newCategoryName');
+            const categoryName = categoryNameInput.value.trim();
+
+            if (!categoryName) {
+                showNotification('الرجاء إدخال اسم القسم.', 'error');
+                return;
+            }
+
+            // Check if category already exists
+            const categoryExists = window.adminData.categories.some(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
+            if (categoryExists) {
+                showNotification('هذا القسم موجود بالفعل.', 'warning');
+                return;
+            }
+
+            showNotification('جاري إضافة القسم...', 'info');
+
+            try {
+                const newCategoryRef = push(categoriesRef); // Generates a unique ID
+                await set(newCategoryRef, { name: categoryName, timestamp: Date.now() });
+                showNotification('تمت إضافة القسم بنجاح!', 'success');
+                categoryNameInput.value = ''; // Clear input
+
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'ADD_CATEGORY',
+                    adminId: window.adminData.currentUser.uid,
+                    categoryName: categoryName,
+                    categoryId: newCategoryRef.key,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10); // Ensure logs are managed
+            } catch (error) {
+                console.error("Error adding category:", error);
+                showNotification('حدث خطأ أثناء إضافة القسم.', 'error');
+            }
+        }
+
+        // Function to open edit category modal
+        function openEditCategoryModal(id, name) {
+            const modal = document.getElementById('editCategoryModal');
+            document.getElementById('editCategoryId').textContent = id;
+            document.getElementById('editCategoryNameInput').value = name;
+            editingCategoryId = id; // Set current editing category ID
+            modal.style.display = 'block';
+        }
+
+        // Function to close edit category modal
+        function closeEditCategoryModal() {
+            document.getElementById('editCategoryModal').style.display = 'none';
+            editingCategoryId = null;
+        }
+
+        // Function to update category
+        async function updateCategory() {
+            if (!editingCategoryId) {
+                showNotification('خطأ: لا يوجد قسم محدد للتعديل.', 'error');
+                return;
+            }
+
+            const newCategoryName = document.getElementById('editCategoryNameInput').value.trim();
+            const oldCategory = window.adminData.categories.find(cat => cat.id === editingCategoryId);
+            const oldCategoryName = oldCategory ? oldCategory.name : 'غير معروف';
+
+            if (!newCategoryName) {
+                showNotification('الرجاء إدخال اسم القسم الجديد.', 'error');
+                return;
+            }
+
+            if (oldCategoryName.toLowerCase() === newCategoryName.toLowerCase()) {
+                showNotification('لم يتم تغيير اسم القسم.', 'info');
+                closeEditCategoryModal();
+                return;
+            }
+
+            // Check if new category name already exists for another category
+            const categoryExists = window.adminData.categories.some(cat => 
+                cat.id !== editingCategoryId && cat.name.toLowerCase() === newCategoryName.toLowerCase()
+            );
+            if (categoryExists) {
+                showNotification('هذا القسم موجود بالفعل.', 'warning');
+                return;
+            }
+
+            showNotification('جاري تحديث القسم...', 'info');
+
+            try {
+                await update(dbRef(db, `categories/${editingCategoryId}`), { name: newCategoryName });
+                showNotification('تم تحديث القسم بنجاح!', 'success');
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_CATEGORY',
+                    adminId: window.adminData.currentUser.uid,
+                    categoryId: editingCategoryId,
+                    oldCategoryName: oldCategoryName,
+                    newCategoryName: newCategoryName,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10); // Ensure logs are managed
+                closeEditCategoryModal();
+            } catch (error) {
+                console.error("Error updating category:", error);
+                showNotification('حدث خطأ أثناء تحديث القسم.', 'error');
+            }
+        }
+
+        // Function to delete category
+        async function deleteCategory(categoryId, categoryName) {
+            if (!confirm(`هل أنت متأكد أنك تريد حذف القسم "${categoryName}"؟ هذا الإجراء لا يمكن التراجع عنه وسيحذف جميع المنتجات المرتبطة بهذا القسم!`)) {
+                return;
+            }
+
+            showNotification('جاري حذف القسم...', 'info');
+
+            try {
+                await remove(dbRef(db, `categories/${categoryId}`));
+                showNotification('تم حذف القسم بنجاح!', 'success');
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'DELETE_CATEGORY',
+                    adminId: window.adminData.currentUser.uid,
+                    categoryId: categoryId,
+                    deletedCategoryName: categoryName,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10); // Ensure logs are managed
+            } catch (error) {
+                console.error("Error deleting category:", error);
+                showNotification('حدث خطأ أثناء حذف القسم.', 'error');
+            }
+        }
+
+        // Function to manage the size of admin logs in Firebase
+        async function manageAdminLogsSize(maxLogs = 10) {
+            try {
+                // Fetch all logs without orderByChild to avoid index error
+                const snapshot = await get(adminLogsRef); 
+                const logs = [];
+                snapshot.forEach(childSnapshot => {
+                    logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
+                });
+
+                // Sort logs by timestamp in JavaScript
+                logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+                if (logs.length > maxLogs) {
+                    const logsToDelete = logs.slice(0, logs.length - maxLogs);
+
+                    for (const log of logsToDelete) {
+                        await remove(dbRef(db, `adminLogs/${log.id}`));
+                        console.log(`Removed old log: ${log.id}`);
+                    }
+                }
+            } catch (error) {
+                console.error("Error managing admin logs size:", error);
+            }
+        }
+
+        // Function to handle logout (will just redirect as no Firebase auth session)
+        async function handleLogout() {
+            try {
+                if (auth.currentUser) {
+                    await signOut(auth);
+                }
+                showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
+                window.location.replace(window.location.origin + '/admin_login.html'); 
+            } catch (error) {
+                console.error("Error during logout (no active session expected):", error);
+                showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGeneralSettings(); 
+            loadCategories();
+
+            // Add event listeners for category form
+            document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
+
+            // Add event listeners for modal buttons
+            document.getElementById('closeEditCategoryModalBtn').addEventListener('click', closeEditCategoryModal);
+            document.getElementById('updateCategoryBtn').addEventListener('click', updateCategory);
+
+            // Set active navigation link in sidebar
+            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Add logout event listener to the sidebar button
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            // Periodically manage log size (e.g., every 30 seconds)
+            setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
+        });
+    </script>
+    <style>
+        :root {
+            /* Main Colors - Adjusted for Admin Panel */
+            --color-primary-dark-blue: #1A237E; /* Primary */
+            --color-secondary-gold: #FFD700; /* Secondary / Accent */
+            --color-admin-bg: #F0F2F5; /* Lighter, modern background */
+            --color-admin-card-bg: #FFFFFF; /* White cards */
+            --color-admin-text: #343A40; /* Darker text for readability */
+            --color-admin-border: #E0E0E0; /* Light border */
+
+            /* Mapped to general variables for consistency */
+            --primary: var(--color-primary-dark-blue);
+            --secondary: var(--color-secondary-gold);
+            --accent: var(--color-secondary-gold);
+            --light: var(--color-admin-bg);
+            --dark: var(--color-admin-text);
+            --success: #28A745; /* Bootstrap green */
+            --warning: #FFC107; /* Bootstrap yellow */
+            --error: #DC3545; /* Bootstrap red */
+            --info: #17A2B8; /* Bootstrap info blue */
+            --border: #DEE2E6; /* Slightly darker border for better contrast */
+            --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Lighter, smaller shadow */
+            --radius: 0.6rem; /* Slightly larger rounded corners for modern feel */
+            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
+
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px; /* Base font size */
+            direction: rtl;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .admin-dashboard-container {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        /* Admin Sidebar */
+        .admin-sidebar {
+            width: 250px; /* Fixed width for sidebar */
+            background-color: var(--primary); /* Dark blue background */
+            color: white;
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 0;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            position: sticky; /* Make sidebar sticky */
+            top: 0;
+            height: 100vh; /* Full viewport height */
+            overflow-y: auto; /* Enable scrolling for long content */
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-header .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-header .store-logo {
+            width: 80px; /* Larger logo */
+            height: auto;
+            object-fit: contain;
+            border-radius: var(--radius);
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+        }
+
+        .sidebar-header .store-name {
+            font-size: 1.4rem; /* Larger font size */
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 1rem 0;
+        }
+
+        .sidebar-nav .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            border-right: 4px solid transparent; /* For active indicator */
+        }
+
+        .sidebar-nav .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .sidebar-nav .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--accent);
+            border-right-color: var(--accent); /* Active indicator color */
+        }
+
+        .sidebar-nav .nav-item i {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-footer .logout-btn {
+            background-color: var(--error);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-footer .logout-btn:hover {
+            background-color: #C82333;
+            transform: translateY(-2px);
+        }
+
+        /* Main Content Area */
+        .admin-main-content {
+            flex-grow: 1;
+            padding: 2rem; /* Increased padding */
+            max-width: calc(100% - 250px); /* Adjust max-width based on sidebar */
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem; /* Increased gap between sections */
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+
+        .section-header h2 {
+            font-size: 2rem; /* Larger heading */
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            font-size: 1rem; /* Larger subtitle */
+            color: #6C757D;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px; /* Wider underline */
+            height: 4px; /* Thicker underline */
+            background-color: var(--secondary);
+            border-radius: 2px;
+        }
+
+        /* Category Management Section */
+        .category-management-section {
+            background-color: var(--color-admin-card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .category-management-section h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .add-category-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .add-category-form input[type="text"] {
+            flex-grow: 1;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            color: var(--dark);
+            background-color: #FDFDFD;
+            transition: var(--transition);
+            max-width: 400px;
+        }
+
+        .add-category-form input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+            background-color: white;
+        }
+
+        .add-category-form .btn-primary {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* Categories Table */
+        .categories-table-container {
+            overflow-x: auto;
+        }
+
+        .categories-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .categories-table th,
+        .categories-table td {
+            padding: 0.8rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .categories-table th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .categories-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .categories-table tbody tr:hover {
+            background-color: #F0F0F0;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-right: 0.5rem; /* Small margin for buttons in table */
+        }
+
+        .btn-info { background-color: var(--info); }
+        .btn-danger { background-color: var(--error); }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            padding-top: 80px;
+        }
+
+        .modal-content {
+            background-color: var(--color-admin-card-bg);
+            margin: 5% auto;
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .close-button {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .close-button:hover,
+        .close-button:focus {
+            color: var(--error);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-header {
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-body .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .modal-body .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .modal-body .form-group input[type="text"] {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            color: var(--dark);
+            background-color: #FDFDFD;
+            transition: var(--transition);
+        }
+
+        .modal-body .form-group input[type="text"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+            background-color: white;
+        }
+
+        .modal-footer {
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .modal-footer button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            margin: 0 0.5rem;
+        }
+
+        .modal-footer .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+        }
+        .modal-footer .btn-primary:hover {
+            background-color: #151B6B;
+        }
+        .modal-footer .btn-secondary {
+            background-color: #6C757D;
+            color: white;
+            border: none;
+        }
+        .modal-footer .btn-secondary:hover {
+            background-color: #5A6268;
+        }
+
+        .no-content-message {
+            text-align: center;
+            color: #6C757D;
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Admin Footer (integrated at the bottom of the page) */
+        .admin-footer {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.8rem 1rem;
+            text-align: center;
+            font-size: 0.8rem;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            margin-top: auto; /* Pushes footer to the bottom */
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            z-index: 2000;
+            font-weight: bold;
+            font-size: 0.8rem;
+            min-width: 180px;
+            text-align: center;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.info { background-color: var(--info); }
+        .notification.warning { background-color: var(--warning); }
+        .notification.error { background-color: var(--error); }
+
+        /* Responsive adjustments */
+        @media (max-width: 992px) {
+            .admin-sidebar {
+                width: 200px;
+                padding: 1rem 0;
+            }
+            .sidebar-header {
+                padding: 0 1rem 1rem;
+            }
+            .sidebar-header .store-logo {
+                width: 70px;
+            }
+            .sidebar-header .store-name {
+                font-size: 1.2rem;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.7rem 1rem;
+                font-size: 0.9rem;
+            }
+            .sidebar-nav .nav-item i {
+                font-size: 1.1rem;
+            }
+            .sidebar-footer {
+                padding: 1rem;
+            }
+            .sidebar-footer .logout-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .admin-main-content {
+                padding: 1.5rem;
+                max-width: calc(100% - 200px);
+            }
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+            .section-header p {
+                font-size: 0.9rem;
+            }
+            .add-category-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .add-category-form input[type="text"] {
+                max-width: 100%;
+            }
+            .categories-table th, .categories-table td {
+                padding: 0.6rem;
+                font-size: 0.8rem;
+            }
+            .btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.75rem;
+                margin-right: 0.3rem;
+            }
+            .modal-content {
+                max-width: 90%;
+            }
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+            .modal-body .form-group input {
+                font-size: 0.85rem;
+            }
+            .modal-footer button {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-dashboard-container {
+                flex-direction: column;
+            }
+            .admin-sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                padding: 1rem 0;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .sidebar-header {
+                width: 100%;
+                padding: 0 1rem 0.5rem;
+                border-bottom: none;
+                text-align: center;
+            }
+            .sidebar-header .logo-container {
+                flex-direction: row;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            .sidebar-header .store-logo {
+                width: 50px;
+            }
+            .sidebar-header .store-name {
+                font-size: 1.1rem;
+            }
+            .sidebar-nav {
+                width: 100%;
+                padding: 0.5rem 0;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-top: 0.5rem;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                border-right: none;
+                border-bottom: 2px solid transparent;
+            }
+            .sidebar-nav .nav-item.active {
+                border-bottom-color: var(--accent);
+                border-right-color: transparent;
+            }
+            .sidebar-nav .nav-item i {
+                font-size: 1rem;
+            }
+            .sidebar-footer {
+                width: 100%;
+                padding: 0.5rem 1rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                text-align: center;
+            }
+            .sidebar-footer .logout-btn {
+                width: 100%;
+            }
+            .admin-main-content {
+                padding: 1rem;
+                max-width: 100%;
+            }
+            .section-header h2 {
+                font-size: 1.6rem;
+            }
+            .section-header p {
+                font-size: 0.8rem;
+            }
+            .add-category-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .add-category-form input[type="text"] {
+                max-width: 100%;
+            }
+            .categories-table th, .categories-table td {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+            .btn {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.7rem;
+                margin-right: 0.2rem;
+            }
+            .modal-content {
+                margin: 10% auto;
+                width: 95%;
+                padding: 1rem;
+            }
+            .modal-header h2 {
+                font-size: 1.3rem;
+            }
+            .modal-body .form-group input {
+                font-size: 0.8rem;
+            }
+            .modal-footer button {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
+            .notification {
+                top: 10px;
+                font-size: 0.7rem;
+                padding: 6px 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <a href="admin.html" class="logo-container">
+                    <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                    <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
+                </a>
+                <a href="requestsadmin.html" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
+                </a>
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-box"></i> <span>المنتجات</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i> <span>المستخدمون</span>
+                </a>
+                <a href="categories_admin.html" class="nav-item active">
+                    <i class="fas fa-list"></i> <span>الأقسام</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cogs"></i> <span>الإعدادات</span>
+                </a>
+                <a href="homepage_settings.html" class="nav-item">
+                    <i class="fas fa-home"></i> <span>إعدادات الصفحة الرئيسية</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main-content">
+            <section class="category-management-section">
+                <div class="section-header">
+                    <h2>إدارة الأقسام</h2>
+                    <p>إضافة، تعديل، وحذف أقسام المنتجات.</p>
+                </div>
+
+                <div class="add-category-form">
+                    <input type="text" id="newCategoryName" placeholder="اسم القسم الجديد" required>
+                    <button type="button" class="btn btn-primary" id="addCategoryBtn">
+                        <i class="fas fa-plus"></i> إضافة قسم
+                    </button>
+                </div>
+
+                <div class="categories-table-container">
+                    <table class="categories-table">
+                        <thead>
+                            <tr>
+                                <th>معرف القسم</th>
+                                <th>اسم القسم</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody">
+                            <!-- Categories will be loaded here by JavaScript -->
+                            <tr><td colspan="3" class="no-content-message">جاري تحميل الأقسام...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeEditCategoryModalBtn">&times;</span>
+            <div class="modal-header">
+                <h2>تعديل القسم</h2>
+                <p>معرف القسم: <span id="editCategoryId"></span></p>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editCategoryNameInput">اسم القسم الجديد:</label>
+                    <input type="text" id="editCategoryNameInput" required>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="updateCategoryBtn">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancelEditCategoryBtn">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Footer -->
+    <footer class="admin-footer">
+        <p>&copy; 2025 لوحة تحكم المتجر. جميع الحقوق محفوظة.</p>
+    </footer>
+    
+</body>
+</html>
