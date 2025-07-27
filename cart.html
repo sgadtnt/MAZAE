@@ -160,8 +160,8 @@
                 
                 cartContainer.innerHTML += `
                     <div class="cart-summary">
-                        <h3>إجمالي السلة: <span class="total-price text-pulse">${totalPrice.toLocaleString('ar-EG')} د.ع</span></h3>
-                        <button class="checkout-btn glowing-border-btn">إتمام الشراء <i class="fas fa-arrow-left"></i></button>
+                        <h3>إجمالي السلة: <span class="total-price">${totalPrice.toLocaleString('ar-EG')} د.ع</span></h3>
+                        <button class="checkout-btn">إتمام الشراء <i class="fas fa-arrow-left"></i></button>
                     </div>
                 `;
                 
@@ -554,8 +554,6 @@
             left: 0;
             right: 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            background-size: 400% 400%; /* حجم أكبر للسماح بالحركة */
-            animation: gradientAnimation 15s ease infinite; /* تطبيق الحركة */
             color: white;
             display: flex;
             justify-content: space-between; 
@@ -564,13 +562,6 @@
             height: 80px; /* ارتفاع أكبر */
             box-shadow: var(--shadow);
             z-index: 1000;
-        }
-
-        /* Animated Gradient Keyframes */
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
         }
         
         .top-left {
@@ -636,14 +627,6 @@
             background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
         }
         
-        /* Enhanced hover for icons */
-        .icon-btn i {
-            transition: transform 0.3s ease-out;
-        }
-        .icon-btn i:hover {
-            transform: rotate(5deg) scale(1.1); /* دوران وتكبير */
-        }
-
         .icon-label {
             font-size: 13px; /* حجم خط أكبر قليلاً */
             margin-top: 6px;
@@ -656,8 +639,6 @@
             left: 0;
             right: 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            background-size: 400% 400%; /* حجم أكبر للسماح بالحركة */
-            animation: gradientAnimation 15s ease infinite reverse; /* تطبيق الحركة بشكل عكسي */
             color: white;
             display: flex;
             justify-content: space-around;
@@ -820,37 +801,12 @@
             justify-content: center;
             transition: var(--transition);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: relative; /* For glowing border */
-            overflow: hidden; /* For glowing border */
-            z-index: 0;
         }
 
         .quantity-btn:hover {
             background-color: #3a7bc8;
             transform: scale(1.1);
         }
-
-        /* Glowing border for quantity buttons */
-        .quantity-btn::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 90deg, var(--primary) 90deg, var(--secondary) 180deg, var(--accent) 270deg, transparent 360deg);
-            animation: rotateBorder 4s linear infinite;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.3s ease-out;
-        }
-        .quantity-btn:hover::before {
-            opacity: 1;
-        }
-        @keyframes rotateBorder {
-            to { transform: rotate(360deg); }
-        }
-
 
         .quantity-display {
             font-weight: bold;
@@ -927,16 +883,7 @@
         .cart-summary .total-price {
             color: var(--primary);
             font-weight: 800;
-            /* Text pulse effect */
-            animation: textPulse 2s infinite alternate; 
         }
-
-        /* Text pulse animation */
-        @keyframes textPulse {
-            0% { text-shadow: 0 0 5px rgba(74, 144, 226, 0.5); } /* Using var(--primary) converted to rgba */
-            100% { text-shadow: 0 0 15px rgba(74, 144, 226, 1); }
-        }
-
 
         .checkout-btn {
             background-color: var(--secondary);
@@ -952,9 +899,6 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            position: relative; /* For glowing border */
-            overflow: hidden; /* For glowing border */
-            z-index: 0;
         }
 
         .checkout-btn:hover {
@@ -962,25 +906,6 @@
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
         }
-
-        /* Glowing border for checkout button */
-        .checkout-btn::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 90deg, var(--primary) 90deg, var(--secondary) 180deg, var(--accent) 270deg, transparent 360deg);
-            animation: rotateBorder 4s linear infinite;
-            z-index: -1;
-            opacity: 0;
-            transition: opacity 0.3s ease-out;
-        }
-        .checkout-btn:hover::before {
-            opacity: 1;
-        }
-
 
         .empty-cart-message {
             padding: 50px;
