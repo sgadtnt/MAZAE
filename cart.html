@@ -41,6 +41,7 @@
         const settingsRef = dbRef(db, "settings");
         const homepageSettingsRef = dbRef(db, "homepageSettings"); 
         const productsRef = dbRef(db, "products"); // مرجع للمنتجات
+        const deliveryPricesRef = dbRef(db, "deliveryPrices"); // مرجع لأسعار التوصيل
 
         // Global data storage for frontend
         window.frontendData = {
@@ -48,6 +49,9 @@
             homepageSettings: {},
             cart: [], // This will hold cart product data
             allProducts: [], // To store all products for stock checking
+            deliveryPrices: {}, // To store delivery prices by city
+            selectedCity: null,
+            deliveryCost: 0,
             currentUser: null,
             authReady: false
         };
@@ -106,6 +110,12 @@
         function getCartFromLocalStorage() {
             try {
                 const cart = localStorage.getItem('guestCart');
+                const selectedCity = localStorage.getItem('selectedCity');
+                const deliveryCost = localStorage.getItem('deliveryCost');
+
+                if (selectedCity) window.frontendData.selectedCity = selectedCity;
+                if (deliveryCost) window.frontendData.deliveryCost = parseFloat(deliveryCost);
+
                 return cart ? JSON.parse(cart) : [];
             } catch (e) {
                 console.error("Error parsing cart from localStorage:", e);
@@ -117,9 +127,78 @@
         function saveCartToLocalStorage(cart) {
             try {
                 localStorage.setItem('guestCart', JSON.stringify(cart));
+                localStorage.setItem('selectedCity', window.frontendData.selectedCity || '');
+                localStorage.setItem('deliveryCost', window.frontendData.deliveryCost || 0);
             } catch (e) {
                 console.error("Error saving cart to localStorage:", e);
                 showNotification('لم يتم حفظ السلة محلياً بسبب خطأ.', 'error');
+            }
+        }
+
+        // وظيفة لحساب إجمالي السلة (المجموع الفرعي)
+        function calculateSubtotal(cartData) {
+            return cartData.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
+        }
+
+        // وظيفة لحساب الإجمالي الكلي (المجموع الفرعي + التوصيل)
+        function calculateTotalPrice(subtotal) {
+            return subtotal + window.frontendData.deliveryCost;
+        }
+
+        // وظيفة لملء القائمة المنسدلة بالمدن
+        function populateCitySelect() {
+            const citySelect = document.getElementById('citySelect');
+            if (!citySelect) return; // Exit if element not found
+
+            citySelect.innerHTML = '<option value="">اختر المدينة</option>'; // Default option
+
+            const cities = Object.keys(window.frontendData.deliveryPrices);
+            cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+
+            // Set selected city if already chosen
+            if (window.frontendData.selectedCity) {
+                citySelect.value = window.frontendData.selectedCity;
+            } else {
+                // If no city selected, try to select the first one if available
+                if (cities.length > 0) {
+                    window.frontendData.selectedCity = cities[0];
+                    window.frontendData.deliveryCost = window.frontendData.deliveryPrices[cities[0]].price || 0;
+                    citySelect.value = cities[0];
+                }
+            }
+            updateDeliveryInfo();
+        }
+
+        // وظيفة لتحديث معلومات التوصيل والإجمالي
+        function updateDeliveryInfo() {
+            const citySelect = document.getElementById('citySelect');
+            const deliveryPriceDisplay = document.getElementById('deliveryPriceDisplay');
+            const subtotal = calculateSubtotal(window.frontendData.cart);
+            const totalDisplay = document.querySelector('.cart-summary .total-price');
+
+            if (citySelect && deliveryPriceDisplay && totalDisplay) {
+                const selectedCityName = citySelect.value;
+                let currentDeliveryCost = 0;
+
+                if (selectedCityName && window.frontendData.deliveryPrices[selectedCityName]) {
+                    currentDeliveryCost = window.frontendData.deliveryPrices[selectedCityName].price || 0;
+                }
+                
+                window.frontendData.selectedCity = selectedCityName;
+                window.frontendData.deliveryCost = currentDeliveryCost;
+
+                deliveryPriceDisplay.textContent = `${currentDeliveryCost.toLocaleString('ar-EG')} د.ع`;
+                totalDisplay.textContent = `${calculateTotalPrice(subtotal).toLocaleString('ar-EG')} د.ع`;
+                
+                // Save to local storage if guest user
+                if (!window.frontendData.currentUser || window.frontendData.currentUser.isAnonymous) {
+                    saveCartToLocalStorage(window.frontendData.cart);
+                }
             }
         }
 
@@ -129,11 +208,10 @@
             cartContainer.innerHTML = ''; // Clear existing content
 
             if (cartData && cartData.length > 0) {
-                let totalPrice = 0;
+                let subtotal = calculateSubtotal(cartData);
                 
                 cartData.forEach((item, index) => {
                     const itemPrice = (item.price || 0) * (item.quantity || 1);
-                    totalPrice += itemPrice;
                     
                     // Add animation delay for staggered appearance
                     const animationDelay = `${index * 0.1}s`;
@@ -160,8 +238,25 @@
                 
                 cartContainer.innerHTML += `
                     <div class="cart-summary">
-                        <h3>إجمالي السلة: <span class="total-price">${totalPrice.toLocaleString('ar-EG')} د.ع</span></h3>
-                        <button class="checkout-btn">إتمام الشراء <i class="fas fa-arrow-left"></i></button>
+                        <div class="summary-line">
+                            <h3>المجموع الفرعي:</h3>
+                            <span class="subtotal-price">${subtotal.toLocaleString('ar-EG')} د.ع</span>
+                        </div>
+                        <div class="shipping-section">
+                            <h3>الشحن:</h3>
+                            <div class="city-selection">
+                                <label for="citySelect">المدينة:</label>
+                                <select id="citySelect" class="city-dropdown"></select>
+                            </div>
+                            <div class="delivery-cost">
+                                <p>سعر التوصيل: <span id="deliveryPriceDisplay">0 د.ع</span></p>
+                            </div>
+                        </div>
+                        <div class="summary-line total-line">
+                            <h3>الإجمالي الكلي:</h3>
+                            <span class="total-price text-pulse">${calculateTotalPrice(subtotal).toLocaleString('ar-EG')} د.ع</span>
+                        </div>
+                        <button class="checkout-btn glowing-border-btn">إتمام الشراء <i class="fas fa-arrow-left"></i></button>
                     </div>
                 `;
                 
@@ -196,6 +291,11 @@
                     });
                 });
 
+                const citySelectElement = document.getElementById('citySelect');
+                if (citySelectElement) {
+                    citySelectElement.addEventListener('change', updateDeliveryInfo);
+                }
+
                 document.querySelector('.checkout-btn').addEventListener('click', () => {
                     if (!window.frontendData.currentUser || window.frontendData.currentUser.isAnonymous) {
                         showNotification('الرجاء تسجيل الدخول أو إنشاء حساب لإتمام الشراء.', 'info');
@@ -207,6 +307,10 @@
                         // window.location.href = 'checkout.html';
                     }
                 });
+
+                // Populate city select and update delivery info after rendering cart items
+                populateCitySelect();
+                updateDeliveryInfo(); // Initial update
                 
             } else {
                 cartContainer.innerHTML = `
@@ -442,6 +546,13 @@
                     });
                     window.frontendData.allProducts = products;
                 });
+
+                // Load Delivery Prices
+                onValue(deliveryPricesRef, (snapshot) => {
+                    window.frontendData.deliveryPrices = snapshot.val() || {};
+                    populateCitySelect(); // Populate dropdown once prices are loaded
+                    updateDeliveryInfo(); // Update info based on loaded prices
+                });
                 
             } catch (error) {
                 console.error('Error loading data:', error);
@@ -554,6 +665,8 @@
             left: 0;
             right: 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-size: 400% 400%; /* حجم أكبر للسماح بالحركة */
+            animation: gradientAnimation 15s ease infinite; /* تطبيق الحركة */
             color: white;
             display: flex;
             justify-content: space-between; 
@@ -562,6 +675,13 @@
             height: 80px; /* ارتفاع أكبر */
             box-shadow: var(--shadow);
             z-index: 1000;
+        }
+
+        /* Animated Gradient Keyframes */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
         
         .top-left {
@@ -627,6 +747,14 @@
             background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
         }
         
+        /* Enhanced hover for icons */
+        .icon-btn i {
+            transition: transform 0.3s ease-out;
+        }
+        .icon-btn i:hover {
+            transform: rotate(5deg) scale(1.1); /* دوران وتكبير */
+        }
+
         .icon-label {
             font-size: 13px; /* حجم خط أكبر قليلاً */
             margin-top: 6px;
@@ -639,6 +767,8 @@
             left: 0;
             right: 0;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background-size: 400% 400%; /* حجم أكبر للسماح بالحركة */
+            animation: gradientAnimation 15s ease infinite reverse; /* تطبيق الحركة بشكل عكسي */
             color: white;
             display: flex;
             justify-content: space-around;
@@ -801,12 +931,37 @@
             justify-content: center;
             transition: var(--transition);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative; /* For glowing border */
+            overflow: hidden; /* For glowing border */
+            z-index: 0;
         }
 
         .quantity-btn:hover {
             background-color: #3a7bc8;
             transform: scale(1.1);
         }
+
+        /* Glowing border for quantity buttons */
+        .quantity-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 90deg, var(--primary) 90deg, var(--secondary) 180deg, var(--accent) 270deg, transparent 360deg);
+            animation: rotateBorder 4s linear infinite;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+        .quantity-btn:hover::before {
+            opacity: 1;
+        }
+        @keyframes rotateBorder {
+            to { transform: rotate(360deg); }
+        }
+
 
         .quantity-display {
             font-weight: bold;
@@ -872,18 +1027,119 @@
             max-width: 800px;
             margin-left: auto;
             margin-right: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        .cart-summary h3 {
-            font-size: 1.8rem;
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        .summary-line:last-of-type {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .summary-line h3 {
+            font-size: 1.2rem;
             color: var(--dark);
-            margin-bottom: 20px;
+            margin: 0;
+        }
+        .summary-line span {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--dark);
         }
 
-        .cart-summary .total-price {
+        .summary-line.total-line {
+            border-top: 2px solid var(--primary);
+            margin-top: 15px;
+            padding-top: 15px;
+        }
+        .summary-line.total-line h3 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+        }
+        .summary-line.total-line .total-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            animation: textPulse 2s infinite alternate; /* Text pulse effect */
+        }
+
+        /* Text pulse animation */
+        @keyframes textPulse {
+            0% { text-shadow: 0 0 5px rgba(74, 144, 226, 0.5); } /* Using var(--primary) converted to rgba */
+            100% { text-shadow: 0 0 15px rgba(74, 144, 226, 1); }
+        }
+
+        .shipping-section {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px 0;
+            border-bottom: 1px dashed var(--border);
+            border-top: 1px dashed var(--border);
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .shipping-section h3 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+            text-align: right;
+        }
+
+        .city-selection {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+        .city-selection label {
+            font-weight: 600;
+            color: #555;
+        }
+        .city-dropdown {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background-color: white;
+            font-size: 1rem;
+            color: var(--dark);
+            flex-grow: 1;
+            max-width: 200px;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+        .city-dropdown:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        .delivery-cost {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--secondary);
+        }
+        .delivery-cost p {
+            margin: 0;
+        }
+        .delivery-cost span {
             color: var(--primary);
             font-weight: 800;
         }
+
 
         .checkout-btn {
             background-color: var(--secondary);
@@ -899,6 +1155,10 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
+            position: relative; /* For glowing border */
+            overflow: hidden; /* For glowing border */
+            z-index: 0;
+            margin-top: 20px;
         }
 
         .checkout-btn:hover {
@@ -906,6 +1166,25 @@
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
         }
+
+        /* Glowing border for checkout button */
+        .checkout-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg at 50% 50%, transparent 0deg, transparent 90deg, var(--primary) 90deg, var(--secondary) 180deg, var(--accent) 270deg, transparent 360deg);
+            animation: rotateBorder 4s linear infinite;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease-out;
+        }
+        .checkout-btn:hover::before {
+            opacity: 1;
+        }
+
 
         .empty-cart-message {
             padding: 50px;
