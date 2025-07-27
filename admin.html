@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - المركز الرئيسي</title>
+    <title>لوحة التحكم الرئيسية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Firebase SDK imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getDatabase, ref as dbRef, onValue, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         
-        // Your web app's Firebase configuration (replace with your actual config)
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
             authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -29,20 +29,25 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        const auth = getAuth(app); 
         const db = getDatabase(app);
 
         // Realtime Database references
-        const settingsRef = dbRef(db, "settings");
+        const ordersRef = dbRef(db, "orders");
+        const productsRef = dbRef(db, "products");
+        const usersRef = dbRef(db, "users");
+        const generalSettingsRef = dbRef(db, "settings");
 
         // Global data storage for frontend
         window.adminData = {
-            settings: {},
-            currentUser: null,
-            authReady: false
+            ordersCount: 0,
+            productsCount: 0,
+            usersCount: 0,
+            generalSettings: {},
+            authReady: true // Always ready as no auth is required
         };
 
-        // Function to show notifications (reused from client-side)
+        // Function to show notifications
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
@@ -60,71 +65,79 @@
             }, 3000);
         }
 
-        // Function to load settings (for store name/logo in admin header)
-        async function loadSettings() {
-            onValue(settingsRef, (snapshot) => {
-                window.adminData.settings = snapshot.val() || {};
-                document.getElementById('storeName').textContent = window.adminData.settings.storeName || 'لوحة تحكم المتجر';
-                document.getElementById('storeLogo').src = window.adminData.settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
-            }, (error) => {
-                console.error("Error loading settings:", error);
-                showNotification('حدث خطأ في تحميل الإعدادات العامة.', 'error');
-            });
+        // Function to load general settings (for sidebar header)
+        async function loadGeneralSettings() {
+            try {
+                const snapshot = await get(generalSettingsRef);
+                const settings = snapshot.val() || {};
+                window.adminData.generalSettings = settings;
+                document.getElementById('storeName').textContent = settings.storeName || 'لوحة تحكم المتجر';
+                document.getElementById('storeLogo').src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+            } catch (error) {
+                console.error("Error loading general settings:", error);
+            }
         }
 
-        // Function to handle logout
+        // Function to load dashboard data (counts)
+        function loadDashboardData() {
+            // Orders count
+            onValue(ordersRef, (snapshot) => {
+                window.adminData.ordersCount = snapshot.size; // Number of children
+                document.getElementById('ordersCount').textContent = window.adminData.ordersCount;
+            });
+
+            // Products count
+            onValue(productsRef, (snapshot) => {
+                window.adminData.productsCount = snapshot.size;
+                document.getElementById('productsCount').textContent = window.adminData.productsCount;
+            });
+
+            // Users count (excluding anonymous if desired)
+            onValue(usersRef, (snapshot) => {
+                let count = 0;
+                snapshot.forEach((childSnapshot) => {
+                    const userData = childSnapshot.val();
+                    if (!userData.isAnonymous) { // Assuming you mark anonymous users
+                        count++;
+                    }
+                });
+                window.adminData.usersCount = count;
+                document.getElementById('usersCount').textContent = window.adminData.usersCount;
+            });
+
+            showNotification('تم تحديث بيانات لوحة التحكم.', 'info');
+        }
+
+        // Function to handle logout (will just redirect as no Firebase auth session)
         async function handleLogout() {
             try {
-                await signOut(auth);
-                showNotification('تم تسجيل الخروج بنجاح.', 'success');
-                window.location.href = '/'; // Redirect to client-side home page
+                if (auth.currentUser) {
+                    await signOut(auth);
+                }
+                showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
+                window.location.replace(window.location.origin + '/admin_login.html'); 
             } catch (error) {
-                console.error("Error signing out:", error);
+                console.error("Error during logout (no active session expected):", error);
                 showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Check authentication state for admin panel
-            onAuthStateChanged(auth, async (user) => {
-                window.adminData.currentUser = user;
-                window.adminData.authReady = true;
+            loadGeneralSettings(); 
+            loadDashboardData();
 
-                if (!user) {
-                    // If no user, try to sign in with custom token (admin token)
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                            window.adminData.currentUser = auth.currentUser;
-                            console.log("Admin signed in with custom token successfully.");
-                        } catch (error) {
-                            if (error.code === 'auth/custom-token-mismatch') {
-                                console.error("Error signing in with custom token for admin: Token mismatch. Please ensure you have a valid admin token.");
-                                showNotification('خطأ في رمز المسؤول: الرمز غير صالح أو منتهي الصلاحية. سيتم إعادة توجيهك.', 'error');
-                            } else {
-                                console.error("Error signing in with custom token for admin:", error);
-                                showNotification('فشل تسجيل الدخول كمسؤول. يرجى التأكد من صلاحية الرمز. سيتم إعادة توجيهك.', 'error');
-                            }
-                            // Redirect to client-side home page if custom token fails
-                            setTimeout(() => {
-                                window.location.href = '/'; 
-                            }, 2000); // Redirect after 2 seconds
-                        }
-                    } else {
-                        console.warn("No custom token provided for admin. User not authenticated.");
-                        showNotification('يرجى تسجيل الدخول للوصول إلى لوحة التحكم. سيتم إعادة توجيهك.', 'warning');
-                        // Redirect to client-side home page if no token
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 2000); // Redirect after 2 seconds
-                    }
+            // Set active navigation link in sidebar
+            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath || (currentPath === '' && item.getAttribute('href') === 'admin_hub.html')) {
+                    item.classList.add('active');
                 } else {
-                    console.log("Admin user already signed in:", user.uid);
+                    item.classList.remove('active');
                 }
-                loadSettings(); // Load general settings once auth state is determined
             });
 
-            // Add logout event listener
+            // Add logout event listener to the sidebar button
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
         });
     </script>
@@ -133,10 +146,10 @@
             /* Main Colors - Adjusted for Admin Panel */
             --color-primary-dark-blue: #1A237E; /* Primary */
             --color-secondary-gold: #FFD700; /* Secondary / Accent */
-            --color-admin-bg: #F8F9FA; /* Lighter background for admin */
+            --color-admin-bg: #F0F2F5; /* Lighter, modern background */
             --color-admin-card-bg: #FFFFFF; /* White cards */
             --color-admin-text: #343A40; /* Darker text for readability */
-            --color-admin-border: #E9ECEF; /* Light border */
+            --color-admin-border: #E0E0E0; /* Light border */
 
             /* Mapped to general variables for consistency */
             --primary: var(--color-primary-dark-blue);
@@ -147,13 +160,14 @@
             --success: #28A745; /* Bootstrap green */
             --warning: #FFC107; /* Bootstrap yellow */
             --error: #DC3545; /* Bootstrap red */
+            --info: #17A2B8; /* Bootstrap info blue */
             --border: #DEE2E6; /* Slightly darker border for better contrast */
             --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Lighter, smaller shadow */
-            --radius: 0.4rem; /* Slightly smaller rounded corners */
-            --transition: all 0.2s ease-in-out;
+            --radius: 0.6rem; /* Slightly larger rounded corners for modern feel */
+            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
 
             font-family: 'Cairo', sans-serif;
-            font-size: 14px; /* Base font size reduced */
+            font-size: 14px; /* Base font size */
             direction: rtl;
         }
 
@@ -169,108 +183,149 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 60px; /* Space for fixed header */
         }
 
-        /* Admin Header (Top Bar) */
-        .admin-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--primary);
+        .admin-dashboard-container {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        /* Admin Sidebar */
+        .admin-sidebar {
+            width: 250px; /* Fixed width for sidebar */
+            background-color: var(--primary); /* Dark blue background */
             color: white;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 1rem; /* Reduced padding */
-            height: 60px; /* Reduced height */
-            box-shadow: var(--shadow);
+            flex-direction: column;
+            padding: 1.5rem 0;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            position: sticky; /* Make sidebar sticky */
+            top: 0;
+            height: 100vh; /* Full viewport height */
+            overflow-y: auto; /* Enable scrolling for long content */
         }
 
-        .admin-header .logo-container {
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-header .logo-container {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 0.4rem; /* Reduced gap */
+            gap: 0.5rem;
             text-decoration: none;
             color: white;
-            transition: var(--transition);
         }
 
-        .admin-header .logo-container:hover {
-            opacity: 0.9;
-        }
-
-        .admin-header .store-logo {
-            height: 35px; /* Reduced logo size */
-            width: auto;
+        .sidebar-header .store-logo {
+            width: 80px; /* Larger logo */
+            height: auto;
             object-fit: contain;
             border-radius: var(--radius);
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 5px;
         }
 
-        .admin-header .store-name {
-            font-size: 1rem; /* Reduced font size */
-            font-weight: 700;
+        .sidebar-header .store-name {
+            font-size: 1.4rem; /* Larger font size */
+            font-weight: 800;
             color: var(--accent);
         }
 
-        .admin-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem; /* Reduced gap */
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 1rem 0;
         }
 
-        .admin-actions .logout-btn {
+        .sidebar-nav .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            border-right: 4px solid transparent; /* For active indicator */
+        }
+
+        .sidebar-nav .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .sidebar-nav .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--accent);
+            border-right-color: var(--accent); /* Active indicator color */
+        }
+
+        .sidebar-nav .nav-item i {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-footer .logout-btn {
             background-color: var(--error);
             color: white;
             border: none;
-            padding: 0.4rem 0.8rem; /* Reduced padding */
+            padding: 0.6rem 1.2rem;
             border-radius: var(--radius);
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.85rem; /* Reduced font size */
+            font-size: 0.95rem;
             transition: var(--transition);
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 0.4rem; /* Reduced gap */
+            gap: 0.5rem;
         }
 
-        .admin-actions .logout-btn:hover {
+        .sidebar-footer .logout-btn:hover {
             background-color: #C82333;
-            transform: translateY(-1px); /* Reduced transform */
+            transform: translateY(-2px);
         }
 
         /* Main Content Area */
         .admin-main-content {
             flex-grow: 1;
-            padding: 1.5rem; /* Reduced padding */
-            max-width: 900px; /* Adjusted max-width for a simpler hub */
+            padding: 2rem; /* Increased padding */
+            max-width: calc(100% - 250px); /* Adjust max-width based on sidebar */
             width: 100%;
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem; /* Reduced gap */
+            gap: 2rem; /* Increased gap between sections */
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 1.5rem; /* Reduced margin */
+            margin-bottom: 1.5rem;
             position: relative;
-            padding-bottom: 0.75rem; /* Reduced padding */
+            padding-bottom: 0.75rem;
         }
 
         .section-header h2 {
-            font-size: 1.8rem; /* Reduced heading size */
+            font-size: 2rem; /* Larger heading */
             color: var(--primary);
             font-weight: 800;
-            margin-bottom: 0.5rem; /* Reduced margin */
+            margin-bottom: 0.5rem;
         }
 
         .section-header p {
-            font-size: 0.9rem; /* Reduced font size */
+            font-size: 1rem; /* Larger subtitle */
             color: #6C757D;
-            max-width: 500px; /* Reduced max-width */
+            max-width: 600px;
             margin: 0 auto;
         }
 
@@ -280,94 +335,159 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px; /* Reduced width */
-            height: 3px; /* Reduced thickness */
+            width: 80px; /* Wider underline */
+            height: 4px; /* Thicker underline */
             background-color: var(--secondary);
-            border-radius: 1.5px;
+            border-radius: 2px;
         }
 
-        .admin-sections-grid {
+        /* Dashboard Widgets Grid */
+        .dashboard-widgets-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); /* Adjusted for smaller cards */
-            gap: 1rem; /* Reduced gap */
-            justify-content: center;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Larger min-width for widgets */
+            gap: 1.5rem;
+            margin-top: 1.5rem;
         }
 
-        .admin-section-card {
+        .widget-card {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 1.5rem; /* Reduced padding */
-            text-align: center;
-            transition: var(--transition);
+            padding: 1.5rem;
             border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: var(--transition);
+            cursor: pointer;
             text-decoration: none;
             color: inherit;
+        }
+
+        .widget-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+        }
+
+        .widget-icon {
+            width: 60px; /* Larger icon container */
+            height: 60px;
+            border-radius: 50%;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 150px; /* Reduced min-height */
+            font-size: 1.8rem; /* Larger icon */
+            color: white;
+            flex-shrink: 0;
         }
 
-        .admin-section-card:hover {
-            transform: translateY(-4px); /* Reduced lift effect */
-            box-shadow: 0 0.5rem 1.25rem rgba(0, 0, 0, 0.1); /* Reduced shadow on hover */
-            background-color: #F0F2F5;
+        .widget-icon.primary-bg { background-color: var(--primary); }
+        .widget-icon.success-bg { background-color: var(--success); }
+        .widget-icon.info-bg { background-color: var(--info); }
+        .widget-icon.warning-bg { background-color: var(--warning); } /* Example for other colors */
+
+        .widget-details {
+            flex-grow: 1;
+            text-align: right; /* Align text to right in RTL */
         }
 
-        .admin-section-card .icon {
-            font-size: 2.5rem; /* Reduced icon size */
-            color: var(--primary);
-            margin-bottom: 0.8rem; /* Reduced margin */
-            transition: var(--transition);
-        }
-
-        .admin-section-card:hover .icon {
-            color: var(--secondary);
-        }
-
-        .admin-section-card h3 {
-            font-size: 1.3rem; /* Reduced heading size */
+        .widget-value {
+            font-size: 2.5rem; /* Larger value */
+            font-weight: 800;
             color: var(--dark);
-            margin-bottom: 0.4rem; /* Reduced margin */
-            font-weight: 700;
+            line-height: 1; /* Tighter line height */
         }
 
-        .admin-section-card p {
-            font-size: 0.85rem; /* Reduced description font size */
+        .widget-label {
+            font-size: 1.1rem; /* Larger label */
             color: #6C757D;
-            line-height: 1.3;
+            font-weight: 600;
         }
 
-        /* Admin Footer */
+        /* Recent Activity Section (Example) */
+        .recent-activity-section {
+            background-color: var(--color-admin-card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .recent-activity-section h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 0;
+            border-bottom: 1px dashed var(--border);
+        }
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .activity-item p {
+            flex-grow: 1;
+            font-size: 0.95rem;
+            color: var(--dark);
+        }
+
+        .activity-item .activity-time {
+            font-size: 0.8rem;
+            color: #888;
+            flex-shrink: 0;
+        }
+
+        .success-color { color: var(--success); }
+        .info-color { color: var(--info); }
+        .primary-color { color: var(--primary); }
+        .warning-color { color: var(--warning); }
+
+        /* Admin Footer (integrated at the bottom of the page) */
         .admin-footer {
             background-color: var(--primary);
             color: white;
-            padding: 0.8rem 1rem; /* Reduced padding */
+            padding: 0.8rem 1rem;
             text-align: center;
-            font-size: 0.8rem; /* Reduced font size */
+            font-size: 0.8rem;
             box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-            margin-top: auto;
+            margin-top: auto; /* Pushes footer to the bottom */
         }
 
-        /* Notification Styles (reused) */
+        /* Notification Styles */
         .notification {
             position: fixed;
-            top: 70px; /* Adjusted below new header height */
+            top: 20px; /* Adjusted top for notification */
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
             color: white;
-            padding: 10px 15px; /* Reduced padding */
-            border-radius: 6px; /* Slightly smaller radius */
+            padding: 10px 15px;
+            border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             opacity: 0;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
             z-index: 2000;
             font-weight: bold;
-            font-size: 0.8rem; /* Reduced font size */
-            min-width: 180px; /* Reduced min-width */
+            font-size: 0.8rem;
+            min-width: 180px;
             text-align: center;
         }
 
@@ -376,32 +496,144 @@
             opacity: 1;
         }
 
-        .notification.info { background-color: var(--primary); }
+        .notification.info { background-color: var(--info); }
         .notification.warning { background-color: var(--warning); }
         .notification.error { background-color: var(--error); }
 
         /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 55px; /* Adjust for smaller header */
+        @media (max-width: 992px) {
+            .admin-sidebar {
+                width: 200px; /* Smaller sidebar on tablets */
+                padding: 1rem 0;
             }
-            .admin-header {
-                height: 55px;
-                padding: 0.4rem 0.8rem;
+            .sidebar-header {
+                padding: 0 1rem 1rem;
             }
-            .admin-header .store-logo {
-                height: 30px;
+            .sidebar-header .store-logo {
+                width: 70px;
             }
-            .admin-header .store-name {
+            .sidebar-header .store-name {
+                font-size: 1.2rem;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.7rem 1rem;
                 font-size: 0.9rem;
             }
-            .admin-actions .logout-btn {
-                padding: 0.3rem 0.6rem;
+            .sidebar-nav .nav-item i {
+                font-size: 1.1rem;
+            }
+            .sidebar-footer {
+                padding: 1rem;
+            }
+            .sidebar-footer .logout-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .admin-main-content {
+                padding: 1.5rem;
+                max-width: calc(100% - 200px);
+            }
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+            .section-header p {
+                font-size: 0.9rem;
+            }
+            .dashboard-widgets-grid {
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            }
+            .widget-card {
+                padding: 1.2rem;
+            }
+            .widget-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 1.5rem;
+            }
+            .widget-value {
+                font-size: 2rem;
+            }
+            .widget-label {
+                font-size: 1rem;
+            }
+            .recent-activity-section h3 {
+                font-size: 1.3rem;
+            }
+            .activity-item p {
+                font-size: 0.85rem;
+            }
+            .activity-item .activity-time {
                 font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-dashboard-container {
+                flex-direction: column; /* Stack sidebar and content vertically */
+            }
+            .admin-sidebar {
+                position: relative; /* No longer sticky */
+                width: 100%; /* Full width */
+                height: auto; /* Auto height */
+                padding: 1rem 0;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                flex-direction: row; /* Layout sidebar items horizontally */
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap; /* Allow wrapping of nav items */
+            }
+            .sidebar-header {
+                width: 100%; /* Full width for header in mobile */
+                padding: 0 1rem 0.5rem;
+                border-bottom: none;
+                text-align: center;
+            }
+            .sidebar-header .logo-container {
+                flex-direction: row; /* Logo and name side-by-side */
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            .sidebar-header .store-logo {
+                width: 50px;
+            }
+            .sidebar-header .store-name {
+                font-size: 1.1rem;
+            }
+            .sidebar-nav {
+                width: 100%; /* Full width for nav */
+                padding: 0.5rem 0;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 0.5rem; /* Smaller gap for nav items */
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                padding-top: 0.5rem;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                border-right: none; /* Remove right border */
+                border-bottom: 2px solid transparent; /* Use bottom border for active */
+            }
+            .sidebar-nav .nav-item.active {
+                border-bottom-color: var(--accent);
+                border-right-color: transparent;
+            }
+            .sidebar-nav .nav-item i {
+                font-size: 1rem;
+            }
+            .sidebar-footer {
+                width: 100%;
+                padding: 0.5rem 1rem;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                text-align: center;
+            }
+            .sidebar-footer .logout-btn {
+                width: 100%; /* Full width button */
             }
             .admin-main-content {
                 padding: 1rem;
-                gap: 1rem;
+                max-width: 100%; /* Full width */
             }
             .section-header h2 {
                 font-size: 1.6rem;
@@ -409,97 +641,145 @@
             .section-header p {
                 font-size: 0.8rem;
             }
-            .section-header::after {
-                width: 50px;
-                height: 2px;
+            .dashboard-widgets-grid {
+                grid-template-columns: 1fr; /* Stack widgets vertically */
             }
-            .admin-sections-grid {
-                grid-template-columns: 1fr; /* Single column on small screens */
-                gap: 0.8rem;
+            .widget-card {
+                padding: 1rem;
             }
-            .admin-section-card {
-                padding: 1.2rem;
-                min-height: 130px;
+            .widget-icon {
+                width: 45px;
+                height: 45px;
+                font-size: 1.3rem;
             }
-            .admin-section-card .icon {
-                font-size: 2rem;
+            .widget-value {
+                font-size: 2.2rem;
             }
-            .admin-section-card h3 {
+            .widget-label {
+                font-size: 0.9rem;
+            }
+            .recent-activity-section h3 {
                 font-size: 1.2rem;
             }
-            .admin-section-card p {
-                font-size: 0.8rem;
+            .activity-item {
+                flex-direction: column; /* Stack activity item details */
+                align-items: flex-end; /* Align to right */
+                gap: 0.5rem;
+            }
+            .activity-item p {
+                text-align: right;
+            }
+            .activity-icon {
+                align-self: flex-start; /* Keep icon on top-right */
             }
             .admin-footer {
                 padding: 0.6rem 0.8rem;
                 font-size: 0.75rem;
             }
             .notification {
-                top: 65px;
-                font-size: 0.75rem;
-                padding: 8px 12px;
+                top: 10px; /* Adjusted top for notification in mobile */
+                font-size: 0.7rem;
+                padding: 6px 10px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Admin Header -->
-    <header class="admin-header">
-        <div class="logo-container">
-            <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
-            <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
-        </div>
-        
-        <div class="admin-actions">
-            <button id="logoutBtn" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </button>
-        </div>
-    </header>
-    
-    <!-- Main Content for Admin Hub -->
-    <main class="admin-main-content">
-        <section class="admin-hub-section">
+    <div class="admin-dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar">
+            <div class="sidebar-header">
+                <a href="admin_hub.html" class="logo-container">
+                    <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                    <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="admin_hub.html" class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i> <span>الرئيسية</span>
+                </a>
+                <a href="orders.html" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
+                </a>
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-box"></i> <span>المنتجات</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i> <span>المستخدمون</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cogs"></i> <span>الإعدادات</span>
+                </a>
+                <a href="homepage_settings.html" class="nav-item">
+                    <i class="fas fa-home"></i> <span>إعدادات الصفحة الرئيسية</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main-content">
             <div class="section-header">
-                <h2>لوحة التحكم الرئيسية</h2>
-                <p>اختر القسم الذي تريد إدارته في متجرك.</p>
+                <h2>نظرة عامة على لوحة التحكم</h2>
+                <p>مرحباً بك في لوحة التحكم الخاصة بمتجرك. إليك ملخص سريع لأدائك.</p>
             </div>
-            
-            <div class="admin-sections-grid">
-                <a href="orders.html" class="admin-section-card">
-                    <i class="fas fa-shopping-bag icon"></i>
-                    <h3>إدارة الطلبات</h3>
-                    <p>عرض وتحديث حالة طلبات العملاء.</p>
+
+            <div class="dashboard-widgets-grid">
+                <a href="orders.html" class="widget-card">
+                    <div class="widget-icon primary-bg"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="widget-details">
+                        <div class="widget-value" id="ordersCount">0</div>
+                        <div class="widget-label">إجمالي الطلبات</div>
+                    </div>
                 </a>
-                <a href="products.html" class="admin-section-card">
-                    <i class="fas fa-box icon"></i>
-                    <h3>إدارة المنتجات</h3>
-                    <p>إضافة، تعديل، وحذف المنتجات في المتجر.</p>
+                <a href="products.html" class="widget-card">
+                    <div class="widget-icon success-bg"><i class="fas fa-box"></i></div>
+                    <div class="widget-details">
+                        <div class="widget-value" id="productsCount">0</div>
+                        <div class="widget-label">إجمالي المنتجات</div>
+                    </div>
                 </a>
-                <a href="users.html" class="admin-section-card">
-                    <i class="fas fa-users icon"></i>
-                    <h3>إدارة المستخدمين</h3>
-                    <p>عرض وإدارة حسابات العملاء المسجلين.</p>
-                </a>
-                <a href="settings.html" class="admin-section-card">
-                    <i class="fas fa-cogs icon"></i>
-                    <h3>إدارة الإعدادات</h3>
-                    <p>تغيير إعدادات المتجر العامة والتصاميم.</p>
-                </a>
-                <a href="homepage_settings.html" class="admin-section-card">
-                    <i class="fas fa-home icon"></i>
-                    <h3>إعدادات الصفحة الرئيسية</h3>
-                    <p>تخصيص محتوى وأقسام الصفحة الرئيسية.</p>
-                </a>
-                <a href="admin_logs.html" class="admin-section-card">
-                    <i class="fas fa-clipboard-list icon"></i>
-                    <h3>سجل المشرفين</h3>
-                    <p>مراجعة سجلات نشاطات المشرفين.</p>
+                <a href="users.html" class="widget-card">
+                    <div class="widget-icon info-bg"><i class="fas fa-users"></i></div>
+                    <div class="widget-details">
+                        <div class="widget-value" id="usersCount">0</div>
+                        <div class="widget-label">إجمالي المستخدمين</div>
+                    </div>
                 </a>
             </div>
-        </section>
-    </main>
-    
+
+            <section class="recent-activity-section">
+                <h3>النشاطات الأخيرة</h3>
+                <div class="activity-list">
+                    <div class="activity-item">
+                        <span class="activity-icon"><i class="fas fa-check-circle success-color"></i></span>
+                        <p>تم إتمام الطلب #12345</p>
+                        <span class="activity-time">منذ 5 دقائق</span>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-icon"><i class="fas fa-box-open info-color"></i></span>
+                        <p>تم إضافة منتج جديد: هاتف ذكي X</p>
+                        <span class="activity-time">منذ ساعة</span>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-icon"><i class="fas fa-user-plus primary-color"></i></span>
+                        <p>تسجيل مستخدم جديد: أحمد محمد</p>
+                        <span class="activity-time">منذ يوم</span>
+                    </div>
+                    <div class="activity-item">
+                        <span class="activity-icon"><i class="fas fa-cogs warning-color"></i></span>
+                        <p>تم تحديث إعدادات المتجر</p>
+                        <span class="activity-time">منذ يومين</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
     <!-- Admin Footer -->
     <footer class="admin-footer">
         <p>&copy; 2025 لوحة تحكم المتجر. جميع الحقوق محفوظة.</p>
