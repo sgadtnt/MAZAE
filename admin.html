@@ -10,7 +10,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref as dbRef, onValue, get, remove, query, orderByChild, limitToLast, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"; // Ensure 'set' is imported here
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -37,6 +37,7 @@
         const productsRef = dbRef(db, "products");
         const usersRef = dbRef(db, "users");
         const generalSettingsRef = dbRef(db, "settings");
+        const adminLogsRef = dbRef(db, "adminLogs"); // Reference to admin logs
 
         // Global data storage for frontend
         window.adminData = {
@@ -108,6 +109,134 @@
             showNotification('تم تحديث بيانات لوحة التحكم.', 'info');
         }
 
+        // Function to load and display recent activities
+        function loadRecentActivities() {
+            // Query last 10 activities by timestamp
+            const recentLogsQuery = query(adminLogsRef, orderByChild('timestamp'), limitToLast(10));
+            onValue(recentLogsQuery, (snapshot) => {
+                const activities = [];
+                snapshot.forEach((childSnapshot) => {
+                    activities.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                });
+                // Sort in descending order for display (newest first)
+                activities.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                renderRecentActivities(activities);
+            });
+        }
+
+        // Function to format timestamp for display
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return 'غير متوفر';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMinutes = Math.round(diffMs / (1000 * 60));
+            const diffHours = Math.round(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+
+            if (diffMinutes < 1) return 'الآن';
+            if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
+            if (diffHours < 24) return `منذ ${diffHours} ساعة`;
+            if (diffDays < 7) return `منذ ${diffDays} يوم`;
+            
+            return date.toLocaleDateString('ar-EG', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Function to get activity icon and color
+        function getActivityIconAndColor(action) {
+            switch (action) {
+                case 'ADD_PRODUCT': return { icon: 'fas fa-box-open', color: 'success-color' };
+                case 'UPDATE_PRODUCT': return { icon: 'fas fa-edit', color: 'info-color' };
+                case 'DELETE_PRODUCT': return { icon: 'fas fa-trash', color: 'error-color' };
+                case 'TOGGLE_PRODUCT_STATUS': return { icon: 'fas fa-toggle-on', color: 'primary-color' };
+                case 'UPDATE_ORDER_STATUS': return { icon: 'fas fa-shopping-bag', color: 'primary-color' };
+                case 'UPDATE_DELIVERY_PRICE': return { icon: 'fas fa-truck', color: 'warning-color' };
+                case 'DELETE_DELIVERY_PRICE': return { icon: 'fas fa-truck-loading', color: 'error-color' };
+                case 'UPDATE_GENERAL_SETTINGS': return { icon: 'fas fa-cogs', color: 'info-color' };
+                case 'UPDATE_HOMEPAGE_SETTINGS': return { icon: 'fas fa-home', color: 'primary-color' };
+                case 'UPDATE_USER': return { icon: 'fas fa-user-edit', color: 'info-color' };
+                case 'TOGGLE_USER_STATUS': return { icon: 'fas fa-user-check', color: 'primary-color' };
+                case 'DELETE_USER': return { icon: 'fas fa-user-slash', color: 'error-color' };
+                default: return { icon: 'fas fa-info-circle', color: 'info-color' };
+            }
+        }
+
+        // Function to render recent activities
+        function renderRecentActivities(activities) {
+            const activityListContainer = document.getElementById('activityList');
+            activityListContainer.innerHTML = ''; // Clear previous activities
+
+            if (activities.length === 0) {
+                activityListContainer.innerHTML = '<p class="no-content-message">لا توجد نشاطات حديثة لعرضها.</p>';
+                return;
+            }
+
+            activities.forEach(activity => {
+                const { icon, color } = getActivityIconAndColor(activity.action);
+                const item = document.createElement('div');
+                item.className = 'activity-item';
+                item.innerHTML = `
+                    <span class="activity-icon"><i class="${icon} ${color}"></i></span>
+                    <p>${getLogMessage(activity)}</p>
+                    <span class="activity-time">${formatTimestamp(activity.timestamp)}</span>
+                `;
+                activityListContainer.appendChild(item);
+            });
+        }
+
+        // Helper to generate a human-readable log message
+        function getLogMessage(activity) {
+            const adminId = activity.adminId === 'anonymous_admin' ? 'المشرف' : activity.adminId; // Simplified for display
+            switch (activity.action) {
+                case 'ADD_PRODUCT': return `قام ${adminId} بإضافة منتج جديد: ${activity.newValue?.name || 'غير معروف'}`;
+                case 'UPDATE_PRODUCT': return `قام ${adminId} بتعديل المنتج: ${activity.newValue?.name || 'غير معروف'}`;
+                case 'DELETE_PRODUCT': return `قام ${adminId} بحذف المنتج: ${activity.deletedProduct?.name || 'غير معروف'}`;
+                case 'TOGGLE_PRODUCT_STATUS': return `قام ${adminId} بـ ${activity.newStatus ? 'تفعيل' : 'إلغاء تفعيل'} المنتج: ${activity.productId}`;
+                case 'UPDATE_ORDER_STATUS': return `قام ${adminId} بتحديث حالة الطلب #${activity.orderId} إلى: ${activity.newStatus}`;
+                case 'UPDATE_DELIVERY_PRICE': return `قام ${adminId} بتحديث سعر توصيل مدينة ${activity.city} إلى ${activity.newPrice} د.ع`;
+                case 'DELETE_DELIVERY_PRICE': return `قام ${adminId} بحذف سعر توصيل مدينة ${activity.city}`;
+                case 'UPDATE_GENERAL_SETTINGS': return `قام ${adminId} بتحديث الإعدادات العامة للمتجر`;
+                case 'UPDATE_HOMEPAGE_SETTINGS': return `قام ${adminId} بتحديث إعدادات الصفحة الرئيسية`;
+                case 'UPDATE_USER': return `قام ${adminId} بتعديل بيانات المستخدم: ${activity.newValue?.name || 'غير معروف'}`;
+                case 'TOGGLE_USER_STATUS': return `قام ${adminId} بـ ${activity.newStatus ? 'تفعيل' : 'إلغاء تفعيل'} حساب المستخدم: ${activity.userId}`;
+                case 'DELETE_USER': return `قام ${adminId} بحذف حساب المستخدم: ${activity.deletedUser?.name || 'غير معروف'}`;
+                default: return `قام ${adminId} بنشاط غير معروف: ${activity.action}`;
+            }
+        }
+
+        // Function to manage the size of admin logs in Firebase
+        async function manageAdminLogsSize(maxLogs = 10) {
+            try {
+                const snapshot = await get(query(adminLogsRef, orderByChild('timestamp')));
+                const logs = [];
+                snapshot.forEach(childSnapshot => {
+                    logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
+                });
+
+                if (logs.length > maxLogs) {
+                    // Sort by timestamp ascending (oldest first)
+                    logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                    const logsToDelete = logs.slice(0, logs.length - maxLogs);
+
+                    for (const log of logsToDelete) {
+                        await remove(dbRef(db, `adminLogs/${log.id}`));
+                        console.log(`Removed old log: ${log.id}`);
+                    }
+                }
+            } catch (error) {
+                console.error("Error managing admin logs size:", error);
+            }
+        }
+
+        // The problematic 'window.setWithLog' override has been removed as it's not needed here
+        // and was causing the 'set is not defined' error in this module context.
+
         // Function to handle logout (will just redirect as no Firebase auth session)
         async function handleLogout() {
             try {
@@ -125,12 +254,16 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadGeneralSettings(); 
             loadDashboardData();
+            loadRecentActivities(); // Load real recent activities
 
             // Set active navigation link in sidebar
             const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
             const currentPath = window.location.pathname.split('/').pop();
             navItems.forEach(item => {
-                if (item.getAttribute('href') === currentPath || (currentPath === '' && item.getAttribute('href') === 'admin_hub.html')) {
+                // Change 'admin_hub.html' to 'admin.html' for the active check
+                if (item.getAttribute('href') === 'admin.html' && currentPath === 'admin_hub.html') {
+                    item.classList.add('active');
+                } else if (item.getAttribute('href') === currentPath) {
                     item.classList.add('active');
                 } else {
                     item.classList.remove('active');
@@ -139,6 +272,10 @@
 
             // Add logout event listener to the sidebar button
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            // Periodically manage log size (e.g., every 30 seconds)
+            // In a real application, this might be triggered by a Cloud Function on write.
+            setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
         });
     </script>
     <style>
@@ -355,13 +492,14 @@
             box-shadow: var(--shadow);
             padding: 1.5rem;
             border: 1px solid var(--border);
+            text-align: center;
             display: flex;
             align-items: center;
             gap: 1rem;
             transition: var(--transition);
             cursor: pointer;
-            text-decoration: none;
-            color: inherit;
+            text-decoration: none; /* For anchor tags acting as cards */
+            color: inherit; /* Inherit text color */
         }
 
         .widget-card:hover {
@@ -404,7 +542,7 @@
             font-weight: 600;
         }
 
-        /* Recent Activity Section (Example) */
+        /* Recent Activity Section */
         .recent-activity-section {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
@@ -459,6 +597,7 @@
         .info-color { color: var(--info); }
         .primary-color { color: var(--primary); }
         .warning-color { color: var(--warning); }
+        .error-color { color: var(--error); } /* Added for delete actions */
 
         /* Admin Footer (integrated at the bottom of the page) */
         .admin-footer {
@@ -689,14 +828,14 @@
         <!-- Sidebar Navigation -->
         <aside class="admin-sidebar">
             <div class="sidebar-header">
-                <a href="admin_hub.html" class="logo-container">
+                <a href="admin.html" class="logo-container">
                     <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
                     <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
                 </a>
             </div>
             <nav class="sidebar-nav">
-                <a href="admin_hub.html" class="nav-item active">
-                    <i class="fas fa-tachometer-alt"></i> <span>الرئيسية</span>
+                <a href="admin.html" class="nav-item active">
+                    <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
                 </a>
                 <a href="orders.html" class="nav-item">
                     <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
@@ -754,27 +893,9 @@
 
             <section class="recent-activity-section">
                 <h3>النشاطات الأخيرة</h3>
-                <div class="activity-list">
-                    <div class="activity-item">
-                        <span class="activity-icon"><i class="fas fa-check-circle success-color"></i></span>
-                        <p>تم إتمام الطلب #12345</p>
-                        <span class="activity-time">منذ 5 دقائق</span>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-icon"><i class="fas fa-box-open info-color"></i></span>
-                        <p>تم إضافة منتج جديد: هاتف ذكي X</p>
-                        <span class="activity-time">منذ ساعة</span>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-icon"><i class="fas fa-user-plus primary-color"></i></span>
-                        <p>تسجيل مستخدم جديد: أحمد محمد</p>
-                        <span class="activity-time">منذ يوم</span>
-                    </div>
-                    <div class="activity-item">
-                        <span class="activity-icon"><i class="fas fa-cogs warning-color"></i></span>
-                        <p>تم تحديث إعدادات المتجر</p>
-                        <span class="activity-time">منذ يومين</span>
-                    </div>
+                <div class="activity-list" id="activityList">
+                    <!-- Recent activities will be loaded here by JavaScript -->
+                    <p class="no-content-message">جاري تحميل النشاطات...</p>
                 </div>
             </section>
         </main>
