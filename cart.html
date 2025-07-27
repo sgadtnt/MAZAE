@@ -179,9 +179,9 @@
             const citySelect = document.getElementById('citySelect');
             const deliveryPriceDisplay = document.getElementById('deliveryPriceDisplay');
             const subtotal = calculateSubtotal(window.frontendData.cart);
-            const totalDisplay = document.querySelector('.cart-summary .total-price');
+            const totalDisplayInSummary = document.querySelector('.cart-summary .total-price');
 
-            if (citySelect && deliveryPriceDisplay && totalDisplay) {
+            if (citySelect && deliveryPriceDisplay && totalDisplayInSummary) {
                 const selectedCityName = citySelect.value;
                 let currentDeliveryCost = 0;
 
@@ -193,7 +193,7 @@
                 window.frontendData.deliveryCost = currentDeliveryCost;
 
                 deliveryPriceDisplay.textContent = `${currentDeliveryCost.toLocaleString('ar-EG')} د.ع`;
-                totalDisplay.textContent = `${calculateTotalPrice(subtotal).toLocaleString('ar-EG')} د.ع`;
+                totalDisplayInSummary.textContent = `${calculateTotalPrice(subtotal).toLocaleString('ar-EG')} د.ع`;
                 
                 // Save to local storage if guest user
                 if (!window.frontendData.currentUser || window.frontendData.currentUser.isAnonymous) {
@@ -215,8 +215,8 @@
                     
                     cartContainer.innerHTML += `
                         <div class="cart-item-card">
-                            <img src="${item.image || 'https://placehold.co/100x100/5D3FD3/ffffff?text=Product'}" 
-                                 onerror="this.onerror=null;this.src='https://placehold.co/100x100/5D3FD3/ffffff?text=Product';"
+                            <img src="${item.image || 'https://placehold.co/100x100/4B0082/FFD700?text=Product'}" 
+                                 onerror="this.onerror=null;this.src='https://placehold.co/100x100/4B0082/FFD700?text=Product';"
                                  alt="${item.name}" class="cart-item-image">
                             <div class="cart-item-details">
                                 <h4 class="cart-item-name">${item.name}</h4>
@@ -402,101 +402,33 @@
             notification.textContent = message;
             document.body.appendChild(notification);
             
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
+            // Force reflow to ensure transition plays
+            void notification.offsetWidth;
+
+            notification.classList.add('show');
             
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {
                     document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
+                }, 300); // Match CSS transition duration
+            }, 3000); // Notification visible for 3 seconds
         }
 
-        // Function to render footer
+        // Function to render footer (now removed, but kept for context)
         function renderFooter(settings) {
-            const footer = document.getElementById('mainFooter');
-            const hpSettings = window.frontendData.homepageSettings.footer || {};
-            
-            // Construct contact info HTML conditionally
-            let contactInfoHtml = '';
-            if (hpSettings.contactEnabled && settings) {
-                if (settings.contactPhone) contactInfoHtml += `<p><i class="fas fa-phone"></i> ${settings.contactPhone}</p>`;
-                if (settings.contactEmail) contactInfoHtml += `<p><i class="fas fa-envelope"></i> ${settings.contactEmail}</p>`;
+            // This function is no longer rendering the footer HTML as it's removed.
+            // It might still be called for other settings updates if needed elsewhere.
+            // For now, it's effectively a no-op for footer rendering.
+            const storeNameElement = document.getElementById('storeName');
+            const storeLogoElement = document.getElementById('storeLogo');
+
+            if (storeNameElement) {
+                storeNameElement.textContent = settings.storeName || 'متجر إلكتروني';
             }
-
-            // Construct social links HTML conditionally
-            let socialLinksHtml = '';
-            if (hpSettings.socialEnabled) {
-                const socialLinks = [];
-                if (hpSettings.facebook) socialLinks.push({ platform: 'facebook', url: hpSettings.facebook });
-                if (hpSettings.instagram) socialLinks.push({ platform: 'instagram', url: hpSettings.instagram });
-                if (hpSettings.twitter) socialLinks.push({ platform: 'twitter', url: hpSettings.twitter });
-                if (hpSettings.linkedin) socialLinks.push({ platform: 'linkedin', url: hpSettings.linkedin });
-
-                if (socialLinks.length > 0) {
-                    socialLinksHtml = `
-                        <div class="social-links">
-                            ${socialLinks.map(link => `
-                                <a href="${link.url}" class="social-link" target="_blank">
-                                    <i class="fab fa-${link.platform}"></i>
-                                </a>
-                            `).join('')}
-                        </div>
-                    `;
-                }
+            if (storeLogoElement) {
+                storeLogoElement.src = settings.logoUrl || 'https://via.placeholder.com/150x70/4B0082/FFD700?text=شعار+متجر';
             }
-
-            // Construct footer links HTML conditionally
-            let footerLinksHtml = '';
-            if (hpSettings.customLinksEnabled && hpSettings.customLinks && hpSettings.customLinks.length > 0) {
-                footerLinksHtml = `
-                    <ul class="footer-links">
-                        ${hpSettings.customLinks.map(link => `
-                            <li>
-                                <a href="${link.link}" target="_blank">
-                                    <i class="fas fa-arrow-left"></i> ${link.text}
-                                </a>
-                            </li>
-                        `).join('')}
-                    </ul>
-                `;
-            }
-            
-            // Removed "حول المتجر" section entirely
-            const aboutHtml = ''; 
-            
-            // Removed copyright text
-            const copyrightText = '';
-
-            footer.innerHTML = `
-                <div class="footer-content">
-                    ${contactInfoHtml.trim() || socialLinksHtml.trim() ? `
-                    <div class="footer-section">
-                        <h3>اتصل بنا</h3>
-                        <div class="contact-info">
-                            ${contactInfoHtml}
-                        </div>
-                        ${socialLinksHtml}
-                    </div>` : ''}
-                    
-                    ${footerLinksHtml.trim() ? `
-                    <div class="footer-section">
-                        <h3>روابط مهمة</h3>
-                        ${footerLinksHtml}
-                    </div>` : ''}
-                    
-                    ${aboutHtml.trim() ? `
-                    <div class="footer-section">
-                        <h3>حول المتجر</h3>
-                        ${aboutHtml}
-                    </div>` : ''}
-                </div>
-                <div class="copyright">
-                    <p>${copyrightText}</p>
-                </div>
-            `;
         }
         
         // Function to load frontend data from Realtime Database
@@ -505,15 +437,15 @@
                 // Load Settings
                 onValue(settingsRef, (snapshot) => {
                     window.frontendData.settings = snapshot.val() || {};
-                    renderFooter(window.frontendData.settings);
+                    renderFooter(window.frontendData.settings); // Call for store name/logo update
                     document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
-                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/6A0DAD/ffffff?text=شعار+متجر';
+                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/4B0082/FFD700?text=شعار+متجر'; // Updated placeholder
                 });
 
-                // Load Homepage Settings (needed for footer rendering)
+                // Load Homepage Settings (needed for footer rendering, now just for settings)
                 onValue(homepageSettingsRef, (snapshot) => {
                     window.frontendData.homepageSettings = snapshot.val() || {};
-                    renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
+                    // renderFooter(window.frontendData.settings); // No need to re-render footer
                 });
 
                 // Load All Products (for product details, stock check removed)
@@ -605,13 +537,13 @@
     </script>
     <style>
         :root {
-            --primary: #6A0DAD; /* Purple */
-            --secondary: #5D3FD3; /* Darker Purple */
-            --accent: #FFD700; /* Gold */
-            --light: #F8F8FF; /* Ghost White - very light */
-            --dark: #2C003E; /* Very Dark Purple */
+            --primary: #4B0082; /* Indigo - Main Purple (approx 75%) */
+            --secondary: #6A0DAD; /* Amethyst - Lighter Purple */
+            --accent: #FFD700; /* Gold (approx 25%) */
+            --light: #F8F8FF; /* Ghost White - very light background */
+            --dark: #2C003E; /* Dark Purple - for text/deep elements */
             --success: #2ECC71; /* Green */
-            --warning: #FFBF00; /* Amber */
+            --warning: #FFBF00; /* Amber - alternative gold for warnings */
             --error: #E74C3C; /* Red */
             --border: #D8BFD8; /* Thistle - light purple border */
             --shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* Standard shadow */
@@ -629,7 +561,7 @@
             background-color: var(--light);
             color: var(--dark);
             min-height: 100vh;
-            padding: 80px 0 100px; /* Space for top and bottom bars */
+            padding: 80px 0 100px; /* Adjusted padding for top bar and bottom nav only */
             direction: rtl; 
             display: flex;
             flex-direction: column;
@@ -687,6 +619,7 @@
             font-size: 20px;
             font-weight: 800;
             letter-spacing: 0.5px;
+            color: var(--accent); /* Gold for store name */
         }
         
         .top-right-group {
@@ -760,7 +693,7 @@
         }
         
         .bottom-nav-item:hover, .bottom-nav-item.active {
-            color: var(--accent);
+            color: var(--accent); /* Gold for active/hover */
             transform: translateY(-5px) scale(1.05);
         }
         
@@ -772,7 +705,7 @@
             transform: translateX(-50%);
             width: 40px;
             height: 4px;
-            background-color: var(--accent);
+            background-color: var(--accent); /* Gold underline */
             border-radius: 2px;
         }
 
@@ -788,13 +721,13 @@
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             margin-top: 20px;
-            margin-bottom: 20px;
-            min-height: calc(100vh - 180px);
+            margin-bottom: 20px; /* Adjust if needed based on final layout */
+            min-height: calc(100vh - 180px); /* Adjusted for top and bottom bars */
         }
         
         /* Cart Section Specific Styles */
         .cart-section {
-            margin-bottom: 50px;
+            margin-bottom: 50px; /* Ample space above summary */
             text-align: center;
         }
 
@@ -910,7 +843,7 @@
         }
 
         .remove-from-cart-btn:hover {
-            background-color: #C0392B; /* Darker red */
+            background-color: #C0392B;
             transform: scale(1.1);
         }
 
@@ -1011,8 +944,8 @@
         }
         .city-dropdown:focus {
             outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.2); /* Using rgba from --primary */
+            border-color: var(--accent); /* Gold focus */
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2); /* Gold shadow */
         }
 
         .delivery-cost {
@@ -1033,8 +966,8 @@
 
 
         .checkout-btn {
-            background-color: var(--secondary);
-            color: white;
+            background-color: var(--accent); /* Gold button */
+            color: var(--dark); /* Dark purple text */
             border: none;
             padding: 15px 30px;
             border-radius: 50px;
@@ -1050,7 +983,7 @@
         }
 
         .checkout-btn:hover {
-            background-color: var(--primary); /* Hover to primary purple */
+            background-color: #DAA520; /* Darker gold on hover */
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
         }
@@ -1100,15 +1033,16 @@
         /* Notification Styles */
         .notification {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            top: 80px; /* Below the top bar */
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%); /* Start above screen, centered */
             background-color: var(--secondary);
             color: white;
             padding: 15px 25px;
-            border-radius: 50px;
+            border-radius: 10px; /* Slightly less rounded for top */
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            opacity: 1;
-            transition: opacity 0.3s ease-out;
+            opacity: 0;
+            transition: transform 0.4s ease-out, opacity 0.4s ease-out; /* Slide down and fade in */
             z-index: 2000;
             font-weight: bold;
             min-width: 250px;
@@ -1116,6 +1050,7 @@
         }
 
         .notification.show {
+            transform: translateX(-50%) translateY(0); /* Slide into view */
             opacity: 1;
         }
 
@@ -1148,7 +1083,8 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Footer Styling */
+        /* Footer Styling - REMOVED */
+        /*
         #mainFooter {
             background-color: var(--dark);
             color: white;
@@ -1170,7 +1106,7 @@
         .footer-section h3 {
             font-size: 1.4rem;
             margin-bottom: 20px;
-            color: var(--accent); /* Gold for footer headers */
+            color: var(--accent);
             position: relative;
             padding-bottom: 10px;
         }
@@ -1200,7 +1136,7 @@
         }
 
         .contact-info i {
-            color: var(--accent); /* Gold for contact icons */
+            color: var(--accent);
             font-size: 1.1rem;
         }
 
@@ -1239,7 +1175,7 @@
         }
 
         .footer-links a:hover {
-            color: var(--accent); /* Gold for footer links hover */
+            color: var(--accent);
             transform: translateX(-5px);
         }
 
@@ -1254,6 +1190,7 @@
             padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+        */
 
         .no-content-message {
             text-align: center;
@@ -1264,7 +1201,7 @@
 
         @media (max-width: 768px) {
             body {
-                padding: 70px 0 90px;
+                padding: 70px 0 90px; /* Adjusted padding for mobile: topbar (60px) + bottom nav (80px) = 140px. Using 90px for bottom to give some margin. */
             }
             .top-bar {
                 height: 60px;
@@ -1292,7 +1229,7 @@
             }
             .main-content {
                 padding: 15px;
-                min-height: calc(100vh - 150px);
+                min-height: calc(100vh - 150px); /* Adjust for mobile top and bottom bars */
             }
             .section-header h2 {
                 font-size: 2rem;
@@ -1338,10 +1275,25 @@
             .cart-summary h3 {
                 font-size: 1.5rem;
             }
-            .checkout-btn {
-                padding: 12px 20px;
-                font-size: 1rem;
+            /* Fixed bottom total bar is removed */
+            /*
+            .fixed-bottom-total {
+                bottom: 80px;
+                padding: 10px 15px;
+                border-top-left-radius: 15px;
+                border-top-right-radius: 15px;
             }
+            .fixed-total-label {
+                font-size: 1.2rem;
+            }
+            .total-price-display {
+                font-size: 1.5rem;
+            }
+            .fixed-checkout-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+            */
             .empty-cart-message {
                 font-size: 1.1rem;
                 padding: 30px;
@@ -1349,6 +1301,8 @@
             .empty-cart-message i {
                 font-size: 3rem;
             }
+            /* Footer Styling - REMOVED */
+            /*
             .footer-content {
                 grid-template-columns: 1fr;
                 text-align: center;
@@ -1360,12 +1314,17 @@
             .contact-info p, .footer-links a {
                 justify-content: center;
             }
+            */
             .notification {
-                bottom: 10px;
-                right: 10px;
+                top: 70px; /* Below mobile top bar */
                 left: 10px;
+                right: 10px;
+                transform: translateX(0%) translateY(-100%); /* Adjusted for full width */
                 min-width: unset;
                 border-radius: 10px;
+            }
+            .notification.show {
+                transform: translateX(0%) translateY(0);
             }
         }
         
@@ -1391,7 +1350,7 @@
     <header class="top-bar">
         <div class="top-left">
             <a href="index.html" class="logo-container">
-                <img id="storeLogo" src="https://via.placeholder.com/150x70/6A0DAD/ffffff?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                <img id="storeLogo" src="https://via.placeholder.com/150x70/4B0082/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
                 <div id="storeName" class="store-name">متجر إلكتروني</div>
             </a>
         </div>
@@ -1430,12 +1389,11 @@
         </section>
     </div>
     
-    <!-- Footer -->
-    <footer id="mainFooter">
-        <div class="loading">
-            <div class="spinner"></div>
-        </div>
-    </footer>
+    <!-- Fixed Bottom Total Bar is removed -->
+    <!-- <div class="fixed-bottom-total" id="fixedTotalBar" style="display: none;"></div> -->
+
+    <!-- Footer is removed -->
+    <!-- <footer id="mainFooter"></footer> -->
     
     <!-- Fixed Bottom Bar -->
     <nav class="bottom-bar">
