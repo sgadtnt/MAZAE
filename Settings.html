@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - الإعدادات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Firebase SDK imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getDatabase, ref as dbRef, onValue, set, get, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        // Global variables provided by the Canvas environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app); 
+        const db = getDatabase(app);
+
+        // Realtime Database references
+        const settingsRef = dbRef(db, "settings"); // General settings node
+        const deliveryPricesRef = dbRef(db, "deliveryPrices"); // Delivery prices node
+        const adminLogsRef = dbRef(db, "adminLogs"); // Admin logs node
+
+        // Global data storage for frontend
+        window.adminData = {
+            settings: {},
+            deliveryPrices: {},
+            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
+            authReady: true // Always ready as no auth is required
+        };
+
+        // Function to show notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            void notification.offsetWidth;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Function to load general settings from Firebase
+        async function loadGeneralSettings() {
+            try {
+                const snapshot = await get(settingsRef);
+                const settings = snapshot.val() || {};
+                window.adminData.settings = settings;
+
+                // Populate form fields
+                document.getElementById('storeNameInput').value = settings.storeName || '';
+                document.getElementById('storeLogoUrlInput').value = settings.logoUrl || '';
+                document.getElementById('contactPhoneInput').value = settings.contactPhone || '';
+                document.getElementById('contactEmailInput').value = settings.contactEmail || '';
+                document.getElementById('storeAddressInput').value = settings.storeAddress || '';
+                document.getElementById('currencySelect').value = settings.currency || 'IQD'; 
+                document.getElementById('languageSelect').value = settings.language || 'ar'; 
+
+                // Update header live
+                document.getElementById('storeName').textContent = settings.storeName || 'لوحة تحكم المتجر';
+                document.getElementById('storeLogo').src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+
+                showNotification('تم تحميل الإعدادات العامة بنجاح.', 'info');
+            } catch (error) {
+                console.error("Error loading general settings:", error);
+                showNotification('حدث خطأ في تحميل الإعدادات العامة.', 'error');
+            }
+        }
+
+        // Function to save general settings to Firebase
+        async function saveGeneralSettings() {
+            try {
+                const oldSettings = { ...window.adminData.settings }; // Capture old settings for logging
+                const newSettings = {
+                    storeName: document.getElementById('storeNameInput').value.trim(),
+                    logoUrl: document.getElementById('storeLogoUrlInput').value.trim(),
+                    contactPhone: document.getElementById('contactPhoneInput').value.trim(),
+                    contactEmail: document.getElementById('contactEmailInput').value.trim(),
+                    storeAddress: document.getElementById('storeAddressInput').value.trim(),
+                    currency: document.getElementById('currencySelect').value,
+                    language: document.getElementById('languageSelect').value
+                };
+
+                await set(settingsRef, newSettings);
+                window.adminData.settings = newSettings; // Update local state
+                showNotification('تم حفظ الإعدادات العامة بنجاح!', 'success');
+                // Update header live after saving
+                document.getElementById('storeName').textContent = newSettings.storeName || 'لوحة تحكم المتجر';
+                document.getElementById('storeLogo').src = newSettings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+
+                // Log admin activity (using a simulated user ID)
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_GENERAL_SETTINGS',
+                    adminId: window.adminData.currentUser.uid,
+                    oldValue: oldSettings, // Log old value
+                    newValue: newSettings, // Log new value
+                    timestamp: new Date().toISOString()
+                });
+                console.log(`Admin activity logged: General settings updated.`);
+
+            } catch (error) {
+                console.error("Error saving general settings:", error);
+                showNotification('حدث خطأ أثناء حفظ الإعدادات العامة.', 'error');
+            }
+        }
+
+        // Function to render delivery prices table
+        function renderDeliveryPrices() {
+            const deliveryPricesTableBody = document.getElementById('deliveryPricesTableBody');
+            deliveryPricesTableBody.innerHTML = ''; // Clear previous rows
+
+            const prices = window.adminData.deliveryPrices || {};
+            const cities = Object.keys(prices);
+
+            if (cities.length === 0) {
+                deliveryPricesTableBody.innerHTML = `<tr><td colspan="3" class="no-content-message">لا توجد أسعار توصيل مضافة حالياً.</td></tr>`;
+                return;
+            }
+
+            cities.forEach(city => {
+                const price = prices[city].price || 0;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${city}</td>
+                    <td>${price.toLocaleString('ar-EG')} د.ع</td>
+                    <td>
+                        <button class="btn btn-danger delete-delivery-price-btn" data-city="${city}">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
+                    </td>
+                `;
+                deliveryPricesTableBody.appendChild(row);
+            });
+
+            // Add event listeners for delete buttons
+            document.querySelectorAll('.delete-delivery-price-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const cityToDelete = event.target.dataset.city || event.target.closest('[data-city]')?.dataset.city;
+                    if (cityToDelete) {
+                        deleteDeliveryPrice(cityToDelete);
+                    }
+                });
+            });
+        }
+
+        // Function to add/update delivery price
+        async function addOrUpdateDeliveryPrice() {
+            const cityInput = document.getElementById('deliveryCityInput');
+            const priceInput = document.getElementById('deliveryPriceInput');
+
+            const city = cityInput.value.trim();
+            const price = parseFloat(priceInput.value.trim());
+
+            if (!city || isNaN(price) || price < 0) {
+                showNotification('يرجى إدخال اسم مدينة وسعر توصيل صحيح (رقم موجب).', 'error');
+                return;
+            }
+
+            const oldPrice = window.adminData.deliveryPrices[city]?.price || 0;
+
+            try {
+                await set(dbRef(db, `deliveryPrices/${city}`), { price: price });
+                showNotification(`تم ${oldPrice > 0 ? 'تحديث' : 'إضافة'} سعر التوصيل للمدينة "${city}" بنجاح!`, 'success');
+                
+                // Clear inputs
+                cityInput.value = '';
+                priceInput.value = '';
+
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_DELIVERY_PRICE',
+                    adminId: window.adminData.currentUser.uid,
+                    city: city,
+                    oldPrice: oldPrice,
+                    newPrice: price,
+                    timestamp: new Date().toISOString()
+                });
+                console.log(`Admin activity logged: Delivery price for ${city} updated.`);
+
+            } catch (error) {
+                console.error("Error adding/updating delivery price:", error);
+                showNotification('حدث خطأ أثناء حفظ سعر التوصيل.', 'error');
+            }
+        }
+
+        // Function to delete delivery price
+        async function deleteDeliveryPrice(city) {
+            if (!confirm(`هل أنت متأكد أنك تريد حذف سعر التوصيل للمدينة "${city}"؟`)) {
+                return;
+            }
+
+            const oldPrice = window.adminData.deliveryPrices[city]?.price || 0;
+
+            try {
+                await remove(dbRef(db, `deliveryPrices/${city}`));
+                showNotification(`تم حذف سعر التوصيل للمدينة "${city}" بنجاح!`, 'success');
+
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'DELETE_DELIVERY_PRICE',
+                    adminId: window.adminData.currentUser.uid,
+                    city: city,
+                    deletedPrice: oldPrice,
+                    timestamp: new Date().toISOString()
+                });
+                console.log(`Admin activity logged: Delivery price for ${city} deleted.`);
+
+            } catch (error) {
+                console.error("Error deleting delivery price:", error);
+                showNotification('حدث خطأ أثناء حذف سعر التوصيل.', 'error');
+            }
+        }
+
+        // Function to handle logout (will just redirect as no Firebase auth session)
+        async function handleLogout() {
+            try {
+                if (auth.currentUser) {
+                    await signOut(auth);
+                }
+                showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
+                window.location.replace(window.location.origin + '/admin_login.html'); 
+            } catch (error) {
+                console.error("Error during logout (no active session expected):", error);
+                showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Directly load general settings for header
+            loadGeneralSettings(); 
+
+            // Listen for real-time updates to delivery prices
+            onValue(deliveryPricesRef, (snapshot) => {
+                window.adminData.deliveryPrices = snapshot.val() || {};
+                renderDeliveryPrices();
+                showNotification('تم تحديث قائمة أسعار التوصيل.', 'info');
+            });
+            console.log("Admin panel loaded without authentication.");
+
+            // Set active navigation link in header
+            const navLinks = document.querySelectorAll('.admin-nav-link');
+            const currentPath = window.location.pathname.split('/').pop();
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+
+            // Add logout event listener
+            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            // Add save general settings event listener
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveGeneralSettings);
+
+            // Add delivery price event listeners
+            document.getElementById('addOrUpdateDeliveryPriceBtn').addEventListener('click', addOrUpdateDeliveryPrice);
+        });
+    </script>
+    <style>
+        :root {
+            /* Main Colors - Adjusted for Admin Panel */
+            --color-primary-dark-blue: #1A237E; /* Primary */
+            --color-secondary-gold: #FFD700; /* Secondary / Accent */
+            --color-admin-bg: #F8F9FA; /* Lighter background for admin */
+            --color-admin-card-bg: #FFFFFF; /* White cards */
+            --color-admin-text: #343A40; /* Darker text for readability */
+            --color-admin-border: #E9ECEF; /* Light border */
+
+            /* Mapped to general variables for consistency */
+            --primary: var(--color-primary-dark-blue);
+            --secondary: var(--color-secondary-gold);
+            --accent: var(--color-secondary-gold);
+            --light: var(--color-admin-bg);
+            --dark: var(--color-admin-text);
+            --success: #28A745; /* Bootstrap green */
+            --warning: #FFC107; /* Bootstrap yellow */
+            --error: #DC3545; /* Bootstrap red */
+            --info: #17A2B8; /* Bootstrap info blue */
+            --border: #DEE2E6; /* Slightly darker border for better contrast */
+            --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Lighter, smaller shadow */
+            --radius: 0.4rem; /* Slightly smaller rounded corners */
+            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
+
+            font-family: 'Cairo', sans-serif;
+            font-size: 14px; /* Base font size reduced */
+            direction: rtl;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            min-height: 100vh;
+            padding-top: 80px; /* Increased space for fixed header */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Admin Header (Top Bar) */
+        .admin-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--primary); /* Solid Dark Blue */
+            color: white;
+            display: flex;
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 0.8rem 1.5rem; /* Increased padding */
+            height: 80px; /* Increased height */
+            box-shadow: var(--shadow);
+            z-index: 1000;
+        }
+
+        .admin-header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem; /* Increased gap */
+            text-decoration: none; 
+            color: white; 
+            transition: var(--transition);
+        }
+
+        .admin-header .logo-container:hover {
+            opacity: 0.9;
+        }
+
+        .admin-header .store-logo {
+            height: 45px; /* Increased logo size */
+            width: auto;
+            object-fit: contain; 
+            border-radius: var(--radius);
+        }
+
+        .admin-header .store-name {
+            font-size: 1.3rem; /* Increased font size */
+            font-weight: 700;
+            color: var(--accent); /* Accent for store name */
+        }
+
+        .admin-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Increased gap */
+        }
+
+        .admin-actions .logout-btn {
+            background-color: var(--error);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem; /* Increased padding */
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem; /* Increased font size */
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* Increased gap */
+        }
+
+        .admin-actions .logout-btn:hover {
+            background-color: #C82333;
+            transform: translateY(-2px); /* Increased transform */
+        }
+
+        /* Admin Nav */
+        .admin-nav {
+            display: flex;
+            gap: 1.8rem; /* Increased gap for nav links */
+        }
+
+        .admin-nav-link {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 0.6rem 0.9rem; /* Increased padding */
+            border-radius: var(--radius);
+            transition: var(--transition);
+            position: relative;
+            font-size: 0.95rem; /* Increased font size */
+        }
+
+        .admin-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .admin-nav-link.active {
+            color: var(--accent);
+            background-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        /* Main Content Area */
+        .admin-main-content {
+            flex-grow: 1;
+            padding: 1.5rem; /* Reduced padding */
+            max-width: 900px; /* Adjusted max-width */
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Reduced gap */
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 1.5rem; /* Reduced margin */
+            position: relative;
+            padding-bottom: 0.75rem; /* Reduced padding */
+        }
+
+        .section-header h2 {
+            font-size: 1.8rem; /* Reduced heading size */
+            color: var(--primary);
+            font-weight: 800;
+            margin-bottom: 0.5rem; /* Reduced margin */
+        }
+
+        .section-header p {
+            font-size: 0.9rem; /* Reduced font size */
+            color: #6C757D;
+            max-width: 500px; /* Reduced max-width */
+            margin: 0 auto;
+        }
+
+        .section-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px; /* Reduced width */
+            height: 3px; /* Reduced thickness */
+            background-color: var(--secondary);
+            border-radius: 1.5px;
+        }
+
+        /* Settings Form Specific Styles */
+        .settings-form {
+            background-color: var(--color-admin-card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem; /* Spacing between setting groups */
+        }
+
+        .settings-group {
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            background-color: #FDFDFD;
+        }
+
+        .settings-group h3 {
+            font-size: 1.2rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-row {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-row label {
+            font-size: 0.9rem;
+            color: var(--dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-row input[type="text"],
+        .form-row input[type="url"],
+        .form-row input[type="email"],
+        .form-row textarea,
+        .form-row select {
+            width: 100%;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            color: var(--dark);
+            background-color: #FDFDFD;
+            transition: var(--transition);
+        }
+
+        .form-row input[type="text"]:focus,
+        .form-row input[type="url"]:focus,
+        .form-row input[type="email"]:focus,
+        .form-row textarea:focus,
+        .form-row select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+            background-color: white;
+        }
+
+        .form-row textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .save-settings-btn {
+            background-color: var(--success);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: var(--transition);
+            margin-top: 1.5rem;
+            align-self: center; /* Center the button */
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .save-settings-btn:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+        }
+
+        /* Delivery Prices Table */
+        .delivery-prices-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background-color: white;
+            border-radius: var(--radius);
+            overflow: hidden; /* For rounded corners on table */
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .delivery-prices-table th,
+        .delivery-prices-table td {
+            padding: 0.8rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .delivery-prices-table th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .delivery-prices-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .delivery-prices-table tbody tr:hover {
+            background-color: #F0F0F0;
+        }
+
+        .delivery-prices-table .btn-danger {
+            background-color: var(--error);
+            color: white;
+            border: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .delivery-prices-table .btn-danger:hover {
+            background-color: #C82333;
+            transform: translateY(-1px);
+        }
+
+        .add-delivery-price-form {
+            display: flex;
+            gap: 10px;
+            margin-top: 1rem;
+            align-items: flex-end;
+        }
+
+        .add-delivery-price-form .form-row {
+            flex: 1;
+            margin-bottom: 0; /* Remove default margin */
+        }
+
+        .add-delivery-price-form button {
+            flex-shrink: 0;
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            background-color: var(--info);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-delivery-price-form button:hover {
+            background-color: #138496;
+            transform: translateY(-1px);
+        }
+
+        /* Admin Footer */
+        .admin-footer {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.8rem 1rem; /* Reduced padding */
+            text-align: center;
+            font-size: 0.8rem; /* Reduced font size */
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            margin-top: auto;
+        }
+
+        /* Notification Styles */
+        .notification {
+            position: fixed;
+            top: 90px; /* Adjusted below new header height */
+            left: 50%;
+            transform: translateX(-50%) translateY(-100%);
+            background-color: var(--primary);
+            color: white;
+            padding: 10px 15px; /* Reduced padding */
+            border-radius: 6px; /* Slightly smaller radius */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            opacity: 0;
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+            z-index: 2000;
+            font-weight: bold;
+            font-size: 0.8rem; /* Reduced font size */
+            min-width: 180px; /* Reduced min-width */
+            text-align: center;
+        }
+
+        .notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .notification.info { background-color: var(--info); }
+        .notification.warning { background-color: var(--warning); }
+        .notification.error { background-color: var(--error); }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding-top: 70px; /* Adjust for smaller header */
+            }
+            .admin-header {
+                height: 70px;
+                padding: 0.6rem 1rem;
+            }
+            .admin-header .store-logo {
+                height: 40px;
+            }
+            .admin-header .store-name {
+                font-size: 1.1rem;
+            }
+            .admin-actions .logout-btn {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.85rem;
+            }
+            .admin-nav-link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+            .admin-main-content {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .section-header h2 {
+                font-size: 1.6rem;
+            }
+            .section-header p {
+                font-size: 0.8rem;
+            }
+            .section-header::after {
+                width: 50px;
+                height: 2px;
+            }
+            .settings-form {
+                padding: 1rem;
+                gap: 1rem;
+            }
+            .settings-group {
+                padding: 0.8rem;
+            }
+            .settings-group h3 {
+                font-size: 1.1rem;
+                margin-bottom: 0.8rem;
+            }
+            .form-row input, .form-row textarea, .form-row select {
+                padding: 0.5rem 0.7rem;
+                font-size: 0.8rem;
+            }
+            .form-row label {
+                font-size: 0.8rem;
+            }
+            .save-settings-btn {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .delivery-prices-table th, .delivery-prices-table td {
+                padding: 0.6rem;
+                font-size: 0.8rem;
+            }
+            .delivery-prices-table .btn-danger {
+                padding: 0.3rem 0.6rem;
+                font-size: 0.75rem;
+            }
+            .add-delivery-price-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .add-delivery-price-form button {
+                width: 100%;
+            }
+            .admin-footer {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.75rem;
+            }
+            .notification {
+                top: 80px;
+                font-size: 0.75rem;
+                padding: 8px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Admin Header -->
+    <header class="admin-header">
+        <div class="logo-container">
+            <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+            <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
+        </div>
+        
+        <nav class="admin-nav">
+            <a href="admin_hub.html" class="admin-nav-link">
+                <i class="fas fa-tachometer-alt"></i> الرئيسية
+            </a>
+            <a href="orders.html" class="admin-nav-link">
+                <i class="fas fa-shopping-bag"></i> الطلبات
+            </a>
+            <a href="products.html" class="admin-nav-link">
+                <i class="fas fa-box"></i> المنتجات
+            </a>
+            <a href="users.html" class="admin-nav-link">
+                <i class="fas fa-users"></i> المستخدمون
+            </a>
+            <a href="settings.html" class="admin-nav-link active">
+                <i class="fas fa-cogs"></i> الإعدادات
+            </a>
+            <a href="homepage_settings.html" class="admin-nav-link">
+                <i class="fas fa-home"></i> إعدادات الصفحة الرئيسية
+            </a>
+            <a href="admin_logs.html" class="admin-nav-link">
+                <i class="fas fa-clipboard-list"></i> سجل المشرفين
+            </a>
+        </nav>
+
+        <div class="admin-actions">
+            <button id="logoutBtn" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+        </div>
+    </header>
+    
+    <!-- Main Content for Settings -->
+    <main class="admin-main-content">
+        <section class="general-settings-section">
+            <div class="section-header">
+                <h2>الإعدادات العامة</h2>
+                <p>إدارة المعلومات الأساسية لمتجرك.</p>
+            </div>
+            
+            <div class="settings-form">
+                <!-- Store Information -->
+                <div class="settings-group">
+                    <h3>معلومات المتجر</h3>
+                    <div class="form-row">
+                        <label for="storeNameInput">اسم المتجر:</label>
+                        <input type="text" id="storeNameInput" placeholder="اسم متجرك الإلكتروني">
+                    </div>
+                    <div class="form-row">
+                        <label for="storeLogoUrlInput">رابط شعار المتجر:</label>
+                        <input type="url" id="storeLogoUrlInput" placeholder="أدخل رابط URL لشعار المتجر">
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="settings-group">
+                    <h3>معلومات الاتصال</h3>
+                    <div class="form-row">
+                        <label for="contactPhoneInput">رقم الهاتف:</label>
+                        <input type="text" id="contactPhoneInput" placeholder="مثال: +9647xxxxxxxx">
+                    </div>
+                    <div class="form-row">
+                        <label for="contactEmailInput">البريد الإلكتروني:</label>
+                        <input type="email" id="contactEmailInput" placeholder="مثال: info@yourstore.com">
+                    </div>
+                    <div class="form-row">
+                        <label for="storeAddressInput">عنوان المتجر:</label>
+                        <textarea id="storeAddressInput" placeholder="مثال: بغداد، حي المنصور، شارع 123"></textarea>
+                    </div>
+                </div>
+
+                <!-- General Preferences -->
+                <div class="settings-group">
+                    <h3>تفضيلات عامة</h3>
+                    <div class="form-row">
+                        <label for="currencySelect">العملة:</label>
+                        <select id="currencySelect">
+                            <option value="IQD">د.ع (دينار عراقي)</option>
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <label for="languageSelect">لغة الواجهة:</label>
+                        <select id="languageSelect">
+                            <option value="ar">العربية</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" id="saveSettingsBtn" class="save-settings-btn">
+                    <i class="fas fa-save"></i> حفظ الإعدادات
+                </button>
+            </div>
+        </section>
+
+        <section class="delivery-prices-section">
+            <div class="section-header">
+                <h2>إدارة أسعار التوصيل</h2>
+                <p>إضافة وتعديل وحذف أسعار التوصيل للمدن المختلفة.</p>
+            </div>
+
+            <div class="settings-form">
+                <div class="settings-group">
+                    <h3>أسعار التوصيل الحالية</h3>
+                    <table class="delivery-prices-table">
+                        <thead>
+                            <tr>
+                                <th>المدينة</th>
+                                <th>السعر</th>
+                                <th>الإجراء</th>
+                            </tr>
+                        </thead>
+                        <tbody id="deliveryPricesTableBody">
+                            <!-- Delivery prices will be loaded here by JavaScript -->
+                            <tr><td colspan="3" class="no-content-message">جاري تحميل أسعار التوصيل...</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="add-delivery-price-form">
+                        <div class="form-row">
+                            <label for="deliveryCityInput">المدينة:</label>
+                            <input type="text" id="deliveryCityInput" placeholder="اسم المدينة" required>
+                        </div>
+                        <div class="form-row">
+                            <label for="deliveryPriceInput">سعر التوصيل:</label>
+                            <input type="number" id="deliveryPriceInput" placeholder="السعر بالدينار العراقي" min="0" required>
+                        </div>
+                        <button type="button" id="addOrUpdateDeliveryPriceBtn">
+                            <i class="fas fa-plus-circle"></i> إضافة / تحديث
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Admin Footer -->
+    <footer class="admin-footer">
+        <p>&copy; 2025 لوحة تحكم المتجر. جميع الحقوق محفوظة.</p>
+    </footer>
+    
+</body>
+</html>
