@@ -48,7 +48,7 @@
             settings: {},
             homepageSettings: {},
             cart: [], // This will hold cart product data
-            allProducts: [], // To store all products for stock checking
+            allProducts: [], // To store all products (stock check removed, but still useful for product details)
             deliveryPrices: {}, // To store delivery prices by city
             selectedCity: null,
             deliveryCost: 0,
@@ -56,19 +56,19 @@
             authReady: false
         };
         
-        // وظيفة لإظهار مؤشر التحميل
+        // Function to show loading spinner
         function showLoading() {
             document.getElementById('cartLoadingSpinner').style.display = 'flex';
             document.getElementById('cartContainer').style.display = 'none';
         }
 
-        // وظيفة لإخفاء مؤشر التحميل
+        // Function to hide loading spinner
         function hideLoading() {
             document.getElementById('cartLoadingSpinner').style.display = 'none';
             document.getElementById('cartContainer').style.display = 'grid'; // Or block, depending on layout
         }
 
-        // وظيفة جلب بيانات سلة المستخدم
+        // Function to load user cart data
         async function loadUserCart(userId) {
             showLoading();
             try {
@@ -106,7 +106,7 @@
             }
         }
 
-        // وظيفة جلب السلة من Local Storage
+        // Function to get cart from Local Storage
         function getCartFromLocalStorage() {
             try {
                 const cart = localStorage.getItem('guestCart');
@@ -123,7 +123,7 @@
             }
         }
 
-        // وظيفة حفظ السلة في Local Storage
+        // Function to save cart to Local Storage
         function saveCartToLocalStorage(cart) {
             try {
                 localStorage.setItem('guestCart', JSON.stringify(cart));
@@ -135,17 +135,17 @@
             }
         }
 
-        // وظيفة لحساب إجمالي السلة (المجموع الفرعي)
+        // Function to calculate subtotal
         function calculateSubtotal(cartData) {
             return cartData.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0);
         }
 
-        // وظيفة لحساب الإجمالي الكلي (المجموع الفرعي + التوصيل)
+        // Function to calculate total price (subtotal + delivery)
         function calculateTotalPrice(subtotal) {
             return subtotal + window.frontendData.deliveryCost;
         }
 
-        // وظيفة لملء القائمة المنسدلة بالمدن
+        // Function to populate city dropdown
         function populateCitySelect() {
             const citySelect = document.getElementById('citySelect');
             if (!citySelect) return; // Exit if element not found
@@ -174,7 +174,7 @@
             updateDeliveryInfo();
         }
 
-        // وظيفة لتحديث معلومات التوصيل والإجمالي
+        // Function to update delivery information and total
         function updateDeliveryInfo() {
             const citySelect = document.getElementById('citySelect');
             const deliveryPriceDisplay = document.getElementById('deliveryPriceDisplay');
@@ -202,7 +202,7 @@
             }
         }
 
-        // وظيفة عرض عناصر سلة التسوق
+        // Function to render cart items
         function renderCart(cartData) {
             const cartContainer = document.getElementById('cartContainer');
             cartContainer.innerHTML = ''; // Clear existing content
@@ -215,8 +215,8 @@
                     
                     cartContainer.innerHTML += `
                         <div class="cart-item-card">
-                            <img src="${item.image || 'https://placehold.co/100x100/50B3A2/ffffff?text=Product'}" 
-                                 onerror="this.onerror=null;this.src='https://placehold.co/100x100/50B3A2/ffffff?text=Product';"
+                            <img src="${item.image || 'https://placehold.co/100x100/5D3FD3/ffffff?text=Product'}" 
+                                 onerror="this.onerror=null;this.src='https://placehold.co/100x100/5D3FD3/ffffff?text=Product';"
                                  alt="${item.name}" class="cart-item-image">
                             <div class="cart-item-details">
                                 <h4 class="cart-item-name">${item.name}</h4>
@@ -257,7 +257,7 @@
                     </div>
                 `;
                 
-                // إضافة مستمعات الأحداث للأزرار
+                // Add event listeners to buttons
                 document.querySelectorAll('.remove-from-cart-btn').forEach(btn => {
                     btn.addEventListener('click', (e) => {
                         const productId = e.currentTarget.dataset.productId;
@@ -312,7 +312,7 @@
             }
         }
 
-        // وظيفة حذف منتج من السلة
+        // Function to remove product from cart
         async function removeFromCart(productId) {
             if (!window.frontendData.currentUser || window.frontendData.currentUser.isAnonymous) {
                 // Remove from localStorage for guest users
@@ -338,7 +338,7 @@
             }
         }
 
-        // وظيفة تحديث كمية المنتج في السلة
+        // Function to update product quantity in cart
         async function updateCartQuantity(productId, change) {
             const productInCart = window.frontendData.cart.find(item => item.id === productId);
             if (!productInCart) {
@@ -354,19 +354,18 @@
                 return;
             }
             
-            // Get product stock from allProducts
-            const productDetails = window.frontendData.allProducts.find(p => p.id === productId);
-            if (!productDetails) {
-                showNotification('لم يتم العثور على تفاصيل المنتج للتحقق من المخزون.', 'error');
-                return;
-            }
-
-            const availableStock = productDetails.stock || 0; // Assume 0 if stock is not defined
-
-            if (newQuantity > availableStock) {
-                showNotification(`لا يوجد مخزون كافٍ. الكمية المتاحة: ${availableStock}.`, 'warning');
-                return;
-            }
+            // --- STOCK CHECK REMOVED AS PER USER REQUEST ---
+            // const productDetails = window.frontendData.allProducts.find(p => p.id === productId);
+            // if (!productDetails) {
+            //     showNotification('لم يتم العثور على تفاصيل المنتج للتحقق من المخزون.', 'error');
+            //     return;
+            // }
+            // const availableStock = productDetails.stock || 0;
+            // if (newQuantity > availableStock) {
+            //     showNotification(`لا يوجد مخزون كافٍ. الكمية المتاحة: ${availableStock}.`, 'warning');
+            //     return;
+            // }
+            // --- END OF REMOVED STOCK CHECK ---
 
 
             if (!window.frontendData.currentUser || window.frontendData.currentUser.isAnonymous) {
@@ -396,7 +395,7 @@
             }
         }
 
-        // وظيفة عرض الإشعارات
+        // Function to show notifications
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`; // Add type for styling (success, info, warning, error)
@@ -415,7 +414,7 @@
             }, 3000);
         }
 
-        // وظيفة عرض التذييل
+        // Function to render footer
         function renderFooter(settings) {
             const footer = document.getElementById('mainFooter');
             const hpSettings = window.frontendData.homepageSettings.footer || {};
@@ -500,7 +499,7 @@
             `;
         }
         
-        // وظيفة تحميل بيانات الواجهة الأمامية من Realtime Database
+        // Function to load frontend data from Realtime Database
         async function loadFrontendData() {
             try {
                 // Load Settings
@@ -508,7 +507,7 @@
                     window.frontendData.settings = snapshot.val() || {};
                     renderFooter(window.frontendData.settings);
                     document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
-                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر';
+                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://via.placeholder.com/150x70/6A0DAD/ffffff?text=شعار+متجر';
                 });
 
                 // Load Homepage Settings (needed for footer rendering)
@@ -517,7 +516,7 @@
                     renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
                 });
 
-                // Load All Products for stock checking
+                // Load All Products (for product details, stock check removed)
                 onValue(productsRef, (snapshot) => {
                     const products = [];
                     snapshot.forEach((childSnapshot) => {
@@ -540,7 +539,7 @@
                 });
             }
             
-            // تعيين حالة التنقل النشطة
+            // Set active navigation state
             const navItems = document.querySelectorAll('.bottom-nav-item');
             const currentPath = window.location.pathname.split('/').pop();
             
@@ -554,18 +553,18 @@
             });
         }
         
-        // تهيئة الصفحة
+        // Page initialization
         document.addEventListener('DOMContentLoaded', () => {
-            // التحقق من حالة تسجيل الدخول
+            // Check authentication state
             onAuthStateChanged(auth, async (user) => {
                 window.frontendData.currentUser = user;
                 window.frontendData.authReady = true;
                 
                 if (user) {
-                    // تحميل سلة المستخدم من Firebase
+                    // Load user cart from Firebase
                     loadUserCart(user.uid);
                 } else {
-                    // محاولة تسجيل الدخول باستخدام الرمز المخصص أو كمجهول
+                    // Try to sign in with custom token or anonymously
                     if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                         try {
                             const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
@@ -606,18 +605,18 @@
     </script>
     <style>
         :root {
-            --primary: #4A90E2; /* أزرق فاتح */
-            --secondary: #50B3A2; /* أخضر مائي */
-            --accent: #FF6B6B; /* أحمر وردي */
-            --light: #F0F4F8; /* رمادي فاتح جداً */
-            --dark: #2C3E50; /* أزرق داكن */
-            --success: #2ECC71; /* أخضر */
-            --warning: #F1C40F; /* أصفر */
-            --error: #E74C3C; /* أحمر */
-            --border: #DCE4EC; /* رمادي فاتح للحدود */
-            --shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* ظل أكثر بروزاً */
-            --radius: 16px; /* حواف دائرية أكبر */
-            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); /* انتقال سلس وممتد */
+            --primary: #6A0DAD; /* Purple */
+            --secondary: #5D3FD3; /* Darker Purple */
+            --accent: #FFD700; /* Gold */
+            --light: #F8F8FF; /* Ghost White - very light */
+            --dark: #2C003E; /* Very Dark Purple */
+            --success: #2ECC71; /* Green */
+            --warning: #FFBF00; /* Amber */
+            --error: #E74C3C; /* Red */
+            --border: #D8BFD8; /* Thistle - light purple border */
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.1); /* Standard shadow */
+            --radius: 16px; /* Larger rounded corners */
+            --transition: all 0.3s ease; /* Smoother, simpler transition */
         }
         
         * {
@@ -630,7 +629,7 @@
             background-color: var(--light);
             color: var(--dark);
             min-height: 100vh;
-            padding: 80px 0 100px; /* زيادة المساحة لشريط التنقل العلوي والسفلي */
+            padding: 80px 0 100px; /* Space for top and bottom bars */
             direction: rtl; 
             display: flex;
             flex-direction: column;
@@ -648,8 +647,8 @@
             display: flex;
             justify-content: space-between; 
             align-items: center; 
-            padding: 0 20px; /* زيادة المساحة الداخلية */
-            height: 80px; /* ارتفاع أكبر */
+            padding: 0 20px;
+            height: 80px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
         }
@@ -657,7 +656,7 @@
         .top-left {
             display: flex;
             align-items: center; 
-            gap: 15px; /* زيادة المسافة بين العناصر */
+            gap: 15px;
             height: 100%;
         }
         
@@ -667,7 +666,7 @@
             gap: 10px; 
             text-decoration: none; 
             color: white; 
-            transition: all 0.3s ease;
+            transition: var(--transition);
             height: 100%;
         }
         
@@ -681,44 +680,44 @@
             width: auto;
             object-fit: contain; 
             background-color: transparent;
-            padding: 8px 0; /* زيادة المساحة الداخلية */
+            padding: 8px 0;
         }
         
         .store-name {
-            font-size: 20px; /* حجم خط أكبر */
-            font-weight: 800; /* خط أثقل */
+            font-size: 20px;
+            font-weight: 800;
             letter-spacing: 0.5px;
         }
         
         .top-right-group {
             display: flex;
             align-items: center;
-            gap: 20px; /* زيادة المسافة بين الأيقونات */
+            gap: 20px;
         }
 
         .icon-btn {
             background: transparent;
             border: none;
             color: white;
-            font-size: 18px; /* حجم أيقونة أكبر */
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
             position: relative;
-            transition: all 0.3s ease;
-            padding: 8px 12px; /* زيادة المساحة الداخلية */
+            transition: var(--transition);
+            padding: 8px 12px;
             text-decoration: none; 
-            border-radius: var(--radius); /* حواف دائرية */
+            border-radius: var(--radius);
         }
         
         .icon-btn:hover {
-            transform: translateY(-3px) scale(1.05); /* تأثير رفع وتكبير */
-            background-color: rgba(255, 255, 255, 0.15); /* خلفية شفافة عند التحويم */
+            transform: translateY(-3px) scale(1.05);
+            background-color: rgba(255, 255, 255, 0.15);
         }
         
         .icon-label {
-            font-size: 13px; /* حجم خط أكبر قليلاً */
+            font-size: 13px;
             margin-top: 6px;
             font-weight: 700; 
         }
@@ -735,9 +734,9 @@
             padding: 15px 0;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
             z-index: 1000;
-            border-top-left-radius: 30px; /* حواف دائرية أكبر */
-            border-top-right-radius: 30px; /* حواف دائرية أكبر */
-            height: 100px; /* ارتفاع أكبر */
+            border-top-left-radius: 30px;
+            border-top-right-radius: 30px;
+            height: 100px;
         }
         
         .bottom-nav-item {
@@ -745,24 +744,24 @@
             flex-direction: column;
             align-items: center;
             color: white;
-            font-size: 14px; /* حجم خط أكبر قليلاً */
+            font-size: 14px;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             flex: 1;
-            padding: 12px 0; /* زيادة المساحة الداخلية */
+            padding: 12px 0;
             font-weight: 700; 
             position: relative;
         }
         
         .bottom-nav-item i {
-            font-size: 24px; /* حجم أيقونة أكبر */
+            font-size: 24px;
             margin-bottom: 6px;
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
         
         .bottom-nav-item:hover, .bottom-nav-item.active {
             color: var(--accent);
-            transform: translateY(-5px) scale(1.05); /* تأثير رفع وتكبير أكثر وضوحاً */
+            transform: translateY(-5px) scale(1.05);
         }
         
         .bottom-nav-item.active::after {
@@ -781,16 +780,16 @@
             flex-grow: 1;
             display: flex;
             flex-direction: column;
-            padding: 30px 20px; /* زيادة المساحة الداخلية */
+            padding: 30px 20px;
             max-width: 1200px;
             margin: 0 auto;
             width: 100%;
-            background-color: white; /* خلفية بيضاء للمحتوى الرئيسي */
+            background-color: white;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            margin-top: 20px; /* مسافة من الشريط العلوي */
-            margin-bottom: 20px; /* مسافة من الشريط السفلي */
-            min-height: calc(100vh - 180px); /* Adjust height to fill space between bars */
+            margin-top: 20px;
+            margin-bottom: 20px;
+            min-height: calc(100vh - 180px);
         }
         
         /* Cart Section Specific Styles */
@@ -801,9 +800,9 @@
 
         .cart-items-grid {
             display: grid;
-            grid-template-columns: 1fr; /* Single column for cart items */
+            grid-template-columns: 1fr;
             gap: 20px;
-            max-width: 800px; /* Limit width for better readability */
+            max-width: 800px;
             margin: 0 auto;
         }
 
@@ -816,7 +815,7 @@
             align-items: center;
             padding: 15px;
             gap: 15px;
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
 
         .cart-item-card:hover {
@@ -849,7 +848,7 @@
             align-items: center;
             gap: 10px;
             margin-bottom: 10px;
-            justify-content: flex-end; /* Align controls to the right */
+            justify-content: flex-end;
         }
 
         .quantity-btn {
@@ -864,12 +863,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .quantity-btn:hover {
-            background-color: #3a7bc8;
+            background-color: var(--secondary);
             transform: scale(1.1);
         }
 
@@ -894,7 +893,7 @@
         }
 
         .remove-from-cart-btn {
-            background-color: var(--accent);
+            background-color: var(--error);
             color: white;
             border: none;
             width: 40px;
@@ -902,23 +901,23 @@
             border-radius: 50%;
             cursor: pointer;
             font-size: 1.1rem;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0; /* Prevent shrinking */
+            flex-shrink: 0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .remove-from-cart-btn:hover {
-            background-color: #D64545;
+            background-color: #C0392B; /* Darker red */
             transform: scale(1.1);
         }
 
         .cart-summary {
             background-color: var(--light);
             border-radius: var(--radius);
-            padding: 30px; /* Increased padding */
+            padding: 30px;
             margin-top: 30px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             text-align: center;
@@ -927,15 +926,15 @@
             margin-right: auto;
             display: flex;
             flex-direction: column;
-            gap: 20px; /* Increased gap */
+            gap: 20px;
         }
 
         .summary-line {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 0; /* Increased padding */
-            border-bottom: 1px solid var(--border); /* Solid border for clarity */
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
         }
         .summary-line:last-of-type {
             border-bottom: none;
@@ -943,28 +942,28 @@
         }
 
         .summary-line h3 {
-            font-size: 1.3rem; /* Slightly larger font */
+            font-size: 1.3rem;
             color: var(--dark);
             margin: 0;
         }
         .summary-line span {
-            font-size: 1.3rem; /* Slightly larger font */
+            font-size: 1.3rem;
             font-weight: 700;
             color: var(--dark);
         }
 
         .summary-line.total-line {
             border-top: 2px solid var(--primary);
-            margin-top: 20px; /* Increased margin */
-            padding-top: 20px; /* Increased padding */
+            margin-top: 20px;
+            padding-top: 20px;
         }
         .summary-line.total-line h3 {
-            font-size: 1.6rem; /* Larger font for total */
+            font-size: 1.6rem;
             font-weight: 800;
             color: var(--dark);
         }
         .summary-line.total-line .total-price {
-            font-size: 1.6rem; /* Larger font for total */
+            font-size: 1.6rem;
             font-weight: 800;
             color: var(--primary);
         }
@@ -972,16 +971,16 @@
         .shipping-section {
             display: flex;
             flex-direction: column;
-            gap: 15px; /* Increased gap */
-            padding: 20px 0; /* Increased padding */
+            gap: 15px;
+            padding: 20px 0;
             border-bottom: 1px solid var(--border);
             border-top: 1px solid var(--border);
-            margin-top: 15px; /* Increased margin */
-            margin-bottom: 15px; /* Increased margin */
+            margin-top: 15px;
+            margin-bottom: 15px;
         }
 
         .shipping-section h3 {
-            font-size: 1.3rem; /* Slightly larger font */
+            font-size: 1.3rem;
             color: var(--dark);
             margin-bottom: 10px;
             text-align: right;
@@ -991,36 +990,36 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 15px; /* Increased gap */
+            gap: 15px;
         }
         .city-selection label {
             font-weight: 600;
             color: #555;
-            font-size: 1.1rem; /* Slightly larger font */
+            font-size: 1.1rem;
         }
         .city-dropdown {
-            padding: 10px 15px; /* Increased padding */
+            padding: 10px 15px;
             border: 1px solid var(--border);
             border-radius: 8px;
             background-color: white;
-            font-size: 1.1rem; /* Slightly larger font */
+            font-size: 1.1rem;
             color: var(--dark);
             flex-grow: 1;
-            max-width: 250px; /* Increased max-width */
+            max-width: 250px;
             cursor: pointer;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            transition: var(--transition);
         }
         .city-dropdown:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+            box-shadow: 0 0 0 3px rgba(106, 13, 173, 0.2); /* Using rgba from --primary */
         }
 
         .delivery-cost {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 1.2rem; /* Slightly larger font */
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--secondary);
         }
@@ -1042,7 +1041,7 @@
             cursor: pointer;
             font-weight: 700;
             font-size: 1.1rem;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
             display: inline-flex;
             align-items: center;
@@ -1051,7 +1050,7 @@
         }
 
         .checkout-btn:hover {
-            background-color: #439E8E;
+            background-color: var(--primary); /* Hover to primary purple */
             transform: translateY(-3px) scale(1.05);
             box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
         }
@@ -1066,8 +1065,8 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 300px; /* Ensure it takes up some space */
-            grid-column: 1 / -1; /* Span full width in grid */
+            min-height: 300px;
+            grid-column: 1 / -1;
         }
 
         .empty-cart-message i {
@@ -1089,12 +1088,12 @@
             text-decoration: none;
             font-weight: 700;
             margin-top: 20px;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .browse-btn:hover {
-            background-color: #3a7bc8;
+            background-color: var(--secondary);
             transform: translateY(-3px);
         }
 
@@ -1103,14 +1102,13 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            background-color: var(--secondary); /* Default for success */
+            background-color: var(--secondary);
             color: white;
             padding: 15px 25px;
             border-radius: 50px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transform: translateX(0) translateY(0); /* No animation on entry */
-            opacity: 1; /* Always visible when active */
-            transition: opacity 0.3s ease-out; /* Only fade out */
+            opacity: 1;
+            transition: opacity 0.3s ease-out;
             z-index: 2000;
             font-weight: bold;
             min-width: 250px;
@@ -1123,7 +1121,7 @@
 
         .notification.info { background-color: var(--primary); }
         .notification.warning { background-color: var(--warning); }
-        .notification.error { background-color: var(--accent); }
+        .notification.error { background-color: var(--error); }
 
 
         /* Loading Spinner Styles */
@@ -1150,7 +1148,7 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* Footer Styling (reused from other pages) */
+        /* Footer Styling */
         #mainFooter {
             background-color: var(--dark);
             color: white;
@@ -1158,7 +1156,7 @@
             border-top-left-radius: var(--radius);
             border-top-right-radius: var(--radius);
             box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-            margin-top: auto; /* يدفع التذييل للأسفل */
+            margin-top: auto;
         }
 
         .footer-content {
@@ -1172,7 +1170,7 @@
         .footer-section h3 {
             font-size: 1.4rem;
             margin-bottom: 20px;
-            color: var(--primary);
+            color: var(--accent); /* Gold for footer headers */
             position: relative;
             padding-bottom: 10px;
         }
@@ -1202,7 +1200,7 @@
         }
 
         .contact-info i {
-            color: var(--secondary);
+            color: var(--accent); /* Gold for contact icons */
             font-size: 1.1rem;
         }
 
@@ -1215,7 +1213,7 @@
         .social-link {
             color: white;
             font-size: 1.5rem;
-            transition: all 0.3s ease;
+            transition: var(--transition);
         }
 
         .social-link:hover {
@@ -1234,14 +1232,14 @@
         .footer-links a {
             color: #E0E0E0;
             text-decoration: none;
-            transition: all 0.3s ease;
+            transition: var(--transition);
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
         .footer-links a:hover {
-            color: var(--primary);
+            color: var(--accent); /* Gold for footer links hover */
             transform: translateX(-5px);
         }
 
@@ -1335,6 +1333,7 @@
             }
             .cart-summary {
                 padding: 15px;
+                gap: 15px;
             }
             .cart-summary h3 {
                 font-size: 1.5rem;
@@ -1364,7 +1363,7 @@
             .notification {
                 bottom: 10px;
                 right: 10px;
-                left: 10px; /* Make it full width on small screens */
+                left: 10px;
                 min-width: unset;
                 border-radius: 10px;
             }
@@ -1392,7 +1391,7 @@
     <header class="top-bar">
         <div class="top-left">
             <a href="index.html" class="logo-container">
-                <img id="storeLogo" src="https://via.placeholder.com/150x70/4A90E2/ffffff?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                <img id="storeLogo" src="https://via.placeholder.com/150x70/6A0DAD/ffffff?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
                 <div id="storeName" class="store-name">متجر إلكتروني</div>
             </a>
         </div>
