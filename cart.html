@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Updated Firebase SDK imports for version 9+ modular SDK -->
     <script type="module">
-        // Firebase SDK links updated to version 9.23.0
+        // تم تحديث روابط Firebase SDK إلى الإصدار 9.23.0
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
@@ -263,6 +263,14 @@
                 // Populate city select and update delivery info after rendering cart items
                 populateCitySelect();
                 updateDeliveryInfo(); // Initial update
+
+                // Re-attach event listener for the checkout button after it's rendered
+                const checkoutBtn = document.querySelector('.checkout-btn');
+                if (checkoutBtn) {
+                    checkoutBtn.addEventListener('click', () => {
+                        window.location.href = 'checkout.html';
+                    });
+                }
                 
             } else {
                 cartContainer.innerHTML = `
@@ -326,20 +334,6 @@
                 return;
             }
             
-            // --- STOCK CHECK REMOVED AS PER USER REQUEST ---
-            // const productDetails = window.frontendData.allProducts.find(p => p.id === productId);
-            // if (!productDetails) {
-            //     showNotification('لم يتم العثور على تفاصيل المنتج للتحقق من المخزون.', 'error');
-            //     return;
-            // }
-            // const availableStock = productDetails.stock || 0;
-            // if (newQuantity > availableStock) {
-            //     showNotification(`لا يوجد مخزون كافٍ. الكمية المتاحة: ${availableStock}.`, 'warning');
-            //     return;
-            // }
-            // --- END OF REMOVED STOCK CHECK ---
-
-
             if (!window.frontendData.currentUser || window.frontendData.currentUser.isAnonymous) {
                 // Update localStorage for guest users
                 let localCart = getCartFromLocalStorage();
@@ -578,10 +572,9 @@
                                 updateCartQuantity(productId, 0, newValue);
                             }
                         }
-                    } else if (target.classList.contains('checkout-btn') || target.closest('.checkout-btn')) {
-                        // Redirect to checkout page
-                        window.location.href = 'checkout.html';
                     }
+                    // The checkout button event listener is now attached *inside* renderCart
+                    // to ensure it's always attached to the newly rendered button.
                 });
 
                 cartContainer.addEventListener('change', (e) => {
@@ -594,6 +587,7 @@
                 });
             }
 
+            // This listener must be outside the cartContainer listener as citySelect is not part of cartItemCard
             const citySelectElement = document.getElementById('citySelect');
             if (citySelectElement) {
                 citySelectElement.addEventListener('change', updateDeliveryInfo);
