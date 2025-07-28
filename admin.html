@@ -2,15 +2,16 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم الرئيسية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لوحة التحكم - متجر موحد</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Firebase SDK imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, get, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -31,223 +32,328 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
         // Realtime Database references
-        const ordersRef = dbRef(db, "orders");
-        const productsRef = dbRef(db, "products");
-        const usersRef = dbRef(db, "users");
-        const generalSettingsRef = dbRef(db, "settings");
-        const adminLogsRef = dbRef(db, "adminLogs"); // Reference to admin logs
+        const generalSettingsRef = dbRef(db, "settings"); // General settings node
+        const adminLogsRef = dbRef(db, "adminLogs");
 
         // Global data storage for frontend
         window.adminData = {
-            ordersCount: 0,
-            productsCount: 0,
-            usersCount: 0,
-            generalSettings: {},
+            generalSettings: {}, // To store fetched settings
+            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
             authReady: true // Always ready as no auth is required
         };
 
         // Function to show notifications
         function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
+            const notification = document.getElementById('notification');
+            if (!notification) return;
+
             notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            void notification.offsetWidth;
-            notification.classList.add('show');
+            notification.className = `notification ${type} show`;
             
             setTimeout(() => {
                 notification.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
             }, 3000);
         }
 
-        // Function to load general settings (for sidebar header)
+        // Function to show a custom confirmation modal
+        function showConfirmModal(message, onConfirm, onCancel = () => {}) {
+            const modal = document.getElementById('confirmationModal');
+            const cityNameSpan = document.getElementById('cityName');
+            const confirmBtn = document.getElementById('confirmDeleteBtn');
+            const cancelBtn = document.getElementById('cancelDeleteBtn');
+
+            if (!modal || !cityNameSpan || !confirmBtn || !cancelBtn) {
+                console.error("Confirmation modal elements not found.");
+                return;
+            }
+
+            // Update modal message (assuming message contains the city name or is generic)
+            cityNameSpan.textContent = message.split('"')[1] || ''; // Extract city name if present, or leave empty
+            if (!cityNameSpan.textContent) { // If no city name extracted, just show generic message
+                modal.querySelector('p').textContent = message;
+            } else {
+                modal.querySelector('p').textContent = `هل أنت متأكد أنك تريد حذف سعر التوصيل لمدينة "${cityNameSpan.textContent}"؟`;
+            }
+
+            modal.style.display = 'flex'; // Show the modal
+            document.body.style.overflow = 'hidden'; // Prevent scrolling background
+
+            // Clear previous listeners to prevent multiple calls
+            confirmBtn.onclick = null;
+            cancelBtn.onclick = null;
+
+            confirmBtn.onclick = () => {
+                onConfirm();
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            };
+            cancelBtn.onclick = () => {
+                onCancel();
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            };
+
+            // Close modal when clicking outside
+            window.onclick = (event) => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                    onCancel(); // Call cancel if user clicks outside
+                }
+            };
+        }
+
+        // Function to load general settings from Firebase (for Settings tab)
         async function loadGeneralSettings() {
             try {
-                const snapshot = await get(generalSettingsRef);
-                const settings = snapshot.val() || {};
-                window.adminData.generalSettings = settings;
-                const storeNameElement = document.getElementById('storeName');
-                if (storeNameElement) {
-                    storeNameElement.textContent = settings.storeName || 'لوحة تحكم المتجر';
-                }
-                const storeLogoElement = document.getElementById('storeLogo');
-                if (storeLogoElement) {
-                    storeLogoElement.src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
-                }
+                // Listen for real-time updates to general settings
+                onValue(generalSettingsRef, (snapshot) => {
+                    const settings = snapshot.val() || {};
+                    window.adminData.generalSettings = settings;
+
+                    // Populate form fields for General Info and Contact Info in Settings Tab
+                    document.getElementById('storeNameInput').value = settings.storeName || '';
+                    document.getElementById('storeLogoUrlInput').value = settings.logoUrl || '';
+                    document.getElementById('phoneNumberInput').value = settings.phoneNumber || '';
+                    document.getElementById('emailInput').value = settings.email || '';
+                    document.getElementById('storeAddressInput').value = settings.address || '';
+                    document.getElementById('currencySelect').value = settings.currency || 'IQD'; // Default to IQD
+                    document.getElementById('languageSelect').value = settings.language || 'ar'; // Default to Arabic
+
+                    // Update mobile header
+                    const mobileStoreNameElement = document.getElementById('mobileStoreName');
+                    if (mobileStoreNameElement) {
+                        mobileStoreNameElement.textContent = settings.storeName || 'لوحة التحكم';
+                    }
+                    const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
+                    if (mobileStoreLogoElement) {
+                        mobileStoreLogoElement.src = settings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
+                    }
+
+                    // Render delivery prices table in Settings Tab
+                    renderDeliveryPricesTable(settings.deliveryPrices || {});
+                    // showNotification('تم تحميل الإعدادات بنجاح.', 'info'); // Only show when settings tab is active
+                });
             } catch (error) {
                 console.error("Error loading general settings:", error);
+                showNotification('حدث خطأ أثناء تحميل الإعدادات.', 'error');
             }
         }
 
-        // Function to load dashboard data (counts)
-        function loadDashboardData() {
-            // Orders count
-            onValue(ordersRef, (snapshot) => {
-                window.adminData.ordersCount = snapshot.size; // Number of children
-                const ordersCountElement = document.getElementById('ordersCount');
-                if (ordersCountElement) {
-                    ordersCountElement.textContent = window.adminData.ordersCount;
+        // Function to save general settings
+        async function saveGeneralSettings() {
+            const storeName = document.getElementById('storeNameInput').value.trim();
+            const storeLogoUrl = document.getElementById('storeLogoUrlInput').value.trim();
+            const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+            const email = document.getElementById('emailInput').value.trim();
+            const storeAddress = document.getElementById('storeAddressInput').value.trim();
+            const currency = document.getElementById('currencySelect').value;
+            const language = document.getElementById('languageSelect').value;
+
+            if (!storeName || !phoneNumber || !email || !storeAddress) {
+                showNotification('الرجاء ملء جميع حقول معلومات المتجر والاتصال.', 'error');
+                return;
+            }
+
+            showNotification('جاري حفظ الإعدادات...', 'info');
+
+            try {
+                const oldSettings = { ...window.adminData.generalSettings }; // Clone for logging
+                const newSettings = {
+                    storeName: storeName,
+                    logoUrl: storeLogoUrl,
+                    phoneNumber: phoneNumber,
+                    email: email,
+                    address: storeAddress,
+                    currency: currency,
+                    language: language,
+                    deliveryPrices: window.adminData.generalSettings.deliveryPrices || {} // Keep existing delivery prices
+                };
+                await set(generalSettingsRef, newSettings); // Use set to overwrite all settings
+                window.adminData.generalSettings = newSettings; // Update global state
+                showNotification('تم حفظ الإعدادات بنجاح!', 'success');
+
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_GENERAL_SETTINGS',
+                    adminId: window.adminData.currentUser.uid,
+                    oldSettings: oldSettings,
+                    newSettings: newSettings,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10); // Keep logs clean
+                
+                // Update mobile header immediately after saving
+                const mobileStoreNameElement = document.getElementById('mobileStoreName');
+                if (mobileStoreNameElement) {
+                    mobileStoreNameElement.textContent = newSettings.storeName || 'لوحة التحكم';
                 }
+                const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
+                if (mobileStoreLogoElement) {
+                    mobileStoreLogoElement.src = newSettings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
+                }
+
+            } catch (error) {
+                console.error("Error saving general settings:", error);
+                if (error.code) {
+                    console.error("Firebase Error Code:", error.code);
+                }
+                if (error.message) {
+                    console.error("Firebase Error Message:", error.message);
+                }
+                showNotification('حدث خطأ أثناء حفظ الإعدادات. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
+            }
+        }
+
+        // Function to render delivery prices table
+        function renderDeliveryPricesTable(deliveryPrices) {
+            const deliveryPricesTableBody = document.getElementById('deliveryPricesTableBody');
+            deliveryPricesTableBody.innerHTML = ''; // Clear previous rows
+
+            const pricesArray = Object.entries(deliveryPrices).map(([city, price]) => ({ city, price }));
+
+            if (pricesArray.length === 0) {
+                deliveryPricesTableBody.innerHTML = `<tr><td colspan="3" class="no-content-message">لا توجد أسعار توصيل محددة.</td></tr>`;
+                return;
+            }
+
+            pricesArray.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.city}</td>
+                    <td>${item.price.toLocaleString('ar-EG')} د.ع</td>
+                    <td>
+                        <button class="delivery-action-btn delete-delivery-btn" data-city="${item.city}" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                deliveryPricesTableBody.appendChild(row);
             });
 
-            // Products count
-            onValue(productsRef, (snapshot) => {
-                window.adminData.productsCount = snapshot.size;
-                const productsCountElement = document.getElementById('productsCount');
-                if (productsCountElement) {
-                    productsCountElement.textContent = window.adminData.productsCount;
-                }
-            });
-
-            // Users count (excluding anonymous if desired)
-            onValue(usersRef, (snapshot) => {
-                let count = 0;
-                snapshot.forEach((childSnapshot) => {
-                    const userData = childSnapshot.val();
-                    if (!userData.isAnonymous) { // Assuming you mark anonymous users
-                        count++;
+            // Add event listeners for delete buttons (re-attach after rendering)
+            document.querySelectorAll('.delete-delivery-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const cityToDelete = event.target.dataset.city || event.target.closest('[data-city]')?.dataset.city;
+                    if (cityToDelete) {
+                        showConfirmModal(`هل أنت متأكد أنك تريد حذف سعر التوصيل للمدينة "${cityToDelete}"؟`, () => {
+                            deleteDeliveryPrice(cityToDelete);
+                        });
                     }
                 });
-                window.adminData.usersCount = count;
-                const usersCountElement = document.getElementById('usersCount');
-                if (usersCountElement) {
-                    usersCountElement.textContent = window.adminData.usersCount;
-                }
             });
-
-            showNotification('تم تحديث بيانات لوحة التحكم.', 'info');
         }
 
-        // Function to load and display recent activities
-        function loadRecentActivities() {
-            // Query last 10 activities by timestamp
-            // Note: Removed orderByChild from here to avoid index error, sorting in JS
-            onValue(adminLogsRef, (snapshot) => {
-                const activities = [];
-                snapshot.forEach((childSnapshot) => {
-                    activities.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        // Function to add or update a delivery price
+        async function addOrUpdateDeliveryPrice() {
+            const cityInput = document.getElementById('deliveryCityInput').value.trim();
+            const priceInput = document.getElementById('deliveryPriceInput').value.trim();
+
+            if (!cityInput || !priceInput) {
+                showNotification('الرجاء إدخال المدينة وسعر التوصيل.', 'error');
+                return;
+            }
+
+            const price = parseFloat(priceInput);
+            if (isNaN(price) || price <= 0) {
+                showNotification('الرجاء إدخال سعر توصيل صحيح وموجب.', 'error');
+                return;
+            }
+
+            showNotification('جاري إضافة/تحديث سعر التوصيل...', 'info');
+
+            try {
+                const currentDeliveryPrices = window.adminData.generalSettings.deliveryPrices || {};
+                const oldPrice = currentDeliveryPrices[cityInput];
+                
+                const newDeliveryPrices = {
+                    ...currentDeliveryPrices,
+                    [cityInput]: price
+                };
+
+                await update(generalSettingsRef, { deliveryPrices: newDeliveryPrices });
+                window.adminData.generalSettings.deliveryPrices = newDeliveryPrices; // Update global state
+                
+                showNotification('تم إضافة/تحديث سعر التوصيل بنجاح!', 'success');
+                
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_DELIVERY_PRICE',
+                    adminId: window.adminData.currentUser.uid,
+                    city: cityInput,
+                    oldPrice: oldPrice || 'غير موجود',
+                    newPrice: price,
+                    timestamp: new Date().toISOString()
                 });
-                // Sort in descending order for display (newest first)
-                activities.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                // Limit to last 10 activities after sorting
-                const recentActivities = activities.slice(0, 10);
-                renderRecentActivities(recentActivities);
-            });
-        }
+                manageAdminLogsSize(10);
 
-        // Function to format timestamp for display
-        function formatTimestamp(timestamp) {
-            if (!timestamp) return 'غير متوفر';
-            const date = new Date(timestamp);
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMinutes = Math.round(diffMs / (1000 * 60));
-            const diffHours = Math.round(diffMs / (1000 * 60 * 60));
-            const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24));
+                // Clear input fields
+                document.getElementById('deliveryCityInput').value = '';
+                document.getElementById('deliveryPriceInput').value = '';
 
-            if (diffMinutes < 1) return 'الآن';
-            if (diffMinutes < 60) return `منذ ${diffMinutes} دقيقة`;
-            if (diffHours < 24) return `منذ ${diffHours} ساعة`;
-            if (diffDays < 7) return `منذ ${diffDays} يوم`;
-            
-            return date.toLocaleDateString('ar-EG', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
-        // Function to get activity icon and color
-        function getActivityIconAndColor(action) {
-            switch (action) {
-                case 'ADD_PRODUCT': return { icon: 'fas fa-box-open', color: 'success-color' };
-                case 'UPDATE_PRODUCT': return { icon: 'fas fa-edit', color: 'info-color' };
-                case 'DELETE_PRODUCT': return { icon: 'fas fa-trash', color: 'error-color' };
-                case 'TOGGLE_PRODUCT_STATUS': return { icon: 'fas fa-toggle-on', color: 'primary-color' };
-                case 'UPDATE_ORDER_STATUS': return { icon: 'fas fa-shopping-bag', color: 'primary-color' };
-                case 'UPDATE_DELIVERY_PRICE': return { icon: 'fas fa-truck', color: 'warning-color' };
-                case 'DELETE_DELIVERY_PRICE': return { icon: 'fas fa-truck-loading', color: 'error-color' };
-                case 'UPDATE_GENERAL_SETTINGS': return { icon: 'fas fa-cogs', color: 'info-color' };
-                case 'UPDATE_HOMEPAGE_SETTINGS': return { icon: 'fas fa-home', color: 'primary-color' };
-                case 'UPDATE_USER': return { icon: 'fas fa-user-edit', color: 'info-color' };
-                case 'TOGGLE_USER_STATUS': return { icon: 'fas fa-user-check', color: 'primary-color' };
-                case 'DELETE_USER': return { icon: 'fas fa-user-slash', color: 'error-color' };
-                case 'ADD_CATEGORY': return { icon: 'fas fa-folder-plus', color: 'success-color' };
-                case 'UPDATE_CATEGORY': return { icon: 'fas fa-folder-open', color: 'info-color' };
-                case 'DELETE_CATEGORY': return { icon: 'fas fa-folder-minus', color: 'error-color' };
-                default: return { icon: 'fas fa-info-circle', color: 'info-color' };
+            } catch (error) {
+                console.error("Error adding/updating delivery price:", error);
+                if (error.code) {
+                    console.error("Firebase Error Code:", error.code);
+                }
+                if (error.message) {
+                    console.error("Firebase Error Message:", error.message);
+                }
+                showNotification('حدث خطأ أثناء إضافة/تحديث سعر التوصيل. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
             }
         }
 
-        // Function to render recent activities
-        function renderRecentActivities(activities) {
-            const activityListContainer = document.getElementById('activityList');
-            if (!activityListContainer) { // Add null check here
-                console.error("Error: 'activityList' element not found.");
-                return;
-            }
-            activityListContainer.innerHTML = ''; // Clear previous activities
+        // Function to delete a delivery price
+        async function deleteDeliveryPrice(city) {
+            showNotification('جاري حذف سعر التوصيل...', 'info');
 
-            if (activities.length === 0) {
-                activityListContainer.innerHTML = '<p class="no-content-message">لا توجد نشاطات حديثة لعرضها.</p>';
-                return;
-            }
+            try {
+                const currentDeliveryPrices = window.adminData.generalSettings.deliveryPrices || {};
+                const priceToDelete = currentDeliveryPrices[city];
+                
+                // Create a new object without the city to delete
+                const newDeliveryPrices = { ...currentDeliveryPrices };
+                delete newDeliveryPrices[city];
 
-            activities.forEach(activity => {
-                const { icon, color } = getActivityIconAndColor(activity.action);
-                const item = document.createElement('div');
-                item.className = 'activity-item';
-                item.innerHTML = `
-                    <span class="activity-icon"><i class="${icon} ${color}"></i></span>
-                    <p>${getLogMessage(activity)}</p>
-                    <span class="activity-time">${formatTimestamp(activity.timestamp)}</span>
-                `;
-                activityListContainer.appendChild(item);
-            });
-        }
+                await update(generalSettingsRef, { deliveryPrices: newDeliveryPrices });
+                window.adminData.generalSettings.deliveryPrices = newDeliveryPrices; // Update global state
 
-        // Helper to generate a human-readable log message
-        function getLogMessage(activity) {
-            const adminId = activity.adminId === 'anonymous_admin' ? 'المشرف' : activity.adminId; // Simplified for display
-            switch (activity.action) {
-                case 'ADD_PRODUCT': return `قام ${adminId} بإضافة منتج جديد: ${activity.newValue?.name || 'غير معروف'}`;
-                case 'UPDATE_PRODUCT': return `قام ${adminId} بتعديل المنتج: ${activity.newValue?.name || 'غير معروف'}`;
-                case 'DELETE_PRODUCT': return `قام ${adminId} بحذف المنتج: ${activity.deletedProduct?.name || 'غير معروف'}`;
-                case 'TOGGLE_PRODUCT_STATUS': return `قام ${adminId} بـ ${activity.newStatus ? 'تفعيل' : 'إلغاء تفعيل'} المنتج: ${activity.productId}`;
-                case 'UPDATE_ORDER_STATUS': return `قام ${adminId} بتحديث حالة الطلب #${activity.orderId} إلى: ${activity.newStatus}`;
-                case 'UPDATE_DELIVERY_PRICE': return `قام ${adminId} بتحديث سعر توصيل مدينة ${activity.city} إلى ${activity.newPrice} د.ع`;
-                case 'DELETE_DELIVERY_PRICE': return `قام ${adminId} بحذف سعر توصيل مدينة ${activity.city}`;
-                case 'UPDATE_GENERAL_SETTINGS': return `قام ${adminId} بتحديث الإعدادات العامة للمتجر`;
-                case 'UPDATE_HOMEPAGE_SETTINGS': return `قام ${adminId} بتحديث إعدادات الصفحة الرئيسية`;
-                case 'UPDATE_USER': return `قام ${adminId} بتعديل بيانات المستخدم: ${activity.newValue?.name || 'غير معروف'}`;
-                case 'TOGGLE_USER_STATUS': return `قام ${adminId} بـ ${activity.newStatus ? 'تفعيل' : 'إلغاء تفعيل'} حساب المستخدم: ${activity.userId}`;
-                case 'DELETE_USER': return `قام ${adminId} بحذف حساب المستخدم: ${activity.deletedUser?.name || 'غير معروف'}`;
-                case 'ADD_CATEGORY': return `قام ${adminId} بإضافة قسم جديد: ${activity.categoryName || 'غير معروف'}`;
-                case 'UPDATE_CATEGORY': return `قام ${adminId} بتعديل القسم: ${activity.oldCategoryName || 'غير معروف'} إلى ${activity.newCategoryName || 'غير معروف'}`;
-                case 'DELETE_CATEGORY': return `قام ${adminId} بحذف القسم: ${activity.deletedCategoryName || 'غير معروف'}`;
-                default: return `قام ${adminId} بنشاط غير معروف: ${activity.action}`;
+                showNotification('تم حذف سعر التوصيل بنجاح!', 'success');
+                
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'DELETE_DELIVERY_PRICE',
+                    adminId: window.adminData.currentUser.uid,
+                    city: city,
+                    deletedPrice: priceToDelete,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10);
+
+            } catch (error) {
+                console.error("Error deleting delivery price:", error);
+                if (error.code) {
+                    console.error("Firebase Error Code:", error.code);
+                }
+                if (error.message) {
+                    console.error("Firebase Error Message:", error.message);
+                }
+                showNotification('حدث خطأ أثناء حذف سعر التوصيل. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
             }
         }
 
         // Function to manage the size of admin logs in Firebase
         async function manageAdminLogsSize(maxLogs = 10) {
             try {
-                // Fetch all logs without orderByChild to avoid index error
                 const snapshot = await get(adminLogsRef); 
                 const logs = [];
                 snapshot.forEach(childSnapshot => {
                     logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
                 });
 
-                // Sort logs by timestamp in JavaScript
                 logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
 
                 if (logs.length > maxLogs) {
@@ -263,13 +369,14 @@
             }
         }
 
-        // Function to handle logout (will just redirect as no Firebase auth session)
+        // Function to handle logout
         async function handleLogout() {
             try {
                 if (auth.currentUser) {
                     await signOut(auth);
                 }
                 showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
+                // Redirect to admin_login.html relative to the current origin
                 window.location.replace(window.location.origin + '/admin_login.html'); 
             } catch (error) {
                 console.error("Error during logout (no active session expected):", error);
@@ -277,42 +384,145 @@
             }
         }
 
-        // Function to toggle sidebar visibility
-        function toggleSidebar() {
-            const sidebar = document.getElementById('adminSidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            const body = document.body;
+        // Function to load overview data from Firebase
+        async function loadOverviewData() {
+            try {
+                showNotification('جاري تحميل بيانات النظرة العامة...', 'info');
 
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-            body.classList.toggle('sidebar-open'); // To prevent body scroll
+                // Fetch total orders
+                const ordersSnapshot = await get(dbRef(db, 'orders'));
+                document.getElementById('totalOrdersValue').textContent = ordersSnapshot.exists() ? Object.keys(ordersSnapshot.val()).length : 0;
+
+                // Fetch total products
+                const productsSnapshot = await get(dbRef(db, 'products'));
+                document.getElementById('totalProductsValue').textContent = productsSnapshot.exists() ? Object.keys(productsSnapshot.val()).length : 0;
+
+                // Fetch total offers (assuming a 'offers' node)
+                const offersSnapshot = await get(dbRef(db, 'offers'));
+                document.getElementById('totalOffersValue').textContent = offersSnapshot.exists() ? Object.keys(offersSnapshot.val()).length : 0;
+
+                // Fetch total categories
+                const categoriesSnapshot = await get(dbRef(db, 'categories'));
+                document.getElementById('totalCategoriesValue').textContent = categoriesSnapshot.exists() ? Object.keys(categoriesSnapshot.val()).length : 0;
+
+                // Fetch total customer messages (assuming a 'customerMessages' node)
+                const customerMessagesSnapshot = await get(dbRef(db, 'customerMessages'));
+                document.getElementById('totalUserMessagesValue').textContent = customerMessagesSnapshot.exists() ? Object.keys(customerMessagesSnapshot.val()).length : 0;
+
+                showNotification('تم تحميل بيانات النظرة العامة بنجاح!', 'success');
+            } catch (error) {
+                console.error("Error loading overview data:", error);
+                showNotification('حدث خطأ أثناء تحميل بيانات النظرة العامة.', 'error');
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadGeneralSettings(); 
-            loadDashboardData();
-            loadRecentActivities(); // Load real recent activities
+        // Function to switch between sections/tabs
+        function showSection(sectionId) {
+            // Hide all content sections
+            document.querySelectorAll('.main-content > section').forEach(section => {
+                section.style.display = 'none';
+            });
+            // Show the selected content section
+            const targetSection = document.getElementById(sectionId + 'Section');
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
 
-            // Set active navigation link in sidebar
-            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
-            const currentPath = window.location.pathname.split('/').pop();
-            navItems.forEach(item => {
-                // Special handling for admin.html to be active when it's the current page
-                if (item.getAttribute('href') === 'admin.html' && (currentPath === 'admin.html' || currentPath === '')) {
-                    item.classList.add('active');
-                } else if (item.getAttribute('href') === currentPath) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
+            // Update section header title and description
+            const sectionHeaderTitle = document.querySelector('.section-header h2');
+            const sectionHeaderDesc = document.querySelector('.section-header p');
+
+            switch (sectionId) {
+                case 'overview':
+                    sectionHeaderTitle.textContent = 'نظرة عامة على لوحة التحكم';
+                    sectionHeaderDesc.textContent = 'مرحباً بك في لوحة تحكم متجرك.';
+                    loadOverviewData(); // Load data specifically for overview
+                    break;
+                case 'customerReplies':
+                    sectionHeaderTitle.textContent = 'الرد على الزبائن';
+                    sectionHeaderDesc.textContent = 'إدارة رسائل واستفسارات العملاء.';
+                    break;
+                case 'requestsAdmin':
+                    sectionHeaderTitle.textContent = 'إدارة الطلبات';
+                    sectionHeaderDesc.textContent = 'عرض وتتبع وإدارة طلبات العملاء.';
+                    break;
+                case 'products':
+                    sectionHeaderTitle.textContent = 'إدارة المنتجات';
+                    sectionHeaderDesc.textContent = 'إضافة وتعديل وحذف المنتجات.';
+                    break;
+                case 'users':
+                    sectionHeaderTitle.textContent = 'إدارة المستخدمين';
+                    sectionHeaderDesc.textContent = 'عرض وإدارة حسابات المستخدمين.';
+                    break;
+                case 'categoriesAdmin':
+                    sectionHeaderTitle.textContent = 'إدارة الأقسام';
+                    sectionHeaderDesc.textContent = 'تنظيم أقسام المنتجات في متجرك.';
+                    break;
+                case 'settings':
+                    sectionHeaderTitle.textContent = 'الإعدادات العامة';
+                    sectionHeaderDesc.textContent = 'إدارة معلومات متجرك وتحديث الإعدادات.';
+                    // loadGeneralSettings() is already called onValue, so data will be there
+                    break;
+                case 'homepageSettings':
+                    sectionHeaderTitle.textContent = 'إعدادات الصفحة الرئيسية';
+                    sectionHeaderDesc.textContent = 'تخصيص محتوى وتصميم الصفحة الرئيسية.';
+                    break;
+                default:
+                    sectionHeaderTitle.textContent = 'لوحة التحكم';
+                    sectionHeaderDesc.textContent = 'صفحة غير معروفة.';
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGeneralSettings(); // Load general settings once for header and settings tab
+
+            // Mobile Navigation Toggle (for the sidebar)
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileNav = document.getElementById('mobileNav');
+            
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileNav.classList.toggle('open');
+            });
+            
+            // Close mobile nav (sidebar) when clicking outside
+            document.addEventListener('click', (event) => {
+                const isClickInsideNav = mobileNav.contains(event.target);
+                const isClickOnMenuBtn = mobileMenuBtn.contains(event.target);
+                const isClickOnHeader = document.querySelector('.mobile-header').contains(event.target);
+
+                // Close sidebar if click is outside sidebar, menu button, and the main header itself
+                if (!isClickInsideNav && !isClickOnMenuBtn && !isClickOnHeader && mobileNav.classList.contains('open')) {
+                    mobileNav.classList.remove('open');
                 }
             });
 
-            // Add event listeners for sidebar toggle
-            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
-            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+            // Event listeners for sidebar navigation items
+            document.querySelectorAll('.mobile-nav .nav-item').forEach(item => {
+                item.addEventListener('click', (event) => {
+                    // Only prevent default if it's not the logout button
+                    if (item.id !== 'mobileLogoutBtn') {
+                        event.preventDefault();
+                        const sectionId = item.getAttribute('data-section'); // Use data-section for clarity
+                        if (sectionId) { // Check if it's a content section link
+                            showSection(sectionId);
+                            mobileNav.classList.remove('open'); // Close sidebar after selecting a section
+                        }
+                    }
+                });
+            });
 
-            // Add logout event listener to the sidebar button
-            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+            // Set initial active section to 'overview'
+            showSection('overview');
+
+            // Save General Settings Button Functionality (in Settings tab)
+            document.getElementById('saveGeneralSettingsBtn').addEventListener('click', saveGeneralSettings);
+            
+            // Add/Update Delivery Price Button (in Settings tab)
+            document.getElementById('addUpdateDeliveryPriceBtn').addEventListener('click', addOrUpdateDeliveryPrice);
+            
+            // Logout button in mobile nav
+            document.getElementById('mobileLogoutBtn').addEventListener('click', handleLogout);
 
             // Periodically manage log size (e.g., every 30 seconds)
             setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
@@ -320,31 +530,27 @@
     </script>
     <style>
         :root {
-            /* Main Colors - Adjusted for Admin Panel */
-            --color-primary-dark-blue: #1A237E; /* Primary */
-            --color-secondary-gold: #FFD700; /* Secondary / Accent */
-            --color-admin-bg: #F0F2F5; /* Lighter, modern background */
-            --color-admin-card-bg: #FFFFFF; /* White cards */
-            --color-admin-text: #343A40; /* Darker text for readability */
-            --color-admin-border: #E0E0E0; /* Light border */
-
-            /* Mapped to general variables for consistency */
+            --color-primary-dark-blue: #1A237E;
+            --color-secondary-gold: #FFD700;
+            --color-admin-bg: #F0F2F5;
+            --color-admin-card-bg: #FFFFFF;
+            --color-admin-text: #343A40;
+            --color-admin-border: #E0E0E0;
             --primary: var(--color-primary-dark-blue);
             --secondary: var(--color-secondary-gold);
             --accent: var(--color-secondary-gold);
             --light: var(--color-admin-bg);
             --dark: var(--color-admin-text);
-            --success: #28A745; /* Bootstrap green */
-            --warning: #FFC107; /* Bootstrap yellow */
-            --error: #DC3545; /* Bootstrap red */
-            --info: #17A2B8; /* Bootstrap info blue */
-            --border: #DEE2E6; /* Slightly darker border for better contrast */
-            --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Lighter, smaller shadow */
-            --radius: 0.6rem; /* Slightly larger rounded corners for modern feel */
-            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
-
+            --success: #28A745;
+            --warning: #FFC107;
+            --error: #DC3545;
+            --info: #17A2B8;
+            --border: #DEE2E6;
+            --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
+            --radius: 0.8rem;
+            --transition: all 0.2s ease-in-out;
             font-family: 'Cairo', sans-serif;
-            font-size: 14px; /* Base font size */
+            font-size: 16px;
             direction: rtl;
         }
 
@@ -352,6 +558,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
@@ -360,203 +567,140 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is off-screen */
+            overflow-x: hidden;
+            padding-top: 60px; /* Space for fixed mobile header */
         }
 
-        /* Body class to prevent scrolling when sidebar is open */
-        body.sidebar-open {
-            overflow: hidden;
-        }
-
-        .admin-dashboard-wrapper {
-            display: flex;
-            flex-grow: 1;
-            width: 100%;
-            position: relative; /* For overlay positioning */
-        }
-
-        /* Admin Sidebar - Now a slide-out menu */
-        .admin-sidebar {
-            width: 250px;
-            background-color: var(--primary);
-            color: white;
-            display: flex;
-            flex-direction: column;
-            padding: 1.5rem 0;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-            position: fixed; /* Fixed position */
-            top: 0;
-            right: -250px; /* Hidden by default (off-screen to the right) */
-            height: 100vh;
-            overflow-y: auto;
-            transition: right 0.3s ease-in-out; /* Slide transition */
-        }
-
-        .admin-sidebar.open {
-            right: 0; /* Slide in */
-        }
-
-        .sidebar-header {
-            padding: 0 1.5rem 1.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-        }
-
-        .sidebar-header .logo-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 0.5rem;
-            text-decoration: none;
-            color: white;
-        }
-
-        .sidebar-header .store-logo {
-            width: 80px;
-            height: auto;
-            object-fit: contain;
-            border-radius: var(--radius);
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 5px;
-        }
-
-        .sidebar-header .store-name {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--accent);
-        }
-
-        .sidebar-nav {
-            flex-grow: 1;
-            padding: 1rem 0;
-        }
-
-        .sidebar-nav .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.8rem 1.5rem;
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: var(--transition);
-            border-right: 4px solid transparent;
-        }
-
-        .sidebar-nav .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: var(--accent);
-        }
-
-        .sidebar-nav .nav-item.active {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: var(--accent);
-            border-right-color: var(--accent);
-        }
-
-        .sidebar-nav .nav-item i {
-            font-size: 1.2rem;
-        }
-
-        .sidebar-footer {
-            padding: 1.5rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            text-align: center;
-        }
-
-        .sidebar-footer .logout-btn {
-            background-color: var(--error);
-            color: white;
-            border: none;
-            padding: 0.6rem 1.2rem;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .sidebar-footer .logout-btn:hover {
-            background-color: #C82333;
-            transform: translateY(-2px);
-        }
-
-        /* Main Content Area */
-        .admin-main-content {
-            flex-grow: 1;
-            padding: 2rem;
-            width: 100%; /* Take full width */
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            position: relative; /* For hamburger button positioning */
-        }
-
-        /* Hamburger Menu Button */
-        .menu-toggle-btn {
-            position: absolute;
-            top: 20px;
-            left: 20px; /* Position on the left for RTL */
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: var(--radius);
-            padding: 0.8rem 1rem;
-            font-size: 1.2rem;
-            cursor: pointer;
-            z-index: 1001; /* Above main content */
-            box-shadow: var(--shadow);
-            transition: background-color 0.2s ease-in-out;
-        }
-
-        .menu-toggle-btn:hover {
-            background-color: #151B6B;
-        }
-
-        /* Overlay for when sidebar is open */
-        .sidebar-overlay {
+        /* Mobile Header (Top Bar: Logo + Hamburger Button) */
+        .mobile-header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 999; /* Below sidebar, above content */
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            height: 60px; /* Fixed height for header */
+            background-color: var(--primary);
+            color: white;
+            padding: 0.8rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        .sidebar-overlay.active {
-            opacity: 1;
-            visibility: visible;
+        .mobile-header .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .mobile-header .store-logo {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 3px;
+        }
+
+        .mobile-header .store-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .mobile-menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        /* Mobile Navigation (Sidebar - for all links including Logout) */
+        .mobile-nav {
+            position: fixed;
+            top: 0; /* Starts from top */
+            left: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            background-color: var(--primary);
+            color: white;
+            z-index: 1000; /* Above main content, same as header */
+            transform: translateX(100%); /* Hidden by default, slides from right */
+            transition: transform 0.3s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            padding-top: 60px; /* Space for header */
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mobile-nav.open {
+            transform: translateX(0); /* Slide in */
+            overflow-y: auto; /* Allow scrolling if content is long */
+        }
+
+        .mobile-nav .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-nav .nav-item:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-nav .nav-item:hover,
+        .mobile-nav .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .mobile-nav .nav-item i {
+            font-size: 1.2rem;
+            min-width: 25px;
+            text-align: center;
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            padding: 1rem;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.2rem;
             position: relative;
             padding-bottom: 0.75rem;
-            margin-top: 4rem; /* Space for hamburger button */
         }
 
         .section-header h2 {
-            font-size: 2rem;
+            font-size: 1.6rem;
             color: var(--primary);
             font-weight: 800;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
 
         .section-header p {
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: #6C757D;
-            max-width: 600px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -566,161 +710,273 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
+            width: 60px;
+            height: 3px;
             background-color: var(--secondary);
             border-radius: 2px;
         }
 
-        /* Dashboard Widgets Grid */
-        .dashboard-widgets-grid {
+        /* Dashboard Summary Cards (for Overview Section) */
+        .summary-cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-top: 1.5rem;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsive grid */
+            gap: 1rem;
+            padding: 0.5rem;
         }
 
-        .widget-card {
+        .summary-card {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 1.5rem;
+            padding: 1.2rem;
             border: 1px solid var(--border);
             text-align: center;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 1rem;
-            transition: var(--transition);
-            cursor: pointer;
+            justify-content: center;
+            gap: 0.8rem;
             text-decoration: none;
-            color: inherit;
+            color: var(--dark);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
         }
 
-        .widget-card:hover {
+        .summary-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
         }
 
-        .widget-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
+        .summary-card i {
+            font-size: 2.2rem; /* Slightly smaller icon for summary */
+            color: var(--primary);
+        }
+
+        .summary-card .card-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--accent);
+            margin-top: 0.5rem;
+        }
+
+        .summary-card .card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        /* Settings Section Styles (reused from previous iteration) */
+        .settings-section-card {
+            background-color: var(--color-admin-card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 1.2rem;
+            border: 1px solid var(--border);
+            width: 100%;
+        }
+
+        .settings-section-card h3 {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1.1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.95rem;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"],
+        .form-group select {
+            width: 100%;
+            padding: 0.9rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.95rem;
+            color: var(--dark);
+            background-color: #FDFDFD;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+            background-color: white;
+        }
+
+        .form-actions {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem;
-            color: white;
-            flex-shrink: 0;
+            gap: 0.6rem;
+            width: 100%; /* Full width buttons on mobile */
         }
 
-        .widget-icon.primary-bg { background-color: var(--primary); }
-        .widget-icon.success-bg { background-color: var(--success); }
-        .widget-icon.info-bg { background-color: var(--info); }
-        .widget-icon.warning-bg { background-color: var(--warning); }
-
-        .widget-details {
-            flex-grow: 1;
-            text-align: right;
+        .btn-primary { background-color: var(--primary); }
+        .btn-primary:hover {
+            background-color: #151B6B;
+            transform: translateY(-2px);
+        }
+        .btn-danger { background-color: var(--error); }
+        .btn-danger:hover {
+            background-color: #C82333;
+            transform: translateY(-2px);
+        }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
         }
 
-        .widget-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: var(--dark);
-            line-height: 1;
-        }
-
-        .widget-label {
-            font-size: 1.1rem;
+        .no-content-message {
+            text-align: center;
             color: #6C757D;
-            font-weight: 600;
+            padding: 1.5rem;
+            font-size: 1rem;
         }
 
-        /* Recent Activity Section */
-        .recent-activity-section {
+        /* Delivery Prices Table */
+        .delivery-prices-table-container {
+            overflow-x: auto; /* Allows horizontal scrolling for the table if content is too wide */
+            margin-top: 1.2rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.5rem;
+            background: white;
+            max-height: 300px; /* Limit height and add scroll for long lists */
+            overflow-y: auto;
+        }
+
+        .delivery-prices-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 100%; /* Ensure it takes full width of its container */
+        }
+
+        .delivery-prices-table th,
+        .delivery-prices-table td {
+            padding: 0.8rem;
+            text-align: right;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+            font-size: 0.9rem;
+        }
+
+        .delivery-prices-table th {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 700;
+            position: sticky; /* Keeps header visible when scrolling table */
+            top: 0;
+        }
+
+        .delivery-prices-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .delivery-prices-table tbody tr:hover {
+            background-color: #F0F0F0;
+        }
+
+        .delivery-action-btn {
+            background: none;
+            border: none;
+            color: var(--primary); /* Use primary color for action icons */
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            transition: var(--transition);
+        }
+        .delivery-action-btn:hover {
+            color: var(--accent);
+            transform: scale(1.1);
+        }
+        .delivery-action-btn.delete-delivery-btn {
+            color: var(--error); /* Red for delete button */
+        }
+        .delivery-action-btn.delete-delivery-btn:hover {
+            color: #C82333;
+        }
+
+        .delivery-input-group {
+            display: flex;
+            flex-direction: column; /* Stack inputs vertically on mobile */
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        /* Customer Replies Section */
+        .customer-replies-section .content-card {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             padding: 1.5rem;
             border: 1px solid var(--border);
+            text-align: center;
+        }
+        
+        .customer-replies-section .content-card p {
+            font-size: 1rem;
+            color: #555;
+            line-height: 1.6;
         }
 
-        .recent-activity-section h3 {
-            font-size: 1.5rem;
-            color: var(--primary);
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .activity-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .activity-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.8rem 0;
-            border-bottom: 1px dashed var(--border);
-        }
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-        .activity-icon {
-            font-size: 1.4rem;
-            flex-shrink: 0;
-        }
-
-        .activity-item p {
-            flex-grow: 1;
-            font-size: 0.95rem;
-            color: var(--dark);
-        }
-
-        .activity-item .activity-time {
-            font-size: 0.8rem;
-            color: #888;
-            flex-shrink: 0;
-        }
-
-        .success-color { color: var(--success); }
-        .info-color { color: var(--info); }
-        .primary-color { color: var(--primary); }
-        .warning-color { color: var(--warning); }
-        .error-color { color: var(--error); }
-
-        /* Admin Footer (integrated at the bottom of the page) */
+        /* Admin Footer */
         .admin-footer {
             background-color: var(--primary);
             color: white;
-            padding: 0.8rem 1rem;
+            padding: 0.8rem;
             text-align: center;
             font-size: 0.8rem;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-            margin-top: auto;
+            margin-top: 2rem;
         }
 
         /* Notification Styles */
         .notification {
             position: fixed;
-            top: 20px;
+            top: 70px; /* Below mobile header */
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
             color: white;
-            padding: 10px 15px;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             opacity: 0;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
             z-index: 2000;
             font-weight: bold;
-            font-size: 0.8rem;
-            min-width: 180px;
+            font-size: 0.9rem;
+            min-width: 80%;
+            max-width: 90%;
             text-align: center;
         }
 
@@ -733,266 +989,302 @@
         .notification.warning { background-color: var(--warning); }
         .notification.error { background-color: var(--error); }
 
-        /* Responsive adjustments */
-        @media (max-width: 992px) {
-            .admin-sidebar {
-                width: 200px;
-                right: -200px; /* Adjust for smaller width */
-                padding: 1rem 0;
-            }
-            .sidebar-header {
-                padding: 0 1rem 1rem;
-            }
-            .sidebar-header .store-logo {
-                width: 70px;
-            }
-            .sidebar-header .store-name {
-                font-size: 1.2rem;
-            }
-            .sidebar-nav .nav-item {
-                padding: 0.7rem 1rem;
-                font-size: 0.9rem;
-            }
-            .sidebar-nav .nav-item i {
-                font-size: 1.1rem;
-            }
-            .sidebar-footer {
-                padding: 1rem;
-            }
-            .sidebar-footer .logout-btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
-            }
-            .admin-main-content {
-                padding: 1.5rem;
-            }
-            .section-header h2 {
-                font-size: 1.8rem;
-            }
-            .section-header p {
-                font-size: 0.9rem;
-            }
-            .dashboard-widgets-grid {
-                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            }
-            .widget-card {
-                padding: 1.2rem;
-            }
-            .widget-icon {
-                width: 50px;
-                height: 50px;
-                font-size: 1.5rem;
-            }
-            .widget-value {
-                font-size: 2rem;
-            }
-            .widget-label {
-                font-size: 1rem;
-            }
-            .recent-activity-section h3 {
-                font-size: 1.3rem;
-            }
-            .activity-item p {
-                font-size: 0.85rem;
-            }
-            .activity-item .activity-time {
-                font-size: 0.75rem;
-            }
-            .menu-toggle-btn {
-                padding: 0.6rem 0.8rem;
-                font-size: 1rem;
-            }
+        /* Custom Modal Styles */
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            padding: 1rem;
         }
 
-        @media (max-width: 768px) {
-            .admin-sidebar {
-                width: 100%; /* Full width on very small screens */
-                right: -100%; /* Hide full width */
-            }
-            .admin-sidebar.open {
-                right: 0;
-            }
-            .sidebar-header {
-                padding: 0 1rem 0.5rem;
-            }
-            .sidebar-header .logo-container {
-                flex-direction: row;
-                justify-content: center;
-                gap: 0.5rem;
-            }
-            .sidebar-header .store-logo {
-                width: 50px;
-            }
-            .sidebar-header .store-name {
-                font-size: 1.1rem;
-            }
-            .sidebar-nav {
-                padding: 0.5rem 0;
-            }
-            .sidebar-nav .nav-item {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
-                border-right: none;
-                border-bottom: 2px solid transparent; /* Use bottom border for active */
-            }
-            .sidebar-nav .nav-item.active {
-                border-bottom-color: var(--accent);
-                border-right-color: transparent;
-            }
-            .sidebar-nav .nav-item i {
-                font-size: 1rem;
-            }
-            .sidebar-footer {
-                padding: 0.5rem 1rem;
-            }
-            .sidebar-footer .logout-btn {
-                width: 100%;
-            }
-            .admin-main-content {
-                padding: 1rem;
-            }
-            .section-header h2 {
-                font-size: 1.6rem;
-            }
-            .section-header p {
-                font-size: 0.8rem;
-            }
-            .dashboard-widgets-grid {
-                grid-template-columns: 1fr;
-            }
-            .widget-card {
-                padding: 1rem;
-            }
-            .widget-icon {
-                width: 45px;
-                height: 45px;
-                font-size: 1.3rem;
-            }
-            .widget-value {
-                font-size: 2.2rem;
-            }
-            .widget-label {
-                font-size: 0.9rem;
-            }
-            .recent-activity-section h3 {
-                font-size: 1.2rem;
-            }
-            .activity-item {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 0.5rem;
-            }
-            .activity-item p {
-                text-align: right;
-            }
-            .activity-icon {
-                align-self: flex-start;
-            }
-            .admin-footer {
-                padding: 0.6rem 0.8rem;
-                font-size: 0.75rem;
-            }
-            .notification {
-                top: 10px;
-                font-size: 0.7rem;
-                padding: 6px 10px;
-            }
+        .custom-modal-content {
+            background-color: var(--color-admin-card-bg);
+            padding: 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            text-align: center;
+            width: 100%;
+            max-width: 350px;
+            color: var(--dark);
+        }
+
+        .custom-modal-content p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.5;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .modal-actions .btn {
+            min-width: 120px;
+            width: auto;
+            padding: 0.8rem 1.2rem;
         }
     </style>
 </head>
 <body>
-    <div class="admin-dashboard-wrapper">
-        <!-- Sidebar Overlay -->
-        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <!-- Mobile Header (Top Bar: Logo + Hamburger Button) -->
+    <header class="mobile-header">
+        <div class="logo-container">
+            <img id="mobileStoreLogo" src="https://placehold.co/40x40/1A237E/FFD700?text=شعار" alt="Store Logo" class="store-logo">
+            <div id="mobileStoreName" class="store-name">لوحة التحكم</div>
+        </div>
+        <button class="mobile-menu-btn" id="mobileMenuBtn" title="القائمة">
+            <i class="fas fa-bars"></i>
+        </button>
+    </header>
 
-        <!-- Sidebar Navigation -->
-        <aside class="admin-sidebar" id="adminSidebar">
-            <div class="sidebar-header">
-                <a href="admin.html" class="logo-container">
-                    <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
-                    <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
-                </a>
+    <!-- Mobile Navigation (Sidebar - for all links including Logout) -->
+    <nav class="mobile-nav" id="mobileNav">
+        <a href="#" class="nav-item" data-section="overview">
+            <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
+        </a>
+        <a href="#" class="nav-item" data-section="customerReplies">
+            <i class="fas fa-reply"></i> <span>الرد على الزبائن</span>
+        </a>
+        <a href="#" class="nav-item" data-section="requestsAdmin">
+            <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
+        </a>
+        <a href="#" class="nav-item" data-section="products">
+            <i class="fas fa-box"></i> <span>المنتجات</span>
+        </a>
+        <a href="#" class="nav-item" data-section="users">
+            <i class="fas fa-users"></i> <span>المستخدمون</span>
+        </a>
+        <a href="#" class="nav-item" data-section="categoriesAdmin">
+            <i class="fas fa-list"></i> <span>الأقسام</span>
+        </a>
+        <a href="#" class="nav-item" data-section="settings">
+            <i class="fas fa-cogs"></i> <span>الإعدادات</span>
+        </a>
+        <a href="#" class="nav-item" data-section="homepageSettings">
+            <i class="fas fa-home"></i> <span>إعدادات الصفحة الرئيسية</span>
+        </a>
+        <a href="#" class="nav-item" id="mobileLogoutBtn">
+            <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
+        </a>
+    </nav>
+
+    <!-- Main Content Area - This will hold the dynamically switched sections -->
+    <main class="main-content">
+        <div class="section-header">
+            <!-- Title and description will be updated by JavaScript -->
+            <h2>نظرة عامة على لوحة التحكم</h2>
+            <p>مرحباً بك في لوحة تحكم متجرك.</p>
+        </div>
+
+        <!-- Overview Section (Default active) -->
+        <section id="overviewSection" class="dashboard-section">
+            <div class="summary-cards-grid">
+                <div class="summary-card">
+                    <i class="fas fa-shopping-bag"></i>
+                    <div id="totalOrdersValue" class="card-value">0</div>
+                    <span class="card-title">إجمالي الطلبات</span>
+                </div>
+                <div class="summary-card">
+                    <i class="fas fa-box"></i>
+                    <div id="totalProductsValue" class="card-value">0</div>
+                    <span class="card-title">إجمالي المنتجات</span>
+                </div>
+                <div class="summary-card">
+                    <i class="fas fa-tag"></i>
+                    <div id="totalOffersValue" class="card-value">0</div>
+                    <span class="card-title">إجمالي العروض</span>
+                </div>
+                <div class="summary-card">
+                    <i class="fas fa-list"></i>
+                    <div id="totalCategoriesValue" class="card-value">0</div>
+                    <span class="card-title">إجمالي الأقسام</span>
+                </div>
+                <div class="summary-card">
+                    <i class="fas fa-envelope"></i>
+                    <div id="totalUserMessagesValue" class="card-value">0</div>
+                    <span class="card-title">رسائل المستخدمين</span>
+                </div>
             </div>
-            <nav class="sidebar-nav">
-                <a href="admin.html" class="nav-item active">
-                    <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
-                </a>
-                <a href="requestsadmin.html" class="nav-item">
-                    <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
-                </a>
-                <a href="products.html" class="nav-item">
-                    <i class="fas fa-box"></i> <span>المنتجات</span>
-                </a>
-                <a href="users.html" class="nav-item">
-                    <i class="fas fa-users"></i> <span>المستخدمون</span>
-                </a>
-                <a href="categories_admin.html" class="nav-item">
-                    <i class="fas fa-list"></i> <span>الأقسام</span>
-                </a>
-                <a href="settings.html" class="nav-item">
-                    <i class="fas fa-cogs"></i> <span>الإعدادات</span>
-                </a>
-                <a href="homepage_settings.html" class="nav-item">
-                    <i class="fas fa-home"></i> <span>إعدادات الصفحة الرئيسية</span>
-                </a>
-            </nav>
-            <div class="sidebar-footer">
-                <button id="logoutBtn" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
+        </section>
+
+        <!-- Customer Replies Section (Placeholder - now minimal) -->
+        <section id="customerRepliesSection" style="display: none;">
+            <div class="settings-section-card">
+                <h3>الرد على الزبائن</h3>
+                <div class="no-content-message">
+                    <i class="fas fa-tools"></i>
+                    <p>هذا القسم قيد الإنشاء. سيتم إضافة وظائف الرد على الزبائن هنا قريباً.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Requests Admin Section (Placeholder) -->
+        <section id="requestsAdminSection" style="display: none;">
+            <div class="settings-section-card">
+                <h3>إدارة الطلبات</h3>
+                <div class="no-content-message">
+                    <i class="fas fa-info-circle"></i>
+                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة الطلبات هنا.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Products Section (Placeholder) -->
+        <section id="productsSection" style="display: none;">
+            <div class="settings-section-card">
+                <h3>إدارة المنتجات</h3>
+                <div class="no-content-message">
+                    <i class="fas fa-info-circle"></i>
+                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة المنتجات هنا.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Users Section (Placeholder) -->
+        <section id="usersSection" style="display: none;">
+            <div class="settings-section-card">
+                <h3>إدارة المستخدمين</h3>
+                <div class="no-content-message">
+                    <i class="fas fa-info-circle"></i>
+                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة المستخدمين هنا.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Categories Admin Section (Placeholder) -->
+        <section id="categoriesAdminSection" style="display: none;">
+            <div class="settings-section-card">
+                <h3>إدارة الأقسام</h3>
+                <div class="no-content-message">
+                    <i class="fas fa-info-circle"></i>
+                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة الأقسام هنا.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settingsSection" class="settings-section-card" style="display: none;">
+            <form id="generalSettingsForm">
+                <h3>معلومات المتجر</h3>
+                <div class="form-group">
+                    <label for="storeNameInput">اسم المتجر:</label>
+                    <input type="text" id="storeNameInput" placeholder="أدخل اسم متجرك" required>
+                </div>
+                <div class="form-group">
+                    <label for="storeLogoUrlInput">رابط شعار المتجر:</label>
+                    <input type="url" id="storeLogoUrlInput" placeholder="https://example.com/logo.png">
+                </div>
+                <div class="form-group">
+                    <label for="phoneNumberInput">رقم الهاتف:</label>
+                    <input type="tel" id="phoneNumberInput" placeholder="أدخل رقم الهاتف">
+                </div>
+                <div class="form-group">
+                    <label for="emailInput">البريد الإلكتروني:</label>
+                    <input type="email" id="emailInput" placeholder="أدخل البريد الإلكتروني">
+                </div>
+                <div class="form-group">
+                    <label for="storeAddressInput">عنوان المتجر:</label>
+                    <input type="text" id="storeAddressInput" placeholder="أدخل عنوان المتجر">
+                </div>
+                <div class="form-group">
+                    <label for="currencySelect">العملة:</label>
+                    <select id="currencySelect">
+                        <option value="IQD">د.ع (دينار عراقي)</option>
+                        <option value="USD">$ (دولار أمريكي)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="languageSelect">لغة الواجهة:</label>
+                    <select id="languageSelect">
+                        <option value="ar">العربية</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-primary" id="saveGeneralSettingsBtn">
+                        <i class="fas fa-save"></i> حفظ الإعدادات
+                    </button>
+                </div>
+            </form>
+
+            <h3 style="margin-top: 2.5rem;">إدارة أسعار التوصيل</h3>
+            <div class="delivery-prices-table-container">
+                <table class="delivery-prices-table">
+                    <thead>
+                        <tr>
+                            <th>المدينة</th>
+                            <th>السعر</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="deliveryPricesTableBody">
+                        <!-- Delivery prices will be loaded here by JavaScript -->
+                        <tr><td colspan="3" class="no-content-message">جاري تحميل أسعار التوصيل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3 style="margin-top: 1.5rem;">إضافة مدينة جديدة</h3>
+            <div class="delivery-input-group">
+                <div class="form-group">
+                    <label for="deliveryCityInput">المدينة:</label>
+                    <input type="text" id="deliveryCityInput" placeholder="اسم المدينة">
+                </div>
+                <div class="form-group">
+                    <label for="deliveryPriceInput">سعر التوصيل:</label>
+                    <input type="number" id="deliveryPriceInput" placeholder="السعر بالدينار العراقي">
+                </div>
+                <button type="button" class="btn btn-success" id="addUpdateDeliveryPriceBtn">
+                    <i class="fas fa-plus-circle"></i> إضافة مدينة
                 </button>
             </div>
-        </aside>
+        </section>
 
-        <!-- Main Content Area -->
-        <main class="admin-main-content">
-            <!-- Hamburger Menu Button -->
-            <button id="menuToggleBtn" class="menu-toggle-btn">
-                <i class="fas fa-bars"></i>
-            </button>
-
-            <div class="section-header">
-                <h2>نظرة عامة على لوحة التحكم</h2>
-                <p>مرحباً بك في لوحة التحكم الخاصة بمتجرك. إليك ملخص سريع لأدائك.</p>
-            </div>
-
-            <div class="dashboard-widgets-grid">
-                <a href="requestsadmin.html" class="widget-card">
-                    <div class="widget-icon primary-bg"><i class="fas fa-shopping-bag"></i></div>
-                    <div class="widget-details">
-                        <div class="widget-value" id="ordersCount">0</div>
-                        <div class="widget-label">إجمالي الطلبات</div>
-                    </div>
-                </a>
-                <a href="products.html" class="widget-card">
-                    <div class="widget-icon success-bg"><i class="fas fa-box"></i></div>
-                    <div class="widget-details">
-                        <div class="widget-value" id="productsCount">0</div>
-                        <div class="widget-label">إجمالي المنتجات</div>
-                    </div>
-                </a>
-                <a href="users.html" class="widget-card">
-                    <div class="widget-icon info-bg"><i class="fas fa-users"></i></div>
-                    <div class="widget-details">
-                        <div class="widget-value" id="usersCount">0</div>
-                        <div class="widget-label">إجمالي المستخدمين</div>
-                    </div>
-                </a>
-            </div>
-
-            <section class="recent-activity-section">
-                <h3>النشاطات الأخيرة</h3>
-                <div class="activity-list" id="activityList">
-                    <!-- Recent activities will be loaded here by JavaScript -->
-                    <p class="no-content-message">جاري تحميل النشاطات...</p>
+        <!-- Homepage Settings Section (Placeholder) -->
+        <section id="homepageSettingsSection" style="display: none;">
+            <div class="settings-section-card">
+                <h3>إعدادات الصفحة الرئيسية</h3>
+                <div class="no-content-message">
+                    <i class="fas fa-info-circle"></i>
+                    <p>هذا القسم قيد الإنشاء. سيتم توفير خيارات تخصيص الصفحة الرئيسية هنا.</p>
                 </div>
-            </section>
-        </main>
-    </div>
+            </div>
+        </section>
 
+    </main>
+    
     <!-- Admin Footer -->
     <footer class="admin-footer">
         <p>&copy; 2025 لوحة تحكم المتجر. جميع الحقوق محفوظة.</p>
     </footer>
+    
+    <!-- Notification -->
+    <div class="notification" id="notification">
+        <!-- Notification messages will appear here -->
+    </div>
+    
+    <!-- Modal for Confirmation -->
+    <div class="custom-modal" id="confirmationModal" style="display: none;">
+        <div class="custom-modal-content">
+            <p>هل أنت متأكد أنك تريد حذف سعر التوصيل لمدينة <span id="cityName"></span>؟</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="cancelDeleteBtn">إلغاء</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn">حذف</button>
+            </div>
+        </div>
+    </div>
     
 </body>
 </html>
