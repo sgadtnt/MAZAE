@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم - إدارة المنتجات</title>
+    <title>لوحة التحكم - المنتجات</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Firebase SDK imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getStorage, ref as storageRef, deleteObject } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
+        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -37,8 +37,8 @@
         // Realtime Database references
         const productsRef = dbRef(db, "products");
         const categoriesRef = dbRef(db, "categories");
-        const generalSettingsRef = dbRef(db, "settings");
         const adminLogsRef = dbRef(db, "adminLogs");
+        const generalSettingsRef = dbRef(db, "settings"); // Added for store name/logo
 
         // Global data storage for frontend
         window.adminData = {
@@ -69,15 +69,50 @@
             }, 3000);
         }
 
-        // Function to load general settings (for footer, etc.)
+        // Function to load general settings (for sidebar header)
         async function loadGeneralSettings() {
             try {
                 const snapshot = await get(generalSettingsRef);
                 const settings = snapshot.val() || {};
                 window.adminData.generalSettings = settings;
+                const storeNameElement = document.getElementById('storeName');
+                if (storeNameElement) {
+                    storeNameElement.textContent = settings.storeName || 'لوحة تحكم المتجر';
+                }
+                const storeLogoElement = document.getElementById('storeLogo');
+                if (storeLogoElement) {
+                    storeLogoElement.src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                }
             } catch (error) {
                 console.error("Error loading general settings:", error);
             }
+        }
+
+        // Function to load categories for the dropdown
+        function loadCategoriesForDropdown() {
+            onValue(categoriesRef, (snapshot) => {
+                const categories = [];
+                snapshot.forEach((childSnapshot) => {
+                    categories.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                });
+                window.adminData.categories = categories;
+                populateCategoryDropdown(categories);
+            });
+        }
+
+        // Function to populate category dropdowns
+        function populateCategoryDropdown(categories) {
+            const categorySelect = document.getElementById('productCategory');
+            
+            // Clear existing options
+            categorySelect.innerHTML = '<option value="">اختر قسماً</option>';
+
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
         }
 
         // Function to load products from Firebase
@@ -88,75 +123,9 @@
                     products.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
                 window.adminData.products = products;
-                applyFiltersAndSort(); // Apply filters and sort after loading products
+                renderProductsTable(products);
                 showNotification('تم تحديث قائمة المنتجات.', 'info');
             });
-        }
-
-        // Function to load categories for dropdown
-        function loadCategoriesForDropdown() {
-            onValue(categoriesRef, (snapshot) => {
-                const categories = [];
-                snapshot.forEach((childSnapshot) => {
-                    categories.push({ id: childSnapshot.key, ...childSnapshot.val() });
-                });
-                window.adminData.categories = categories;
-                populateCategoryDropdown();
-            });
-        }
-
-        // Function to populate category dropdown in modal
-        function populateCategoryDropdown() {
-            const categorySelect = document.getElementById('productCategoryInput');
-            categorySelect.innerHTML = '<option value="">اختر فئة</option>';
-            window.adminData.categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category.name; // Assuming category name is unique and used as value
-                option.textContent = category.name;
-                categorySelect.appendChild(option);
-            });
-        }
-
-        // Function to apply search filters and sorting
-        function applyFiltersAndSort() {
-            const searchInput = document.getElementById('searchInput');
-            const sortSelect = document.getElementById('sortSelect');
-
-            const searchTerm = searchInput.value.toLowerCase();
-            const sortBy = sortSelect.value;
-
-            let filteredProducts = window.adminData.products.filter(product => {
-                const nameMatch = product.name.toLowerCase().includes(searchTerm);
-                const priceMatch = (product.price || 0).toString().includes(searchTerm);
-                // Can add more fields to search here (e.g., description, category)
-                return nameMatch || priceMatch;
-            });
-
-            // Apply sorting
-            filteredProducts.sort((a, b) => {
-                switch (sortBy) {
-                    case 'name-asc':
-                        return a.name.localeCompare(b.name);
-                    case 'name-desc':
-                        return b.name.localeCompare(a.name);
-                    case 'price-asc':
-                        return (a.price || 0) - (b.price || 0);
-                    case 'price-desc':
-                        return (b.price || 0) - (a.price || 0);
-                    // For quantity, we need to assume a 'quantity' field exists or is calculated
-                    // For now, let's assume quantity is not directly in product data for sorting,
-                    // as it's typically a cart/order specific field.
-                    // If you have a 'stockQuantity' field, you can add:
-                    // case 'quantity-asc':
-                    //     return (a.stockQuantity || 0) - (b.stockQuantity || 0);
-                    // case 'quantity-desc':
-                    //     return (b.stockQuantity || 0) - (a.stockQuantity || 0);
-                    default:
-                        return 0; // No sorting
-                }
-            });
-
-            renderProductsTable(filteredProducts);
         }
 
         // Function to render products table
@@ -165,29 +134,44 @@
             productsTableBody.innerHTML = ''; // Clear previous rows
 
             if (productsToRender.length === 0) {
-                productsTableBody.innerHTML = `<tr><td colspan="8" class="no-content-message">لا توجد منتجات مطابقة لمعايير البحث أو الترتيب.</td></tr>`;
+                productsTableBody.innerHTML = `<tr><td colspan="10" class="no-content-message">لا توجد منتجات لعرضها.</td></tr>`;
                 return;
             }
 
             productsToRender.forEach(product => {
+                const categoryName = window.adminData.categories.find(cat => cat.id === product.category)?.name || 'غير معروف';
                 const row = document.createElement('tr');
+                // Add a class to highlight products on offer
+                if (product.isOnOffer) {
+                    row.classList.add('on-offer');
+                }
                 row.innerHTML = `
-                    <td><img src="${product.images?.[0] || 'https://placehold.co/50x50/1A237E/FFD700?text=Product'}" onerror="this.onerror=null;this.src='https://placehold.co/50x50/1A237E/FFD700?text=Product';" alt="${product.name}" class="product-thumbnail"></td>
+                    <td>${product.id}</td>
+                    <td><img src="${product.imageUrl || 'https://placehold.co/50x50/E0E0E0/6C757D?text=لا+صورة'}" alt="${product.name}" class="product-thumbnail"></td>
                     <td>${product.name}</td>
-                    <td>${product.category || 'غير محدد'}</td>
-                    <td>${(product.price || 0).toLocaleString('ar-EG')} د.ع</td>
+                    <td>${product.price} د.ع</td>
                     <td>
-                        <label class="switch">
-                            <input type="checkbox" data-product-id="${product.id}" ${product.isActive ? 'checked' : ''}>
-                            <span class="slider round"></span>
-                        </label>
+                        <span class="status-badge ${product.isOnOffer ? 'active' : 'inactive'}">
+                            ${product.isOnOffer ? 'نعم' : 'لا'}
+                        </span>
                     </td>
-                    <td>${product.isSale ? 'نعم' : 'لا'}</td>
+                    <td>${product.isOnOffer && product.discountPercentage ? `${product.discountPercentage}%` : '-'}</td>
+                    <td>${product.isOnOffer && product.finalPrice ? `${product.finalPrice} د.ع` : '-'}</td>
+                    <td>${product.stock}</td>
+                    <td>${categoryName}</td>
+                    <td>
+                        <span class="status-badge ${product.isActive ? 'active' : 'inactive'}">
+                            ${product.isActive ? 'نشط' : 'غير نشط'}
+                        </span>
+                    </td>
                     <td>
                         <button class="btn btn-info edit-product-btn" data-product-id="${product.id}">
                             <i class="fas fa-edit"></i> تعديل
                         </button>
-                        <button class="btn btn-danger delete-product-btn" data-product-id="${product.id}">
+                        <button class="btn ${product.isActive ? 'btn-warning' : 'btn-success'} toggle-status-btn" data-product-id="${product.id}" data-product-name="${product.name}" data-is-active="${product.isActive}">
+                            <i class="fas ${product.isActive ? 'fa-toggle-off' : 'fa-toggle-on'}"></i> ${product.isActive ? 'تعطيل' : 'تفعيل'}
+                        </button>
+                        <button class="btn btn-danger delete-product-btn" data-product-id="${product.id}" data-product-name="${product.name}">
                             <i class="fas fa-trash"></i> حذف
                         </button>
                     </td>
@@ -195,200 +179,170 @@
                 productsTableBody.appendChild(row);
             });
 
-            // Add event listeners for toggle switches
-            document.querySelectorAll('.switch input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', (event) => {
-                    const productId = event.target.dataset.productId;
-                    const newStatus = event.target.checked;
-                    toggleProductActiveStatus(productId, newStatus);
-                });
-            });
-
-            // Add event listeners for edit buttons
+            // Add event listeners for buttons
             document.querySelectorAll('.edit-product-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const productId = event.target.dataset.productId || event.target.closest('[data-product-id]')?.dataset.productId;
-                    const productToEdit = window.adminData.products.find(p => p.id === productId);
-                    if (productToEdit) {
-                        openProductModal(productToEdit);
+                    const product = window.adminData.products.find(p => p.id === productId);
+                    if (product) {
+                        openProductModal(product);
                     }
                 });
             });
 
-            // Add event listeners for delete buttons
+            document.querySelectorAll('.toggle-status-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const productId = event.target.dataset.productId || event.target.closest('[data-product-id]')?.dataset.productId;
+                    const productName = event.target.dataset.productName || event.target.closest('[data-product-name]')?.dataset.productName;
+                    const isActive = (event.target.dataset.isActive === 'true');
+                    if (productId) {
+                        toggleProductStatus(productId, productName, isActive);
+                    }
+                });
+            });
+
             document.querySelectorAll('.delete-product-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const productId = event.target.dataset.productId || event.target.closest('[data-product-id]')?.dataset.productId;
+                    const productName = event.target.dataset.productName || event.target.closest('[data-product-name]')?.dataset.productName;
                     if (productId) {
-                        deleteProduct(productId);
+                        deleteProduct(productId, productName);
                     }
                 });
             });
         }
 
-        // Function to open product add/edit modal
+        // Function to open product modal (for add/edit)
         function openProductModal(product = null) {
             const modal = document.getElementById('productModal');
             const modalTitle = document.getElementById('productModalTitle');
             const form = document.getElementById('productForm');
-            const imagePreviewContainer = document.getElementById('imagePreviewContainer');
-            const existingImagesContainer = document.getElementById('existingImagesContainer');
-            const productImageUrlsInput = document.getElementById('productImageUrlsInput');
 
             form.reset(); // Clear form
-            imagePreviewContainer.innerHTML = ''; // Clear new image previews
-            existingImagesContainer.innerHTML = ''; // Clear existing image previews
-            productImageUrlsInput.value = ''; // Clear URL input
+            editingProductId = null; // Reset editing product ID
+
+            // Get elements for offer fields
+            const productIsOnOffer = document.getElementById('productIsOnOffer');
+            const productDiscountPercentage = document.getElementById('productDiscountPercentage');
+            const productFinalPrice = document.getElementById('productFinalPrice');
 
             if (product) {
-                editingProductId = product.id;
+                // Edit mode
                 modalTitle.textContent = 'تعديل المنتج';
-                document.getElementById('productNameInput').value = product.name || '';
-                document.getElementById('productDescriptionInput').value = product.description || '';
-                document.getElementById('productPriceInput').value = product.price || '';
-                document.getElementById('productCategoryInput').value = product.category || '';
-                document.getElementById('productIsActiveToggle').checked = product.isActive !== false; // Default to true
-                document.getElementById('productIsSaleToggle').checked = product.isSale || false;
-                document.getElementById('productDiscountPercentageInput').value = product.discountPercentage || '';
-                document.getElementById('productCustomDiscountPriceInput').value = product.customDiscountPrice || '';
-                document.getElementById('productUseCustomDiscountPrice').checked = product.useCustomDiscountPrice || false;
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productDescription').value = product.description || '';
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productStock').value = product.stock;
+                document.getElementById('productCategory').value = product.category || '';
+                document.getElementById('productImageUrl').value = product.imageUrl || '';
+                document.getElementById('productIsActive').checked = product.isActive;
 
-                // Show/hide discount fields based on isSale and useCustomDiscountPrice
-                toggleDiscountFields(product.isSale);
-                toggleCustomPriceField(product.useCustomDiscountPrice);
+                // Set offer specific fields
+                productIsOnOffer.checked = product.isOnOffer || false;
+                productDiscountPercentage.value = product.discountPercentage || '';
+                productFinalPrice.value = product.finalPrice || '';
 
-                // Display existing images and populate URL input
-                if (product.images && product.images.length > 0) {
-                    productImageUrlsInput.value = product.images.join('\n'); // Populate textarea with existing URLs
-                    product.images.forEach((imageUrl, index) => {
-                        const imgWrapper = document.createElement('div');
-                        imgWrapper.className = 'existing-image-wrapper';
-                        imgWrapper.innerHTML = `
-                            <img src="${imageUrl}" alt="Product Image" class="existing-product-image" onerror="this.onerror=null;this.src='https://placehold.co/80x80/1A237E/FFD700?text=Error';">
-                            <button type="button" class="delete-existing-image-btn" data-image-url="${imageUrl}" data-image-index="${index}">
-                                <i class="fas fa-times-circle"></i>
-                            </button>
-                        `;
-                        existingImagesContainer.appendChild(imgWrapper);
-                    });
-
-                    document.querySelectorAll('.delete-existing-image-btn').forEach(button => {
-                        button.addEventListener('click', (e) => {
-                            const imageUrlToDelete = e.target.dataset.imageUrl || e.target.closest('[data-image-url]')?.dataset.imageUrl;
-                            if (imageUrlToDelete) {
-                                deleteImageFromProduct(imageUrlToDelete, editingProductId);
-                            }
-                        });
-                    });
-                }
+                editingProductId = product.id;
             } else {
-                editingProductId = null;
+                // Add mode
                 modalTitle.textContent = 'إضافة منتج جديد';
-                document.getElementById('productIsActiveToggle').checked = true; // Default new products to active
-                document.getElementById('productIsSaleToggle').checked = false;
-                document.getElementById('productUseCustomDiscountPrice').checked = false;
-                toggleDiscountFields(false); // Hide discount fields initially
+                document.getElementById('productIsActive').checked = true; // Default to active for new products
+                productIsOnOffer.checked = false; // Default no offer
+                productDiscountPercentage.value = '';
+                productFinalPrice.value = '';
             }
-
+            
+            // Toggle visibility of offer fields based on initial state
+            toggleOfferFields(); 
             modal.style.display = 'block';
         }
 
         // Function to close product modal
         function closeProductModal() {
             document.getElementById('productModal').style.display = 'none';
-            document.getElementById('productForm').reset();
-            document.getElementById('imagePreviewContainer').innerHTML = '';
-            document.getElementById('existingImagesContainer').innerHTML = '';
-            document.getElementById('productImageUrlsInput').value = ''; // Clear URL input
             editingProductId = null;
         }
 
-        // Handle image URL input change for preview
-        document.getElementById('productImageUrlsInput').addEventListener('input', (event) => {
-            const urlsText = event.target.value;
-            const urls = urlsText.split('\n').map(url => url.trim()).filter(url => url !== '');
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            previewContainer.innerHTML = ''; // Clear previous previews
+        // Function to toggle visibility of discount and final price fields
+        function toggleOfferFields() {
+            const productIsOnOffer = document.getElementById('productIsOnOffer');
+            const discountFields = document.getElementById('discountFields');
+            if (productIsOnOffer.checked) {
+                discountFields.style.display = 'block';
+            } else {
+                discountFields.style.display = 'none';
+                // Clear values when offer is turned off
+                document.getElementById('productDiscountPercentage').value = '';
+                document.getElementById('productFinalPrice').value = '';
+            }
+        }
 
-            urls.forEach(url => {
-                if (url) {
-                    const img = document.createElement('img');
-                    img.src = url;
-                    img.className = 'preview-image';
-                    img.onerror = function() { this.src = 'https://placehold.co/80x80/1A237E/FFD700?text=Error'; }; // Fallback for broken URLs
-                    previewContainer.appendChild(img);
-                }
-            });
-        });
+        // Function to calculate final price based on discount
+        function calculateFinalPrice() {
+            const productPrice = parseFloat(document.getElementById('productPrice').value);
+            const discountPercentage = parseFloat(document.getElementById('productDiscountPercentage').value);
+            const productFinalPrice = document.getElementById('productFinalPrice');
 
-        // Function to save or update product
-        async function saveOrUpdateProduct() {
-            const productName = document.getElementById('productNameInput').value.trim();
-            const productDescription = document.getElementById('productDescriptionInput').value.trim();
-            const productPrice = parseFloat(document.getElementById('productPriceInput').value.trim());
-            const productCategory = document.getElementById('productCategoryInput').value.trim();
-            const isActive = document.getElementById('productIsActiveToggle').checked;
-            const isSale = document.getElementById('productIsSaleToggle').checked;
-            const useCustomDiscountPrice = document.getElementById('productUseCustomDiscountPrice').checked;
-            let discountPercentage = parseFloat(document.getElementById('productDiscountPercentageInput').value.trim());
-            let customDiscountPrice = parseFloat(document.getElementById('productCustomDiscountPriceInput').value.trim());
-            const imageUrlsText = document.getElementById('productImageUrlsInput').value.trim();
-            const newImageUrls = imageUrlsText.split('\n').map(url => url.trim()).filter(url => url !== '');
+            if (!isNaN(productPrice) && productPrice > 0 && !isNaN(discountPercentage) && discountPercentage >= 0 && discountPercentage <= 100) {
+                const finalPrice = productPrice * (1 - discountPercentage / 100);
+                productFinalPrice.value = finalPrice.toFixed(2); // Format to 2 decimal places
+            } else if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
+                productFinalPrice.value = ''; // Clear if discount is invalid
+            } else {
+                // If original price is not valid, clear final price
+                productFinalPrice.value = '';
+            }
+        }
 
-            if (!productName || !productPrice || isNaN(productPrice) || productPrice <= 0 || !productCategory) {
-                showNotification('الرجاء ملء جميع الحقول المطلوبة (الاسم، السعر، الفئة).', 'error');
+        // Function to save product (add or update)
+        async function saveProduct() {
+            const productName = document.getElementById('productName').value.trim();
+            const productDescription = document.getElementById('productDescription').value.trim();
+            const productPrice = parseFloat(document.getElementById('productPrice').value);
+            const productStock = parseInt(document.getElementById('productStock').value);
+            const productCategory = document.getElementById('productCategory').value;
+            const productImageUrl = document.getElementById('productImageUrl').value.trim();
+            const productIsActive = document.getElementById('productIsActive').checked;
+            
+            const productIsOnOffer = document.getElementById('productIsOnOffer').checked;
+            let discountPercentage = parseFloat(document.getElementById('productDiscountPercentage').value);
+            let finalPrice = parseFloat(document.getElementById('productFinalPrice').value);
+
+            if (!productName || isNaN(productPrice) || productPrice <= 0 || isNaN(productStock) || productStock < 0 || !productCategory) {
+                showNotification('الرجاء ملء جميع الحقول المطلوبة بشكل صحيح (الاسم، السعر، الكمية، القسم).', 'error');
                 return;
             }
 
-            if (isSale) {
-                if (useCustomDiscountPrice) {
-                    if (isNaN(customDiscountPrice) || customDiscountPrice <= 0 || customDiscountPrice >= productPrice) {
-                        showNotification('الرجاء إدخال سعر خصم مخصص صحيح وأقل من السعر الأصلي.', 'error');
-                        return;
-                    }
-                    discountPercentage = null; // Clear percentage if custom price is used
-                } else {
-                    if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
-                        showNotification('الرجاء إدخال نسبة خصم صحيحة بين 0 و 100.', 'error');
-                        return;
-                    }
-                    customDiscountPrice = null; // Clear custom price if percentage is used
+            if (productIsOnOffer) {
+                if (isNaN(discountPercentage) || discountPercentage < 0 || discountPercentage > 100) {
+                    showNotification('نسبة التخفيض يجب أن تكون رقماً بين 0 و 100.', 'error');
+                    return;
+                }
+                if (isNaN(finalPrice) || finalPrice < 0) {
+                    showNotification('السعر النهائي يجب أن يكون رقماً صالحاً وموجباً.', 'error');
+                    return;
                 }
             } else {
-                // If not on sale, clear all discount related fields
+                // If not on offer, ensure these fields are reset/not saved
                 discountPercentage = null;
-                customDiscountPrice = null;
-                useCustomDiscountPrice = false;
+                finalPrice = null;
             }
 
             showNotification('جاري حفظ المنتج...', 'info');
 
             try {
-                let currentProductImages = [];
-                if (editingProductId) {
-                    const existingProduct = window.adminData.products.find(p => p.id === editingProductId);
-                    if (existingProduct && existingProduct.images) {
-                        currentProductImages = existingProduct.images;
-                    }
-                }
-
-                // Combine existing images with newly entered URLs
-                const allImages = [...currentProductImages, ...newImageUrls];
-                // Remove duplicates if any (e.g., if user pastes existing URLs)
-                const uniqueImages = [...new Set(allImages)];
-
-                const productData = {
+                let productData = {
                     name: productName,
                     description: productDescription,
                     price: productPrice,
+                    stock: productStock,
                     category: productCategory,
-                    isActive: isActive,
-                    images: uniqueImages, // Use combined and unique image URLs
-                    isSale: isSale,
+                    imageUrl: productImageUrl || 'https://placehold.co/400x400/E0E0E0/6C757D?text=لا+صورة+للمنتج', // Default placeholder if no URL
+                    isActive: productIsActive,
+                    isOnOffer: productIsOnOffer,
                     discountPercentage: discountPercentage,
-                    customDiscountPrice: customDiscountPrice,
-                    useCustomDiscountPrice: useCustomDiscountPrice,
-                    timestamp: serverTimestamp() // Add or update timestamp
+                    finalPrice: finalPrice,
+                    timestamp: Date.now()
                 };
 
                 if (editingProductId) {
@@ -419,52 +373,32 @@
                         timestamp: new Date().toISOString()
                     });
                 }
+                manageAdminLogsSize(10);
                 closeProductModal();
             } catch (error) {
-                console.error("Error saving/updating product:", error);
+                console.error("Error saving product:", error);
                 showNotification('حدث خطأ أثناء حفظ المنتج.', 'error');
             }
         }
 
-        // Function to delete an image from a product (during edit)
-        async function deleteImageFromProduct(imageUrl, productId) {
-            const productRef = dbRef(db, `products/${productId}`);
-            const productSnapshot = await get(productRef);
-            const product = productSnapshot.val();
-
-            if (product && product.images) {
-                const updatedImages = product.images.filter(img => img !== imageUrl);
-                try {
-                    await update(productRef, { images: updatedImages });
-                    showNotification('تم حذف الصورة من المنتج.', 'success');
-                    // Re-render modal to reflect changes
-                    const updatedProduct = { ...product, images: updatedImages };
-                    openProductModal(updatedProduct);
-                } catch (error) {
-                    console.error("Error deleting image from product:", error);
-                    showNotification('حدث خطأ أثناء حذف الصورة.', 'error');
-                }
-            }
-        }
-
-        // Function to toggle product active status
-        async function toggleProductActiveStatus(productId, newStatus) {
-            const productRef = dbRef(db, `products/${productId}`);
-            const oldProduct = window.adminData.products.find(p => p.id === productId);
-            const oldStatus = oldProduct ? oldProduct.isActive : null;
+        // Function to toggle product status (active/inactive)
+        async function toggleProductStatus(productId, productName, currentStatus) {
+            const newStatus = !currentStatus;
+            showNotification(`جاري ${newStatus ? 'تفعيل' : 'تعطيل'} المنتج "${productName}"...`, 'info');
 
             try {
-                await update(productRef, { isActive: newStatus });
-                showNotification(`تم ${newStatus ? 'تفعيل' : 'إلغاء تفعيل'} المنتج بنجاح!`, 'success');
+                await update(dbRef(db, `products/${productId}`), { isActive: newStatus });
+                showNotification(`تم ${newStatus ? 'تفعيل' : 'تعطيل'} المنتج "${productName}" بنجاح!`, 'success');
                 // Log admin activity
                 await set(dbRef(db, `adminLogs/${Date.now()}`), {
                     action: 'TOGGLE_PRODUCT_STATUS',
                     adminId: window.adminData.currentUser.uid,
                     productId: productId,
-                    oldStatus: oldStatus,
+                    oldStatus: currentStatus,
                     newStatus: newStatus,
                     timestamp: new Date().toISOString()
                 });
+                manageAdminLogsSize(10);
             } catch (error) {
                 console.error("Error toggling product status:", error);
                 showNotification('حدث خطأ أثناء تغيير حالة المنتج.', 'error');
@@ -472,60 +406,57 @@
         }
 
         // Function to delete product
-        async function deleteProduct(productId) {
-            if (!confirm('هل أنت متأكد أنك تريد حذف هذا المنتج؟ هذا الإجراء لا يمكن التراجع عنه.')) {
+        async function deleteProduct(productId, productName) {
+            // Replaced alert/confirm with a custom modal or simple console log for now, as per instructions
+            // For a real app, you'd implement a custom confirmation modal here.
+            if (!confirm(`هل أنت متأكد أنك تريد حذف المنتج "${productName}"؟ هذا الإجراء لا يمكن التراجع عنه!`)) {
                 return;
             }
 
-            const productToDelete = window.adminData.products.find(p => p.id === productId);
+            showNotification('جاري حذف المنتج...', 'info');
 
             try {
-                // Remove product from Realtime Database
+                const productToDelete = window.adminData.products.find(p => p.id === productId);
                 await remove(dbRef(db, `products/${productId}`));
-
                 showNotification('تم حذف المنتج بنجاح!', 'success');
                 // Log admin activity
                 await set(dbRef(db, `adminLogs/${Date.now()}`), {
                     action: 'DELETE_PRODUCT',
                     adminId: window.adminData.currentUser.uid,
                     productId: productId,
-                    deletedProduct: productToDelete,
+                    deletedProduct: productToDelete, // Log the full product data before deletion
                     timestamp: new Date().toISOString()
                 });
+                manageAdminLogsSize(10);
             } catch (error) {
                 console.error("Error deleting product:", error);
                 showNotification('حدث خطأ أثناء حذف المنتج.', 'error');
             }
         }
 
-        // Toggle discount fields visibility
-        function toggleDiscountFields(isSaleChecked) {
-            const discountFields = document.getElementById('discountFields');
-            if (discountFields) {
-                discountFields.style.display = isSaleChecked ? 'block' : 'none';
-            }
-            // Reset discount fields when toggling off sale
-            if (!isSaleChecked) {
-                document.getElementById('productDiscountPercentageInput').value = '';
-                document.getElementById('productCustomDiscountPriceInput').value = '';
-                document.getElementById('productUseCustomDiscountPrice').checked = false;
-                toggleCustomPriceField(false);
-            }
-        }
+        // Function to manage the size of admin logs in Firebase
+        async function manageAdminLogsSize(maxLogs = 10) {
+            try {
+                // Fetch all logs without orderByChild to avoid index error
+                const snapshot = await get(adminLogsRef); 
+                const logs = [];
+                snapshot.forEach(childSnapshot => {
+                    logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
+                });
 
-        // Toggle custom price field visibility
-        function toggleCustomPriceField(useCustomPriceChecked) {
-            const percentageField = document.getElementById('percentageDiscountField');
-            const customPriceField = document.getElementById('customPriceDiscountField');
-            if (percentageField && customPriceField) {
-                percentageField.style.display = useCustomPriceChecked ? 'none' : 'block';
-                customPriceField.style.display = useCustomPriceChecked ? 'block' : 'none';
-            }
-            // Reset values when toggling
-            if (useCustomPriceChecked) {
-                document.getElementById('productDiscountPercentageInput').value = '';
-            } else {
-                document.getElementById('productCustomDiscountPriceInput').value = '';
+                // Sort logs by timestamp in JavaScript
+                logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+                if (logs.length > maxLogs) {
+                    const logsToDelete = logs.slice(0, logs.length - maxLogs);
+
+                    for (const log of logsToDelete) {
+                        await remove(dbRef(db, `adminLogs/${log.id}`));
+                        console.log(`Removed old log: ${log.id}`);
+                    }
+                }
+            } catch (error) {
+                console.error("Error managing admin logs size:", error);
             }
         }
 
@@ -543,34 +474,53 @@
             }
         }
 
+        // Function to toggle sidebar visibility
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('sidebar-open'); // To prevent body scroll
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            loadGeneralSettings(); // Load general settings for footer
-            loadProducts(); // This will now trigger applyFiltersAndSort
-            loadCategoriesForDropdown();
+            loadGeneralSettings(); 
+            loadCategoriesForDropdown(); // Load categories first
+            loadProducts(); // Then load products
 
-            // Add event listeners for search and sort
-            document.getElementById('searchInput').addEventListener('input', applyFiltersAndSort);
-            document.getElementById('sortSelect').addEventListener('change', applyFiltersAndSort);
-
-            // Add event listeners for modal buttons
-            document.getElementById('addNewProductBtn').addEventListener('click', () => openProductModal());
+            // Add event listeners for modal
+            document.getElementById('addProductBtn').addEventListener('click', () => openProductModal());
             document.getElementById('closeProductModalBtn').addEventListener('click', closeProductModal);
-            document.getElementById('productForm').addEventListener('submit', (e) => {
-                e.preventDefault();
-                saveOrUpdateProduct();
-            });
             document.getElementById('cancelProductModalBtn').addEventListener('click', closeProductModal);
+            document.getElementById('saveProductBtn').addEventListener('click', saveProduct);
 
-            // Discount toggle listeners
-            document.getElementById('productIsSaleToggle').addEventListener('change', (e) => {
-                toggleDiscountFields(e.target.checked);
-            });
-            document.getElementById('productUseCustomDiscountPrice').addEventListener('change', (e) => {
-                toggleCustomPriceField(e.target.checked);
+            // Event listeners for offer fields
+            document.getElementById('productIsOnOffer').addEventListener('change', toggleOfferFields);
+            document.getElementById('productPrice').addEventListener('input', calculateFinalPrice);
+            document.getElementById('productDiscountPercentage').addEventListener('input', calculateFinalPrice);
+
+            // Add event listeners for sidebar toggle
+            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
+
+            // Set active navigation link in sidebar
+            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
             });
 
-            // Add logout event listener to the new logout button in the nav
+            // Add logout event listener to the sidebar button
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+            // Periodically manage log size (e.g., every 30 seconds)
+            setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
         });
     </script>
     <style>
@@ -578,10 +528,10 @@
             /* Main Colors - Adjusted for Admin Panel */
             --color-primary-dark-blue: #1A237E; /* Primary */
             --color-secondary-gold: #FFD700; /* Secondary / Accent */
-            --color-admin-bg: #F8F9FA; /* Lighter background for admin */
+            --color-admin-bg: #F0F2F5; /* Lighter, modern background */
             --color-admin-card-bg: #FFFFFF; /* White cards */
             --color-admin-text: #343A40; /* Darker text for readability */
-            --color-admin-border: #E9ECEF; /* Light border */
+            --color-admin-border: #E0E0E0; /* Light border */
 
             /* Mapped to general variables for consistency */
             --primary: var(--color-primary-dark-blue);
@@ -595,11 +545,11 @@
             --info: #17A2B8; /* Bootstrap info blue */
             --border: #DEE2E6; /* Slightly darker border for better contrast */
             --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Lighter, smaller shadow */
-            --radius: 0.4rem; /* Slightly smaller rounded corners */
+            --radius: 0.6rem; /* Slightly larger rounded corners for modern feel */
             --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
 
             font-family: 'Cairo', sans-serif;
-            font-size: 14px; /* Base font size reduced */
+            font-size: 14px; /* Base font size */
             direction: rtl;
         }
 
@@ -613,70 +563,184 @@
             background-color: var(--light);
             color: var(--dark);
             min-height: 100vh;
-            padding-top: 20px; /* Adjusted padding-top after removing header */
             display: flex;
             flex-direction: column;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is off-screen */
         }
 
-        /* Removed .admin-header styles entirely */
+        /* Body class to prevent scrolling when sidebar is open */
+        body.sidebar-open {
+            overflow: hidden;
+        }
 
-        /* Admin Nav (now a standalone fixed bar at top) */
-        .admin-nav {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+        .admin-dashboard-wrapper {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            position: relative; /* For overlay positioning */
+        }
+
+        /* Admin Sidebar - Now a slide-out menu */
+        .admin-sidebar {
+            width: 250px;
             background-color: var(--primary);
             color: white;
             display: flex;
-            justify-content: center; /* Center the nav items */
-            align-items: center;
-            padding: 0.8rem 1.5rem;
-            height: 60px; /* Adjusted height for standalone nav */
-            box-shadow: var(--shadow);
+            flex-direction: column;
+            padding: 1.5rem 0;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            gap: 1.5rem; /* Adjusted gap */
+            position: fixed; /* Fixed position */
+            top: 0;
+            right: -250px; /* Hidden by default (off-screen to the right) */
+            height: 100vh;
+            overflow-y: auto;
+            transition: right 0.3s ease-in-out; /* Slide transition */
         }
 
-        .admin-nav-link {
+        .admin-sidebar.open {
+            right: 0; /* Slide in */
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-header .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: white;
+        }
+
+        .sidebar-header .store-logo {
+            width: 80px;
+            height: auto;
+            object-fit: contain;
+            border-radius: var(--radius);
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 5px;
+        }
+
+        .sidebar-header .store-name {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 1rem 0;
+        }
+
+        .sidebar-nav .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.5rem;
             color: white;
             text-decoration: none;
             font-weight: 600;
-            padding: 0.6rem 0.9rem;
-            border-radius: var(--radius);
+            font-size: 1rem;
             transition: var(--transition);
-            position: relative;
-            font-size: 0.9rem; /* Adjusted font size */
+            border-right: 4px solid transparent;
         }
 
-        .admin-nav-link:hover {
+        .sidebar-nav .nav-item:hover {
             background-color: rgba(255, 255, 255, 0.15);
             color: var(--accent);
         }
 
-        .admin-nav-link.active {
-            color: var(--accent);
+        .sidebar-nav .nav-item.active {
             background-color: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 0 2px var(--accent);
+            color: var(--accent);
+            border-right-color: var(--accent);
         }
 
-        /* Logout button within nav */
-        .logout-btn-nav {
-            margin-right: auto; /* Pushes logout to the left in RTL */
-            margin-left: 1rem; /* Space from other nav items */
+        .sidebar-nav .nav-item i {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-footer .logout-btn {
+            background-color: var(--error);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sidebar-footer .logout-btn:hover {
+            background-color: #C82333;
+            transform: translateY(-2px);
         }
 
         /* Main Content Area */
         .admin-main-content {
             flex-grow: 1;
-            padding: 1.5rem;
-            max-width: 1200px;
-            width: 100%;
+            padding: 2rem;
+            width: 100%; /* Take full width */
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem;
-            padding-top: 80px; /* Adjusted padding to account for fixed nav */
+            gap: 2rem;
+            position: relative; /* For hamburger button positioning */
+        }
+
+        /* Hamburger Menu Button */
+        .menu-toggle-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px; /* Position on the left for RTL */
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001; /* Above main content */
+            box-shadow: var(--shadow);
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: #151B6B;
+        }
+
+        /* Overlay for when sidebar is open */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999; /* Below sidebar, above content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .section-header {
@@ -684,19 +748,20 @@
             margin-bottom: 1.5rem;
             position: relative;
             padding-bottom: 0.75rem;
+            margin-top: 4rem; /* Space for hamburger button */
         }
 
         .section-header h2 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             color: var(--primary);
             font-weight: 800;
             margin-bottom: 0.5rem;
         }
 
         .section-header p {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #6C757D;
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
         }
 
@@ -706,84 +771,49 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
+            width: 80px;
+            height: 4px;
             background-color: var(--secondary);
-            border-radius: 1.5px;
+            border-radius: 2px;
         }
 
-        /* Products Table and Controls */
-        .products-controls {
-            display: flex;
-            justify-content: space-between; /* Distribute items */
-            align-items: center;
-            margin-bottom: 1rem;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
-            gap: 1rem; /* Spacing between control elements */
-        }
-
-        .search-sort-group {
-            display: flex;
-            gap: 10px;
-            flex-grow: 1; /* Allow to take available space */
-            max-width: 600px; /* Limit width */
-        }
-
-        .search-sort-group input[type="text"],
-        .search-sort-group select {
-            padding: 0.6rem 0.8rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.85rem;
-            color: var(--dark);
-            background-color: #FDFDFD;
-            transition: var(--transition);
-            flex-grow: 1;
-        }
-
-        .search-sort-group input[type="text"]:focus,
-        .search-sort-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
-            background-color: white;
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.6rem 1rem;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .btn-success { background-color: var(--success); }
-        .btn-info { background-color: var(--info); }
-        .btn-danger { background-color: var(--error); }
-
-        .btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-        }
-
-        .products-table-container {
+        /* Product Management Section */
+        .product-management-section {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
+            padding: 1.5rem;
             border: 1px solid var(--border);
-            overflow-x: auto; /* For responsive tables */
+        }
+
+        .product-management-section h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .add-product-container {
+            text-align: left; /* Align button to the left in RTL */
+            margin-bottom: 1.5rem;
+        }
+
+        .add-product-container .btn-primary {
+            padding: 0.8rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        /* Products Table */
+        .products-table-container {
+            overflow-x: auto;
         }
 
         .products-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 1000px; /* Ensure table doesn't get too squished with new columns */
         }
 
         .products-table th,
@@ -809,73 +839,58 @@
             background-color: #F0F0F0;
         }
 
+        /* Highlight products on offer */
+        .products-table tbody tr.on-offer {
+            background-color: #FFFBE6; /* Light yellow background */
+            border-left: 5px solid var(--accent); /* Accent border */
+        }
+
         .product-thumbnail {
             width: 50px;
             height: 50px;
             object-fit: cover;
-            border-radius: 4px;
+            border-radius: var(--radius);
             border: 1px solid var(--border);
+            vertical-align: middle;
         }
 
-        /* Toggle Switch */
-        .switch {
-            position: relative;
+        .status-badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
             display: inline-block;
-            width: 40px;
-            height: 20px;
+            text-align: center;
         }
 
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+        .status-badge.active { background-color: var(--success); }
+        .status-badge.inactive { background-color: var(--error); }
 
-        .slider {
-            position: absolute;
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1rem;
+            border-radius: var(--radius);
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            -webkit-transition: .4s;
-            transition: .4s;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-left: 0.5rem; /* Small margin for buttons in table */
         }
 
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 16px;
-            width: 16px;
-            left: 2px;
-            bottom: 2px;
-            background-color: white;
-            -webkit-transition: .4s;
-            transition: .4s;
-        }
+        .btn-info { background-color: var(--info); }
+        .btn-danger { background-color: var(--error); }
+        .btn-warning { background-color: var(--warning); }
+        .btn-success { background-color: var(--success); }
 
-        input:checked + .slider {
-            background-color: var(--success);
-        }
-
-        input:focus + .slider {
-            box-shadow: 0 0 1px var(--success);
-        }
-
-        input:checked + .slider:before {
-            -webkit-transform: translateX(20px);
-            -ms-transform: translateX(20px);
-            transform: translateX(20px);
-        }
-
-        /* Rounded sliders */
-        .slider.round {
-            border-radius: 20px;
-        }
-
-        .slider.round:before {
-            border-radius: 50%;
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
 
         /* Modal Styles */
@@ -899,7 +914,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             width: 90%;
-            max-width: 800px;
+            max-width: 600px; /* Wider for product details */
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             position: relative;
             animation: fadeIn 0.3s ease-out;
@@ -946,125 +961,57 @@
             margin-bottom: 1rem;
         }
 
-        .modal-body label {
+        .modal-body .form-group label {
             display: block;
-            font-size: 0.9rem;
-            color: var(--dark);
-            font-weight: 600;
             margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--dark);
         }
 
-        .modal-body input[type="text"],
-        .modal-body input[type="number"],
-        .modal-body textarea,
-        .modal-body select {
+        .modal-body .form-group input[type="text"],
+        .modal-body .form-group input[type="number"],
+        .modal-body .form-group textarea,
+        .modal-body .form-group select {
             width: 100%;
-            padding: 0.6rem 0.8rem;
+            padding: 0.8rem 1rem;
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             color: var(--dark);
             background-color: #FDFDFD;
             transition: var(--transition);
         }
+        .modal-body .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
 
-        .modal-body input[type="text"]:focus,
-        .modal-body input[type="number"]:focus,
-        .modal-body textarea:focus,
-        .modal-body select:focus {
+        .modal-body .form-group input:focus,
+        .modal-body .form-group textarea:focus,
+        .modal-body .form-group select:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
             background-color: white;
         }
 
-        .modal-body textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .modal-body .checkbox-group {
+        .modal-body .form-group.checkbox-group {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 1rem;
+            margin-top: 1.5rem;
+        }
+        .modal-body .form-group.checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            transform: scale(1.3);
         }
 
-        .modal-body .checkbox-group input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            accent-color: var(--primary);
-        }
-
-        .modal-body .checkbox-group label {
-            margin-bottom: 0;
-        }
-
-        .image-upload-section {
-            border: 1px dashed var(--border);
-            padding: 1rem;
-            border-radius: var(--radius);
-            margin-bottom: 1rem;
-            background-color: #FDFDFD;
-        }
-
-        .image-upload-section h4 {
-            font-size: 1rem;
-            color: var(--primary);
-            margin-bottom: 0.8rem;
-        }
-
-        .image-preview-container, .existing-images-container {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .preview-image, .existing-product-image {
-            width: 80px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .existing-image-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-
-        .delete-existing-image-btn {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background-color: var(--error);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            transition: var(--transition);
-        }
-
-        .delete-existing-image-btn:hover {
-            background-color: #C82333;
-            transform: scale(1.1);
-        }
-
-        #discountFields {
-            display: none;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1rem;
+        /* Styles for discount fields container */
+        .modal-body #discountFields {
+            border-top: 1px dashed var(--border);
+            padding-top: 1rem;
             margin-top: 1rem;
-            background-color: #FDFDFD;
         }
 
         .modal-footer {
@@ -1108,7 +1055,7 @@
             font-size: 1.1rem;
         }
 
-        /* Admin Footer */
+        /* Admin Footer (integrated at the bottom of the page) */
         .admin-footer {
             background-color: var(--primary);
             color: white;
@@ -1116,13 +1063,13 @@
             text-align: center;
             font-size: 0.8rem;
             box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-            margin-top: auto;
+            margin-top: auto; /* Pushes footer to the bottom */
         }
 
         /* Notification Styles */
         .notification {
             position: fixed;
-            top: 70px; /* Adjusted top for notification after header removal */
+            top: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
@@ -1149,50 +1096,47 @@
         .notification.error { background-color: var(--error); }
 
         /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 10px;
+        @media (max-width: 992px) {
+            .admin-sidebar {
+                width: 200px;
+                right: -200px;
+                padding: 1rem 0;
             }
-            .admin-nav {
-                height: 50px;
+            .sidebar-header {
+                padding: 0 1rem 1rem;
+            }
+            .sidebar-header .store-logo {
+                width: 70px;
+            }
+            .sidebar-header .store-name {
+                font-size: 1.2rem;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.7rem 1rem;
+                font-size: 0.9rem;
+            }
+            .sidebar-nav .nav-item i {
+                font-size: 1.1rem;
+            }
+            .sidebar-footer {
+                padding: 1rem;
+            }
+            .sidebar-footer .logout-btn {
                 padding: 0.5rem 1rem;
-                gap: 1rem;
-            }
-            .admin-nav-link {
-                padding: 0.4rem 0.7rem;
-                font-size: 0.8rem;
+                font-size: 0.9rem;
             }
             .admin-main-content {
-                padding: 1rem;
-                gap: 1rem;
-                padding-top: 70px; /* Adjusted padding for main content */
+                padding: 1.5rem;
             }
             .section-header h2 {
-                font-size: 1.6rem;
+                font-size: 1.8rem;
             }
             .section-header p {
-                font-size: 0.8rem;
+                font-size: 0.9rem;
             }
-            .section-header::after {
-                width: 50px;
-                height: 2px;
-            }
-            .products-controls {
-                flex-direction: column; /* Stack controls vertically */
-                align-items: stretch; /* Stretch items to full width */
-            }
-            .search-sort-group {
-                flex-direction: column; /* Stack search and sort vertically */
-                max-width: 100%; /* Full width */
-            }
-            .search-sort-group input[type="text"],
-            .search-sort-group select {
-                width: 100%; /* Full width */
-            }
-            .btn {
-                padding: 0.5rem 0.8rem;
-                font-size: 0.75rem;
-                width: 100%; /* Full width for add new button */
+            .add-product-container .btn-primary {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
             }
             .products-table th, .products-table td {
                 padding: 0.6rem;
@@ -1202,21 +1146,96 @@
                 width: 40px;
                 height: 40px;
             }
-            .switch {
-                width: 30px;
-                height: 15px;
+            .btn {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.75rem;
+                margin-left: 0.3rem;
             }
-            .slider:before {
-                height: 12px;
-                width: 12px;
-                left: 1.5px;
-                bottom: 1.5px;
+            .modal-content {
+                max-width: 90%;
             }
-            input:checked + .slider:before {
-                transform: translateX(15px);
+            .modal-header h2 {
+                font-size: 1.3rem;
             }
-            .modal {
-                padding-top: 60px;
+            .modal-body .form-group input,
+            .modal-body .form-group textarea,
+            .modal-body .form-group select {
+                font-size: 0.85rem;
+            }
+            .modal-footer button {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .menu-toggle-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+            .admin-sidebar.open {
+                right: 0;
+            }
+            .sidebar-header {
+                padding: 0 1rem 0.5rem;
+            }
+            .sidebar-header .logo-container {
+                flex-direction: row;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            .sidebar-header .store-logo {
+                width: 50px;
+            }
+            .sidebar-header .store-name {
+                font-size: 1.1rem;
+            }
+            .sidebar-nav {
+                padding: 0.5rem 0;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                border-right: none;
+                border-bottom: 2px solid transparent;
+            }
+            .sidebar-nav .nav-item.active {
+                border-bottom-color: var(--accent);
+                border-right-color: transparent;
+            }
+            .sidebar-nav .nav-item i {
+                font-size: 1rem;
+            }
+            .sidebar-footer {
+                padding: 0.5rem 1rem;
+            }
+            .sidebar-footer .logout-btn {
+                width: 100%;
+            }
+            .admin-main-content {
+                padding: 1rem;
+            }
+            .section-header h2 {
+                font-size: 1.6rem;
+            }
+            .section-header p {
+                font-size: 0.8rem;
+            }
+            .add-product-container .btn-primary {
+                width: 100%;
+            }
+            .products-table th, .products-table td {
+                padding: 0.5rem;
+                font-size: 0.75rem;
+            }
+            .btn {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.7rem;
+                margin-left: 0.2rem;
             }
             .modal-content {
                 margin: 10% auto;
@@ -1226,202 +1245,181 @@
             .modal-header h2 {
                 font-size: 1.3rem;
             }
-            .modal-body label {
+            .modal-body .form-group input,
+            .modal-body .form-group textarea,
+            .modal-body .form-group select {
                 font-size: 0.8rem;
-            }
-            .modal-body input, .modal-body textarea, .modal-body select {
-                padding: 0.5rem 0.7rem;
-                font-size: 0.8rem;
-            }
-            .modal-body textarea {
-                min-height: 60px;
-            }
-            .image-upload-section {
-                padding: 0.8rem;
-            }
-            .image-upload-section h4 {
-                font-size: 0.9rem;
-            }
-            .preview-image, .existing-product-image {
-                width: 60px;
-                height: 60px;
-            }
-            .delete-existing-image-btn {
-                width: 20px;
-                height: 20px;
-                font-size: 0.7rem;
-                top: -6px;
-                right: -6px;
             }
             .modal-footer button {
-                padding: 0.7rem 1.2rem;
-                font-size: 0.9rem;
-                margin: 0 0.3rem;
-            }
-            .admin-footer {
-                padding: 0.6rem 0.8rem;
-                font-size: 0.75rem;
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
             }
             .notification {
-                top: 60px;
-                font-size: 0.75rem;
-                padding: 8px 12px;
+                top: 10px;
+                font-size: 0.7rem;
+                padding: 6px 10px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Admin Navigation (now fixed at top, replacing the full header) -->
-    <nav class="admin-nav">
-        <a href="admin_hub.html" class="admin-nav-link">
-            <i class="fas fa-tachometer-alt"></i> الرئيسية
-        </a>
-        <a href="orders.html" class="admin-nav-link">
-            <i class="fas fa-shopping-bag"></i> الطلبات
-        </a>
-        <a href="products.html" class="admin-nav-link active">
-            <i class="fas fa-box"></i> المنتجات
-        </a>
-        <a href="users.html" class="admin-nav-link">
-            <i class="fas fa-users"></i> المستخدمون
-        </a>
-        <a href="settings.html" class="admin-nav-link">
-            <i class="fas fa-cogs"></i> الإعدادات
-        </a>
-        <a href="homepage_settings.html" class="admin-nav-link">
-            <i class="fas fa-home"></i> إعدادات الصفحة الرئيسية
-        </a>
-        <a href="admin_logs.html" class="admin-nav-link">
-            <i class="fas fa-clipboard-list"></i> سجل المشرفين
-        </a>
-        <!-- Logout button moved here for accessibility -->
-        <button id="logoutBtn" class="btn btn-danger logout-btn-nav">
-            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-        </button>
-    </nav>
-    
-    <!-- Main Content for Products -->
-    <main class="admin-main-content">
-        <section class="products-section">
-            <div class="section-header">
-                <h2>إدارة المنتجات</h2>
-                <p>إضافة، تعديل، وحذف المنتجات في متجرك.</p>
+    <div class="admin-dashboard-wrapper">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <a href="admin.html" class="logo-container">
+                    <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                    <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
+                </a>
             </div>
-            
-            <div class="products-controls">
-                <div class="search-sort-group">
-                    <input type="text" id="searchInput" placeholder="ابحث بالاسم أو السعر..." title="ابحث عن منتج بالاسم أو السعر">
-                    <select id="sortSelect" title="ترتيب المنتجات حسب...">
-                        <option value="">ترتيب حسب...</option>
-                        <option value="name-asc">الاسم (أ-ي)</option>
-                        <option value="name-desc">الاسم (ي-أ)</option>
-                        <option value="price-asc">السعر (الأقل أولاً)</option>
-                        <option value="price-desc">السعر (الأعلى أولاً)</option>
-                        <!-- If you have a 'stockQuantity' field in your product data, uncomment these: -->
-                        <!-- <option value="quantity-asc">الكمية (الأقل أولاً)</option> -->
-                        <!-- <option value="quantity-desc">الكمية (الأعلى أولاً)</option> -->
-                    </select>
-                </div>
-                <button id="addNewProductBtn" class="btn btn-success">
-                    <i class="fas fa-plus-circle"></i> إضافة منتج جديد
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
+                </a>
+                <a href="requestsadmin.html" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
+                </a>
+                <a href="products.html" class="nav-item active">
+                    <i class="fas fa-box"></i> <span>المنتجات</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i> <span>المستخدمون</span>
+                </a>
+                <a href="categories_admin.html" class="nav-item">
+                    <i class="fas fa-list"></i> <span>الأقسام</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cogs"></i> <span>الإعدادات</span>
+                </a>
+                <a href="homepage_settings.html" class="nav-item">
+                    <i class="fas fa-home"></i> <span>إعدادات الصفحة الرئيسية</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
                 </button>
             </div>
+        </aside>
 
-            <div class="products-table-container">
-                <table class="products-table">
-                    <thead>
-                        <tr>
-                            <th>صورة</th>
-                            <th>الاسم</th>
-                            <th>الفئة</th>
-                            <th>السعر</th>
-                            <th>مفعل</th>
-                            <th>عرض خاص</th>
-                            <th>الإجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody id="productsTableBody">
-                        <!-- Products will be loaded here by JavaScript -->
-                        <tr><td colspan="7" class="no-content-message">جاري تحميل المنتجات...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </main>
+        <!-- Main Content Area -->
+        <main class="admin-main-content">
+            <!-- Hamburger Menu Button -->
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
 
-    <!-- Product Add/Edit Modal -->
+            <section class="product-management-section">
+                <div class="section-header">
+                    <h2>إدارة المنتجات</h2>
+                    <p>إضافة، تعديل، حذف، وتفعيل/تعطيل المنتجات.</p>
+                </div>
+
+                <div class="add-product-container">
+                    <button type="button" class="btn btn-primary" id="addProductBtn">
+                        <i class="fas fa-plus"></i> إضافة منتج جديد
+                    </button>
+                </div>
+
+                <div class="products-table-container">
+                    <table class="products-table">
+                        <thead>
+                            <tr>
+                                <th>معرف المنتج</th>
+                                <th>الصورة</th>
+                                <th>الاسم</th>
+                                <th>السعر الأصلي</th>
+                                <th>عرض خاص؟</th>
+                                <th>نسبة التخفيض</th>
+                                <th>السعر النهائي</th>
+                                <th>الكمية</th>
+                                <th>القسم</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody">
+                            <!-- Products will be loaded here by JavaScript -->
+                            <tr><td colspan="11" class="no-content-message">جاري تحميل المنتجات...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Product Modal (Add/Edit) -->
     <div id="productModal" class="modal">
         <div class="modal-content">
             <span class="close-button" id="closeProductModalBtn">&times;</span>
             <div class="modal-header">
                 <h2 id="productModalTitle">إضافة منتج جديد</h2>
             </div>
-            <form id="productForm">
-                <div class="modal-body">
+            <div class="modal-body">
+                <form id="productForm">
                     <div class="form-group">
-                        <label for="productNameInput">اسم المنتج:</label>
-                        <input type="text" id="productNameInput" required>
+                        <label for="productName">اسم المنتج:</label>
+                        <input type="text" id="productName" required>
                     </div>
                     <div class="form-group">
-                        <label for="productDescriptionInput">الوصف:</label>
-                        <textarea id="productDescriptionInput"></textarea>
+                        <label for="productDescription">الوصف:</label>
+                        <textarea id="productDescription"></textarea>
                     </div>
                     <div class="form-group">
-                        <label for="productPriceInput">السعر (د.ع):</label>
-                        <input type="number" id="productPriceInput" min="0" step="0.01" required>
+                        <label for="productPrice">السعر الأصلي (د.ع):</label>
+                        <input type="number" id="productPrice" step="0.01" min="0" required>
                     </div>
                     <div class="form-group">
-                        <label for="productCategoryInput">الفئة:</label>
-                        <select id="productCategoryInput" required>
-                            <!-- Categories will be loaded by JS -->
+                        <label for="productStock">الكمية في المخزون:</label>
+                        <input type="number" id="productStock" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">القسم:</label>
+                        <select id="productCategory" required>
+                            <!-- Categories will be loaded here by JavaScript -->
+                            <option value="">جاري تحميل الأقسام...</option>
                         </select>
                     </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="productIsActiveToggle">
-                        <label for="productIsActiveToggle">تفعيل المنتج (عرض في المتجر)</label>
+                    <div class="form-group">
+                        <label for="productImageUrl">رابط الصورة (URL):</label>
+                        <input type="text" id="productImageUrl" placeholder="مثال: https://example.com/image.jpg">
+                        <!-- Future: Add file input for image upload here -->
                     </div>
-                    <div class="checkbox-group">
-                        <input type="checkbox" id="productIsSaleToggle">
-                        <label for="productIsSaleToggle">عرض خاص / تخفيض</label>
-                    </div>
-
-                    <div id="discountFields">
-                        <div class="checkbox-group">
-                            <input type="checkbox" id="productUseCustomDiscountPrice">
-                            <label for="productUseCustomDiscountPrice">استخدام سعر خصم مخصص (بدلاً من النسبة)</label>
-                        </div>
-                        <div class="form-group" id="percentageDiscountField">
-                            <label for="productDiscountPercentageInput">نسبة الخصم (%):</label>
-                            <input type="number" id="productDiscountPercentageInput" min="0" max="100" step="0.01">
-                        </div>
-                        <div class="form-group" id="customPriceDiscountField" style="display: none;">
-                            <label for="productCustomDiscountPriceInput">سعر الخصم المخصص (د.ع):</label>
-                            <input type="number" id="productCustomDiscountPriceInput" min="0" step="0.01">
-                        </div>
+                    
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="productIsActive">
+                        <label for="productIsActive">المنتج نشط</label>
                     </div>
 
-                    <div class="image-upload-section">
-                        <h4>صور المنتج</h4>
+                    <!-- Offer Specific Fields -->
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="productIsOnOffer">
+                        <label for="productIsOnOffer">عرض خاص؟</label>
+                    </div>
+
+                    <div id="discountFields" style="display: none;">
                         <div class="form-group">
-                            <label for="productImageUrlsInput">إضافة روابط صور جديدة (رابط لكل سطر):</label>
-                            <textarea id="productImageUrlsInput" placeholder="أدخل روابط الصور هنا، رابط لكل سطر" rows="5"></textarea>
+                            <label for="productDiscountPercentage">نسبة التخفيض (%):</label>
+                            <input type="number" id="productDiscountPercentage" step="0.01" min="0" max="100">
                         </div>
-                        <div id="imagePreviewContainer" class="image-preview-container">
-                            <!-- New image previews will appear here -->
-                        </div>
-                        <div class="form-group" style="margin-top: 1rem;">
-                            <label>الصور الموجودة حالياً:</label>
-                            <div id="existingImagesContainer" class="existing-images-container">
-                                <!-- Existing product images will appear here with delete buttons -->
-                            </div>
+                        <div class="form-group">
+                            <label for="productFinalPrice">السعر النهائي (د.ع):</label>
+                            <input type="number" id="productFinalPrice" step="0.01" min="0">
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary">حفظ</button>
-                    <button type="button" class="btn btn-secondary" id="cancelProductModalBtn">إلغاء</button>
-                </div>
-            </form>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveProductBtn">
+                    <i class="fas fa-save"></i> حفظ التغييرات
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancelProductModalBtn">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+            </div>
         </div>
     </div>
     
