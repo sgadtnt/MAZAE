@@ -127,13 +127,13 @@
                     document.getElementById('languageSelect').value = settings.language || 'ar'; // Default to Arabic
 
                     // Update mobile header as well
-                    const storeNameElement = document.querySelector('.mobile-header .store-name');
-                    if (storeNameElement) {
-                        storeNameElement.textContent = settings.storeName || 'الإعدادات'; // Keep it concise for mobile header
+                    const mobileStoreNameElement = document.getElementById('mobileStoreName');
+                    if (mobileStoreNameElement) {
+                        mobileStoreNameElement.textContent = settings.storeName || 'الإعدادات'; // Keep it concise for mobile header
                     }
-                    const storeLogoElement = document.querySelector('.mobile-header .store-logo');
-                    if (storeLogoElement) {
-                        storeLogoElement.src = settings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
+                    const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
+                    if (mobileStoreLogoElement) {
+                        mobileStoreLogoElement.src = settings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
                     }
 
                     // Render delivery prices table
@@ -190,18 +190,25 @@
                 manageAdminLogsSize(10); // Keep logs clean
                 
                 // Update mobile header immediately after saving
-                const storeNameElement = document.querySelector('.mobile-header .store-name');
-                if (storeNameElement) {
-                    storeNameElement.textContent = newSettings.storeName || 'الإعدادات';
+                const mobileStoreNameElement = document.getElementById('mobileStoreName');
+                if (mobileStoreNameElement) {
+                    mobileStoreNameElement.textContent = newSettings.storeName || 'الإعدادات';
                 }
-                const storeLogoElement = document.querySelector('.mobile-header .store-logo');
-                if (storeLogoElement) {
-                    storeLogoElement.src = newSettings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
+                const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
+                if (mobileStoreLogoElement) {
+                    mobileStoreLogoElement.src = newSettings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
                 }
 
             } catch (error) {
                 console.error("Error saving general settings:", error);
-                showNotification('حدث خطأ أثناء حفظ الإعدادات.', 'error');
+                // Log specific Firebase error details if available
+                if (error.code) {
+                    console.error("Firebase Error Code:", error.code);
+                }
+                if (error.message) {
+                    console.error("Firebase Error Message:", error.message);
+                }
+                showNotification('حدث خطأ أثناء حفظ الإعدادات. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
             }
         }
 
@@ -231,7 +238,7 @@
                 deliveryPricesTableBody.appendChild(row);
             });
 
-            // Add event listeners for delete buttons
+            // Add event listeners for delete buttons (re-attach after rendering)
             document.querySelectorAll('.delete-delivery-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const cityToDelete = event.target.dataset.city || event.target.closest('[data-city]')?.dataset.city;
@@ -293,7 +300,14 @@
 
             } catch (error) {
                 console.error("Error adding/updating delivery price:", error);
-                showNotification('حدث خطأ أثناء إضافة/تحديث سعر التوصيل.', 'error');
+                // Log specific Firebase error details if available
+                if (error.code) {
+                    console.error("Firebase Error Code:", error.code);
+                }
+                if (error.message) {
+                    console.error("Firebase Error Message:", error.message);
+                }
+                showNotification('حدث خطأ أثناء إضافة/تحديث سعر التوصيل. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
             }
         }
 
@@ -326,7 +340,14 @@
 
             } catch (error) {
                 console.error("Error deleting delivery price:", error);
-                showNotification('حدث خطأ أثناء حذف سعر التوصيل.', 'error');
+                // Log specific Firebase error details if available
+                if (error.code) {
+                    console.error("Firebase Error Code:", error.code);
+                }
+                if (error.message) {
+                    console.error("Firebase Error Message:", error.message);
+                }
+                showNotification('حدث خطأ أثناء حذف سعر التوصيل. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
             }
         }
 
