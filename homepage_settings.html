@@ -9,13 +9,14 @@
     <!-- Firebase SDK imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         
-        // Your web app's Firebase configuration (replace with your actual config)
+        // Your web app's Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
             authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -29,345 +30,640 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+        const auth = getAuth(app); 
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
         // Realtime Database references
-        const settingsRef = dbRef(db, "settings");
         const homepageSettingsRef = dbRef(db, "homepageSettings");
-        const categoriesRef = dbRef(db, "categories"); // To fetch categories for selection
+        const generalSettingsRef = dbRef(db, "settings"); // To get store name/logo
+        const categoriesRef = dbRef(db, "categories"); // To get categories for multi-select
+        const adminLogsRef = dbRef(db, "adminLogs");
 
         // Global data storage for frontend
         window.adminData = {
-            settings: {},
             homepageSettings: {},
-            categories: [], // To store available categories
-            currentUser: null,
-            authReady: false
+            allCategories: [],
+            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
+            authReady: true // Always ready as no auth is required
         };
 
-        // Function to show notifications (reused from client-side)
+        // Function to show notifications
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
             notification.className = `notification ${type}`;
             notification.textContent = message;
             document.body.appendChild(notification);
             
-            void notification.offsetWidth;
+            void notification.offsetWidth; // Trigger reflow to apply transition
             notification.classList.add('show');
             
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {
                     document.body.removeChild(notification);
-                }, 300);
+                }, 300); // Allow time for fade out
             }, 3000);
         }
 
-        // Function to load settings (for store name/logo in admin header)
-        async function loadSettings() {
-            onValue(settingsRef, (snapshot) => {
-                window.adminData.settings = snapshot.val() || {};
-                document.getElementById('storeName').textContent = window.adminData.settings.storeName || 'لوحة تحكم المتجر';
-                document.getElementById('storeLogo').src = window.adminData.settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
-            }, (error) => {
-                console.error("Error loading settings:", error);
-                showNotification('حدث خطأ في تحميل الإعدادات العامة.', 'error');
-            });
+        // Function to show a custom confirmation modal
+        function showConfirmModal(message, onConfirm) {
+            const modal = document.createElement('div');
+            modal.className = 'custom-modal';
+            modal.innerHTML = `
+                <div class="custom-modal-content">
+                    <p>${message}</p>
+                    <div class="modal-actions">
+                        <button id="modalConfirmBtn" class="btn btn-danger">نعم</button>
+                        <button id="modalCancelBtn" class="btn btn-secondary">إلغاء</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            document.getElementById('modalConfirmBtn').onclick = () => {
+                onConfirm();
+                document.body.removeChild(modal);
+            };
+            document.getElementById('modalCancelBtn').onclick = () => {
+                document.body.removeChild(modal);
+            };
         }
 
-        // Function to handle logout
-        async function handleLogout() {
+        // Function to load all categories from Firebase
+        async function loadCategories() {
             try {
-                await signOut(auth);
-                showNotification('تم تسجيل الخروج بنجاح.', 'success');
-                window.location.href = '/'; // Redirect to client-side home page
+                const snapshot = await get(categoriesRef);
+                const categoriesData = snapshot.val() || {};
+                window.adminData.allCategories = Object.entries(categoriesData).map(([id, data]) => ({ id, name: data.name }));
+                populateCategoriesMultiSelect(window.adminData.allCategories, window.adminData.homepageSettings.productCategories?.selectedCategories || []);
             } catch (error) {
-                console.error("Error signing out:", error);
-                showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
+                console.error("Error loading categories:", error);
+                showNotification('حدث خطأ أثناء تحميل الفئات.', 'error');
             }
         }
 
-        // --- Homepage Settings Specific Functions ---
+        // Function to populate the categories multi-select dropdown
+        function populateCategoriesMultiSelect(categories, selectedCategoryIds) {
+            const selectElement = document.getElementById('productCategoriesSelect');
+            selectElement.innerHTML = ''; // Clear existing options
+
+            if (categories.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'لا توجد فئات متاحة';
+                option.disabled = true;
+                selectElement.appendChild(option);
+                return;
+            }
+
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category.id;
+                option.textContent = category.name;
+                if (selectedCategoryIds.includes(category.id)) {
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
+            });
+        }
 
         // Function to load homepage settings from Firebase
         async function loadHomepageSettings() {
             try {
-                const snapshot = await get(homepageSettingsRef);
-                const settings = snapshot.val() || {};
-                window.adminData.homepageSettings = settings;
+                // Listen for real-time updates to homepage settings
+                onValue(homepageSettingsRef, (snapshot) => {
+                    const settings = snapshot.val() || {};
+                    window.adminData.homepageSettings = settings;
 
-                // Main Banner
-                document.getElementById('mainBannerEnabled').checked = settings.mainBanner?.enabled || false;
-                document.getElementById('mainBannerImage').value = settings.mainBanner?.image || '';
-                document.getElementById('mainBannerTitle').value = settings.mainBanner?.title || '';
-                document.getElementById('mainBannerDescription').value = settings.mainBanner?.description || '';
-                document.getElementById('mainBannerCtaText').value = settings.mainBanner?.ctaText || '';
-                document.getElementById('mainBannerCtaLink').value = settings.mainBanner?.ctaLink || '';
+                    // Main Banner
+                    document.getElementById('mainBannerToggle').checked = settings.mainBanner?.enabled || false;
+                    document.getElementById('mainBannerImageUrl').value = settings.mainBanner?.imageUrl || '';
+                    document.getElementById('mainBannerTitle').value = settings.mainBanner?.title || '';
+                    document.getElementById('mainBannerDescription').value = settings.mainBanner?.description || '';
+                    document.getElementById('mainBannerCtaText').value = settings.mainBanner?.ctaText || '';
+                    document.getElementById('mainBannerCtaUrl').value = settings.mainBanner?.ctaUrl || '';
+                    toggleSectionInputs('mainBanner', settings.mainBanner?.enabled || false);
 
-                // Product Categories
-                document.getElementById('productCategoriesEnabled').checked = settings.productCategories?.enabled || false;
-                await loadCategoriesForSelection(settings.productCategories?.selectedCategories || []);
+                    // Product Categories
+                    document.getElementById('productCategoriesToggle').checked = settings.productCategories?.enabled || false;
+                    populateCategoriesMultiSelect(window.adminData.allCategories, settings.productCategories?.selectedCategories || []);
+                    toggleSectionInputs('productCategories', settings.productCategories?.enabled || false);
 
-                // Featured Products
-                document.getElementById('featuredProductsEnabled').checked = settings.featuredProducts?.enabled || false;
-                const featuredType = settings.featuredProducts?.type || 'most_selling';
-                document.querySelector(`input[name="featuredProductType"][value="${featuredType}"]`).checked = true;
+                    // Featured Products
+                    document.getElementById('featuredProductsToggle').checked = settings.featuredProducts?.enabled || false;
+                    document.getElementById('featuredProductsType').value = settings.featuredProducts?.type || 'bestsellers';
+                    toggleSectionInputs('featuredProducts', settings.featuredProducts?.enabled || false);
 
-                // Internal Banners
-                document.getElementById('internalBannersEnabled').checked = settings.internalBanners?.enabled || false;
-                renderInternalBanners(settings.internalBanners?.banners || []);
+                    // Internal Banners
+                    document.getElementById('internalBannersToggle').checked = settings.internalBanners?.enabled || false;
+                    renderInternalBanners(settings.internalBanners?.banners || {});
+                    toggleSectionInputs('internalBanners', settings.internalBanners?.enabled || false);
 
-                // Customer Reviews
-                document.getElementById('customerReviewsEnabled').checked = settings.customerReviews?.enabled || false;
+                    // Customer Reviews
+                    document.getElementById('customerReviewsToggle').checked = settings.customerReviews?.enabled || false;
 
-                // Articles/Blog
-                document.getElementById('articlesBlogEnabled').checked = settings.articlesBlog?.enabled || false;
+                    // Articles/Blog
+                    document.getElementById('articlesBlogToggle').checked = settings.articlesBlog?.enabled || false;
 
-                // Footer
-                document.getElementById('footerContactEnabled').checked = settings.footer?.contactEnabled || false;
-                document.getElementById('footerSocialEnabled').checked = settings.footer?.socialEnabled || false;
-                document.getElementById('facebookLink').value = settings.footer?.facebook || '';
-                document.getElementById('instagramLink').value = settings.footer?.instagram || '';
-                document.getElementById('twitterLink').value = settings.footer?.twitter || '';
-                document.getElementById('linkedinLink').value = settings.footer?.linkedin || '';
-                document.getElementById('footerCustomLinksEnabled').checked = settings.footer?.customLinksEnabled || false;
-                renderCustomFooterLinks(settings.footer?.customLinks || []);
+                    // Footer Settings
+                    document.getElementById('footerContactInfoToggle').checked = settings.footerSettings?.contactInfoEnabled || false;
+                    document.getElementById('socialFacebook').value = settings.footerSettings?.socialMedia?.facebook || '';
+                    document.getElementById('socialInstagram').value = settings.footerSettings?.socialMedia?.instagram || '';
+                    document.getElementById('socialTwitter').value = settings.footerSettings?.socialMedia?.twitter || '';
+                    document.getElementById('socialLinkedIn').value = settings.footerSettings?.socialMedia?.linkedin || '';
+                    renderCustomFooterLinks(settings.footerSettings?.customLinks || {});
 
-                showNotification('تم تحميل إعدادات الصفحة الرئيسية بنجاح.', 'info');
+                    showNotification('تم تحميل إعدادات الصفحة الرئيسية بنجاح.', 'info');
+                });
             } catch (error) {
                 console.error("Error loading homepage settings:", error);
-                showNotification('حدث خطأ في تحميل إعدادات الصفحة الرئيسية.', 'error');
+                showNotification('حدث خطأ أثناء تحميل إعدادات الصفحة الرئيسية.', 'error');
             }
         }
 
-        // Function to save homepage settings to Firebase
+        // Function to save homepage settings
         async function saveHomepageSettings() {
+            showNotification('جاري حفظ إعدادات الصفحة الرئيسية...', 'info');
+
             try {
-                const homepageSettings = {
-                    mainBanner: {
-                        enabled: document.getElementById('mainBannerEnabled').checked,
-                        image: document.getElementById('mainBannerImage').value.trim(),
-                        title: document.getElementById('mainBannerTitle').value.trim(),
-                        description: document.getElementById('mainBannerDescription').value.trim(),
-                        ctaText: document.getElementById('mainBannerCtaText').value.trim(),
-                        ctaLink: document.getElementById('mainBannerCtaLink').value.trim()
-                    },
-                    productCategories: {
-                        enabled: document.getElementById('productCategoriesEnabled').checked,
-                        selectedCategories: Array.from(document.getElementById('categorySelect').selectedOptions).map(option => option.value)
-                    },
-                    featuredProducts: {
-                        enabled: document.getElementById('featuredProductsEnabled').checked,
-                        type: document.querySelector('input[name="featuredProductType"]:checked').value
-                    },
+                const oldSettings = { ...window.adminData.homepageSettings }; // Clone for logging
+
+                // Main Banner
+                const mainBannerEnabled = document.getElementById('mainBannerToggle').checked;
+                const mainBanner = {
+                    enabled: mainBannerEnabled,
+                    imageUrl: document.getElementById('mainBannerImageUrl').value.trim(),
+                    title: document.getElementById('mainBannerTitle').value.trim(),
+                    description: document.getElementById('mainBannerDescription').value.trim(),
+                    ctaText: document.getElementById('mainBannerCtaText').value.trim(),
+                    ctaUrl: document.getElementById('mainBannerCtaUrl').value.trim()
+                };
+
+                // Product Categories
+                const productCategoriesEnabled = document.getElementById('productCategoriesToggle').checked;
+                const selectedCategories = Array.from(document.getElementById('productCategoriesSelect').selectedOptions).map(option => option.value);
+                const productCategories = {
+                    enabled: productCategoriesEnabled,
+                    selectedCategories: selectedCategories
+                };
+
+                // Featured Products
+                const featuredProductsEnabled = document.getElementById('featuredProductsToggle').checked;
+                const featuredProducts = {
+                    enabled: featuredProductsEnabled,
+                    type: document.getElementById('featuredProductsType').value
+                };
+
+                // Internal Banners (collect from dynamic elements)
+                const internalBannersEnabled = document.getElementById('internalBannersToggle').checked;
+                const internalBannersContainer = document.getElementById('internalBannersContainer');
+                const internalBanners = {};
+                Array.from(internalBannersContainer.children).forEach(bannerDiv => {
+                    const id = bannerDiv.dataset.id;
+                    internalBanners[id] = {
+                        imageUrl: bannerDiv.querySelector('[data-field="imageUrl"]').value.trim(),
+                        title: bannerDiv.querySelector('[data-field="title"]').value.trim(),
+                        description: bannerDiv.querySelector('[data-field="description"]').value.trim(),
+                        ctaText: bannerDiv.querySelector('[data-field="ctaText"]').value.trim(),
+                        ctaUrl: bannerDiv.querySelector('[data-field="ctaUrl"]').value.trim()
+                    };
+                });
+
+                // Customer Reviews
+                const customerReviewsEnabled = document.getElementById('customerReviewsToggle').checked;
+
+                // Articles/Blog
+                const articlesBlogEnabled = document.getElementById('articlesBlogToggle').checked;
+
+                // Footer Settings
+                const footerContactInfoEnabled = document.getElementById('footerContactInfoToggle').checked;
+                const socialMedia = {
+                    facebook: document.getElementById('socialFacebook').value.trim(),
+                    instagram: document.getElementById('socialInstagram').value.trim(),
+                    twitter: document.getElementById('socialTwitter').value.trim(),
+                    linkedin: document.getElementById('socialLinkedIn').value.trim()
+                };
+
+                // Custom Footer Links (collect from dynamic elements)
+                const customLinksContainer = document.getElementById('customFooterLinksContainer');
+                const customLinks = {};
+                Array.from(customLinksContainer.children).forEach(linkDiv => {
+                    const id = linkDiv.dataset.id;
+                    customLinks[id] = {
+                        text: linkDiv.querySelector('[data-field="text"]').value.trim(),
+                        url: linkDiv.querySelector('[data-field="url"]').value.trim()
+                    };
+                });
+
+                const newSettings = {
+                    mainBanner: mainBanner,
+                    productCategories: productCategories,
+                    featuredProducts: featuredProducts,
                     internalBanners: {
-                        enabled: document.getElementById('internalBannersEnabled').checked,
-                        banners: getInternalBannersData()
+                        enabled: internalBannersEnabled,
+                        banners: internalBanners
                     },
                     customerReviews: {
-                        enabled: document.getElementById('customerReviewsEnabled').checked
+                        enabled: customerReviewsEnabled
                     },
                     articlesBlog: {
-                        enabled: document.getElementById('articlesBlogEnabled').checked
+                        enabled: articlesBlogEnabled
                     },
-                    footer: {
-                        contactEnabled: document.getElementById('footerContactEnabled').checked,
-                        socialEnabled: document.getElementById('footerSocialEnabled').checked,
-                        facebook: document.getElementById('facebookLink').value.trim(),
-                        instagram: document.getElementById('instagramLink').value.trim(),
-                        twitter: document.getElementById('twitterLink').value.trim(),
-                        linkedin: document.getElementById('linkedinLink').value.trim(),
-                        customLinksEnabled: document.getElementById('footerCustomLinksEnabled').checked,
-                        customLinks: getCustomFooterLinksData()
+                    footerSettings: {
+                        contactInfoEnabled: footerContactInfoEnabled,
+                        socialMedia: socialMedia,
+                        customLinks: customLinks
                     }
                 };
 
-                await set(homepageSettingsRef, homepageSettings);
+                await set(homepageSettingsRef, newSettings); // Use set to overwrite all settings
+                window.adminData.homepageSettings = newSettings; // Update global state
                 showNotification('تم حفظ إعدادات الصفحة الرئيسية بنجاح!', 'success');
+
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'UPDATE_HOMEPAGE_SETTINGS',
+                    adminId: window.adminData.currentUser.uid,
+                    oldSettings: oldSettings,
+                    newSettings: newSettings,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10);
+
             } catch (error) {
                 console.error("Error saving homepage settings:", error);
                 showNotification('حدث خطأ أثناء حفظ إعدادات الصفحة الرئيسية.', 'error');
             }
         }
 
-        // Function to load categories for the multi-select dropdown
-        async function loadCategoriesForSelection(selectedCategoryIds = []) {
-            try {
-                const snapshot = await get(categoriesRef);
-                const categoriesData = snapshot.val();
-                const categoriesArray = [];
-                if (categoriesData) {
-                    for (const key in categoriesData) {
-                        categoriesArray.push({ id: key, ...categoriesData[key] });
-                    }
-                }
-                window.adminData.categories = categoriesArray.filter(cat => cat.isActive); // Only show active categories
+        // Helper function to toggle input fields based on section toggle
+        function toggleSectionInputs(sectionId, isEnabled) {
+            const section = document.getElementById(sectionId + 'Section');
+            if (!section) return;
 
-                const categorySelect = document.getElementById('categorySelect');
-                categorySelect.innerHTML = ''; // Clear previous options
-
-                if (window.adminData.categories.length === 0) {
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = 'لا توجد فئات متاحة';
-                    option.disabled = true;
-                    categorySelect.appendChild(option);
+            const inputs = section.querySelectorAll('input, select, textarea, button:not(.toggle-switch-input)');
+            inputs.forEach(input => {
+                // Keep the toggle switch itself enabled
+                if (input.type === 'checkbox' && input.classList.contains('toggle-switch-input')) {
                     return;
                 }
-
-                window.adminData.categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.id;
-                    option.textContent = category.name;
-                    if (selectedCategoryIds.includes(category.id)) {
-                        option.selected = true;
-                    }
-                    categorySelect.appendChild(option);
-                });
-            } catch (error) {
-                console.error("Error loading categories for selection:", error);
-                showNotification('حدث خطأ في تحميل الفئات.', 'error');
+                input.disabled = !isEnabled;
+            });
+            // Specific handling for internal banners and custom links add buttons
+            if (sectionId === 'internalBanners') {
+                document.getElementById('addInternalBannerBtn').disabled = !isEnabled;
+            }
+            if (sectionId === 'footerSettings') {
+                document.getElementById('addCustomLinkBtn').disabled = !isEnabled;
             }
         }
 
-        // Functions for Internal Banners (dynamic add/remove)
+        // --- Internal Banners Management ---
         function renderInternalBanners(banners) {
             const container = document.getElementById('internalBannersContainer');
-            container.innerHTML = '';
-            banners.forEach((banner, index) => {
-                container.innerHTML += `
-                    <div class="dynamic-item-row" data-index="${index}">
-                        <input type="text" class="internal-banner-image" value="${banner.image || ''}" placeholder="رابط صورة البانر">
-                        <input type="text" class="internal-banner-link" value="${banner.link || ''}" placeholder="رابط البانر">
-                        <button type="button" class="remove-item-btn" onclick="removeInternalBanner(this)"><i class="fas fa-trash"></i></button>
+            container.innerHTML = ''; // Clear existing banners
+
+            if (Object.keys(banners).length === 0) {
+                container.innerHTML = `<p class="no-content-message">لا توجد بانرات داخلية مضافة.</p>`;
+                return;
+            }
+
+            for (const id in banners) {
+                const banner = banners[id];
+                const bannerDiv = document.createElement('div');
+                bannerDiv.className = 'dynamic-item-card';
+                bannerDiv.dataset.id = id;
+                bannerDiv.innerHTML = `
+                    <div class="form-group">
+                        <label>رابط الصورة:</label>
+                        <input type="url" data-field="imageUrl" value="${banner.imageUrl || ''}" placeholder="https://example.com/banner.png">
                     </div>
+                    <div class="form-group">
+                        <label>العنوان:</label>
+                        <input type="text" data-field="title" value="${banner.title || ''}" placeholder="عنوان البانر">
+                    </div>
+                    <div class="form-group">
+                        <label>الوصف:</label>
+                        <input type="text" data-field="description" value="${banner.description || ''}" placeholder="وصف قصير للبانر">
+                    </div>
+                    <div class="form-group">
+                        <label>نص زر الإجراء (CTA):</label>
+                        <input type="text" data-field="ctaText" value="${banner.ctaText || ''}" placeholder="مثال: تسوق الآن">
+                    </div>
+                    <div class="form-group">
+                        <label>رابط زر الإجراء (CTA):</label>
+                        <input type="url" data-field="ctaUrl" value="${banner.ctaUrl || ''}" placeholder="https://example.com/products">
+                    </div>
+                    <button type="button" class="btn btn-danger remove-item-btn" data-id="${id}">
+                        <i class="fas fa-trash"></i> حذف البانر
+                    </button>
                 `;
+                container.appendChild(bannerDiv);
+            }
+
+            // Add event listeners to new remove buttons
+            container.querySelectorAll('.remove-item-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const idToRemove = event.target.dataset.id || event.target.closest('[data-id]')?.dataset.id;
+                    if (idToRemove) {
+                        showConfirmModal('هل أنت متأكد أنك تريد حذف هذا البانر؟', () => {
+                            removeInternalBanner(idToRemove);
+                        });
+                    }
+                });
             });
         }
 
         function addInternalBanner() {
+            const newId = crypto.randomUUID();
             const container = document.getElementById('internalBannersContainer');
-            const newIndex = container.children.length;
-            container.innerHTML += `
-                <div class="dynamic-item-row" data-index="${newIndex}">
-                    <input type="text" class="internal-banner-image" placeholder="رابط صورة البانر">
-                    <input type="text" class="internal-banner-link" placeholder="رابط البانر">
-                    <button type="button" class="remove-item-btn" onclick="removeInternalBanner(this)"><i class="fas fa-trash"></i></button>
+            const newBanner = {
+                imageUrl: '', title: '', description: '', ctaText: '', ctaUrl: ''
+            };
+            
+            // If "no content" message is present, remove it
+            const noContentMsg = container.querySelector('.no-content-message');
+            if (noContentMsg) {
+                noContentMsg.remove();
+            }
+
+            const bannerDiv = document.createElement('div');
+            bannerDiv.className = 'dynamic-item-card';
+            bannerDiv.dataset.id = newId;
+            bannerDiv.innerHTML = `
+                <div class="form-group">
+                    <label>رابط الصورة:</label>
+                    <input type="url" data-field="imageUrl" value="${newBanner.imageUrl}" placeholder="https://example.com/banner.png">
                 </div>
+                <div class="form-group">
+                    <label>العنوان:</label>
+                    <input type="text" data-field="title" value="${newBanner.title}" placeholder="عنوان البانر">
+                </div>
+                <div class="form-group">
+                    <label>الوصف:</label>
+                    <input type="text" data-field="description" value="${newBanner.description}" placeholder="وصف قصير للبانر">
+                </div>
+                <div class="form-group">
+                    <label>نص زر الإجراء (CTA):</label>
+                    <input type="text" data-field="ctaText" value="${newBanner.ctaText}" placeholder="مثال: تسوق الآن">
+                </div>
+                <div class="form-group">
+                    <label>رابط زر الإجراء (CTA):</label>
+                    <input type="url" data-field="ctaUrl" value="${newBanner.ctaUrl}" placeholder="https://example.com/products">
+                </div>
+                <button type="button" class="btn btn-danger remove-item-btn" data-id="${newId}">
+                    <i class="fas fa-trash"></i> حذف البانر
+                </button>
             `;
-        }
+            container.appendChild(bannerDiv);
 
-        function removeInternalBanner(button) {
-            button.closest('.dynamic-item-row').remove();
-        }
-
-        function getInternalBannersData() {
-            const banners = [];
-            document.querySelectorAll('#internalBannersContainer .dynamic-item-row').forEach(row => {
-                banners.push({
-                    image: row.querySelector('.internal-banner-image').value.trim(),
-                    link: row.querySelector('.internal-banner-link').value.trim()
-                });
+            // Add event listener to the new remove button
+            bannerDiv.querySelector('.remove-item-btn').addEventListener('click', (event) => {
+                const idToRemove = event.target.dataset.id || event.target.closest('[data-id]')?.dataset.id;
+                if (idToRemove) {
+                    showConfirmModal('هل أنت متأكد أنك تريد حذف هذا البانر؟', () => {
+                        removeInternalBanner(idToRemove);
+                    });
+                }
             });
-            return banners;
         }
 
-        // Functions for Custom Footer Links (dynamic add/remove)
+        async function removeInternalBanner(id) {
+            const currentBanners = window.adminData.homepageSettings.internalBanners?.banners || {};
+            if (currentBanners[id]) {
+                const oldBanner = currentBanners[id];
+                delete currentBanners[id];
+                try {
+                    await update(dbRef(db, `homepageSettings/internalBanners/banners`), currentBanners);
+                    showNotification('تم حذف البانر بنجاح!', 'success');
+                    // Log admin activity
+                    await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                        action: 'DELETE_INTERNAL_BANNER',
+                        adminId: window.adminData.currentUser.uid,
+                        bannerId: id,
+                        bannerData: oldBanner,
+                        timestamp: new Date().toISOString()
+                    });
+                    manageAdminLogsSize(10);
+                } catch (error) {
+                    console.error("Error removing internal banner:", error);
+                    showNotification('حدث خطأ أثناء حذف البانر.', 'error');
+                }
+            }
+        }
+
+        // --- Custom Footer Links Management ---
         function renderCustomFooterLinks(links) {
             const container = document.getElementById('customFooterLinksContainer');
-            container.innerHTML = '';
-            links.forEach((link, index) => {
-                container.innerHTML += `
-                    <div class="dynamic-item-row" data-index="${index}">
-                        <input type="text" class="custom-link-text" value="${link.text || ''}" placeholder="نص الرابط">
-                        <input type="text" class="custom-link-url" value="${link.link || ''}" placeholder="رابط الصفحة">
-                        <button type="button" class="remove-item-btn" onclick="removeCustomFooterLink(this)"><i class="fas fa-trash"></i></button>
+            container.innerHTML = ''; // Clear existing links
+
+            if (Object.keys(links).length === 0) {
+                container.innerHTML = `<p class="no-content-message">لا توجد روابط مخصصة مضافة.</p>`;
+                return;
+            }
+
+            for (const id in links) {
+                const link = links[id];
+                const linkDiv = document.createElement('div');
+                linkDiv.className = 'dynamic-item-card';
+                linkDiv.dataset.id = id;
+                linkDiv.innerHTML = `
+                    <div class="form-group">
+                        <label>نص الرابط:</label>
+                        <input type="text" data-field="text" value="${link.text || ''}" placeholder="مثال: سياسة الخصوصية">
                     </div>
+                    <div class="form-group">
+                        <label>رابط URL:</label>
+                        <input type="url" data-field="url" value="${link.url || ''}" placeholder="https://example.com/privacy">
+                    </div>
+                    <button type="button" class="btn btn-danger remove-item-btn" data-id="${id}">
+                        <i class="fas fa-trash"></i> حذف الرابط
+                    </button>
                 `;
+                container.appendChild(linkDiv);
+            }
+
+            // Add event listeners to new remove buttons
+            container.querySelectorAll('.remove-item-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const idToRemove = event.target.dataset.id || event.target.closest('[data-id]')?.dataset.id;
+                    if (idToRemove) {
+                        showConfirmModal('هل أنت متأكد أنك تريد حذف هذا الرابط؟', () => {
+                            removeCustomFooterLink(idToRemove);
+                        });
+                    }
+                });
             });
         }
 
         function addCustomFooterLink() {
+            const newId = crypto.randomUUID();
             const container = document.getElementById('customFooterLinksContainer');
-            const newIndex = container.children.length;
-            container.innerHTML += `
-                <div class="dynamic-item-row" data-index="${newIndex}">
-                    <input type="text" class="custom-link-text" placeholder="نص الرابط">
-                    <input type="text" class="custom-link-url" placeholder="رابط الصفحة">
-                    <button type="button" class="remove-item-btn" onclick="removeCustomFooterLink(this)"><i class="fas fa-trash"></i></button>
+            const newLink = {
+                text: '', url: ''
+            };
+
+            // If "no content" message is present, remove it
+            const noContentMsg = container.querySelector('.no-content-message');
+            if (noContentMsg) {
+                noContentMsg.remove();
+            }
+
+            const linkDiv = document.createElement('div');
+            linkDiv.className = 'dynamic-item-card';
+            linkDiv.dataset.id = newId;
+            linkDiv.innerHTML = `
+                <div class="form-group">
+                    <label>نص الرابط:</label>
+                    <input type="text" data-field="text" value="${newLink.text}" placeholder="مثال: سياسة الخصوصية">
                 </div>
+                <div class="form-group">
+                    <label>رابط URL:</label>
+                    <input type="url" data-field="url" value="${newLink.url}" placeholder="https://example.com/privacy">
+                </div>
+                <button type="button" class="btn btn-danger remove-item-btn" data-id="${newId}">
+                    <i class="fas fa-trash"></i> حذف الرابط
+                </button>
             `;
+            container.appendChild(linkDiv);
+
+            // Add event listener to the new remove button
+            linkDiv.querySelector('.remove-item-btn').addEventListener('click', (event) => {
+                const idToRemove = event.target.dataset.id || event.target.closest('[data-id]')?.dataset.id;
+                if (idToRemove) {
+                    showConfirmModal('هل أنت متأكد أنك تريد حذف هذا الرابط؟', () => {
+                        removeCustomFooterLink(idToRemove);
+                    });
+                }
+            });
         }
 
-        function removeCustomFooterLink(button) {
-            button.closest('.dynamic-item-row').remove();
+        async function removeCustomFooterLink(id) {
+            const currentLinks = window.adminData.homepageSettings.footerSettings?.customLinks || {};
+            if (currentLinks[id]) {
+                const oldLink = currentLinks[id];
+                delete currentLinks[id];
+                try {
+                    await update(dbRef(db, `homepageSettings/footerSettings/customLinks`), currentLinks);
+                    showNotification('تم حذف الرابط بنجاح!', 'success');
+                    // Log admin activity
+                    await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                        action: 'DELETE_CUSTOM_FOOTER_LINK',
+                        adminId: window.adminData.currentUser.uid,
+                        linkId: id,
+                        linkData: oldLink,
+                        timestamp: new Date().toISOString()
+                    });
+                    manageAdminLogsSize(10);
+                } catch (error) {
+                    console.error("Error removing custom footer link:", error);
+                    showNotification('حدث خطأ أثناء حذف الرابط.', 'error');
+                }
+            }
         }
 
-        function getCustomFooterLinksData() {
-            const links = [];
-            document.querySelectorAll('#customFooterLinksContainer .dynamic-item-row').forEach(row => {
-                links.push({
-                    text: row.querySelector('.custom-link-text').value.trim(),
-                    link: row.querySelector('.custom-link-url').value.trim()
+        // Function to manage the size of admin logs in Firebase
+        async function manageAdminLogsSize(maxLogs = 10) {
+            try {
+                const snapshot = await get(adminLogsRef); 
+                const logs = [];
+                snapshot.forEach(childSnapshot => {
+                    logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
+                });
+
+                logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+                if (logs.length > maxLogs) {
+                    const logsToDelete = logs.slice(0, logs.length - maxLogs);
+
+                    for (const log of logsToDelete) {
+                        await remove(dbRef(db, `adminLogs/${log.id}`));
+                        console.log(`Removed old log: ${log.id}`);
+                    }
+                }
+            } catch (error) {
+                console.error("Error managing admin logs size:", error);
+            }
+        }
+
+        // Function to handle logout (will just redirect as no Firebase auth session)
+        async function handleLogout() {
+            try {
+                if (auth.currentUser) {
+                    await signOut(auth);
+                }
+                showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
+                window.location.replace(window.location.origin + '/admin_login.html'); 
+            } catch (error) {
+                console.error("Error during logout (no active session expected):", error);
+                showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
+            }
+        }
+
+        // Function to toggle sidebar visibility
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('sidebar-open'); // To prevent body scroll
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Load store name and logo for sidebar header
+            onValue(generalSettingsRef, (snapshot) => {
+                const settings = snapshot.val() || {};
+                const storeNameElement = document.getElementById('storeName');
+                if (storeNameElement) {
+                    storeNameElement.textContent = settings.storeName || 'لوحة تحكم المتجر';
+                }
+                const storeLogoElement = document.getElementById('storeLogo');
+                if (storeLogoElement) {
+                    storeLogoElement.src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                }
+            });
+
+            await loadCategories(); // Load categories first
+            loadHomepageSettings(); // Then load homepage settings
+
+            // Add event listeners for section toggles
+            document.querySelectorAll('.toggle-switch-input').forEach(toggle => {
+                toggle.addEventListener('change', (event) => {
+                    const sectionId = event.target.dataset.section;
+                    toggleSectionInputs(sectionId, event.target.checked);
                 });
             });
-            return links;
-        }
 
-        // Make dynamic functions globally accessible
-        window.addInternalBanner = addInternalBanner;
-        window.removeInternalBanner = removeInternalBanner;
-        window.addCustomFooterLink = addCustomFooterLink;
-        window.removeCustomFooterLink = removeCustomFooterLink;
+            // Add event listeners for dynamic content buttons
+            document.getElementById('addInternalBannerBtn').addEventListener('click', addInternalBanner);
+            document.getElementById('addCustomLinkBtn').addEventListener('click', addCustomFooterLink);
 
+            // Add event listener for save button
+            document.getElementById('saveHomepageSettingsBtn').addEventListener('click', saveHomepageSettings);
 
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check authentication state for admin panel
-            onAuthStateChanged(auth, async (user) => {
-                window.adminData.currentUser = user;
-                window.adminData.authReady = true;
+            // Add event listeners for sidebar toggle
+            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
 
-                if (!user) {
-                    // If no user, try to sign in with custom token (admin token)
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                            window.adminData.currentUser = auth.currentUser;
-                            console.log("Admin signed in with custom token successfully.");
-                        } catch (error) {
-                            if (error.code === 'auth/custom-token-mismatch') {
-                                console.error("Error signing in with custom token for admin: Token mismatch. Please ensure you have a valid admin token.");
-                                showNotification('خطأ في رمز المسؤول: الرمز غير صالح أو منتهي الصلاحية. سيتم إعادة توجيهك.', 'error');
-                            } else {
-                                console.error("Error signing in with custom token for admin:", error);
-                                showNotification('فشل تسجيل الدخول كمسؤول. يرجى التأكد من صلاحية الرمز. سيتم إعادة توجيهك.', 'error');
-                            }
-                            // Redirect to client-side home page if custom token fails
-                            setTimeout(() => {
-                                window.location.href = '/'; 
-                            }, 2000); // Redirect after 2 seconds
-                        }
-                    } else {
-                        console.warn("No custom token provided for admin. User not authenticated.");
-                        showNotification('يرجى تسجيل الدخول للوصول إلى لوحة التحكم. سيتم إعادة توجيهك.', 'warning');
-                        // Redirect to client-side home page if no token
-                        setTimeout(() => {
-                            window.location.href = '/';
-                        }, 2000); // Redirect after 2 seconds
-                    }
+            // Set active navigation link in sidebar
+            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+            navItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
                 } else {
-                    console.log("Admin user already signed in:", user.uid);
-                    loadHomepageSettings(); // Load homepage settings once authenticated
+                    item.classList.remove('active');
                 }
-                loadSettings(); // Load general settings once auth state is determined
             });
 
-            // Add logout event listener
+            // Add logout event listener to the sidebar button
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
-            // Add save settings event listener
-            document.getElementById('saveHomepageSettingsBtn').addEventListener('click', saveHomepageSettings);
+            // Periodically manage log size (e.g., every 30 seconds)
+            setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
         });
     </script>
     <style>
@@ -375,10 +671,10 @@
             /* Main Colors - Adjusted for Admin Panel */
             --color-primary-dark-blue: #1A237E; /* Primary */
             --color-secondary-gold: #FFD700; /* Secondary / Accent */
-            --color-admin-bg: #F8F9FA; /* Lighter background for admin */
+            --color-admin-bg: #F0F2F5; /* Lighter, modern background */
             --color-admin-card-bg: #FFFFFF; /* White cards */
             --color-admin-text: #343A40; /* Darker text for readability */
-            --color-admin-border: #E9ECEF; /* Light border */
+            --color-admin-border: #E0E0E0; /* Light border */
 
             /* Mapped to general variables for consistency */
             --primary: var(--color-primary-dark-blue);
@@ -389,13 +685,14 @@
             --success: #28A745; /* Bootstrap green */
             --warning: #FFC107; /* Bootstrap yellow */
             --error: #DC3545; /* Bootstrap red */
+            --info: #17A2B8; /* Bootstrap info blue */
             --border: #DEE2E6; /* Slightly darker border for better contrast */
             --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Lighter, smaller shadow */
-            --radius: 0.4rem; /* Slightly smaller rounded corners */
-            --transition: all 0.2s ease-in-out;
+            --radius: 0.6rem; /* Slightly larger rounded corners for modern feel */
+            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
 
             font-family: 'Cairo', sans-serif;
-            font-size: 14px; /* Base font size reduced */
+            font-size: 14px; /* Base font size */
             direction: rtl;
         }
 
@@ -411,108 +708,203 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: 60px; /* Space for fixed header */
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is off-screen */
         }
 
-        /* Admin Header (Top Bar) */
-        .admin-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+        /* Body class to prevent scrolling when sidebar is open */
+        body.sidebar-open {
+            overflow: hidden;
+        }
+
+        .admin-dashboard-wrapper {
+            display: flex;
+            flex-grow: 1;
+            width: 100%;
+            position: relative; /* For overlay positioning */
+        }
+
+        /* Admin Sidebar - Now a slide-out menu */
+        .admin-sidebar {
+            width: 250px;
             background-color: var(--primary);
             color: white;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.5rem 1rem; /* Reduced padding */
-            height: 60px; /* Reduced height */
-            box-shadow: var(--shadow);
+            flex-direction: column;
+            padding: 1.5rem 0;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
             z-index: 1000;
+            position: fixed; /* Fixed position */
+            top: 0;
+            right: -250px; /* Hidden by default (off-screen to the right) */
+            height: 100vh;
+            overflow-y: auto;
+            transition: right 0.3s ease-in-out; /* Slide transition */
         }
 
-        .admin-header .logo-container {
+        .admin-sidebar.open {
+            right: 0; /* Slide in */
+        }
+
+        .sidebar-header {
+            padding: 0 1.5rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-header .logo-container {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 0.4rem; /* Reduced gap */
+            gap: 0.5rem;
             text-decoration: none;
             color: white;
-            transition: var(--transition);
         }
 
-        .admin-header .logo-container:hover {
-            opacity: 0.9;
-        }
-
-        .admin-header .store-logo {
-            height: 35px; /* Reduced logo size */
-            width: auto;
+        .sidebar-header .store-logo {
+            width: 80px;
+            height: auto;
             object-fit: contain;
             border-radius: var(--radius);
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 5px;
         }
 
-        .admin-header .store-name {
-            font-size: 1rem; /* Reduced font size */
-            font-weight: 700;
+        .sidebar-header .store-name {
+            font-size: 1.4rem;
+            font-weight: 800;
             color: var(--accent);
         }
 
-        .admin-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem; /* Reduced gap */
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 1rem 0;
         }
 
-        .admin-actions .logout-btn {
+        .sidebar-nav .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.8rem 1.5rem;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            border-right: 4px solid transparent;
+        }
+
+        .sidebar-nav .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--accent);
+        }
+
+        .sidebar-nav .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: var(--accent);
+            border-right-color: var(--accent);
+        }
+
+        .sidebar-nav .nav-item i {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-footer {
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-footer .logout-btn {
             background-color: var(--error);
             color: white;
             border: none;
-            padding: 0.4rem 0.8rem; /* Reduced padding */
+            padding: 0.6rem 1.2rem;
             border-radius: var(--radius);
             cursor: pointer;
             font-weight: 600;
-            font-size: 0.85rem; /* Reduced font size */
+            font-size: 0.95rem;
             transition: var(--transition);
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 0.4rem; /* Reduced gap */
+            gap: 0.5rem;
         }
 
-        .admin-actions .logout-btn:hover {
+        .sidebar-footer .logout-btn:hover {
             background-color: #C82333;
-            transform: translateY(-1px); /* Reduced transform */
+            transform: translateY(-2px);
         }
 
         /* Main Content Area */
         .admin-main-content {
             flex-grow: 1;
-            padding: 1.5rem; /* Reduced padding */
-            max-width: 900px; /* Adjusted max-width for a simpler hub */
-            width: 100%;
+            padding: 2rem;
+            width: 100%; /* Take full width */
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 1.5rem; /* Reduced gap */
+            gap: 2rem;
+            position: relative; /* For hamburger button positioning */
+        }
+
+        /* Hamburger Menu Button */
+        .menu-toggle-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px; /* Position on the left for RTL */
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001; /* Above main content */
+            box-shadow: var(--shadow);
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: #151B6B;
+        }
+
+        /* Overlay for when sidebar is open */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999; /* Below sidebar, above content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 1.5rem; /* Reduced margin */
+            margin-bottom: 1.5rem;
             position: relative;
-            padding-bottom: 0.75rem; /* Reduced padding */
+            padding-bottom: 0.75rem;
+            margin-top: 4rem; /* Space for hamburger button */
         }
 
         .section-header h2 {
-            font-size: 1.8rem; /* Reduced heading size */
+            font-size: 2rem;
             color: var(--primary);
             font-weight: 800;
-            margin-bottom: 0.5rem; /* Reduced margin */
+            margin-bottom: 0.5rem;
         }
 
         .section-header p {
-            font-size: 0.9rem; /* Reduced font size */
+            font-size: 1rem;
             color: #6C757D;
-            max-width: 500px; /* Reduced max-width */
+            max-width: 600px;
             margin: 0 auto;
         }
 
@@ -522,244 +914,80 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px; /* Reduced width */
-            height: 3px; /* Reduced thickness */
+            width: 80px;
+            height: 4px;
             background-color: var(--secondary);
-            border-radius: 1.5px;
+            border-radius: 2px;
         }
 
-        /* Settings Form Specific Styles */
-        .settings-form {
+        /* Settings Sections */
+        .settings-section-card {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
             padding: 1.5rem;
             border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem; /* Spacing between setting groups */
+            max-width: 900px; /* Wider for more content */
+            margin: 0 auto; /* Center the form */
         }
 
-        .settings-group {
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 1rem;
-            background-color: #FDFDFD;
-        }
-
-        .settings-group h3 {
-            font-size: 1.2rem;
+        .settings-section-card h3 {
+            font-size: 1.5rem;
             color: var(--primary);
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
             border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
 
-        .form-row {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
+        .form-group {
+            margin-bottom: 1.2rem;
         }
 
-        .form-row label {
-            font-size: 0.9rem;
-            color: var(--dark);
+        .form-group label {
+            display: block;
+            margin-bottom: 0.6rem;
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            color: var(--dark);
+            font-size: 1rem;
         }
 
-        .form-row input[type="text"],
-        .form-row input[type="url"],
-        .form-row textarea,
-        .form-row select {
+        .form-group input[type="text"],
+        .form-group input[type="url"],
+        .form-group input[type="email"],
+        .form-group input[type="tel"],
+        .form-group input[type="number"],
+        .form-group select,
+        .form-group textarea {
             width: 100%;
-            padding: 0.6rem 0.8rem;
+            padding: 0.8rem 1rem;
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             color: var(--dark);
             background-color: #FDFDFD;
             transition: var(--transition);
         }
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
 
-        .form-row input[type="text"]:focus,
-        .form-row input[type="url"]:focus,
-        .form-row textarea:focus,
-        .form-row select:focus {
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
             background-color: white;
         }
 
-        .form-row textarea {
-            resize: vertical;
-            min-height: 60px;
+        .form-actions {
+            text-align: center;
+            margin-top: 2rem;
         }
 
-        .checkbox-toggle {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            cursor: pointer;
-            margin-bottom: 0.75rem;
-        }
-
-        .checkbox-toggle input[type="checkbox"] {
-            position: relative;
-            width: 34px;
-            height: 20px;
-            -webkit-appearance: none;
-            background: #ccc;
-            outline: none;
-            border-radius: 20px;
-            transition: .4s;
-            box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-            cursor: pointer;
-        }
-
-        .checkbox-toggle input[type="checkbox"]:checked {
-            background: var(--success);
-        }
-
-        .checkbox-toggle input[type="checkbox"]::before {
-            content: '';
-            position: absolute;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            background: white;
-            transform: scale(1.1);
-            transition: .4s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .checkbox-toggle input[type="checkbox"]:checked::before {
-            left: calc(100% - 18px); /* 34px - 16px - 2px */
-        }
-
-        .checkbox-toggle span {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        .radio-group {
-            display: flex;
-            gap: 1rem;
-            margin-top: 0.5rem;
-            flex-wrap: wrap;
-        }
-
-        .radio-group label {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            font-size: 0.85rem;
-            font-weight: normal;
-        }
-
-        .radio-group input[type="radio"] {
-            -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            outline: none;
-            cursor: pointer;
-            position: relative;
-            transition: background 0.2s;
-        }
-
-        .radio-group input[type="radio"]:checked {
+        .btn {
             background-color: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .radio-group input[type="radio"]:checked::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background-color: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        .dynamic-list-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-            margin-top: 1rem;
-            padding-top: 0.75rem;
-            border-top: 1px dashed var(--border);
-        }
-
-        .dynamic-item-row {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-            flex-wrap: wrap; /* Allow wrapping on small screens */
-        }
-        .dynamic-item-row input {
-            flex-grow: 1;
-            min-width: 120px; /* Ensure inputs don't get too small */
-        }
-
-        .add-item-btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 0.6rem 1rem;
-            border-radius: var(--radius);
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.4rem;
-            margin-top: 0.5rem;
-        }
-
-        .add-item-btn:hover {
-            background-color: #151C6B;
-            transform: translateY(-1px);
-        }
-
-        .remove-item-btn {
-            background-color: var(--error);
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .remove-item-btn:hover {
-            background-color: #C82333;
-            transform: scale(1.1);
-        }
-
-        .save-settings-btn {
-            background-color: var(--success);
             color: white;
             border: none;
             padding: 0.8rem 1.5rem;
@@ -768,46 +996,175 @@
             font-weight: 700;
             font-size: 1rem;
             transition: var(--transition);
-            margin-top: 1.5rem;
-            align-self: center; /* Center the button */
-            display: flex;
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .save-settings-btn:hover {
+        .btn-primary { background-color: var(--primary); }
+        .btn-primary:hover {
+            background-color: #151B6B;
+            transform: translateY(-2px);
+        }
+        .btn-danger { background-color: var(--error); }
+        .btn-danger:hover {
+            background-color: #C82333;
+            transform: translateY(-2px);
+        }
+        .btn-success { background-color: var(--success); }
+        .btn-success:hover {
             background-color: #218838;
             transform: translateY(-2px);
         }
+        .btn-secondary { /* For modal cancel button */
+            background-color: #6C757D;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn-secondary:hover {
+            background-color: #5A6268;
+            transform: translateY(-2px);
+        }
 
-        /* Admin Footer */
+        .no-content-message {
+            text-align: center;
+            color: #6C757D;
+            padding: 2rem;
+            font-size: 1.1rem;
+        }
+
+        /* Toggle Switch Styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+            margin-bottom: 1rem;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .toggle-switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            -webkit-transition: .4s;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-switch-slider {
+            background-color: var(--success);
+        }
+
+        input:focus + .toggle-switch-slider {
+            box-shadow: 0 0 1px var(--success);
+        }
+
+        input:checked + .toggle-switch-slider:before {
+            -webkit-transform: translateX(26px);
+            -ms-transform: translateX(26px);
+            transform: translateX(26px);
+        }
+
+        /* Section header with toggle */
+        .section-header-with-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .section-header-with-toggle h3 {
+            margin-bottom: 0; /* Override default h3 margin */
+            border-bottom: none; /* Override default h3 border */
+            padding-bottom: 0;
+        }
+
+        /* Dynamic Item Cards (for internal banners, custom links) */
+        .dynamic-item-card {
+            background-color: #F8F9FA;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+            position: relative;
+        }
+        .dynamic-item-card .form-group {
+            margin-bottom: 0.8rem;
+        }
+        .dynamic-item-card .remove-item-btn {
+            margin-top: 1rem;
+            width: auto;
+            display: block; /* Make it a block element to take full width if needed */
+            margin-left: auto; /* Push to the left in RTL */
+        }
+        /* Adjust for RTL */
+        html[dir="rtl"] .dynamic-item-card .remove-item-btn {
+            margin-right: auto;
+            margin-left: unset;
+        }
+
+        /* Admin Footer (integrated at the bottom of the page) */
         .admin-footer {
             background-color: var(--primary);
             color: white;
-            padding: 0.8rem 1rem; /* Reduced padding */
+            padding: 0.8rem 1rem;
             text-align: center;
-            font-size: 0.8rem; /* Reduced font size */
+            font-size: 0.8rem;
             box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-            margin-top: auto;
+            margin-top: auto; /* Pushes footer to the bottom */
         }
 
-        /* Notification Styles (reused) */
+        /* Notification Styles */
         .notification {
             position: fixed;
-            top: 70px; /* Adjusted below new header height */
+            top: 20px;
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
             color: white;
-            padding: 10px 15px; /* Reduced padding */
-            border-radius: 6px; /* Slightly smaller radius */
+            padding: 10px 15px;
+            border-radius: 6px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             opacity: 0;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
             z-index: 2000;
             font-weight: bold;
-            font-size: 0.8rem; /* Reduced font size */
-            min-width: 180px; /* Reduced min-width */
+            font-size: 0.8rem;
+            min-width: 180px;
             text-align: center;
         }
 
@@ -816,32 +1173,168 @@
             opacity: 1;
         }
 
-        .notification.info { background-color: var(--primary); }
+        .notification.info { background-color: var(--info); }
         .notification.warning { background-color: var(--warning); }
         .notification.error { background-color: var(--error); }
 
+        /* Custom Modal Styles */
+        .custom-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            padding: 1rem; /* Add padding for small screens */
+        }
+
+        .custom-modal-content {
+            background-color: var(--color-admin-card-bg);
+            padding: 2rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 400px;
+            width: 100%; /* Ensure it takes full width on small screens */
+            color: var(--dark);
+        }
+
+        .custom-modal-content p {
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap; /* Allow buttons to wrap */
+        }
+
+        .modal-actions .btn {
+            min-width: 100px; /* Ensure buttons are not too small */
+        }
+
+
         /* Responsive adjustments */
-        @media (max-width: 768px) {
-            body {
-                padding-top: 55px; /* Adjust for smaller header */
+        @media (max-width: 992px) {
+            .admin-sidebar {
+                width: 200px;
+                right: -200px;
+                padding: 1rem 0;
             }
-            .admin-header {
-                height: 55px;
-                padding: 0.4rem 0.8rem;
+            .sidebar-header {
+                padding: 0 1rem 1rem;
             }
-            .admin-header .store-logo {
-                height: 30px;
+            .sidebar-header .store-logo {
+                width: 70px;
             }
-            .admin-header .store-name {
+            .sidebar-header .store-name {
+                font-size: 1.2rem;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.7rem 1rem;
                 font-size: 0.9rem;
             }
-            .admin-actions .logout-btn {
-                padding: 0.3rem 0.6rem;
-                font-size: 0.75rem;
+            .sidebar-nav .nav-item i {
+                font-size: 1.1rem;
+            }
+            .sidebar-footer {
+                padding: 1rem;
+            }
+            .sidebar-footer .logout-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
+            }
+            .admin-main-content {
+                padding: 1.5rem;
+            }
+            .section-header h2 {
+                font-size: 1.8rem;
+            }
+            .section-header p {
+                font-size: 0.9rem;
+            }
+            .settings-section-card {
+                padding: 1rem;
+            }
+            .settings-section-card h3 {
+                font-size: 1.3rem;
+            }
+            .form-group label {
+                font-size: 0.9rem;
+            }
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
+                padding: 0.7rem 0.9rem;
+                font-size: 0.85rem;
+            }
+            .btn {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .menu-toggle-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 1rem;
+            }
+            .custom-modal-content {
+                padding: 1.5rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .admin-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+            .admin-sidebar.open {
+                right: 0;
+            }
+            .sidebar-header {
+                padding: 0 1rem 0.5rem;
+            }
+            .sidebar-header .logo-container {
+                flex-direction: row;
+                justify-content: center;
+                gap: 0.5rem;
+            }
+            .sidebar-header .store-logo {
+                width: 50px;
+            }
+            .sidebar-header .store-name {
+                font-size: 1.1rem;
+            }
+            .sidebar-nav {
+                padding: 0.5rem 0;
+            }
+            .sidebar-nav .nav-item {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.8rem;
+                border-right: none;
+                border-bottom: 2px solid transparent;
+            }
+            .sidebar-nav .nav-item.active {
+                border-bottom-color: var(--accent);
+                border-right-color: transparent;
+            }
+            .sidebar-nav .nav-item i {
+                font-size: 1rem;
+            }
+            .sidebar-footer {
+                padding: 0.5rem 1rem;
+            }
+            .sidebar-footer .logout-btn {
+                width: 100%;
             }
             .admin-main-content {
                 padding: 1rem;
-                gap: 1rem;
             }
             .section-header h2 {
                 font-size: 1.6rem;
@@ -849,270 +1342,259 @@
             .section-header p {
                 font-size: 0.8rem;
             }
-            .section-header::after {
-                width: 50px;
-                height: 2px;
-            }
-            .settings-form {
-                padding: 1rem;
-                gap: 1rem;
-            }
-            .settings-group {
+            .settings-section-card {
                 padding: 0.8rem;
             }
-            .settings-group h3 {
-                font-size: 1.1rem;
-                margin-bottom: 0.8rem;
+            .settings-section-card h3 {
+                font-size: 1.2rem;
             }
-            .form-row input, .form-row textarea, .form-row select {
-                padding: 0.5rem 0.7rem;
+            .form-group label {
                 font-size: 0.8rem;
             }
-            .form-row label, .checkbox-toggle span {
-                font-size: 0.8rem;
-            }
-            .checkbox-toggle input[type="checkbox"] {
-                width: 30px;
-                height: 18px;
-            }
-            .checkbox-toggle input[type="checkbox"]::before {
-                width: 14px;
-                height: 14px;
-                left: 2px;
-            }
-            .checkbox-toggle input[type="checkbox"]:checked::before {
-                left: calc(100% - 16px);
-            }
-            .radio-group label {
-                font-size: 0.8rem;
-            }
-            .dynamic-item-row {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 0.75rem;
-            }
-            .dynamic-item-row input {
-                width: 100%;
-                min-width: unset;
-            }
-            .remove-item-btn {
-                width: 28px;
-                height: 28px;
-                font-size: 0.7rem;
-            }
-            .add-item-btn, .save-settings-btn {
-                padding: 0.7rem 1.2rem;
-                font-size: 0.9rem;
-            }
-            .admin-footer {
+            .form-group input,
+            .form-group select,
+            .form-group textarea {
                 padding: 0.6rem 0.8rem;
                 font-size: 0.75rem;
             }
+            .btn {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
             .notification {
-                top: 65px;
-                font-size: 0.75rem;
-                padding: 8px 12px;
+                top: 10px;
+                font-size: 0.7rem;
+                padding: 6px 10px;
+            }
+            .custom-modal-content {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+            .modal-actions .btn {
+                width: 100%; /* Full width buttons on very small screens */
             }
         }
     </style>
 </head>
 <body>
-    <!-- Admin Header -->
-    <header class="admin-header">
-        <div class="logo-container">
-            <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
-            <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
-        </div>
-        
-        <div class="admin-actions">
-            <button id="logoutBtn" class="logout-btn">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </button>
-        </div>
-    </header>
-    
-    <!-- Main Content for Admin Hub -->
-    <main class="admin-main-content">
-        <section class="homepage-settings-section">
-            <div class="section-header">
-                <h2>إعدادات الصفحة الرئيسية</h2>
-                <p>تحكم في الأقسام والمحتوى المعروض في الصفحة الرئيسية لمتجرك.</p>
+    <div class="admin-dashboard-wrapper">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-header">
+                <a href="admin.html" class="logo-container">
+                    <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="Store Logo" class="store-logo">
+                    <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
+                </a>
             </div>
-            
-            <div class="settings-form">
-                <!-- Main Banner Settings -->
-                <div class="settings-group">
-                    <h3>
-                        <span>البانر الرئيسي</span>
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="mainBannerEnabled">
-                            <span>تفعيل</span>
-                        </label>
-                    </h3>
-                    <div class="form-row">
-                        <label for="mainBannerImage">رابط الصورة:</label>
-                        <input type="url" id="mainBannerImage" placeholder="أدخل رابط صورة البانر">
-                    </div>
-                    <div class="form-row">
-                        <label for="mainBannerTitle">العنوان:</label>
-                        <input type="text" id="mainBannerTitle" placeholder="عنوان البانر الرئيسي">
-                    </div>
-                    <div class="form-row">
-                        <label for="mainBannerDescription">الوصف:</label>
-                        <textarea id="mainBannerDescription" placeholder="وصف جذاب للبانر الرئيسي"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <label for="mainBannerCtaText">نص زر الإجراء (CTA):</label>
-                        <input type="text" id="mainBannerCtaText" placeholder="مثال: تسوق الآن">
-                    </div>
-                    <div class="form-row">
-                        <label for="mainBannerCtaLink">رابط زر الإجراء (CTA):</label>
-                        <input type="url" id="mainBannerCtaLink" placeholder="رابط الصفحة عند النقر">
-                    </div>
-                </div>
-
-                <!-- Product Categories Settings -->
-                <div class="settings-group">
-                    <h3>
-                        <span>أقسام المنتجات (الفئات)</span>
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="productCategoriesEnabled">
-                            <span>تفعيل</span>
-                        </label>
-                    </h3>
-                    <div class="form-row">
-                        <label for="categorySelect">اختيار الفئات للعرض:</label>
-                        <select id="categorySelect" multiple size="4">
-                            <!-- Options will be loaded by JavaScript -->
-                            <option disabled>جاري تحميل الفئات...</option>
-                        </select>
-                        <p class="hint-text">يمكنك اختيار عدة فئات بالضغط على Ctrl/Cmd والنقر.</p>
-                    </div>
-                </div>
-
-                <!-- Featured Products Settings -->
-                <div class="settings-group">
-                    <h3>
-                        <span>المنتجات المختارة</span>
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="featuredProductsEnabled">
-                            <span>تفعيل</span>
-                        </label>
-                    </h3>
-                    <div class="form-row">
-                        <label>نوع المنتجات المختارة:</label>
-                        <div class="radio-group">
-                            <label>
-                                <input type="radio" name="featuredProductType" value="most_selling" checked>
-                                الأكثر مبيعًا
-                            </label>
-                            <label>
-                                <input type="radio" name="featuredProductType" value="new_products">
-                                الجديدة
-                            </label>
-                            <label>
-                                <input type="radio" name="featuredProductType" value="discounts">
-                                خصومات
-                            </label>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Internal Banners/Sub-ads Settings -->
-                <div class="settings-group">
-                    <h3>
-                        <span>بانرات داخلية/إعلانات فرعية</span>
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="internalBannersEnabled">
-                            <span>تفعيل</span>
-                        </label>
-                    </h3>
-                    <div id="internalBannersContainer" class="dynamic-list-container">
-                        <!-- Dynamic banners will be added here by JavaScript -->
-                    </div>
-                    <button type="button" class="add-item-btn" onclick="addInternalBanner()">
-                        <i class="fas fa-plus"></i> إضافة بانر داخلي
-                    </button>
-                </div>
-
-                <!-- Customer Reviews Section Settings -->
-                <div class="settings-group">
-                    <h3>
-                        <span>قسم تقييمات العملاء</span>
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="customerReviewsEnabled">
-                            <span>تفعيل</span>
-                        </label>
-                    </h3>
-                    <p class="hint-text">تفعيل/تعطيل عرض قسم تقييمات العملاء في الصفحة الرئيسية.</p>
-                </div>
-
-                <!-- Articles/Blog Section Settings -->
-                <div class="settings-group">
-                    <h3>
-                        <span>قسم المقالات/المدونة</span>
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="articlesBlogEnabled">
-                            <span>تفعيل</span>
-                        </label>
-                    </h3>
-                    <p class="hint-text">تفعيل/تعطيل عرض أحدث المقالات أو الأخبار في الصفحة الرئيسية.</p>
-                </div>
-
-                <!-- Footer Settings -->
-                <div class="settings-group">
-                    <h3>الفوتر (تذييل الصفحة)</h3>
-                    <div class="form-row">
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="footerContactEnabled">
-                            <span>معلومات التواصل (من الإعدادات العامة)</span>
-                        </label>
-                        <p class="hint-text">تفعيل/تعطيل عرض معلومات الاتصال في الفوتر. يتم إدارة تفاصيل الاتصال من قسم "الإعدادات العامة".</p>
-                    </div>
-                    
-                    <div class="form-row">
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="footerSocialEnabled">
-                            <span>روابط التواصل الاجتماعي</span>
-                        </label>
-                    </div>
-                    <div class="form-row">
-                        <label for="facebookLink">رابط فيسبوك:</label>
-                        <input type="url" id="facebookLink" placeholder="رابط صفحة الفيسبوك">
-                    </div>
-                    <div class="form-row">
-                        <label for="instagramLink">رابط انستغرام:</label>
-                        <input type="url" id="instagramLink" placeholder="رابط صفحة الانستغرام">
-                    </div>
-                    <div class="form-row">
-                        <label for="twitterLink">رابط تويتر:</label>
-                        <input type="url" id="twitterLink" placeholder="رابط صفحة تويتر">
-                    </div>
-                    <div class="form-row">
-                        <label for="linkedinLink">رابط لينكدإن:</label>
-                        <input type="url" id="linkedinLink" placeholder="رابط صفحة لينكدإن">
-                    </div>
-
-                    <div class="form-row">
-                        <label class="checkbox-toggle">
-                            <input type="checkbox" id="footerCustomLinksEnabled">
-                            <span>روابط مخصصة في الفوتر</span>
-                        </label>
-                    </div>
-                    <div id="customFooterLinksContainer" class="dynamic-list-container">
-                        <!-- Dynamic custom links will be added here by JavaScript -->
-                    </div>
-                    <button type="button" class="add-item-btn" onclick="addCustomFooterLink()">
-                        <i class="fas fa-plus"></i> إضافة رابط مخصص
-                    </button>
-                </div>
-
-                <button type="button" id="saveHomepageSettingsBtn" class="save-settings-btn">
-                    <i class="fas fa-save"></i> حفظ إعدادات الصفحة الرئيسية
+            <nav class="sidebar-nav">
+                <a href="admin.html" class="nav-item">
+                    <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
+                </a>
+                <a href="requestsadmin.html" class="nav-item">
+                    <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
+                </a>
+                <a href="products.html" class="nav-item">
+                    <i class="fas fa-box"></i> <span>المنتجات</span>
+                </a>
+                <a href="users.html" class="nav-item">
+                    <i class="fas fa-users"></i> <span>المستخدمون</span>
+                </a>
+                <a href="categories_admin.html" class="nav-item">
+                    <i class="fas fa-list"></i> <span>الأقسام</span>
+                </a>
+                <a href="settings.html" class="nav-item">
+                    <i class="fas fa-cogs"></i> <span>الإعدادات</span>
+                </a>
+                <a href="homepage_settings.html" class="nav-item active">
+                    <i class="fas fa-home"></i> <span>إعدادات الصفحة الرئيسية</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="logoutBtn" class="logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
                 </button>
             </div>
-        </section>
-    </main>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="admin-main-content">
+            <!-- Hamburger Menu Button -->
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <section class="settings-section-card">
+                <div class="section-header">
+                    <h2>إعدادات الصفحة الرئيسية</h2>
+                    <p>تحكم في الأقسام والمحتوى المعروض في الصفحة الرئيسية لمتجرك.</p>
+                </div>
+
+                <form id="homepageSettingsForm">
+                    <!-- Main Banner Section -->
+                    <div id="mainBannerSection">
+                        <div class="section-header-with-toggle">
+                            <h3>البانر الرئيسي</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="mainBannerToggle" class="toggle-switch-input" data-section="mainBanner">
+                                <span class="toggle-switch-slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="mainBannerImageUrl">رابط الصورة:</label>
+                            <input type="url" id="mainBannerImageUrl" placeholder="https://example.com/main-banner.png">
+                        </div>
+                        <div class="form-group">
+                            <label for="mainBannerTitle">العنوان:</label>
+                            <input type="text" id="mainBannerTitle" placeholder="عنوان البانر الرئيسي">
+                        </div>
+                        <div class="form-group">
+                            <label for="mainBannerDescription">الوصف:</label>
+                            <textarea id="mainBannerDescription" placeholder="وصف قصير للبانر"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="mainBannerCtaText">نص زر الإجراء (CTA):</label>
+                            <input type="text" id="mainBannerCtaText" placeholder="مثال: تسوق الآن">
+                        </div>
+                        <div class="form-group">
+                            <label for="mainBannerCtaUrl">رابط زر الإجراء (CTA):</label>
+                            <input type="url" id="mainBannerCtaUrl" placeholder="https://example.com/shop">
+                        </div>
+                    </div>
+
+                    <!-- Product Categories Section -->
+                    <div id="productCategoriesSection">
+                        <div class="section-header-with-toggle">
+                            <h3>أقسام المنتجات (الفئات)</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="productCategoriesToggle" class="toggle-switch-input" data-section="productCategories">
+                                <span class="toggle-switch-slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="productCategoriesSelect">اختيار الفئات للعرض:</label>
+                            <select id="productCategoriesSelect" multiple size="5">
+                                <!-- Categories will be loaded here by JavaScript -->
+                                <option disabled>جاري تحميل الفئات...</option>
+                            </select>
+                            <small>يمكنك اختيار عدة فئات بالضغط على Ctrl/Cmd والنقر.</small>
+                        </div>
+                    </div>
+
+                    <!-- Featured Products Section -->
+                    <div id="featuredProductsSection">
+                        <div class="section-header-with-toggle">
+                            <h3>المنتجات المختارة</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="featuredProductsToggle" class="toggle-switch-input" data-section="featuredProducts">
+                                <span class="toggle-switch-slider"></span>
+                            </label>
+                        </div>
+                        <div class="form-group">
+                            <label for="featuredProductsType">نوع المنتجات المختارة:</label>
+                            <select id="featuredProductsType">
+                                <option value="bestsellers">الأكثر مبيعًا</option>
+                                <option value="new">الجديدة</option>
+                                <option value="discounts">خصومات</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Internal Banners/Sub-ads Section -->
+                    <div id="internalBannersSection">
+                        <div class="section-header-with-toggle">
+                            <h3>بانرات داخلية/إعلانات فرعية</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="internalBannersToggle" class="toggle-switch-input" data-section="internalBanners">
+                                <span class="toggle-switch-slider"></span>
+                            </label>
+                        </div>
+                        <div id="internalBannersContainer">
+                            <!-- Dynamic internal banners will be rendered here -->
+                            <p class="no-content-message">جاري تحميل البانرات الداخلية...</p>
+                        </div>
+                        <button type="button" class="btn btn-success" id="addInternalBannerBtn">
+                            <i class="fas fa-plus-circle"></i> إضافة بانر داخلي
+                        </button>
+                    </div>
+
+                    <!-- Customer Reviews Section -->
+                    <div id="customerReviewsSection">
+                        <div class="section-header-with-toggle">
+                            <h3>قسم تقييمات العملاء</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="customerReviewsToggle" class="toggle-switch-input" data-section="customerReviews">
+                                <span class="toggle-switch-slider"></span>
+                            </label>
+                        </div>
+                        <p>تفعيل/تعطيل عرض قسم تقييمات العملاء في الصفحة الرئيسية.</p>
+                    </div>
+
+                    <!-- Articles/Blog Section -->
+                    <div id="articlesBlogSection">
+                        <div class="section-header-with-toggle">
+                            <h3>قسم المقالات/المدونة</h3>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="articlesBlogToggle" class="toggle-switch-input" data-section="articlesBlog">
+                                <span class="toggle-switch-slider"></span>
+                            </label>
+                        </div>
+                        <p>تفعيل/تعطيل عرض أحدث المقالات أو الأخبار في الصفحة الرئيسية.</p>
+                    </div>
+
+                    <!-- Footer Settings Section -->
+                    <div id="footerSettingsSection">
+                        <div class="section-header-with-toggle">
+                            <h3>الفوتر (تذييل الصفحة)</h3>
+                            <!-- No toggle for entire footer, just its sub-sections -->
+                        </div>
+                        
+                        <h4>معلومات التواصل (من الإعدادات العامة)</h4>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="footerContactInfoToggle" class="toggle-switch-input" data-section="footerSettings">
+                            <span class="toggle-switch-slider"></span>
+                        </label>
+                        <p>تفعيل/تعطيل عرض معلومات الاتصال في الفوتر. يتم إدارة تفاصيل الاتصال من قسم "الإعدادات العامة".</p>
+
+                        <h4 style="margin-top: 1.5rem;">روابط التواصل الاجتماعي</h4>
+                        <div class="form-group">
+                            <label for="socialFacebook">رابط فيسبوك:</label>
+                            <input type="url" id="socialFacebook" placeholder="https://facebook.com/yourpage">
+                        </div>
+                        <div class="form-group">
+                            <label for="socialInstagram">رابط انستغرام:</label>
+                            <input type="url" id="socialInstagram" placeholder="https://instagram.com/yourpage">
+                        </div>
+                        <div class="form-group">
+                            <label for="socialTwitter">رابط تويتر:</label>
+                            <input type="url" id="socialTwitter" placeholder="https://twitter.com/yourpage">
+                        </div>
+                        <div class="form-group">
+                            <label for="socialLinkedIn">رابط لينكدإن:</label>
+                            <input type="url" id="socialLinkedIn" placeholder="https://linkedin.com/in/yourprofile">
+                        </div>
+
+                        <h4 style="margin-top: 1.5rem;">روابط مخصصة في الفوتر</h4>
+                        <div id="customFooterLinksContainer">
+                            <!-- Dynamic custom links will be rendered here -->
+                            <p class="no-content-message">جاري تحميل الروابط المخصصة...</p>
+                        </div>
+                        <button type="button" class="btn btn-success" id="addCustomLinkBtn">
+                            <i class="fas fa-plus-circle"></i> إضافة رابط مخصص
+                        </button>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" id="saveHomepageSettingsBtn">
+                            <i class="fas fa-save"></i> حفظ إعدادات الصفحة الرئيسية
+                        </button>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
     
     <!-- Admin Footer -->
     <footer class="admin-footer">
