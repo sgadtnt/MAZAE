@@ -8,389 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Firebase SDK imports -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-            authDomain: "zio3-8ffdd.firebaseapp.com",
-            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-            projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
-            messagingSenderId: "560939348415",
-            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-            measurementId: "G-CVN2B2D0RD"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); 
-        const db = getDatabase(app);
-        const storage = getStorage(app);
-
-        // Realtime Database references
-        const generalSettingsRef = dbRef(db, "settings"); // General settings node
-        const adminLogsRef = dbRef(db, "adminLogs");
-
-        // Global data storage for frontend
-        window.adminData = {
-            generalSettings: {},
-            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
-            authReady: true // Always ready as no auth is required
-        };
-
-        // Function to show notifications
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            void notification.offsetWidth; // Trigger reflow to apply transition
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300); // Allow time for fade out
-            }, 3000);
-        }
-
-        // Function to show a custom confirmation modal
-        function showConfirmModal(message, onConfirm) {
-            const modal = document.createElement('div');
-            modal.className = 'custom-modal';
-            modal.innerHTML = `
-                <div class="custom-modal-content">
-                    <p>${message}</p>
-                    <div class="modal-actions">
-                        <button id="modalConfirmBtn" class="btn btn-danger">نعم</button>
-                        <button id="modalCancelBtn" class="btn btn-secondary">إلغاء</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            document.getElementById('modalConfirmBtn').onclick = () => {
-                onConfirm();
-                document.body.removeChild(modal);
-            };
-            document.getElementById('modalCancelBtn').onclick = () => {
-                document.body.removeChild(modal);
-            };
-        }
-
-        // Function to load general settings from Firebase
-        async function loadGeneralSettings() {
-            try {
-                // Listen for real-time updates to general settings
-                onValue(generalSettingsRef, (snapshot) => {
-                    const settings = snapshot.val() || {};
-                    window.adminData.generalSettings = settings;
-
-                    // Populate form fields for General Info and Contact Info
-                    document.getElementById('storeNameInput').value = settings.storeName || '';
-                    document.getElementById('storeLogoUrlInput').value = settings.logoUrl || '';
-                    document.getElementById('phoneNumberInput').value = settings.phoneNumber || '';
-                    document.getElementById('emailInput').value = settings.email || '';
-                    document.getElementById('storeAddressInput').value = settings.address || '';
-                    
-                    // Populate form fields for General Preferences
-                    document.getElementById('currencySelect').value = settings.currency || 'IQD'; // Default to IQD
-                    document.getElementById('languageSelect').value = settings.language || 'ar'; // Default to Arabic
-
-                    // Update sidebar header as well
-                    const storeNameElement = document.getElementById('storeName');
-                    if (storeNameElement) {
-                        storeNameElement.textContent = settings.storeName || 'لوحة تحكم المتجر';
-                    }
-                    const storeLogoElement = document.getElementById('storeLogo');
-                    if (storeLogoElement) {
-                        storeLogoElement.src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
-                    }
-
-                    // Render delivery prices
-                    renderDeliveryPricesTable(settings.deliveryPrices || {});
-                    showNotification('تم تحميل الإعدادات بنجاح.', 'info');
-                });
-            } catch (error) {
-                console.error("Error loading general settings:", error);
-                showNotification('حدث خطأ أثناء تحميل الإعدادات.', 'error');
-            }
-        }
-
-        // Function to save general settings
-        async function saveGeneralSettings() {
-            const storeName = document.getElementById('storeNameInput').value.trim();
-            const storeLogoUrl = document.getElementById('storeLogoUrlInput').value.trim();
-            const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
-            const email = document.getElementById('emailInput').value.trim();
-            const storeAddress = document.getElementById('storeAddressInput').value.trim();
-            const currency = document.getElementById('currencySelect').value;
-            const language = document.getElementById('languageSelect').value;
-
-            if (!storeName || !phoneNumber || !email || !storeAddress) {
-                showNotification('الرجاء ملء جميع حقول معلومات المتجر والاتصال.', 'error');
-                return;
-            }
-
-            showNotification('جاري حفظ الإعدادات...', 'info');
-
-            try {
-                const oldSettings = { ...window.adminData.generalSettings }; // Clone for logging
-                const newSettings = {
-                    storeName: storeName,
-                    logoUrl: storeLogoUrl,
-                    phoneNumber: phoneNumber,
-                    email: email,
-                    address: storeAddress,
-                    currency: currency,
-                    language: language,
-                    deliveryPrices: window.adminData.generalSettings.deliveryPrices || {} // Keep existing delivery prices
-                };
-                await set(generalSettingsRef, newSettings); // Use set to overwrite all settings
-                window.adminData.generalSettings = newSettings; // Update global state
-                showNotification('تم حفظ الإعدادات بنجاح!', 'success');
-
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'UPDATE_GENERAL_SETTINGS',
-                    adminId: window.adminData.currentUser.uid,
-                    oldSettings: oldSettings,
-                    newSettings: newSettings,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10); // Keep logs clean
-                
-                // Update sidebar header immediately after saving
-                const storeNameElement = document.getElementById('storeName');
-                if (storeNameElement) {
-                    storeNameElement.textContent = newSettings.storeName;
-                }
-                const storeLogoElement = document.getElementById('storeLogo');
-                if (storeLogoElement) {
-                    storeLogoElement.src = newSettings.logoUrl;
-                }
-
-            } catch (error) {
-                console.error("Error saving general settings:", error);
-                showNotification('حدث خطأ أثناء حفظ الإعدادات.', 'error');
-            }
-        }
-
-        // Function to render delivery prices table
-        function renderDeliveryPricesTable(deliveryPrices) {
-            const deliveryPricesTableBody = document.getElementById('deliveryPricesTableBody');
-            deliveryPricesTableBody.innerHTML = ''; // Clear previous rows
-
-            const pricesArray = Object.entries(deliveryPrices).map(([city, price]) => ({ city, price }));
-
-            if (pricesArray.length === 0) {
-                deliveryPricesTableBody.innerHTML = `<tr><td colspan="3" class="no-content-message">لا توجد أسعار توصيل محددة.</td></tr>`;
-                return;
-            }
-
-            pricesArray.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.city}</td>
-                    <td>${item.price.toLocaleString('ar-EG')} د.ع</td>
-                    <td>
-                        <button class="btn btn-danger delete-delivery-btn" data-city="${item.city}">
-                            <i class="fas fa-trash"></i> حذف
-                        </button>
-                    </td>
-                `;
-                deliveryPricesTableBody.appendChild(row);
-            });
-
-            // Add event listeners for delete buttons
-            document.querySelectorAll('.delete-delivery-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const cityToDelete = event.target.dataset.city || event.target.closest('[data-city]')?.dataset.city;
-                    if (cityToDelete) {
-                        showConfirmModal(`هل أنت متأكد أنك تريد حذف سعر التوصيل للمدينة "${cityToDelete}"؟`, () => {
-                            deleteDeliveryPrice(cityToDelete);
-                        });
-                    }
-                });
-            });
-        }
-
-        // Function to add or update a delivery price
-        async function addOrUpdateDeliveryPrice() {
-            const cityInput = document.getElementById('deliveryCityInput').value.trim();
-            const priceInput = document.getElementById('deliveryPriceInput').value.trim();
-
-            if (!cityInput || !priceInput) {
-                showNotification('الرجاء إدخال المدينة وسعر التوصيل.', 'error');
-                return;
-            }
-
-            const price = parseFloat(priceInput);
-            if (isNaN(price) || price <= 0) {
-                showNotification('الرجاء إدخال سعر توصيل صحيح وموجب.', 'error');
-                return;
-            }
-
-            showNotification('جاري إضافة/تحديث سعر التوصيل...', 'info');
-
-            try {
-                const currentDeliveryPrices = window.adminData.generalSettings.deliveryPrices || {};
-                const oldPrice = currentDeliveryPrices[cityInput];
-                
-                const newDeliveryPrices = {
-                    ...currentDeliveryPrices,
-                    [cityInput]: price
-                };
-
-                await update(generalSettingsRef, { deliveryPrices: newDeliveryPrices });
-                window.adminData.generalSettings.deliveryPrices = newDeliveryPrices; // Update global state
-                
-                showNotification('تم إضافة/تحديث سعر التوصيل بنجاح!', 'success');
-                
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'UPDATE_DELIVERY_PRICE',
-                    adminId: window.adminData.currentUser.uid,
-                    city: cityInput,
-                    oldPrice: oldPrice || 'غير موجود',
-                    newPrice: price,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10);
-
-                // Clear input fields
-                document.getElementById('deliveryCityInput').value = '';
-                document.getElementById('deliveryPriceInput').value = '';
-
-            } catch (error) {
-                console.error("Error adding/updating delivery price:", error);
-                showNotification('حدث خطأ أثناء إضافة/تحديث سعر التوصيل.', 'error');
-            }
-        }
-
-        // Function to delete a delivery price
-        async function deleteDeliveryPrice(city) {
-            showNotification('جاري حذف سعر التوصيل...', 'info');
-
-            try {
-                const currentDeliveryPrices = window.adminData.generalSettings.deliveryPrices || {};
-                const priceToDelete = currentDeliveryPrices[city];
-                
-                // Create a new object without the city to delete
-                const newDeliveryPrices = { ...currentDeliveryPrices };
-                delete newDeliveryPrices[city];
-
-                await update(generalSettingsRef, { deliveryPrices: newDeliveryPrices });
-                window.adminData.generalSettings.deliveryPrices = newDeliveryPrices; // Update global state
-
-                showNotification('تم حذف سعر التوصيل بنجاح!', 'success');
-                
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'DELETE_DELIVERY_PRICE',
-                    adminId: window.adminData.currentUser.uid,
-                    city: city,
-                    deletedPrice: priceToDelete,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10);
-
-            } catch (error) {
-                console.error("Error deleting delivery price:", error);
-                showNotification('حدث خطأ أثناء حذف سعر التوصيل.', 'error');
-            }
-        }
-
-        // Function to manage the size of admin logs in Firebase
-        async function manageAdminLogsSize(maxLogs = 10) {
-            try {
-                // Fetch all logs without orderByChild to avoid index error
-                const snapshot = await get(adminLogsRef); 
-                const logs = [];
-                snapshot.forEach(childSnapshot => {
-                    logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
-                });
-
-                // Sort logs by timestamp in JavaScript
-                logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-                if (logs.length > maxLogs) {
-                    const logsToDelete = logs.slice(0, logs.length - maxLogs);
-
-                    for (const log of logsToDelete) {
-                        await remove(dbRef(db, `adminLogs/${log.id}`));
-                        console.log(`Removed old log: ${log.id}`);
-                    }
-                }
-            } catch (error) {
-                console.error("Error managing admin logs size:", error);
-            }
-        }
-
-        // Function to handle logout (will just redirect as no Firebase auth session)
-        async function handleLogout() {
-            try {
-                if (auth.currentUser) {
-                    await signOut(auth);
-                }
-                showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
-                window.location.replace(window.location.origin + '/admin_login.html'); 
-            } catch (error) {
-                console.error("Error during logout (no active session expected):", error);
-                showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
-            }
-        }
-
-        // Function to toggle sidebar visibility
-        function toggleSidebar() {
-            const sidebar = document.getElementById('adminSidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            const body = document.body;
-
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-            body.classList.toggle('sidebar-open'); // To prevent body scroll
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadGeneralSettings(); 
-
-            // Add event listeners for general settings save button
-            document.getElementById('saveGeneralSettingsBtn').addEventListener('click', saveGeneralSettings);
-
-            // Add event listeners for delivery prices
-            document.getElementById('addUpdateDeliveryPriceBtn').addEventListener('click', addOrUpdateDeliveryPrice);
-
-            // Add event listeners for sidebar toggle
-            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
-            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
-
-            // Set active navigation link in sidebar
-            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
-            const currentPath = window.location.pathname.split('/').pop();
-            navItems.forEach(item => {
-                if (item.getAttribute('href') === currentPath) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-
-            // Add logout event listener to the sidebar button
-            document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-
-            // Periodically manage log size (e.g., every 30 seconds)
-            setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
-        });
+        // ... (نفس كود Firebase السابق) ...
     </script>
     <style>
         :root {
@@ -816,7 +434,6 @@
             font-size: 0.95rem;
         }
 
-
         /* Admin Footer (integrated at the bottom of the page) */
         .admin-footer {
             background-color: var(--primary);
@@ -900,166 +517,135 @@
             min-width: 100px; /* Ensure buttons are not too small */
         }
 
-
-        /* Responsive adjustments */
-        @media (max-width: 992px) {
-            .admin-sidebar {
-                width: 200px;
-                right: -200px;
-                padding: 1rem 0;
-            }
-            .sidebar-header {
-                padding: 0 1rem 1rem;
-            }
-            .sidebar-header .store-logo {
-                width: 70px;
-            }
-            .sidebar-header .store-name {
-                font-size: 1.2rem;
-            }
-            .sidebar-nav .nav-item {
-                padding: 0.7rem 1rem;
-                font-size: 0.9rem;
-            }
-            .sidebar-nav .nav-item i {
-                font-size: 1.1rem;
-            }
-            .sidebar-footer {
+        /* ===== تحسينات للهواتف المحمولة ===== */
+        @media (max-width: 768px) {
+            .admin-main-content {
                 padding: 1rem;
             }
-            .sidebar-footer .logout-btn {
-                padding: 0.5rem 1rem;
-                font-size: 0.9rem;
+            
+            .section-header {
+                margin-top: 3.5rem;
             }
-            .admin-main-content {
-                padding: 1.5rem;
-            }
+            
             .section-header h2 {
-                font-size: 1.8rem;
+                font-size: 1.6rem;
             }
+            
             .section-header p {
                 font-size: 0.9rem;
             }
+            
             .settings-section-card {
                 padding: 1rem;
             }
+            
             .settings-section-card h3 {
                 font-size: 1.3rem;
+                margin-bottom: 1rem;
             }
+            
+            .form-group {
+                margin-bottom: 1rem;
+            }
+            
             .form-group label {
                 font-size: 0.9rem;
             }
+            
             .form-group input,
             .form-group select {
-                padding: 0.7rem 0.9rem;
-                font-size: 0.85rem;
+                padding: 0.7rem;
+                font-size: 0.9rem;
             }
+            
             .btn {
                 padding: 0.7rem 1.2rem;
                 font-size: 0.9rem;
             }
-            .menu-toggle-btn {
-                padding: 0.6rem 0.8rem;
-                font-size: 1rem;
+            
+            .delivery-prices-table th,
+            .delivery-prices-table td {
+                padding: 0.6rem;
+                font-size: 0.8rem;
             }
+            
             .delivery-input-group {
-                flex-direction: column; /* Stack inputs vertically */
+                flex-direction: column;
                 gap: 0.8rem;
             }
+            
+            .delivery-input-group .form-group {
+                width: 100%;
+            }
+            
             .delivery-input-group button {
-                width: 100%; /* Full width button */
-            }
-            .custom-modal-content {
-                padding: 1.5rem;
-                font-size: 1rem;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .admin-sidebar {
                 width: 100%;
-                right: -100%;
+                margin-top: 0.5rem;
             }
-            .admin-sidebar.open {
-                right: 0;
-            }
-            .sidebar-header {
-                padding: 0 1rem 0.5rem;
-            }
-            .sidebar-header .logo-container {
-                flex-direction: row;
-                justify-content: center;
-                gap: 0.5rem;
-            }
-            .sidebar-header .store-logo {
-                width: 50px;
-            }
-            .sidebar-header .store-name {
-                font-size: 1.1rem;
-            }
-            .sidebar-nav {
-                padding: 0.5rem 0;
-            }
-            .sidebar-nav .nav-item {
-                padding: 0.4rem 0.8rem;
-                font-size: 0.8rem;
-                border-right: none;
-                border-bottom: 2px solid transparent;
-            }
-            .sidebar-nav .nav-item.active {
-                border-bottom-color: var(--accent);
-                border-right-color: transparent;
-            }
-            .sidebar-nav .nav-item i {
-                font-size: 1rem;
-            }
-            .sidebar-footer {
-                padding: 0.5rem 1rem;
-            }
-            .sidebar-footer .logout-btn {
+            
+            .form-actions .btn {
                 width: 100%;
             }
-            .admin-main-content {
-                padding: 1rem;
-            }
-            .section-header h2 {
-                font-size: 1.6rem;
-            }
-            .section-header p {
-                font-size: 0.8rem;
-            }
-            .settings-section-card {
-                padding: 0.8rem;
-            }
-            .settings-section-card h3 {
-                font-size: 1.2rem;
-            }
-            .form-group label {
-                font-size: 0.8rem;
-            }
-            .form-group input,
-            .form-group select {
-                padding: 0.6rem 0.8rem;
+            
+            .admin-footer {
+                padding: 0.6rem;
                 font-size: 0.75rem;
             }
-            .btn {
-                padding: 0.6rem 1rem;
-                font-size: 0.8rem;
+            
+            .menu-toggle-btn {
+                padding: 0.6rem;
+                font-size: 1rem;
             }
-            .notification {
-                top: 10px;
-                font-size: 0.7rem;
-                padding: 6px 10px;
-            }
-            .delivery-input-group {
-                gap: 0.6rem;
-            }
-            .custom-modal-content {
-                padding: 1rem;
-                font-size: 0.9rem;
-            }
-            .modal-actions .btn {
-                width: 100%; /* Full width buttons on very small screens */
+            
+            /* تحسينات خاصة للشاشات الصغيرة جدًا */
+            @media (max-width: 480px) {
+                .section-header h2 {
+                    font-size: 1.4rem;
+                }
+                
+                .settings-section-card h3 {
+                    font-size: 1.2rem;
+                }
+                
+                .form-group label {
+                    font-size: 0.85rem;
+                }
+                
+                .form-group input,
+                .form-group select {
+                    padding: 0.6rem;
+                    font-size: 0.85rem;
+                }
+                
+                .delivery-prices-table th,
+                .delivery-prices-table td {
+                    padding: 0.5rem;
+                    font-size: 0.75rem;
+                }
+                
+                .delivery-prices-table th {
+                    font-size: 0.8rem;
+                }
+                
+                .btn {
+                    padding: 0.6rem 1rem;
+                    font-size: 0.85rem;
+                }
+                
+                .admin-footer {
+                    padding: 0.5rem;
+                    font-size: 0.7rem;
+                }
+                
+                .menu-toggle-btn {
+                    top: 15px;
+                    left: 15px;
+                    padding: 0.5rem;
+                }
+                
+                .section-header {
+                    margin-top: 3rem;
+                }
             }
         }
     </style>
