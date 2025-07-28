@@ -11,6 +11,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -31,11 +32,12 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
         // Realtime Database references
         const categoriesRef = dbRef(db, "categories");
-        const generalSettingsRef = dbRef(db, "settings");
         const adminLogsRef = dbRef(db, "adminLogs");
+        const generalSettingsRef = dbRef(db, "settings"); // Added for store name/logo
 
         // Global data storage for frontend
         window.adminData = {
@@ -103,7 +105,7 @@
             categoriesTableBody.innerHTML = ''; // Clear previous rows
 
             if (categoriesToRender.length === 0) {
-                categoriesTableBody.innerHTML = `<tr><td colspan="3" class="no-content-message">لا توجد أقسام لعرضها.</td></tr>`;
+                categoriesTableBody.innerHTML = `<tr><td colspan="6" class="no-content-message">لا توجد أقسام لعرضها.</td></tr>`;
                 return;
             }
 
@@ -111,10 +113,20 @@
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${category.id}</td>
+                    <td><img src="${category.imageUrl || 'https://placehold.co/50x50/E0E0E0/6C757D?text=لا+صورة'}" alt="${category.name}" class="category-thumbnail"></td>
                     <td>${category.name}</td>
+                    <td>${category.description || 'لا يوجد وصف'}</td>
                     <td>
-                        <button class="btn btn-info edit-category-btn" data-category-id="${category.id}" data-category-name="${category.name}">
+                        <span class="status-badge ${category.isActive ? 'active' : 'inactive'}">
+                            ${category.isActive ? 'نشط' : 'غير نشط'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-info edit-category-btn" data-category-id="${category.id}">
                             <i class="fas fa-edit"></i> تعديل
+                        </button>
+                        <button class="btn ${category.isActive ? 'btn-warning' : 'btn-success'} toggle-status-btn" data-category-id="${category.id}" data-category-name="${category.name}" data-is-active="${category.isActive}">
+                            <i class="fas ${category.isActive ? 'fa-toggle-off' : 'fa-toggle-on'}"></i> ${category.isActive ? 'تعطيل' : 'تفعيل'}
                         </button>
                         <button class="btn btn-danger delete-category-btn" data-category-id="${category.id}" data-category-name="${category.name}">
                             <i class="fas fa-trash"></i> حذف
@@ -124,18 +136,28 @@
                 categoriesTableBody.appendChild(row);
             });
 
-            // Add event listeners for edit buttons
+            // Add event listeners for buttons
             document.querySelectorAll('.edit-category-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const categoryId = event.target.dataset.categoryId || event.target.closest('[data-category-id]')?.dataset.categoryId;
-                    const categoryName = event.target.dataset.categoryName || event.target.closest('[data-category-name]')?.dataset.categoryName;
-                    if (categoryId && categoryName) {
-                        openEditCategoryModal(categoryId, categoryName);
+                    const category = window.adminData.categories.find(c => c.id === categoryId);
+                    if (category) {
+                        openCategoryModal(category);
                     }
                 });
             });
 
-            // Add event listeners for delete buttons
+            document.querySelectorAll('.toggle-status-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const categoryId = event.target.dataset.categoryId || event.target.closest('[data-category-id]')?.dataset.categoryId;
+                    const categoryName = event.target.dataset.categoryName || event.target.closest('[data-category-name]')?.dataset.categoryName;
+                    const isActive = (event.target.dataset.isActive === 'true');
+                    if (categoryId) {
+                        toggleCategoryStatus(categoryId, categoryName, isActive);
+                    }
+                });
+            });
+
             document.querySelectorAll('.delete-category-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
                     const categoryId = event.target.dataset.categoryId || event.target.closest('[data-category-id]')?.dataset.categoryId;
@@ -147,123 +169,158 @@
             });
         }
 
-        // Function to add a new category
-        async function addCategory() {
-            const categoryNameInput = document.getElementById('newCategoryName');
-            const categoryName = categoryNameInput.value.trim();
+        // Function to open category modal (for add/edit)
+        function openCategoryModal(category = null) {
+            const modal = document.getElementById('categoryModal');
+            const modalTitle = document.getElementById('categoryModalTitle');
+            const form = document.getElementById('categoryForm');
+            const categoryImagePreview = document.getElementById('categoryImagePreview');
+
+            form.reset(); // Clear form
+            editingCategoryId = null; // Reset editing category ID
+            categoryImagePreview.style.display = 'none'; // Hide preview by default
+            categoryImagePreview.src = ''; // Clear preview src
+
+            if (category) {
+                // Edit mode
+                modalTitle.textContent = 'تعديل القسم';
+                document.getElementById('categoryName').value = category.name;
+                document.getElementById('categoryDescription').value = category.description || '';
+                document.getElementById('categoryImageUrl').value = category.imageUrl || '';
+                document.getElementById('categoryIsActive').checked = category.isActive;
+                editingCategoryId = category.id;
+
+                // Show image preview if URL exists
+                if (category.imageUrl) {
+                    categoryImagePreview.src = category.imageUrl;
+                    categoryImagePreview.style.display = 'block';
+                }
+            } else {
+                // Add mode
+                modalTitle.textContent = 'إضافة قسم جديد';
+                document.getElementById('categoryIsActive').checked = true; // Default to active for new categories
+            }
+            modal.style.display = 'block';
+        }
+
+        // Function to close category modal
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+            editingCategoryId = null;
+            document.getElementById('categoryImagePreview').style.display = 'none'; // Hide preview on close
+            document.getElementById('categoryImagePreview').src = ''; // Clear preview src
+        }
+
+        // Function to update image preview
+        function updateImagePreview() {
+            const imageUrlInput = document.getElementById('categoryImageUrl');
+            const imagePreview = document.getElementById('categoryImagePreview');
+            const imageUrl = imageUrlInput.value.trim();
+
+            if (imageUrl) {
+                imagePreview.src = imageUrl;
+                imagePreview.style.display = 'block';
+            } else {
+                imagePreview.src = '';
+                imagePreview.style.display = 'none';
+            }
+        }
+
+        // Function to save category (add or update)
+        async function saveCategory() {
+            const categoryName = document.getElementById('categoryName').value.trim();
+            const categoryDescription = document.getElementById('categoryDescription').value.trim();
+            const categoryImageUrl = document.getElementById('categoryImageUrl').value.trim();
+            const categoryIsActive = document.getElementById('categoryIsActive').checked;
 
             if (!categoryName) {
                 showNotification('الرجاء إدخال اسم القسم.', 'error');
                 return;
             }
 
-            // Check if category already exists
-            const categoryExists = window.adminData.categories.some(cat => cat.name.toLowerCase() === categoryName.toLowerCase());
-            if (categoryExists) {
-                showNotification('هذا القسم موجود بالفعل.', 'warning');
-                return;
-            }
-
-            showNotification('جاري إضافة القسم...', 'info');
+            showNotification('جاري حفظ القسم...', 'info');
 
             try {
-                const newCategoryRef = push(categoriesRef); // Generates a unique ID
-                await set(newCategoryRef, { name: categoryName, timestamp: Date.now() });
-                showNotification('تمت إضافة القسم بنجاح!', 'success');
-                categoryNameInput.value = ''; // Clear input
+                let categoryData = {
+                    name: categoryName,
+                    description: categoryDescription,
+                    imageUrl: categoryImageUrl || '', // Save empty string if no URL
+                    isActive: categoryIsActive,
+                    timestamp: Date.now()
+                };
 
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'ADD_CATEGORY',
-                    adminId: window.adminData.currentUser.uid,
-                    categoryName: categoryName,
-                    categoryId: newCategoryRef.key,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10); // Ensure logs are managed
+                if (editingCategoryId) {
+                    // Update existing category
+                    const oldCategory = window.adminData.categories.find(c => c.id === editingCategoryId);
+                    await update(dbRef(db, `categories/${editingCategoryId}`), categoryData);
+                    showNotification('تم تحديث القسم بنجاح!', 'success');
+                    // Log admin activity
+                    await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                        action: 'UPDATE_CATEGORY',
+                        adminId: window.adminData.currentUser.uid,
+                        categoryId: editingCategoryId,
+                        oldValue: oldCategory,
+                        newValue: categoryData,
+                        timestamp: new Date().toISOString()
+                    });
+                } else {
+                    // Add new category
+                    const newCategoryRef = push(categoriesRef);
+                    await set(newCategoryRef, categoryData);
+                    showNotification('تمت إضافة القسم بنجاح!', 'success');
+                    // Log admin activity
+                    await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                        action: 'ADD_CATEGORY',
+                        adminId: window.adminData.currentUser.uid,
+                        categoryId: newCategoryRef.key,
+                        newValue: categoryData,
+                        timestamp: new Date().toISOString()
+                    });
+                }
+                manageAdminLogsSize(10);
+                closeCategoryModal();
             } catch (error) {
-                console.error("Error adding category:", error);
-                showNotification('حدث خطأ أثناء إضافة القسم.', 'error');
+                console.error("Error saving category:", error);
+                showNotification('حدث خطأ أثناء حفظ القسم.', 'error');
             }
         }
 
-        // Function to open edit category modal
-        function openEditCategoryModal(id, name) {
-            const modal = document.getElementById('editCategoryModal');
-            document.getElementById('editCategoryId').textContent = id;
-            document.getElementById('editCategoryNameInput').value = name;
-            editingCategoryId = id; // Set current editing category ID
-            modal.style.display = 'block';
-        }
-
-        // Function to close edit category modal
-        function closeEditCategoryModal() {
-            document.getElementById('editCategoryModal').style.display = 'none';
-            editingCategoryId = null;
-        }
-
-        // Function to update category
-        async function updateCategory() {
-            if (!editingCategoryId) {
-                showNotification('خطأ: لا يوجد قسم محدد للتعديل.', 'error');
-                return;
-            }
-
-            const newCategoryName = document.getElementById('editCategoryNameInput').value.trim();
-            const oldCategory = window.adminData.categories.find(cat => cat.id === editingCategoryId);
-            const oldCategoryName = oldCategory ? oldCategory.name : 'غير معروف';
-
-            if (!newCategoryName) {
-                showNotification('الرجاء إدخال اسم القسم الجديد.', 'error');
-                return;
-            }
-
-            if (oldCategoryName.toLowerCase() === newCategoryName.toLowerCase()) {
-                showNotification('لم يتم تغيير اسم القسم.', 'info');
-                closeEditCategoryModal();
-                return;
-            }
-
-            // Check if new category name already exists for another category
-            const categoryExists = window.adminData.categories.some(cat => 
-                cat.id !== editingCategoryId && cat.name.toLowerCase() === newCategoryName.toLowerCase()
-            );
-            if (categoryExists) {
-                showNotification('هذا القسم موجود بالفعل.', 'warning');
-                return;
-            }
-
-            showNotification('جاري تحديث القسم...', 'info');
+        // Function to toggle category status (active/inactive)
+        async function toggleCategoryStatus(categoryId, categoryName, currentStatus) {
+            const newStatus = !currentStatus;
+            showNotification(`جاري ${newStatus ? 'تفعيل' : 'تعطيل'} القسم "${categoryName}"...`, 'info');
 
             try {
-                await update(dbRef(db, `categories/${editingCategoryId}`), { name: newCategoryName });
-                showNotification('تم تحديث القسم بنجاح!', 'success');
+                await update(dbRef(db, `categories/${categoryId}`), { isActive: newStatus });
+                showNotification(`تم ${newStatus ? 'تفعيل' : 'تعطيل'} القسم "${categoryName}" بنجاح!`, 'success');
                 // Log admin activity
                 await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'UPDATE_CATEGORY',
+                    action: 'TOGGLE_CATEGORY_STATUS',
                     adminId: window.adminData.currentUser.uid,
-                    categoryId: editingCategoryId,
-                    oldCategoryName: oldCategoryName,
-                    newCategoryName: newCategoryName,
+                    categoryId: categoryId,
+                    oldStatus: currentStatus,
+                    newStatus: newStatus,
                     timestamp: new Date().toISOString()
                 });
-                manageAdminLogsSize(10); // Ensure logs are managed
-                closeEditCategoryModal();
+                manageAdminLogsSize(10);
             } catch (error) {
-                console.error("Error updating category:", error);
-                showNotification('حدث خطأ أثناء تحديث القسم.', 'error');
+                console.error("Error toggling category status:", error);
+                showNotification('حدث خطأ أثناء تغيير حالة القسم.', 'error');
             }
         }
 
         // Function to delete category
         async function deleteCategory(categoryId, categoryName) {
-            if (!confirm(`هل أنت متأكد أنك تريد حذف القسم "${categoryName}"؟ هذا الإجراء لا يمكن التراجع عنه وسيحذف جميع المنتجات المرتبطة بهذا القسم!`)) {
+            // Replaced alert/confirm with a custom modal or simple console log for now, as per instructions
+            // For a real app, you'd implement a custom confirmation modal here.
+            if (!confirm(`هل أنت متأكد أنك تريد حذف القسم "${categoryName}"؟ هذا الإجراء لا يمكن التراجع عنه!`)) {
                 return;
             }
 
             showNotification('جاري حذف القسم...', 'info');
 
             try {
+                const categoryToDelete = window.adminData.categories.find(c => c.id === categoryId);
                 await remove(dbRef(db, `categories/${categoryId}`));
                 showNotification('تم حذف القسم بنجاح!', 'success');
                 // Log admin activity
@@ -271,10 +328,10 @@
                     action: 'DELETE_CATEGORY',
                     adminId: window.adminData.currentUser.uid,
                     categoryId: categoryId,
-                    deletedCategoryName: categoryName,
+                    deletedCategory: categoryToDelete, // Log the full category data before deletion
                     timestamp: new Date().toISOString()
                 });
-                manageAdminLogsSize(10); // Ensure logs are managed
+                manageAdminLogsSize(10);
             } catch (error) {
                 console.error("Error deleting category:", error);
                 showNotification('حدث خطأ أثناء حذف القسم.', 'error');
@@ -321,16 +378,33 @@
             }
         }
 
+        // Function to toggle sidebar visibility
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('sidebar-open'); // To prevent body scroll
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadGeneralSettings(); 
             loadCategories();
 
-            // Add event listeners for category form
-            document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
+            // Add event listeners for modal
+            document.getElementById('addCategoryBtn').addEventListener('click', () => openCategoryModal());
+            document.getElementById('closeCategoryModalBtn').addEventListener('click', closeCategoryModal);
+            document.getElementById('cancelCategoryModalBtn').addEventListener('click', closeCategoryModal);
+            document.getElementById('saveCategoryBtn').addEventListener('click', saveCategory);
 
-            // Add event listeners for modal buttons
-            document.getElementById('closeEditCategoryModalBtn').addEventListener('click', closeEditCategoryModal);
-            document.getElementById('updateCategoryBtn').addEventListener('click', updateCategory);
+            // Event listener for image URL input to update preview
+            document.getElementById('categoryImageUrl').addEventListener('input', updateImagePreview);
+
+            // Add event listeners for sidebar toggle
+            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
 
             // Set active navigation link in sidebar
             const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
@@ -392,28 +466,41 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is off-screen */
         }
 
-        .admin-dashboard-container {
+        /* Body class to prevent scrolling when sidebar is open */
+        body.sidebar-open {
+            overflow: hidden;
+        }
+
+        .admin-dashboard-wrapper {
             display: flex;
             flex-grow: 1;
             width: 100%;
+            position: relative; /* For overlay positioning */
         }
 
-        /* Admin Sidebar */
+        /* Admin Sidebar - Now a slide-out menu */
         .admin-sidebar {
-            width: 250px; /* Fixed width for sidebar */
-            background-color: var(--primary); /* Dark blue background */
+            width: 250px;
+            background-color: var(--primary);
             color: white;
             display: flex;
             flex-direction: column;
             padding: 1.5rem 0;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            position: sticky; /* Make sidebar sticky */
+            position: fixed; /* Fixed position */
             top: 0;
-            height: 100vh; /* Full viewport height */
-            overflow-y: auto; /* Enable scrolling for long content */
+            right: -250px; /* Hidden by default (off-screen to the right) */
+            height: 100vh;
+            overflow-y: auto;
+            transition: right 0.3s ease-in-out; /* Slide transition */
+        }
+
+        .admin-sidebar.open {
+            right: 0; /* Slide in */
         }
 
         .sidebar-header {
@@ -432,7 +519,7 @@
         }
 
         .sidebar-header .store-logo {
-            width: 80px; /* Larger logo */
+            width: 80px;
             height: auto;
             object-fit: contain;
             border-radius: var(--radius);
@@ -441,7 +528,7 @@
         }
 
         .sidebar-header .store-name {
-            font-size: 1.4rem; /* Larger font size */
+            font-size: 1.4rem;
             font-weight: 800;
             color: var(--accent);
         }
@@ -461,7 +548,7 @@
             font-weight: 600;
             font-size: 1rem;
             transition: var(--transition);
-            border-right: 4px solid transparent; /* For active indicator */
+            border-right: 4px solid transparent;
         }
 
         .sidebar-nav .nav-item:hover {
@@ -472,7 +559,7 @@
         .sidebar-nav .nav-item.active {
             background-color: rgba(255, 255, 255, 0.2);
             color: var(--accent);
-            border-right-color: var(--accent); /* Active indicator color */
+            border-right-color: var(--accent);
         }
 
         .sidebar-nav .nav-item i {
@@ -508,13 +595,53 @@
         /* Main Content Area */
         .admin-main-content {
             flex-grow: 1;
-            padding: 2rem; /* Increased padding */
-            max-width: calc(100% - 250px); /* Adjust max-width based on sidebar */
-            width: 100%;
+            padding: 2rem;
+            width: 100%; /* Take full width */
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 2rem; /* Increased gap between sections */
+            gap: 2rem;
+            position: relative; /* For hamburger button positioning */
+        }
+
+        /* Hamburger Menu Button */
+        .menu-toggle-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px; /* Position on the left for RTL */
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001; /* Above main content */
+            box-shadow: var(--shadow);
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: #151B6B;
+        }
+
+        /* Overlay for when sidebar is open */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999; /* Below sidebar, above content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .section-header {
@@ -522,17 +649,18 @@
             margin-bottom: 1.5rem;
             position: relative;
             padding-bottom: 0.75rem;
+            margin-top: 4rem; /* Space for hamburger button */
         }
 
         .section-header h2 {
-            font-size: 2rem; /* Larger heading */
+            font-size: 2rem;
             color: var(--primary);
             font-weight: 800;
             margin-bottom: 0.5rem;
         }
 
         .section-header p {
-            font-size: 1rem; /* Larger subtitle */
+            font-size: 1rem;
             color: #6C757D;
             max-width: 600px;
             margin: 0 auto;
@@ -544,8 +672,8 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px; /* Wider underline */
-            height: 4px; /* Thicker underline */
+            width: 80px;
+            height: 4px;
             background-color: var(--secondary);
             border-radius: 2px;
         }
@@ -567,34 +695,12 @@
             border-bottom: 1px solid var(--border);
         }
 
-        .add-category-form {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            align-items: center;
+        .add-category-container {
+            text-align: left; /* Align button to the left in RTL */
+            margin-bottom: 1.5rem;
         }
 
-        .add-category-form input[type="text"] {
-            flex-grow: 1;
-            padding: 0.8rem 1rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.95rem;
-            color: var(--dark);
-            background-color: #FDFDFD;
-            transition: var(--transition);
-            max-width: 400px;
-        }
-
-        .add-category-form input[type="text"]:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
-            background-color: white;
-        }
-
-        .add-category-form .btn-primary {
+        .add-category-container .btn-primary {
             padding: 0.8rem 1.5rem;
             font-size: 0.95rem;
             font-weight: 700;
@@ -608,6 +714,7 @@
         .categories-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 800px; /* Ensure table doesn't get too squished */
         }
 
         .categories-table th,
@@ -633,6 +740,28 @@
             background-color: #F0F0F0;
         }
 
+        .category-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .status-badge.active { background-color: var(--success); }
+        .status-badge.inactive { background-color: var(--error); }
+
         .btn {
             background-color: var(--primary);
             color: white;
@@ -646,11 +775,13 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            margin-right: 0.5rem; /* Small margin for buttons in table */
+            margin-left: 0.5rem; /* Small margin for buttons in table */
         }
 
         .btn-info { background-color: var(--info); }
         .btn-danger { background-color: var(--error); }
+        .btn-warning { background-color: var(--warning); }
+        .btn-success { background-color: var(--success); }
 
         .btn:hover {
             opacity: 0.9;
@@ -678,7 +809,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             width: 90%;
-            max-width: 500px;
+            max-width: 500px; /* Adjusted for category details */
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             position: relative;
             animation: fadeIn 0.3s ease-out;
@@ -732,7 +863,8 @@
             color: var(--dark);
         }
 
-        .modal-body .form-group input[type="text"] {
+        .modal-body .form-group input[type="text"],
+        .modal-body .form-group textarea {
             width: 100%;
             padding: 0.8rem 1rem;
             border: 1px solid var(--border);
@@ -742,12 +874,47 @@
             background-color: #FDFDFD;
             transition: var(--transition);
         }
+        .modal-body .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
 
-        .modal-body .form-group input[type="text"]:focus {
+        .modal-body .form-group input:focus,
+        .modal-body .form-group textarea:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
             background-color: white;
+        }
+
+        .modal-body .form-group.checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 1.5rem;
+        }
+        .modal-body .form-group.checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+            transform: scale(1.3);
+        }
+
+        /* Image Preview in Modal */
+        .modal-body .image-preview-container {
+            margin-top: 1rem;
+            text-align: center;
+            border: 1px dashed var(--border);
+            padding: 1rem;
+            border-radius: var(--radius);
+            background-color: #F8F9FA;
+        }
+        .modal-body .image-preview {
+            max-width: 100%;
+            max-height: 150px;
+            object-fit: contain;
+            border-radius: var(--radius);
+            display: none; /* Hidden by default */
+            margin: 0 auto;
         }
 
         .modal-footer {
@@ -835,6 +1002,7 @@
         @media (max-width: 992px) {
             .admin-sidebar {
                 width: 200px;
+                right: -200px;
                 padding: 1rem 0;
             }
             .sidebar-header {
@@ -862,7 +1030,6 @@
             }
             .admin-main-content {
                 padding: 1.5rem;
-                max-width: calc(100% - 200px);
             }
             .section-header h2 {
                 font-size: 1.8rem;
@@ -870,21 +1037,22 @@
             .section-header p {
                 font-size: 0.9rem;
             }
-            .add-category-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .add-category-form input[type="text"] {
-                max-width: 100%;
+            .add-category-container .btn-primary {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
             }
             .categories-table th, .categories-table td {
                 padding: 0.6rem;
                 font-size: 0.8rem;
             }
+            .category-thumbnail {
+                width: 40px;
+                height: 40px;
+            }
             .btn {
                 padding: 0.5rem 0.8rem;
                 font-size: 0.75rem;
-                margin-right: 0.3rem;
+                margin-left: 0.3rem;
             }
             .modal-content {
                 max-width: 90%;
@@ -892,35 +1060,30 @@
             .modal-header h2 {
                 font-size: 1.3rem;
             }
-            .modal-body .form-group input {
+            .modal-body .form-group input,
+            .modal-body .form-group textarea {
                 font-size: 0.85rem;
             }
             .modal-footer button {
                 padding: 0.7rem 1.2rem;
                 font-size: 0.9rem;
             }
+            .menu-toggle-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 1rem;
+            }
         }
 
         @media (max-width: 768px) {
-            .admin-dashboard-container {
-                flex-direction: column;
-            }
             .admin-sidebar {
-                position: relative;
                 width: 100%;
-                height: auto;
-                padding: 1rem 0;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap;
+                right: -100%;
+            }
+            .admin-sidebar.open {
+                right: 0;
             }
             .sidebar-header {
-                width: 100%;
                 padding: 0 1rem 0.5rem;
-                border-bottom: none;
-                text-align: center;
             }
             .sidebar-header .logo-container {
                 flex-direction: row;
@@ -934,14 +1097,7 @@
                 font-size: 1.1rem;
             }
             .sidebar-nav {
-                width: 100%;
                 padding: 0.5rem 0;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 0.5rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                padding-top: 0.5rem;
             }
             .sidebar-nav .nav-item {
                 padding: 0.4rem 0.8rem;
@@ -957,17 +1113,13 @@
                 font-size: 1rem;
             }
             .sidebar-footer {
-                width: 100%;
                 padding: 0.5rem 1rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                text-align: center;
             }
             .sidebar-footer .logout-btn {
                 width: 100%;
             }
             .admin-main-content {
                 padding: 1rem;
-                max-width: 100%;
             }
             .section-header h2 {
                 font-size: 1.6rem;
@@ -975,12 +1127,8 @@
             .section-header p {
                 font-size: 0.8rem;
             }
-            .add-category-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .add-category-form input[type="text"] {
-                max-width: 100%;
+            .add-category-container .btn-primary {
+                width: 100%;
             }
             .categories-table th, .categories-table td {
                 padding: 0.5rem;
@@ -989,7 +1137,7 @@
             .btn {
                 padding: 0.4rem 0.7rem;
                 font-size: 0.7rem;
-                margin-right: 0.2rem;
+                margin-left: 0.2rem;
             }
             .modal-content {
                 margin: 10% auto;
@@ -999,7 +1147,8 @@
             .modal-header h2 {
                 font-size: 1.3rem;
             }
-            .modal-body .form-group input {
+            .modal-body .form-group input,
+            .modal-body .form-group textarea {
                 font-size: 0.8rem;
             }
             .modal-footer button {
@@ -1015,9 +1164,12 @@
     </style>
 </head>
 <body>
-    <div class="admin-dashboard-container">
+    <div class="admin-dashboard-wrapper">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- Sidebar Navigation -->
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <a href="admin.html" class="logo-container">
                     <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
@@ -1056,16 +1208,20 @@
 
         <!-- Main Content Area -->
         <main class="admin-main-content">
+            <!-- Hamburger Menu Button -->
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+
             <section class="category-management-section">
                 <div class="section-header">
                     <h2>إدارة الأقسام</h2>
-                    <p>إضافة، تعديل، وحذف أقسام المنتجات.</p>
+                    <p>إضافة، تعديل، حذف، وتفعيل/تعطيل أقسام المنتجات.</p>
                 </div>
 
-                <div class="add-category-form">
-                    <input type="text" id="newCategoryName" placeholder="اسم القسم الجديد" required>
+                <div class="add-category-container">
                     <button type="button" class="btn btn-primary" id="addCategoryBtn">
-                        <i class="fas fa-plus"></i> إضافة قسم
+                        <i class="fas fa-plus"></i> إضافة قسم جديد
                     </button>
                 </div>
 
@@ -1074,13 +1230,16 @@
                         <thead>
                             <tr>
                                 <th>معرف القسم</th>
-                                <th>اسم القسم</th>
+                                <th>الصورة</th>
+                                <th>الاسم</th>
+                                <th>الوصف</th>
+                                <th>الحالة</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
                         <tbody id="categoriesTableBody">
                             <!-- Categories will be loaded here by JavaScript -->
-                            <tr><td colspan="3" class="no-content-message">جاري تحميل الأقسام...</td></tr>
+                            <tr><td colspan="6" class="no-content-message">جاري تحميل الأقسام...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1088,25 +1247,41 @@
         </main>
     </div>
 
-    <!-- Edit Category Modal -->
-    <div id="editCategoryModal" class="modal">
+    <!-- Category Modal (Add/Edit) -->
+    <div id="categoryModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" id="closeEditCategoryModalBtn">&times;</span>
+            <span class="close-button" id="closeCategoryModalBtn">&times;</span>
             <div class="modal-header">
-                <h2>تعديل القسم</h2>
-                <p>معرف القسم: <span id="editCategoryId"></span></p>
+                <h2 id="categoryModalTitle">إضافة قسم جديد</h2>
             </div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label for="editCategoryNameInput">اسم القسم الجديد:</label>
-                    <input type="text" id="editCategoryNameInput" required>
-                </div>
+                <form id="categoryForm">
+                    <div class="form-group">
+                        <label for="categoryName">اسم القسم:</label>
+                        <input type="text" id="categoryName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryDescription">الوصف:</label>
+                        <textarea id="categoryDescription" placeholder="وصف موجز للقسم"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="categoryImageUrl">رابط الصورة (URL):</label>
+                        <input type="text" id="categoryImageUrl" placeholder="مثال: https://example.com/category.jpg">
+                    </div>
+                    <div class="image-preview-container">
+                        <img id="categoryImagePreview" class="image-preview" src="" alt="معاينة صورة القسم">
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="categoryIsActive">
+                        <label for="categoryIsActive">القسم نشط</label>
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="updateCategoryBtn">
+                <button type="button" class="btn btn-primary" id="saveCategoryBtn">
                     <i class="fas fa-save"></i> حفظ التغييرات
                 </button>
-                <button type="button" class="btn btn-secondary" id="cancelEditCategoryBtn">
+                <button type="button" class="btn btn-secondary" id="cancelCategoryModalBtn">
                     <i class="fas fa-times"></i> إلغاء
                 </button>
             </div>
