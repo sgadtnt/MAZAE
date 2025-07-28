@@ -180,6 +180,9 @@
                 case 'UPDATE_USER': return { icon: 'fas fa-user-edit', color: 'info-color' };
                 case 'TOGGLE_USER_STATUS': return { icon: 'fas fa-user-check', color: 'primary-color' };
                 case 'DELETE_USER': return { icon: 'fas fa-user-slash', color: 'error-color' };
+                case 'ADD_CATEGORY': return { icon: 'fas fa-folder-plus', color: 'success-color' };
+                case 'UPDATE_CATEGORY': return { icon: 'fas fa-folder-open', color: 'info-color' };
+                case 'DELETE_CATEGORY': return { icon: 'fas fa-folder-minus', color: 'error-color' };
                 default: return { icon: 'fas fa-info-circle', color: 'info-color' };
             }
         }
@@ -227,6 +230,9 @@
                 case 'UPDATE_USER': return `قام ${adminId} بتعديل بيانات المستخدم: ${activity.newValue?.name || 'غير معروف'}`;
                 case 'TOGGLE_USER_STATUS': return `قام ${adminId} بـ ${activity.newStatus ? 'تفعيل' : 'إلغاء تفعيل'} حساب المستخدم: ${activity.userId}`;
                 case 'DELETE_USER': return `قام ${adminId} بحذف حساب المستخدم: ${activity.deletedUser?.name || 'غير معروف'}`;
+                case 'ADD_CATEGORY': return `قام ${adminId} بإضافة قسم جديد: ${activity.categoryName || 'غير معروف'}`;
+                case 'UPDATE_CATEGORY': return `قام ${adminId} بتعديل القسم: ${activity.oldCategoryName || 'غير معروف'} إلى ${activity.newCategoryName || 'غير معروف'}`;
+                case 'DELETE_CATEGORY': return `قام ${adminId} بحذف القسم: ${activity.deletedCategoryName || 'غير معروف'}`;
                 default: return `قام ${adminId} بنشاط غير معروف: ${activity.action}`;
             }
         }
@@ -271,6 +277,17 @@
             }
         }
 
+        // Function to toggle sidebar visibility
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('sidebar-open'); // To prevent body scroll
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadGeneralSettings(); 
             loadDashboardData();
@@ -280,9 +297,8 @@
             const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
             const currentPath = window.location.pathname.split('/').pop();
             navItems.forEach(item => {
-                // Change 'admin_hub.html' to 'admin.html' for the active check
-                // Also ensure the 'orders' link points to 'requestsadmin.html'
-                if (item.getAttribute('href') === 'admin.html' && currentPath === 'admin_hub.html') {
+                // Special handling for admin.html to be active when it's the current page
+                if (item.getAttribute('href') === 'admin.html' && (currentPath === 'admin.html' || currentPath === '')) {
                     item.classList.add('active');
                 } else if (item.getAttribute('href') === currentPath) {
                     item.classList.add('active');
@@ -290,6 +306,10 @@
                     item.classList.remove('active');
                 }
             });
+
+            // Add event listeners for sidebar toggle
+            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
 
             // Add logout event listener to the sidebar button
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
@@ -340,28 +360,41 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is off-screen */
         }
 
-        .admin-dashboard-container {
+        /* Body class to prevent scrolling when sidebar is open */
+        body.sidebar-open {
+            overflow: hidden;
+        }
+
+        .admin-dashboard-wrapper {
             display: flex;
             flex-grow: 1;
             width: 100%;
+            position: relative; /* For overlay positioning */
         }
 
-        /* Admin Sidebar */
+        /* Admin Sidebar - Now a slide-out menu */
         .admin-sidebar {
-            width: 250px; /* Fixed width for sidebar */
-            background-color: var(--primary); /* Dark blue background */
+            width: 250px;
+            background-color: var(--primary);
             color: white;
             display: flex;
             flex-direction: column;
             padding: 1.5rem 0;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            position: sticky; /* Make sidebar sticky */
+            position: fixed; /* Fixed position */
             top: 0;
-            height: 100vh; /* Full viewport height */
-            overflow-y: auto; /* Enable scrolling for long content */
+            right: -250px; /* Hidden by default (off-screen to the right) */
+            height: 100vh;
+            overflow-y: auto;
+            transition: right 0.3s ease-in-out; /* Slide transition */
+        }
+
+        .admin-sidebar.open {
+            right: 0; /* Slide in */
         }
 
         .sidebar-header {
@@ -380,7 +413,7 @@
         }
 
         .sidebar-header .store-logo {
-            width: 80px; /* Larger logo */
+            width: 80px;
             height: auto;
             object-fit: contain;
             border-radius: var(--radius);
@@ -389,7 +422,7 @@
         }
 
         .sidebar-header .store-name {
-            font-size: 1.4rem; /* Larger font size */
+            font-size: 1.4rem;
             font-weight: 800;
             color: var(--accent);
         }
@@ -409,7 +442,7 @@
             font-weight: 600;
             font-size: 1rem;
             transition: var(--transition);
-            border-right: 4px solid transparent; /* For active indicator */
+            border-right: 4px solid transparent;
         }
 
         .sidebar-nav .nav-item:hover {
@@ -420,7 +453,7 @@
         .sidebar-nav .nav-item.active {
             background-color: rgba(255, 255, 255, 0.2);
             color: var(--accent);
-            border-right-color: var(--accent); /* Active indicator color */
+            border-right-color: var(--accent);
         }
 
         .sidebar-nav .nav-item i {
@@ -456,13 +489,53 @@
         /* Main Content Area */
         .admin-main-content {
             flex-grow: 1;
-            padding: 2rem; /* Increased padding */
-            max-width: calc(100% - 250px); /* Adjust max-width based on sidebar */
-            width: 100%;
+            padding: 2rem;
+            width: 100%; /* Take full width */
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 2rem; /* Increased gap between sections */
+            gap: 2rem;
+            position: relative; /* For hamburger button positioning */
+        }
+
+        /* Hamburger Menu Button */
+        .menu-toggle-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px; /* Position on the left for RTL */
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001; /* Above main content */
+            box-shadow: var(--shadow);
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: #151B6B;
+        }
+
+        /* Overlay for when sidebar is open */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999; /* Below sidebar, above content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .section-header {
@@ -470,17 +543,18 @@
             margin-bottom: 1.5rem;
             position: relative;
             padding-bottom: 0.75rem;
+            margin-top: 4rem; /* Space for hamburger button */
         }
 
         .section-header h2 {
-            font-size: 2rem; /* Larger heading */
+            font-size: 2rem;
             color: var(--primary);
             font-weight: 800;
             margin-bottom: 0.5rem;
         }
 
         .section-header p {
-            font-size: 1rem; /* Larger subtitle */
+            font-size: 1rem;
             color: #6C757D;
             max-width: 600px;
             margin: 0 auto;
@@ -492,8 +566,8 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px; /* Wider underline */
-            height: 4px; /* Thicker underline */
+            width: 80px;
+            height: 4px;
             background-color: var(--secondary);
             border-radius: 2px;
         }
@@ -501,7 +575,7 @@
         /* Dashboard Widgets Grid */
         .dashboard-widgets-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Larger min-width for widgets */
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-top: 1.5rem;
         }
@@ -518,8 +592,8 @@
             gap: 1rem;
             transition: var(--transition);
             cursor: pointer;
-            text-decoration: none; /* For anchor tags acting as cards */
-            color: inherit; /* Inherit text color */
+            text-decoration: none;
+            color: inherit;
         }
 
         .widget-card:hover {
@@ -528,13 +602,13 @@
         }
 
         .widget-icon {
-            width: 60px; /* Larger icon container */
+            width: 60px;
             height: 60px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.8rem; /* Larger icon */
+            font-size: 1.8rem;
             color: white;
             flex-shrink: 0;
         }
@@ -542,22 +616,22 @@
         .widget-icon.primary-bg { background-color: var(--primary); }
         .widget-icon.success-bg { background-color: var(--success); }
         .widget-icon.info-bg { background-color: var(--info); }
-        .widget-icon.warning-bg { background-color: var(--warning); } /* Example for other colors */
+        .widget-icon.warning-bg { background-color: var(--warning); }
 
         .widget-details {
             flex-grow: 1;
-            text-align: right; /* Align text to right in RTL */
+            text-align: right;
         }
 
         .widget-value {
-            font-size: 2.5rem; /* Larger value */
+            font-size: 2.5rem;
             font-weight: 800;
             color: var(--dark);
-            line-height: 1; /* Tighter line height */
+            line-height: 1;
         }
 
         .widget-label {
-            font-size: 1.1rem; /* Larger label */
+            font-size: 1.1rem;
             color: #6C757D;
             font-weight: 600;
         }
@@ -617,7 +691,7 @@
         .info-color { color: var(--info); }
         .primary-color { color: var(--primary); }
         .warning-color { color: var(--warning); }
-        .error-color { color: var(--error); } /* Added for delete actions */
+        .error-color { color: var(--error); }
 
         /* Admin Footer (integrated at the bottom of the page) */
         .admin-footer {
@@ -627,7 +701,7 @@
             text-align: center;
             font-size: 0.8rem;
             box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-            margin-top: auto; /* Pushes footer to the bottom */
+            margin-top: auto;
         }
 
         /* Notification Styles */
@@ -663,6 +737,7 @@
         @media (max-width: 992px) {
             .admin-sidebar {
                 width: 200px;
+                right: -200px; /* Adjust for smaller width */
                 padding: 1rem 0;
             }
             .sidebar-header {
@@ -690,7 +765,6 @@
             }
             .admin-main-content {
                 padding: 1.5rem;
-                max-width: calc(100% - 200px);
             }
             .section-header h2 {
                 font-size: 1.8rem;
@@ -724,31 +798,25 @@
             .activity-item .activity-time {
                 font-size: 0.75rem;
             }
+            .menu-toggle-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 1rem;
+            }
         }
 
         @media (max-width: 768px) {
-            .admin-dashboard-container {
-                flex-direction: column; /* Stack sidebar and content vertically */
-            }
             .admin-sidebar {
-                position: relative; /* No longer sticky */
-                width: 100%; /* Full width */
-                height: auto; /* Auto height */
-                padding: 1rem 0;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                flex-direction: row; /* Layout sidebar items horizontally */
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap; /* Allow wrapping of nav items */
+                width: 100%; /* Full width on very small screens */
+                right: -100%; /* Hide full width */
+            }
+            .admin-sidebar.open {
+                right: 0;
             }
             .sidebar-header {
-                width: 100%; /* Full width for header in mobile */
                 padding: 0 1rem 0.5rem;
-                border-bottom: none;
-                text-align: center;
             }
             .sidebar-header .logo-container {
-                flex-direction: row; /* Logo and name side-by-side */
+                flex-direction: row;
                 justify-content: center;
                 gap: 0.5rem;
             }
@@ -759,19 +827,12 @@
                 font-size: 1.1rem;
             }
             .sidebar-nav {
-                width: 100%; /* Full width for nav */
                 padding: 0.5rem 0;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 0.5rem; /* Smaller gap for nav items */
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                padding-top: 0.5rem;
             }
             .sidebar-nav .nav-item {
                 padding: 0.4rem 0.8rem;
                 font-size: 0.8rem;
-                border-right: none; /* Remove right border */
+                border-right: none;
                 border-bottom: 2px solid transparent; /* Use bottom border for active */
             }
             .sidebar-nav .nav-item.active {
@@ -782,17 +843,13 @@
                 font-size: 1rem;
             }
             .sidebar-footer {
-                width: 100%;
                 padding: 0.5rem 1rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                text-align: center;
             }
             .sidebar-footer .logout-btn {
-                width: 100%; /* Full width button */
+                width: 100%;
             }
             .admin-main-content {
                 padding: 1rem;
-                max-width: 100%; /* Full width */
             }
             .section-header h2 {
                 font-size: 1.6rem;
@@ -801,7 +858,7 @@
                 font-size: 0.8rem;
             }
             .dashboard-widgets-grid {
-                grid-template-columns: 1fr; /* Stack widgets vertically */
+                grid-template-columns: 1fr;
             }
             .widget-card {
                 padding: 1rem;
@@ -821,22 +878,22 @@
                 font-size: 1.2rem;
             }
             .activity-item {
-                flex-direction: column; /* Stack activity item details */
-                align-items: flex-end; /* Align to right */
+                flex-direction: column;
+                align-items: flex-end;
                 gap: 0.5rem;
             }
             .activity-item p {
                 text-align: right;
             }
             .activity-icon {
-                align-self: flex-start; /* Keep icon on top-right */
+                align-self: flex-start;
             }
             .admin-footer {
                 padding: 0.6rem 0.8rem;
                 font-size: 0.75rem;
             }
             .notification {
-                top: 10px; /* Adjusted top for notification in mobile */
+                top: 10px;
                 font-size: 0.7rem;
                 padding: 6px 10px;
             }
@@ -844,9 +901,12 @@
     </style>
 </head>
 <body>
-    <div class="admin-dashboard-container">
+    <div class="admin-dashboard-wrapper">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- Sidebar Navigation -->
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <a href="admin.html" class="logo-container">
                     <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
@@ -885,6 +945,11 @@
 
         <!-- Main Content Area -->
         <main class="admin-main-content">
+            <!-- Hamburger Menu Button -->
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+
             <div class="section-header">
                 <h2>نظرة عامة على لوحة التحكم</h2>
                 <p>مرحباً بك في لوحة التحكم الخاصة بمتجرك. إليك ملخص سريع لأدائك.</p>
