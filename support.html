@@ -11,10 +11,9 @@
         // تم تحديث روابط Firebase SDK إلى الإصدار 9.23.0
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        // تم تغيير Firestore إلى Realtime Database لأن لوحة التحكم تستخدم Realtime Database لرسائل الدعم
-        import { getDatabase, ref as dbRef, onValue, push, set, serverTimestamp, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js"; // Added 'get' here
+        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
         import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-
+        import { getDatabase, ref as dbRef, onValue, push, set, update, get, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
         // Global variables provided by the Canvas environment (appId is still used for collection paths)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -40,8 +39,7 @@
         // Realtime Database references
         const settingsRef = dbRef(db, "settings");
         const homepageSettingsRef = dbRef(db, "homepageSettings"); 
-        // تم تغيير المرجع ليطابق مسار لوحة التحكم لرسائل العملاء
-        const customerMessagesRef = dbRef(db, "customerMessages"); 
+        const customerMessagesRef = dbRef(db, "customerMessages"); // Updated reference
 
         // Global data storage for frontend
         window.frontendData = {
@@ -49,15 +47,14 @@
             homepageSettings: {},
             currentUser: null,
             authReady: false,
-            // لا نحتاج لتخزين chatMessages هنا بنفس الطريقة، لأننا نرسل رسائل جديدة
-            // ولكن يمكننا استخدامها لعرض سجل المحادثة إذا أردنا
-            userSupportConversation: [] // لتخزين المحادثة الحالية للمستخدم
+            chatMessages: [], // To store current chat messages
+            currentConversationId: null // Track current conversation ID
         };
 
         // Function to show notifications
         function showNotification(message, type = 'success') {
             const notification = document.createElement('div');
-            notification.className = `notification ${type}`; // Add type for styling (success, info, warning, error)
+            notification.className = `notification ${type}`;
             notification.textContent = message;
             document.body.appendChild(notification);
             
@@ -70,8 +67,8 @@
                 notification.classList.remove('show');
                 setTimeout(() => {
                     document.body.removeChild(notification);
-                }, 300); // Match CSS transition duration
-            }, 3000); // Notification visible for 3 seconds
+                }, 300);
+            }, 3000);
         }
 
         // وظيفة عرض التذييل
@@ -170,7 +167,7 @@
                 // Load Homepage Settings (needed for footer rendering)
                 onValue(homepageSettingsRef, (snapshot) => {
                     window.frontendData.homepageSettings = snapshot.val() || {};
-                    renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
+                    renderFooter(window.frontendData.settings);
                 });
                 
             } catch (error) {
@@ -205,7 +202,7 @@
         // Function to render chat messages
         function renderChatMessages(messages) {
             const chatMessagesContainer = document.getElementById('chatMessages');
-            chatMessagesContainer.innerHTML = ''; // Clear existing messages
+            chatMessagesContainer.innerHTML = '';
 
             if (messages.length === 0) {
                 // Display initial greeting if no messages
@@ -217,14 +214,13 @@
                 `;
             } else {
                 messages.forEach(msg => {
-                    const isUserMessage = msg.sender === 'user'; // Changed from senderId === currentUser.uid
+                    const isUserMessage = msg.sender === 'user';
                     const messageClass = isUserMessage ? 'user-message' : 'support-message';
-                    
                     const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }) : '';
 
                     chatMessagesContainer.innerHTML += `
                         <div class="message-bubble ${messageClass}">
-                            <p>${msg.message}</p> <!-- Changed from msg.text to msg.message -->
+                            <p>${msg.message}</p>
                             <span class="timestamp">${timestamp}</span>
                         </div>
                     `;
@@ -253,74 +249,98 @@
             // Hide bottom bar
             document.body.classList.add('hide-bottom-bar');
 
-            sendBtn.disabled = true; // Disable button during sending
+            sendBtn.disabled = true;
             messageInput.disabled = true;
 
             try {
                 const userId = window.frontendData.currentUser.uid;
-                const timestamp = serverTimestamp(); // الحصول على ختم الوقت من الخادم
-
-                // البحث عن المحادثة الحالية للمستخدم
-                const userMessagesSnapshot = await get(customerMessagesRef);
-                let existingMessageId = null;
-                let existingMessageData = null;
-
-                userMessagesSnapshot.forEach(childSnapshot => {
-                    const data = childSnapshot.val();
-                    if (data.userId === userId && data.status === 'open') {
-                        existingMessageId = childSnapshot.key;
-                        existingMessageData = data;
-                    }
-                });
-
-                if (existingMessageId) {
-                    // إذا كانت هناك محادثة مفتوحة، أضف الرسالة إليها
-                    const updatedConversation = [...existingMessageData.conversation, {
-                        sender: 'user',
-                        timestamp: timestamp,
-                        message: messageText
-                    }];
-                    await set(dbRef(db, `customerMessages/${existingMessageId}`), {
-                        ...existingMessageData,
-                        conversation: updatedConversation,
-                        lastUpdate: timestamp // تحديث وقت آخر تحديث
+                const newMessage = {
+                    sender: 'user',
+                    timestamp: new Date().toISOString(),
+                    message: messageText
+                };
+                
+                // Check if we have an existing conversation
+                let conversationId = window.frontendData.currentConversationId;
+                
+                if (conversationId) {
+                    // Add to existing conversation
+                    const conversationRef = dbRef(db, `customerMessages/${conversationId}/conversation`);
+                    const newMessageRef = push(conversationRef);
+                    await set(newMessageRef, newMessage);
+                    
+                    // Update lastUpdate timestamp
+                    await update(dbRef(db, `customerMessages/${conversationId}`), {
+                        lastUpdate: newMessage.timestamp,
+                        status: 'open'
                     });
+                    
+                    // Update local messages array
+                    window.frontendData.chatMessages.push(newMessage);
+                    renderChatMessages(window.frontendData.chatMessages);
                 } else {
-                    // إذا لم تكن هناك محادثة مفتوحة، أنشئ محادثة جديدة
-                    const newMessageRef = push(customerMessagesRef);
-                    await set(newMessageRef, {
+                    // Create new conversation
+                    const newConversationRef = push(customerMessagesRef);
+                    conversationId = newConversationRef.key;
+                    window.frontendData.currentConversationId = conversationId;
+                    
+                    await set(newConversationRef, {
                         userId: userId,
-                        subject: 'رسالة دعم جديدة من المستخدم', // يمكن إضافة حقل لإدخال الموضوع لاحقاً
+                        subject: 'استفسار دعم',
                         status: 'open',
-                        createdAt: timestamp,
-                        lastUpdate: timestamp,
-                        conversation: [
-                            {
-                                sender: 'user',
-                                timestamp: timestamp,
-                                message: messageText
-                            }
-                        ]
+                        createdAt: newMessage.timestamp,
+                        lastUpdate: newMessage.timestamp,
+                        conversation: [newMessage]
+                    });
+                    
+                    // Set up listener for this conversation
+                    const conversationRef = dbRef(db, `customerMessages/${conversationId}/conversation`);
+                    onValue(conversationRef, (snapshot) => {
+                        const messages = [];
+                        snapshot.forEach((child) => {
+                            messages.push(child.val());
+                        });
+                        window.frontendData.chatMessages = messages;
+                        renderChatMessages(messages);
                     });
                 }
 
-                messageInput.value = ''; // Clear input field
+                messageInput.value = '';
                 showNotification('تم إرسال رسالتك.', 'success');
             } catch (error) {
                 console.error("Error sending message:", error);
                 showNotification('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.', 'error');
             } finally {
-                sendBtn.disabled = false; // Re-enable button
+                sendBtn.disabled = false;
                 messageInput.disabled = false;
-                messageInput.focus(); // Focus input after sending
-                // Show bottom bar after a short delay to allow for visual feedback
+                messageInput.focus();
                 setTimeout(() => {
                     document.body.classList.remove('hide-bottom-bar');
-                }, 500); // Adjust delay as needed
-                }
+                }, 500);
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        // Function to find existing conversation
+        async function findExistingConversation(userId) {
+            try {
+                const snapshot = await get(customerMessagesRef);
+                let conversationId = null;
+                
+                snapshot.forEach((child) => {
+                    const conversation = child.val();
+                    if (conversation.userId === userId && conversation.status === 'open') {
+                        conversationId = child.key;
+                    }
+                });
+                
+                return conversationId;
+            } catch (error) {
+                console.error("Error finding conversation:", error);
+                return null;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
             const chatMessagesContainer = document.getElementById('chatMessages');
             const chatLoadingSpinner = document.getElementById('chatLoadingSpinner');
             const chatContent = document.getElementById('chatContent');
@@ -353,8 +373,8 @@
                                 showNotification('خطأ في تسجيل الدخول. يرجى تحديث الصفحة.', 'error');
                                 chatMessagesContainer.innerHTML = '<p class="no-content-message">خطأ في المصادقة. يرجى تحديث الصفحة.</p>';
                                 chatLoadingSpinner.style.display = 'none';
-                                chatContent.style.display = 'flex'; // Use flex for chat content
-                                return; // Stop further execution if auth fails
+                                chatContent.style.display = 'block';
+                                return;
                             }
                         }
                     } else {
@@ -366,37 +386,39 @@
                             showNotification('خطأ في تسجيل الدخول. يرجى تحديث الصفحة.', 'error');
                             chatMessagesContainer.innerHTML = '<p class="no-content-message">خطأ في المصادقة. يرجى تحديث الصفحة.</p>';
                             chatLoadingSpinner.style.display = 'none';
-                            chatContent.style.display = 'flex'; // Use flex for chat content
-                            return; // Stop further execution if auth fails
+                            chatContent.style.display = 'block';
+                            return;
                         }
                     }
                 }
                 
-                // Once user is authenticated (or anonymous), set up chat listener
+                // Once user is authenticated, find existing conversation
                 const userId = window.frontendData.currentUser.uid;
-                // الاستماع إلى المحادثة المفتوحة لهذا المستخدم
-                onValue(customerMessagesRef, (snapshot) => {
-                    let userOpenConversation = null;
-                    snapshot.forEach(childSnapshot => {
-                        const data = childSnapshot.val();
-                        if (data.userId === userId && data.status === 'open') {
-                            userOpenConversation = data.conversation || [];
-                            return true; // Break loop once found
-                        }
+                const existingConversationId = await findExistingConversation(userId);
+                
+                if (existingConversationId) {
+                    window.frontendData.currentConversationId = existingConversationId;
+                    
+                    // Set up listener for this conversation
+                    const conversationRef = dbRef(db, `customerMessages/${existingConversationId}/conversation`);
+                    onValue(conversationRef, (snapshot) => {
+                        const messages = [];
+                        snapshot.forEach((child) => {
+                            messages.push(child.val());
+                        });
+                        window.frontendData.chatMessages = messages;
+                        renderChatMessages(messages);
+                        chatLoadingSpinner.style.display = 'none';
+                        chatContent.style.display = 'flex';
                     });
-
-                    window.frontendData.userSupportConversation = userOpenConversation || [];
-                    renderChatMessages(window.frontendData.userSupportConversation);
-                    chatLoadingSpinner.style.display = 'none';
-                    chatContent.style.display = 'flex'; // Use flex for chat content
-                }, (error) => {
-                    console.error("Error listening to chat messages:", error);
-                    showNotification('حدث خطأ في تحميل المحادثة.', 'error');
+                } else {
+                    // No existing conversation
                     chatLoadingSpinner.style.display = 'none';
                     chatContent.style.display = 'flex';
-                });
+                    renderChatMessages([]);
+                }
 
-                loadFrontendData(); // تحميل بيانات الواجهة الأمامية الأخرى
+                loadFrontendData();
             });
 
             // Add event listener for the send button
@@ -404,8 +426,8 @@
 
             // Allow sending message with Enter key
             document.getElementById('messageInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { // Allow Shift+Enter for new line
-                    e.preventDefault(); // Prevent new line on Enter
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
                     sendMessage();
                 }
             });
