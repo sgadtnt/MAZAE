@@ -10,7 +10,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
         // Global variables provided by the Canvas environment
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
@@ -31,21 +32,22 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app); 
         const db = getDatabase(app);
+        const storage = getStorage(app);
 
         // Realtime Database references
-        const ordersRef = dbRef(db, "orders");
-        const generalSettingsRef = dbRef(db, "settings");
+        const requestsRef = dbRef(db, "requests"); // Assuming orders are stored under 'requests'
         const adminLogsRef = dbRef(db, "adminLogs");
+        const generalSettingsRef = dbRef(db, "settings"); // Added for store name/logo
 
         // Global data storage for frontend
         window.adminData = {
-            orders: [],
+            requests: [],
             generalSettings: {},
             currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
             authReady: true // Always ready as no auth is required
         };
 
-        let editingOrderId = null; // To store the ID of the order being edited
+        let currentViewingRequestId = null; // To store the ID of the request being viewed/edited
 
         // Function to show notifications
         function showNotification(message, type = 'success') {
@@ -71,247 +73,165 @@
                 const snapshot = await get(generalSettingsRef);
                 const settings = snapshot.val() || {};
                 window.adminData.generalSettings = settings;
-                document.getElementById('storeName').textContent = settings.storeName || 'لوحة تحكم المتجر';
-                document.getElementById('storeLogo').src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                const storeNameElement = document.getElementById('storeName');
+                if (storeNameElement) {
+                    storeNameElement.textContent = settings.storeName || 'لوحة تحكم المتجر';
+                }
+                const storeLogoElement = document.getElementById('storeLogo');
+                if (storeLogoElement) {
+                    storeLogoElement.src = settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                }
             } catch (error) {
                 console.error("Error loading general settings:", error);
             }
         }
 
-        // Function to load orders from Firebase
-        function loadOrders() {
-            onValue(ordersRef, (snapshot) => {
-                const orders = [];
+        // Function to load requests from Firebase
+        function loadRequests() {
+            onValue(requestsRef, (snapshot) => {
+                const requests = [];
                 snapshot.forEach((childSnapshot) => {
-                    orders.push({ id: childSnapshot.key, ...childSnapshot.val() });
+                    requests.push({ id: childSnapshot.key, ...childSnapshot.val() });
                 });
-                window.adminData.orders = orders;
-                applyFiltersAndSort(); // Apply filters and sort after loading orders
+                // Sort requests by timestamp, newest first
+                requests.sort((a, b) => (b.orderDate || 0) - (a.orderDate || 0));
+                window.adminData.requests = requests;
+                renderRequestsTable(requests);
                 showNotification('تم تحديث قائمة الطلبات.', 'info');
             });
         }
 
-        // Function to apply search filters and sorting
-        function applyFiltersAndSort() {
-            const searchInput = document.getElementById('searchInput');
-            const statusFilter = document.getElementById('statusFilter');
-            const sortSelect = document.getElementById('sortSelect');
+        // Function to render requests table
+        function renderRequestsTable(requestsToRender) {
+            const requestsTableBody = document.getElementById('requestsTableBody');
+            requestsTableBody.innerHTML = ''; // Clear previous rows
 
-            const searchTerm = searchInput.value.toLowerCase();
-            const filterStatus = statusFilter.value;
-            const sortBy = sortSelect.value;
-
-            let filteredOrders = window.adminData.orders.filter(order => {
-                const orderIdMatch = order.id.toLowerCase().includes(searchTerm);
-                const customerNameMatch = (order.customerInfo?.name || '').toLowerCase().includes(searchTerm);
-                const customerPhoneMatch = (order.customerInfo?.phone || '').toLowerCase().includes(searchTerm);
-                const statusMatch = filterStatus === '' || order.status === filterStatus;
-                
-                return (orderIdMatch || customerNameMatch || customerPhoneMatch) && statusMatch;
-            });
-
-            // Apply sorting
-            filteredOrders.sort((a, b) => {
-                switch (sortBy) {
-                    case 'date-asc':
-                        return (a.timestamp || 0) - (b.timestamp || 0);
-                    case 'date-desc':
-                        return (b.timestamp || 0) - (a.timestamp || 0);
-                    case 'total-asc':
-                        return (a.totalPrice || 0) - (b.totalPrice || 0);
-                    case 'total-desc':
-                        return (b.totalPrice || 0) - (a.totalPrice || 0);
-                    default:
-                        return 0; // No sorting
-                }
-            });
-
-            renderOrdersTable(filteredOrders);
-        }
-
-        // Function to render orders table
-        function renderOrdersTable(ordersToRender) {
-            const ordersTableBody = document.getElementById('ordersTableBody');
-            ordersTableBody.innerHTML = ''; // Clear previous rows
-
-            if (ordersToRender.length === 0) {
-                ordersTableBody.innerHTML = `<tr><td colspan="7" class="no-content-message">لا توجد طلبات مطابقة لمعايير البحث أو الفلترة.</td></tr>`;
+            if (requestsToRender.length === 0) {
+                requestsTableBody.innerHTML = `<tr><td colspan="6" class="no-content-message">لا توجد طلبات لعرضها.</td></tr>`;
                 return;
             }
 
-            ordersToRender.forEach(order => {
+            requestsToRender.forEach(request => {
+                const orderDate = new Date(request.orderDate).toLocaleString('ar-EG', {
+                    year: 'numeric', month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
                 const row = document.createElement('tr');
-                const orderDate = order.timestamp ? new Date(order.timestamp).toLocaleDateString('ar-EG') : 'غير متوفر';
-                const orderTime = order.timestamp ? new Date(order.timestamp).toLocaleTimeString('ar-EG') : '';
-                const customerName = order.customerInfo?.name || 'غير متوفر';
-                const totalPrice = (order.totalPrice || 0).toLocaleString('ar-EG');
-                const statusClass = getStatusClass(order.status);
-
                 row.innerHTML = `
-                    <td>${order.id}</td>
-                    <td>${customerName}</td>
-                    <td>${totalPrice} د.ع</td>
-                    <td><span class="status-badge ${statusClass}">${getOrderStatusText(order.status)}</span></td>
-                    <td>${orderDate} ${orderTime}</td>
-                    <td>${order.deliveryInfo?.city || 'غير متوفر'}</td>
+                    <td>${request.id}</td>
+                    <td>${request.userName || 'مستخدم غير معروف'}</td>
+                    <td>${orderDate}</td>
+                    <td>${request.totalAmount ? `${request.totalAmount.toFixed(2)} د.ع` : '0.00 د.ع'}</td>
                     <td>
-                        <button class="btn btn-info view-order-btn" data-order-id="${order.id}">
-                            <i class="fas fa-eye"></i> عرض
-                        </button>
-                        <button class="btn btn-danger delete-order-btn" data-order-id="${order.id}">
-                            <i class="fas fa-trash"></i> حذف
+                        <span class="status-badge status-${request.status.toLowerCase().replace(/\s/g, '-') || 'pending'}">
+                            ${request.status || 'قيد الانتظار'}
+                        </span>
+                    </td>
+                    <td>
+                        <button class="btn btn-info view-details-btn" data-request-id="${request.id}">
+                            <i class="fas fa-eye"></i> عرض التفاصيل
                         </button>
                     </td>
                 `;
-                ordersTableBody.appendChild(row);
+                requestsTableBody.appendChild(row);
             });
 
-            // Add event listeners for view/edit buttons
-            document.querySelectorAll('.view-order-btn').forEach(button => {
+            // Add event listeners for view details buttons
+            document.querySelectorAll('.view-details-btn').forEach(button => {
                 button.addEventListener('click', (event) => {
-                    const orderId = event.target.dataset.orderId || event.target.closest('[data-order-id]')?.dataset.orderId;
-                    const orderToView = window.adminData.orders.find(o => o.id === orderId);
-                    if (orderToView) {
-                        openOrderModal(orderToView);
-                    }
-                });
-            });
-
-            // Add event listeners for delete buttons
-            document.querySelectorAll('.delete-order-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const orderId = event.target.dataset.orderId || event.target.closest('[data-order-id]')?.dataset.orderId;
-                    if (orderId) {
-                        deleteOrder(orderId);
+                    const requestId = event.target.dataset.requestId || event.target.closest('[data-request-id]')?.dataset.requestId;
+                    const request = window.adminData.requests.find(r => r.id === requestId);
+                    if (request) {
+                        openRequestDetailsModal(request);
                     }
                 });
             });
         }
 
-        // Helper function to get status text
-        function getOrderStatusText(status) {
-            switch (status) {
-                case 'pending': return 'قيد الانتظار';
-                case 'processing': return 'قيد المعالجة';
-                case 'delivered': return 'تم التوصيل';
-                case 'cancelled': return 'ملغاة';
-                default: return 'غير معروف';
-            }
-        }
+        // Function to open request details modal
+        function openRequestDetailsModal(request) {
+            const modal = document.getElementById('requestDetailsModal');
+            document.getElementById('detailRequestId').textContent = request.id;
+            document.getElementById('detailUserName').textContent = request.userName || 'غير معروف';
+            document.getElementById('detailOrderDate').textContent = new Date(request.orderDate).toLocaleString('ar-EG', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+            document.getElementById('detailTotalAmount').textContent = `${request.totalAmount ? request.totalAmount.toFixed(2) : '0.00'} د.ع`;
+            document.getElementById('detailDeliveryAddress').textContent = request.deliveryAddress || 'لا يوجد عنوان';
+            document.getElementById('detailContactPhone').textContent = request.contactPhone || 'لا يوجد رقم هاتف';
+            document.getElementById('detailPaymentMethod').textContent = request.paymentMethod || 'غير محدد';
 
-        // Helper function to get status class for styling
-        function getStatusClass(status) {
-            switch (status) {
-                case 'pending': return 'status-pending';
-                case 'processing': return 'status-processing';
-                case 'delivered': return 'status-delivered';
-                case 'cancelled': return 'status-cancelled';
-                default: return '';
-            }
-        }
-
-        // Function to open order details modal
-        function openOrderModal(order) {
-            const modal = document.getElementById('orderDetailsModal');
-            document.getElementById('modalOrderId').textContent = order.id;
-            document.getElementById('modalOrderDate').textContent = order.timestamp ? new Date(order.timestamp).toLocaleString('ar-EG') : 'غير متوفر';
-            document.getElementById('modalCustomerName').textContent = order.customerInfo?.name || 'غير متوفر';
-            document.getElementById('modalCustomerPhone').textContent = order.customerInfo?.phone || 'غير متوفر';
-            document.getElementById('modalCustomerAddress').textContent = order.deliveryInfo?.address || 'غير متوفر';
-            document.getElementById('modalDeliveryCity').textContent = order.deliveryInfo?.city || 'غير متوفر';
-            document.getElementById('modalTotalPrice').textContent = (order.totalPrice || 0).toLocaleString('ar-EG') + ' د.ع';
-            document.getElementById('modalPaymentMethod').textContent = order.paymentMethod || 'غير متوفر';
-
-            const orderStatusSelect = document.getElementById('modalOrderStatus');
-            orderStatusSelect.value = order.status || 'pending';
-            editingOrderId = order.id; // Set current editing order ID
-
-            const productsList = document.getElementById('modalOrderProducts');
-            productsList.innerHTML = '';
-            if (order.products && order.products.length > 0) {
-                order.products.forEach(item => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${item.name} (الكمية: ${item.quantity}) - السعر: ${(item.price * item.quantity).toLocaleString('ar-EG')} د.ع`;
-                    productsList.appendChild(listItem);
+            // Populate items list
+            const detailItemsList = document.getElementById('detailItemsList');
+            detailItemsList.innerHTML = '';
+            if (request.items && request.items.length > 0) {
+                request.items.forEach(item => {
+                    const itemDiv = document.createElement('div');
+                    itemDiv.className = 'detail-item';
+                    itemDiv.innerHTML = `
+                        <img src="${item.imageUrl || 'https://placehold.co/50x50/E0E0E0/6C757D?text=لا+صورة'}" alt="${item.name}" class="item-thumbnail">
+                        <div class="item-info">
+                            <span class="item-name">${item.name}</span>
+                            <span class="item-quantity">الكمية: ${item.quantity}</span>
+                            <span class="item-price">${item.price ? `${item.price.toFixed(2)} د.ع` : '0.00 د.ع'}</span>
+                        </div>
+                    `;
+                    detailItemsList.appendChild(itemDiv);
                 });
             } else {
-                productsList.innerHTML = '<li>لا توجد منتجات في هذا الطلب.</li>';
+                detailItemsList.innerHTML = '<p class="no-content-message">لا توجد منتجات في هذا الطلب.</p>';
             }
+
+            // Set current status in dropdown
+            const statusSelect = document.getElementById('requestStatusSelect');
+            statusSelect.value = request.status || 'Pending';
+            currentViewingRequestId = request.id;
 
             modal.style.display = 'block';
         }
 
-        // Function to close order details modal
-        function closeOrderModal() {
-            document.getElementById('orderDetailsModal').style.display = 'none';
-            editingOrderId = null;
+        // Function to close request details modal
+        function closeRequestDetailsModal() {
+            document.getElementById('requestDetailsModal').style.display = 'none';
+            currentViewingRequestId = null;
         }
 
-        // Function to update order status
-        async function updateOrderStatus() {
-            if (!editingOrderId) {
-                showNotification('خطأ: لا يوجد طلب محدد للتعديل.', 'error');
+        // Function to update request status
+        async function updateRequestStatus() {
+            if (!currentViewingRequestId) {
+                showNotification('لا يوجد طلب محدد لتحديث حالته.', 'error');
                 return;
             }
 
-            const newStatus = document.getElementById('modalOrderStatus').value;
-            const orderRef = dbRef(db, `orders/${editingOrderId}`);
-            const oldOrder = window.adminData.orders.find(o => o.id === editingOrderId);
-            const oldStatus = oldOrder ? oldOrder.status : null;
+            const newStatus = document.getElementById('requestStatusSelect').value;
+            const currentRequest = window.adminData.requests.find(r => r.id === currentViewingRequestId);
 
-            if (oldStatus === newStatus) {
-                showNotification('لم يتم تغيير حالة الطلب.', 'info');
-                closeOrderModal();
+            if (!currentRequest || currentRequest.status === newStatus) {
+                showNotification('لم يتم إجراء تغيير في حالة الطلب.', 'info');
+                closeRequestDetailsModal();
                 return;
             }
 
-            showNotification('جاري تحديث حالة الطلب...', 'info');
+            showNotification(`جاري تحديث حالة الطلب إلى "${newStatus}"...`, 'info');
 
             try {
-                await update(orderRef, { status: newStatus });
+                await update(dbRef(db, `requests/${currentViewingRequestId}`), { status: newStatus });
                 showNotification('تم تحديث حالة الطلب بنجاح!', 'success');
                 // Log admin activity
                 await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'UPDATE_ORDER_STATUS',
+                    action: 'UPDATE_REQUEST_STATUS',
                     adminId: window.adminData.currentUser.uid,
-                    orderId: editingOrderId,
-                    oldStatus: oldStatus,
+                    requestId: currentViewingRequestId,
+                    oldStatus: currentRequest.status,
                     newStatus: newStatus,
                     timestamp: new Date().toISOString()
                 });
-                manageAdminLogsSize(10); // Ensure logs are managed
-                closeOrderModal();
+                manageAdminLogsSize(10);
+                closeRequestDetailsModal();
             } catch (error) {
-                console.error("Error updating order status:", error);
+                console.error("Error updating request status:", error);
                 showNotification('حدث خطأ أثناء تحديث حالة الطلب.', 'error');
-            }
-        }
-
-        // Function to delete order
-        async function deleteOrder(orderId) {
-            if (!confirm('هل أنت متأكد أنك تريد حذف هذا الطلب؟ هذا الإجراء لا يمكن التراجع عنه.')) {
-                return;
-            }
-
-            const orderToDelete = window.adminData.orders.find(o => o.id === orderId);
-
-            showNotification('جاري حذف الطلب...', 'info');
-
-            try {
-                await remove(dbRef(db, `orders/${orderId}`));
-                showNotification('تم حذف الطلب بنجاح!', 'success');
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'DELETE_ORDER',
-                    adminId: window.adminData.currentUser.uid,
-                    orderId: orderId,
-                    deletedOrder: orderToDelete,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10); // Ensure logs are managed
-            } catch (error) {
-                console.error("Error deleting order:", error);
-                showNotification('حدث خطأ أثناء حذف الطلب.', 'error');
             }
         }
 
@@ -355,27 +275,34 @@
             }
         }
 
+        // Function to toggle sidebar visibility
+        function toggleSidebar() {
+            const sidebar = document.getElementById('adminSidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const body = document.body;
+
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            body.classList.toggle('sidebar-open'); // To prevent body scroll
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             loadGeneralSettings(); 
-            loadOrders(); // This will now trigger applyFiltersAndSort
+            loadRequests();
 
-            // Add event listeners for search, filter, and sort
-            document.getElementById('searchInput').addEventListener('input', applyFiltersAndSort);
-            document.getElementById('statusFilter').addEventListener('change', applyFiltersAndSort);
-            document.getElementById('sortSelect').addEventListener('change', applyFiltersAndSort);
+            // Add event listeners for modal
+            document.getElementById('closeRequestDetailsModalBtn').addEventListener('click', closeRequestDetailsModal);
+            document.getElementById('updateRequestStatusBtn').addEventListener('click', updateRequestStatus);
 
-            // Add event listeners for modal buttons
-            document.getElementById('closeOrderModalBtn').addEventListener('click', closeOrderModal);
-            document.getElementById('updateOrderStatusBtn').addEventListener('click', updateOrderStatus);
+            // Add event listeners for sidebar toggle
+            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
+            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
 
             // Set active navigation link in sidebar
             const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
             const currentPath = window.location.pathname.split('/').pop();
             navItems.forEach(item => {
-                // Ensure the 'orders' link (now requestsadmin.html) is active when on this page
-                if (item.getAttribute('href') === 'requestsadmin.html' && currentPath === 'requestsadmin.html') {
-                    item.classList.add('active');
-                } else if (item.getAttribute('href') === currentPath) {
+                if (item.getAttribute('href') === currentPath) {
                     item.classList.add('active');
                 } else {
                     item.classList.remove('active');
@@ -431,28 +358,41 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden; /* Prevent horizontal scroll when sidebar is off-screen */
         }
 
-        .admin-dashboard-container {
+        /* Body class to prevent scrolling when sidebar is open */
+        body.sidebar-open {
+            overflow: hidden;
+        }
+
+        .admin-dashboard-wrapper {
             display: flex;
             flex-grow: 1;
             width: 100%;
+            position: relative; /* For overlay positioning */
         }
 
-        /* Admin Sidebar */
+        /* Admin Sidebar - Now a slide-out menu */
         .admin-sidebar {
-            width: 250px; /* Fixed width for sidebar */
-            background-color: var(--primary); /* Dark blue background */
+            width: 250px;
+            background-color: var(--primary);
             color: white;
             display: flex;
             flex-direction: column;
             padding: 1.5rem 0;
             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            position: sticky; /* Make sidebar sticky */
+            position: fixed; /* Fixed position */
             top: 0;
-            height: 100vh; /* Full viewport height */
-            overflow-y: auto; /* Enable scrolling for long content */
+            right: -250px; /* Hidden by default (off-screen to the right) */
+            height: 100vh;
+            overflow-y: auto;
+            transition: right 0.3s ease-in-out; /* Slide transition */
+        }
+
+        .admin-sidebar.open {
+            right: 0; /* Slide in */
         }
 
         .sidebar-header {
@@ -471,7 +411,7 @@
         }
 
         .sidebar-header .store-logo {
-            width: 80px; /* Larger logo */
+            width: 80px;
             height: auto;
             object-fit: contain;
             border-radius: var(--radius);
@@ -480,7 +420,7 @@
         }
 
         .sidebar-header .store-name {
-            font-size: 1.4rem; /* Larger font size */
+            font-size: 1.4rem;
             font-weight: 800;
             color: var(--accent);
         }
@@ -500,7 +440,7 @@
             font-weight: 600;
             font-size: 1rem;
             transition: var(--transition);
-            border-right: 4px solid transparent; /* For active indicator */
+            border-right: 4px solid transparent;
         }
 
         .sidebar-nav .nav-item:hover {
@@ -511,7 +451,7 @@
         .sidebar-nav .nav-item.active {
             background-color: rgba(255, 255, 255, 0.2);
             color: var(--accent);
-            border-right-color: var(--accent); /* Active indicator color */
+            border-right-color: var(--accent);
         }
 
         .sidebar-nav .nav-item i {
@@ -547,13 +487,53 @@
         /* Main Content Area */
         .admin-main-content {
             flex-grow: 1;
-            padding: 2rem; /* Increased padding */
-            max-width: calc(100% - 250px); /* Adjust max-width based on sidebar */
-            width: 100%;
+            padding: 2rem;
+            width: 100%; /* Take full width */
             margin: 0 auto;
             display: flex;
             flex-direction: column;
-            gap: 2rem; /* Increased gap between sections */
+            gap: 2rem;
+            position: relative; /* For hamburger button positioning */
+        }
+
+        /* Hamburger Menu Button */
+        .menu-toggle-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px; /* Position on the left for RTL */
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            padding: 0.8rem 1rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 1001; /* Above main content */
+            box-shadow: var(--shadow);
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .menu-toggle-btn:hover {
+            background-color: #151B6B;
+        }
+
+        /* Overlay for when sidebar is open */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999; /* Below sidebar, above content */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .section-header {
@@ -561,17 +541,18 @@
             margin-bottom: 1.5rem;
             position: relative;
             padding-bottom: 0.75rem;
+            margin-top: 4rem; /* Space for hamburger button */
         }
 
         .section-header h2 {
-            font-size: 2rem; /* Larger heading */
+            font-size: 2rem;
             color: var(--primary);
             font-weight: 800;
             margin-bottom: 0.5rem;
         }
 
         .section-header p {
-            font-size: 1rem; /* Larger subtitle */
+            font-size: 1rem;
             color: #6C757D;
             max-width: 600px;
             margin: 0 auto;
@@ -583,100 +564,79 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px; /* Wider underline */
-            height: 4px; /* Thicker underline */
+            width: 80px;
+            height: 4px;
             background-color: var(--secondary);
             border-radius: 2px;
         }
 
-        /* Orders Controls */
-        .orders-controls {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .search-filter-sort-group {
-            display: flex;
-            gap: 10px;
-            flex-grow: 1;
-            max-width: 800px;
-        }
-
-        .search-filter-sort-group input[type="text"],
-        .search-filter-sort-group select {
-            padding: 0.6rem 0.8rem;
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-size: 0.85rem;
-            color: var(--dark);
-            background-color: #FDFDFD;
-            transition: var(--transition);
-            flex-grow: 1;
-        }
-
-        .search-filter-sort-group input[type="text"]:focus,
-        .search-filter-sort-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
-            background-color: white;
-        }
-
-        /* Orders Table */
-        .orders-table-container {
+        /* Requests Management Section */
+        .requests-management-section {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
+            padding: 1.5rem;
             border: 1px solid var(--border);
+        }
+
+        .requests-management-section h3 {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Requests Table */
+        .requests-table-container {
             overflow-x: auto;
         }
 
-        .orders-table {
+        .requests-table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 800px; /* Ensure table doesn't get too squished */
         }
 
-        .orders-table th,
-        .orders-table td {
+        .requests-table th,
+        .requests-table td {
             padding: 0.8rem;
             text-align: right;
             border-bottom: 1px solid var(--border);
             vertical-align: middle;
         }
 
-        .orders-table th {
+        .requests-table th {
             background-color: var(--primary);
             color: white;
             font-weight: 700;
             font-size: 0.9rem;
         }
 
-        .orders-table tbody tr:last-child td {
+        .requests-table tbody tr:last-child td {
             border-bottom: none;
         }
 
-        .orders-table tbody tr:hover {
+        .requests-table tbody tr:hover {
             background-color: #F0F0F0;
         }
 
         .status-badge {
-            display: inline-block;
-            padding: 0.3em 0.6em;
+            padding: 0.3rem 0.6rem;
             border-radius: var(--radius);
-            font-size: 0.8em;
+            font-size: 0.75rem;
             font-weight: 600;
             color: white;
+            display: inline-block;
             text-align: center;
         }
 
-        .status-pending { background-color: var(--warning); }
-        .status-processing { background-color: var(--info); }
-        .status-delivered { background-color: var(--success); }
-        .status-cancelled { background-color: var(--error); }
+        /* Status specific colors */
+        .status-badge.status-pending { background-color: #FFC107; } /* Warning yellow */
+        .status-badge.status-processing { background-color: #17A2B8; } /* Info blue */
+        .status-badge.status-shipped { background-color: #007BFF; } /* Primary blue */
+        .status-badge.status-delivered { background-color: #28A745; } /* Success green */
+        .status-badge.status-cancelled { background-color: #DC3545; } /* Danger red */
 
         .btn {
             background-color: var(--primary);
@@ -691,10 +651,13 @@
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
+            margin-left: 0.5rem; /* Small margin for buttons in table */
         }
 
         .btn-info { background-color: var(--info); }
         .btn-danger { background-color: var(--error); }
+        .btn-warning { background-color: var(--warning); }
+        .btn-success { background-color: var(--success); }
 
         .btn:hover {
             opacity: 0.9;
@@ -722,7 +685,7 @@
             border: 1px solid var(--border);
             border-radius: var(--radius);
             width: 90%;
-            max-width: 700px;
+            max-width: 600px; /* Wider for order details */
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
             position: relative;
             animation: fadeIn 0.3s ease-out;
@@ -765,90 +728,80 @@
             margin-bottom: 0.5rem;
         }
 
-        .modal-body .detail-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.8rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px dashed var(--border);
-        }
-        .modal-body .detail-row:last-of-type {
-            border-bottom: none;
+        .modal-body .detail-group {
+            margin-bottom: 1rem;
         }
 
-        .modal-body .detail-label {
+        .modal-body .detail-group label {
+            display: block;
+            margin-bottom: 0.5rem;
             font-weight: 600;
             color: var(--dark);
-            flex-shrink: 0;
-            margin-left: 1rem;
         }
 
-        .modal-body .detail-value {
-            color: #555;
-            text-align: left; /* Align value to left in RTL */
-            flex-grow: 1;
+        .modal-body .detail-group span,
+        .modal-body .detail-group select {
+            display: block;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            background-color: #FDFDFD;
+            font-size: 0.95rem;
+            color: var(--dark);
         }
 
-        .modal-body .products-list-container {
+        .modal-body .detail-group select {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .modal-body .items-list {
             margin-top: 1.5rem;
-            border-top: 1px solid var(--border);
-            padding-top: 1rem;
+            border-top: 1px dashed var(--border);
+            padding-top: 1.5rem;
         }
 
-        .modal-body .products-list-container h4 {
+        .modal-body .items-list h3 {
             font-size: 1.2rem;
             color: var(--primary);
             margin-bottom: 1rem;
         }
 
-        .modal-body .products-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .modal-body .products-list li {
-            background-color: #F8F8F8;
-            padding: 0.8rem;
-            border-radius: var(--radius);
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: var(--dark);
-            border: 1px solid #EEE;
-        }
-
-        .modal-body .status-update-group {
-            margin-top: 1.5rem;
-            padding-top: 1rem;
-            border-top: 1px solid var(--border);
+        .modal-body .detail-item {
             display: flex;
             align-items: center;
             gap: 1rem;
-        }
-
-        .modal-body .status-update-group label {
-            font-weight: 600;
-            color: var(--primary);
-            margin-bottom: 0;
-            flex-shrink: 0;
-        }
-
-        .modal-body .status-update-group select {
-            flex-grow: 1;
-            padding: 0.6rem 0.8rem;
-            border: 1px solid var(--border);
+            margin-bottom: 0.8rem;
+            padding: 0.6rem;
+            background-color: #F8F9FA;
             border-radius: var(--radius);
-            font-size: 0.85rem;
-            color: var(--dark);
-            background-color: #FDFDFD;
-            transition: var(--transition);
+            border: 1px solid #EEE;
         }
 
-        .modal-body .status-update-group select:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
-            background-color: white;
+        .modal-body .item-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .modal-body .item-info {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-body .item-name {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        .modal-body .item-quantity,
+        .modal-body .item-price {
+            font-size: 0.9rem;
+            color: #6C757D;
         }
 
         .modal-footer {
@@ -936,6 +889,7 @@
         @media (max-width: 992px) {
             .admin-sidebar {
                 width: 200px;
+                right: -200px;
                 padding: 1rem 0;
             }
             .sidebar-header {
@@ -963,7 +917,6 @@
             }
             .admin-main-content {
                 padding: 1.5rem;
-                max-width: calc(100% - 200px);
             }
             .section-header h2 {
                 font-size: 1.8rem;
@@ -971,70 +924,56 @@
             .section-header p {
                 font-size: 0.9rem;
             }
-            .orders-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .search-filter-sort-group {
-                flex-direction: column;
-                max-width: 100%;
-            }
-            .search-filter-sort-group input,
-            .search-filter-sort-group select {
-                width: 100%;
-            }
-            .orders-table th, .orders-table td {
+            .requests-table th, .requests-table td {
                 padding: 0.6rem;
                 font-size: 0.8rem;
             }
             .btn {
                 padding: 0.5rem 0.8rem;
                 font-size: 0.75rem;
+                margin-left: 0.3rem;
             }
             .modal-content {
                 max-width: 90%;
             }
-            .modal-body .detail-row {
-                flex-direction: column;
-                align-items: flex-end;
-                gap: 0.3rem;
+            .modal-header h2 {
+                font-size: 1.3rem;
             }
-            .modal-body .detail-label {
-                margin-left: 0;
+            .modal-body .detail-group span,
+            .modal-body .detail-group select {
+                font-size: 0.85rem;
             }
-            .modal-body .status-update-group {
-                flex-direction: column;
-                align-items: stretch;
+            .modal-body .item-thumbnail {
+                width: 50px;
+                height: 50px;
             }
-            .modal-body .status-update-group select {
-                width: 100%;
+            .modal-body .item-name {
+                font-size: 0.9rem;
+            }
+            .modal-body .item-quantity,
+            .modal-body .item-price {
+                font-size: 0.8rem;
             }
             .modal-footer button {
                 padding: 0.7rem 1.2rem;
                 font-size: 0.9rem;
             }
+            .menu-toggle-btn {
+                padding: 0.6rem 0.8rem;
+                font-size: 1rem;
+            }
         }
 
         @media (max-width: 768px) {
-            .admin-dashboard-container {
-                flex-direction: column;
-            }
             .admin-sidebar {
-                position: relative;
                 width: 100%;
-                height: auto;
-                padding: 1rem 0;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-                flex-wrap: wrap;
+                right: -100%;
+            }
+            .admin-sidebar.open {
+                right: 0;
             }
             .sidebar-header {
-                width: 100%;
                 padding: 0 1rem 0.5rem;
-                border-bottom: none;
-                text-align: center;
             }
             .sidebar-header .logo-container {
                 flex-direction: row;
@@ -1048,14 +987,7 @@
                 font-size: 1.1rem;
             }
             .sidebar-nav {
-                width: 100%;
                 padding: 0.5rem 0;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 0.5rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                padding-top: 0.5rem;
             }
             .sidebar-nav .nav-item {
                 padding: 0.4rem 0.8rem;
@@ -1071,17 +1003,13 @@
                 font-size: 1rem;
             }
             .sidebar-footer {
-                width: 100%;
                 padding: 0.5rem 1rem;
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-                text-align: center;
             }
             .sidebar-footer .logout-btn {
                 width: 100%;
             }
             .admin-main-content {
                 padding: 1rem;
-                max-width: 100%;
             }
             .section-header h2 {
                 font-size: 1.6rem;
@@ -1089,25 +1017,14 @@
             .section-header p {
                 font-size: 0.8rem;
             }
-            .orders-controls {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .search-filter-sort-group {
-                flex-direction: column;
-                max-width: 100%;
-            }
-            .search-filter-sort-group input,
-            .search-filter-sort-group select {
-                width: 100%;
-            }
-            .orders-table th, .orders-table td {
+            .requests-table th, .requests-table td {
                 padding: 0.5rem;
                 font-size: 0.75rem;
             }
             .btn {
                 padding: 0.4rem 0.7rem;
                 font-size: 0.7rem;
+                margin-left: 0.2rem;
             }
             .modal-content {
                 margin: 10% auto;
@@ -1117,10 +1034,8 @@
             .modal-header h2 {
                 font-size: 1.3rem;
             }
-            .modal-body .detail-row {
-                font-size: 0.85rem;
-            }
-            .modal-body .products-list li {
+            .modal-body .detail-group span,
+            .modal-body .detail-group select {
                 font-size: 0.8rem;
             }
             .modal-footer button {
@@ -1136,12 +1051,15 @@
     </style>
 </head>
 <body>
-    <div class="admin-dashboard-container">
+    <div class="admin-dashboard-wrapper">
+        <!-- Sidebar Overlay -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
         <!-- Sidebar Navigation -->
-        <aside class="admin-sidebar">
+        <aside class="admin-sidebar" id="adminSidebar">
             <div class="sidebar-header">
                 <a href="admin.html" class="logo-container">
-                    <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
+                    <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="Store Logo" class="store-logo">
                     <div id="storeName" class="store-name">لوحة تحكم المتجر</div>
                 </a>
             </div>
@@ -1157,6 +1075,9 @@
                 </a>
                 <a href="users.html" class="nav-item">
                     <i class="fas fa-users"></i> <span>المستخدمون</span>
+                </a>
+                <a href="categories_admin.html" class="nav-item">
+                    <i class="fas fa-list"></i> <span>الأقسام</span>
                 </a>
                 <a href="settings.html" class="nav-item">
                     <i class="fas fa-cogs"></i> <span>الإعدادات</span>
@@ -1174,47 +1095,32 @@
 
         <!-- Main Content Area -->
         <main class="admin-main-content">
-            <section class="orders-section">
+            <!-- Hamburger Menu Button -->
+            <button id="menuToggleBtn" class="menu-toggle-btn">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <section class="requests-management-section">
                 <div class="section-header">
                     <h2>إدارة الطلبات</h2>
-                    <p>عرض، فلترة، وتحديث حالة طلبات العملاء.</p>
-                </div>
-                
-                <div class="orders-controls">
-                    <div class="search-filter-sort-group">
-                        <input type="text" id="searchInput" placeholder="ابحث برقم الطلب أو اسم العميل..." title="ابحث عن طلب برقم الطلب أو اسم العميل أو الهاتف">
-                        <select id="statusFilter" title="فلترة حسب حالة الطلب">
-                            <option value="">جميع الحالات</option>
-                            <option value="pending">قيد الانتظار</option>
-                            <option value="processing">قيد المعالجة</option>
-                            <option value="delivered">تم التوصيل</option>
-                            <option value="cancelled">ملغاة</option>
-                        </select>
-                        <select id="sortSelect" title="ترتيب الطلبات حسب...">
-                            <option value="date-desc">تاريخ الطلب (الأحدث أولاً)</option>
-                            <option value="date-asc">تاريخ الطلب (الأقدم أولاً)</option>
-                            <option value="total-desc">السعر الإجمالي (الأعلى أولاً)</option>
-                            <option value="total-asc">السعر الإجمالي (الأقل أولاً)</option>
-                        </select>
-                    </div>
+                    <p>عرض تفاصيل الطلبات وتحديث حالاتها.</p>
                 </div>
 
-                <div class="orders-table-container">
-                    <table class="orders-table">
+                <div class="requests-table-container">
+                    <table class="requests-table">
                         <thead>
                             <tr>
-                                <th>رقم الطلب</th>
-                                <th>اسم العميل</th>
-                                <th>الإجمالي</th>
-                                <th>الحالة</th>
+                                <th>معرف الطلب</th>
+                                <th>العميل</th>
                                 <th>تاريخ الطلب</th>
-                                <th>المدينة</th>
+                                <th>المبلغ الإجمالي</th>
+                                <th>الحالة</th>
                                 <th>الإجراءات</th>
                             </tr>
                         </thead>
-                        <tbody id="ordersTableBody">
-                            <!-- Orders will be loaded here by JavaScript -->
-                            <tr><td colspan="7" class="no-content-message">جاري تحميل الطلبات...</td></tr>
+                        <tbody id="requestsTableBody">
+                            <!-- Requests will be loaded here by JavaScript -->
+                            <tr><td colspan="6" class="no-content-message">جاري تحميل الطلبات...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1222,62 +1128,67 @@
         </main>
     </div>
 
-    <!-- Order Details Modal -->
-    <div id="orderDetailsModal" class="modal">
+    <!-- Request Details Modal -->
+    <div id="requestDetailsModal" class="modal">
         <div class="modal-content">
-            <span class="close-button" id="closeOrderModalBtn">&times;</span>
+            <span class="close-button" id="closeRequestDetailsModalBtn">&times;</span>
             <div class="modal-header">
-                <h2>تفاصيل الطلب: <span id="modalOrderId"></span></h2>
+                <h2>تفاصيل الطلب</h2>
             </div>
             <div class="modal-body">
-                <div class="detail-row">
-                    <span class="detail-label">تاريخ الطلب:</span>
-                    <span class="detail-value" id="modalOrderDate"></span>
+                <div class="detail-group">
+                    <label>معرف الطلب:</label>
+                    <span id="detailRequestId"></span>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">اسم العميل:</span>
-                    <span class="detail-value" id="modalCustomerName"></span>
+                <div class="detail-group">
+                    <label>اسم العميل:</label>
+                    <span id="detailUserName"></span>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">رقم الهاتف:</span>
-                    <span class="detail-value" id="modalCustomerPhone"></span>
+                <div class="detail-group">
+                    <label>تاريخ الطلب:</label>
+                    <span id="detailOrderDate"></span>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">عنوان التوصيل:</span>
-                    <span class="detail-value" id="modalCustomerAddress"></span>
+                <div class="detail-group">
+                    <label>المبلغ الإجمالي:</label>
+                    <span id="detailTotalAmount"></span>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">مدينة التوصيل:</span>
-                    <span class="detail-value" id="modalDeliveryCity"></span>
+                <div class="detail-group">
+                    <label>عنوان التوصيل:</label>
+                    <span id="detailDeliveryAddress"></span>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">إجمالي السعر:</span>
-                    <span class="detail-value" id="modalTotalPrice"></span>
+                <div class="detail-group">
+                    <label>رقم الهاتف:</label>
+                    <span id="detailContactPhone"></span>
                 </div>
-                <div class="detail-row">
-                    <span class="detail-label">طريقة الدفع:</span>
-                    <span class="detail-value" id="modalPaymentMethod"></span>
+                <div class="detail-group">
+                    <label>طريقة الدفع:</label>
+                    <span id="detailPaymentMethod"></span>
                 </div>
-
-                <div class="products-list-container">
-                    <h4>المنتجات في الطلب:</h4>
-                    <ul class="products-list" id="modalOrderProducts">
-                        <!-- Products will be loaded here by JS -->
-                    </ul>
-                </div>
-
-                <div class="status-update-group">
-                    <label for="modalOrderStatus">تحديث الحالة:</label>
-                    <select id="modalOrderStatus">
-                        <option value="pending">قيد الانتظار</option>
-                        <option value="processing">قيد المعالجة</option>
-                        <option value="delivered">تم التوصيل</option>
-                        <option value="cancelled">ملغاة</option>
+                <div class="detail-group">
+                    <label for="requestStatusSelect">تغيير الحالة:</label>
+                    <select id="requestStatusSelect">
+                        <option value="Pending">قيد الانتظار</option>
+                        <option value="Processing">قيد المعالجة</option>
+                        <option value="Shipped">تم الشحن</option>
+                        <option value="Delivered">تم التسليم</option>
+                        <option value="Cancelled">ملغى</option>
                     </select>
-                    <button type="button" class="btn btn-primary" id="updateOrderStatusBtn">
-                        <i class="fas fa-save"></i> حفظ الحالة
-                    </button>
                 </div>
+
+                <div class="items-list">
+                    <h3>المنتجات في الطلب:</h3>
+                    <div id="detailItemsList">
+                        <!-- Order items will be loaded here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="updateRequestStatusBtn">
+                    <i class="fas fa-sync-alt"></i> تحديث الحالة
+                </button>
+                <button type="button" class="btn btn-secondary" id="cancelRequestDetailsModalBtn">
+                    <i class="fas fa-times"></i> إغلاق
+                </button>
             </div>
         </div>
     </div>
