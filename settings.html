@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>لوحة التحكم - متجر موحد</title>
+    <title>إعدادات المتجر</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Firebase SDK imports -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
         import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref as dbRef, onValue, set, get, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
         import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
-        // Global variables provided by the Canvas environment
+        // Global variables provided by the Canvas environment (for standalone, we hardcode firebaseConfig)
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         
         // Your web app's Firebase configuration
@@ -36,12 +36,12 @@
 
         // Realtime Database references
         const generalSettingsRef = dbRef(db, "settings"); // General settings node
-        const adminLogsRef = dbRef(db, "adminLogs");
+        const adminLogsRef = dbRef(db, "adminLogs"); // For logging changes
 
-        // Global data storage for frontend
+        // Global data storage for frontend (minimal for standalone)
         window.adminData = {
             generalSettings: {}, // To store fetched settings
-            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
+            currentUser: { uid: 'standalone_admin' }, // Simulate a user for logging purposes
             authReady: true // Always ready as no auth is required
         };
 
@@ -106,7 +106,7 @@
             };
         }
 
-        // Function to load general settings from Firebase (for Settings tab)
+        // Function to load general settings from Firebase
         async function loadGeneralSettings() {
             try {
                 // Listen for real-time updates to general settings
@@ -114,7 +114,7 @@
                     const settings = snapshot.val() || {};
                     window.adminData.generalSettings = settings;
 
-                    // Populate form fields for General Info and Contact Info in Settings Tab
+                    // Populate form fields for General Info and Contact Info
                     document.getElementById('storeNameInput').value = settings.storeName || '';
                     document.getElementById('storeLogoUrlInput').value = settings.logoUrl || '';
                     document.getElementById('phoneNumberInput').value = settings.phoneNumber || '';
@@ -122,20 +122,11 @@
                     document.getElementById('storeAddressInput').value = settings.address || '';
                     document.getElementById('currencySelect').value = settings.currency || 'IQD'; // Default to IQD
                     document.getElementById('languageSelect').value = settings.language || 'ar'; // Default to Arabic
+                    document.getElementById('deliveryTimeInput').value = settings.deliveryTime || ''; // Delivery Time
 
-                    // Update mobile header
-                    const mobileStoreNameElement = document.getElementById('mobileStoreName');
-                    if (mobileStoreNameElement) {
-                        mobileStoreNameElement.textContent = settings.storeName || 'لوحة التحكم';
-                    }
-                    const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
-                    if (mobileStoreLogoElement) {
-                        mobileStoreLogoElement.src = settings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
-                    }
-
-                    // Render delivery prices table in Settings Tab
+                    // Render delivery prices table
                     renderDeliveryPricesTable(settings.deliveryPrices || {});
-                    // showNotification('تم تحميل الإعدادات بنجاح.', 'info'); // Only show when settings tab is active
+                    showNotification('تم تحميل الإعدادات بنجاح.', 'info');
                 });
             } catch (error) {
                 console.error("Error loading general settings:", error);
@@ -152,9 +143,14 @@
             const storeAddress = document.getElementById('storeAddressInput').value.trim();
             const currency = document.getElementById('currencySelect').value;
             const language = document.getElementById('languageSelect').value;
+            const deliveryTime = document.getElementById('deliveryTimeInput').value.trim();
 
             if (!storeName || !phoneNumber || !email || !storeAddress) {
                 showNotification('الرجاء ملء جميع حقول معلومات المتجر والاتصال.', 'error');
+                return;
+            }
+            if (deliveryTime && (isNaN(deliveryTime) || parseFloat(deliveryTime) <= 0)) {
+                showNotification('الرجاء إدخال وقت توصيل صحيح وموجب.', 'error');
                 return;
             }
 
@@ -170,6 +166,7 @@
                     address: storeAddress,
                     currency: currency,
                     language: language,
+                    deliveryTime: deliveryTime ? parseFloat(deliveryTime) : null, // Save Delivery Time as number or null
                     deliveryPrices: window.adminData.generalSettings.deliveryPrices || {} // Keep existing delivery prices
                 };
                 await set(generalSettingsRef, newSettings); // Use set to overwrite all settings
@@ -184,17 +181,7 @@
                     newSettings: newSettings,
                     timestamp: new Date().toISOString()
                 });
-                manageAdminLogsSize(10); // Keep logs clean
-                
-                // Update mobile header immediately after saving
-                const mobileStoreNameElement = document.getElementById('mobileStoreName');
-                if (mobileStoreNameElement) {
-                    mobileStoreNameElement.textContent = newSettings.storeName || 'لوحة التحكم';
-                }
-                const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
-                if (mobileStoreLogoElement) {
-                    mobileStoreLogoElement.src = newSettings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
-                }
+                // manageAdminLogsSize(10); // Not essential for standalone, but included if user adds more logs
 
             } catch (error) {
                 console.error("Error saving general settings:", error);
@@ -288,7 +275,7 @@
                     newPrice: price,
                     timestamp: new Date().toISOString()
                 });
-                manageAdminLogsSize(10);
+                // manageAdminLogsSize(10); // Not essential for standalone
 
                 // Clear input fields
                 document.getElementById('deliveryCityInput').value = '';
@@ -331,7 +318,7 @@
                     deletedPrice: priceToDelete,
                     timestamp: new Date().toISOString()
                 });
-                manageAdminLogsSize(10);
+                // manageAdminLogsSize(10); // Not essential for standalone
 
             } catch (error) {
                 console.error("Error deleting delivery price:", error);
@@ -345,8 +332,10 @@
             }
         }
 
-        // Function to manage the size of admin logs in Firebase
+        // Function to manage the size of admin logs in Firebase (optional for standalone)
         async function manageAdminLogsSize(maxLogs = 10) {
+            // This function is less critical for a standalone settings page,
+            // but kept for completeness if user intends to expand.
             try {
                 const snapshot = await get(adminLogsRef); 
                 const logs = [];
@@ -369,163 +358,39 @@
             }
         }
 
-        // Function to handle logout
+        // No showSection or loadOverviewData needed for standalone settings page.
+        // handleLogout is also not strictly needed for a standalone settings page,
+        // but can be kept if the user wants to add a logout button.
         async function handleLogout() {
             try {
                 if (auth.currentUser) {
                     await signOut(auth);
                 }
                 showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
-                // Redirect to admin_login.html relative to the current origin
-                window.location.replace(window.location.origin + '/admin_login.html'); 
+                // For a standalone page, you might just close the window or redirect to a login page.
+                // window.close(); // Or window.location.replace('admin_login.html');
             } catch (error) {
                 console.error("Error during logout (no active session expected):", error);
                 showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
             }
         }
 
-        // Function to load overview data from Firebase
-        async function loadOverviewData() {
-            try {
-                showNotification('جاري تحميل بيانات النظرة العامة...', 'info');
-
-                // Fetch total orders
-                const ordersSnapshot = await get(dbRef(db, 'orders'));
-                document.getElementById('totalOrdersValue').textContent = ordersSnapshot.exists() ? Object.keys(ordersSnapshot.val()).length : 0;
-
-                // Fetch total products
-                const productsSnapshot = await get(dbRef(db, 'products'));
-                document.getElementById('totalProductsValue').textContent = productsSnapshot.exists() ? Object.keys(productsSnapshot.val()).length : 0;
-
-                // Fetch total offers (assuming a 'offers' node)
-                const offersSnapshot = await get(dbRef(db, 'offers'));
-                document.getElementById('totalOffersValue').textContent = offersSnapshot.exists() ? Object.keys(offersSnapshot.val()).length : 0;
-
-                // Fetch total categories
-                const categoriesSnapshot = await get(dbRef(db, 'categories'));
-                document.getElementById('totalCategoriesValue').textContent = categoriesSnapshot.exists() ? Object.keys(categoriesSnapshot.val()).length : 0;
-
-                // Fetch total customer messages (assuming a 'customerMessages' node)
-                const customerMessagesSnapshot = await get(dbRef(db, 'customerMessages'));
-                document.getElementById('totalUserMessagesValue').textContent = customerMessagesSnapshot.exists() ? Object.keys(customerMessagesSnapshot.val()).length : 0;
-
-                showNotification('تم تحميل بيانات النظرة العامة بنجاح!', 'success');
-            } catch (error) {
-                console.error("Error loading overview data:", error);
-                showNotification('حدث خطأ أثناء تحميل بيانات النظرة العامة.', 'error');
-            }
-        }
-
-        // Function to switch between sections/tabs
-        function showSection(sectionId) {
-            // Hide all content sections
-            document.querySelectorAll('.main-content > section').forEach(section => {
-                section.style.display = 'none';
-            });
-            // Show the selected content section
-            const targetSection = document.getElementById(sectionId + 'Section');
-            if (targetSection) {
-                targetSection.style.display = 'block';
-            }
-
-            // Update section header title and description
-            const sectionHeaderTitle = document.querySelector('.section-header h2');
-            const sectionHeaderDesc = document.querySelector('.section-header p');
-
-            switch (sectionId) {
-                case 'overview':
-                    sectionHeaderTitle.textContent = 'نظرة عامة على لوحة التحكم';
-                    sectionHeaderDesc.textContent = 'مرحباً بك في لوحة تحكم متجرك.';
-                    loadOverviewData(); // Load data specifically for overview
-                    break;
-                case 'customerReplies':
-                    sectionHeaderTitle.textContent = 'الرد على الزبائن';
-                    sectionHeaderDesc.textContent = 'إدارة رسائل واستفسارات العملاء.';
-                    break;
-                case 'requestsAdmin':
-                    sectionHeaderTitle.textContent = 'إدارة الطلبات';
-                    sectionHeaderDesc.textContent = 'عرض وتتبع وإدارة طلبات العملاء.';
-                    break;
-                case 'products':
-                    sectionHeaderTitle.textContent = 'إدارة المنتجات';
-                    sectionHeaderDesc.textContent = 'إضافة وتعديل وحذف المنتجات.';
-                    break;
-                case 'users':
-                    sectionHeaderTitle.textContent = 'إدارة المستخدمين';
-                    sectionHeaderDesc.textContent = 'عرض وإدارة حسابات المستخدمين.';
-                    break;
-                case 'categoriesAdmin':
-                    sectionHeaderTitle.textContent = 'إدارة الأقسام';
-                    sectionHeaderDesc.textContent = 'تنظيم أقسام المنتجات في متجرك.';
-                    break;
-                case 'settings':
-                    sectionHeaderTitle.textContent = 'الإعدادات العامة';
-                    sectionHeaderDesc.textContent = 'إدارة معلومات متجرك وتحديث الإعدادات.';
-                    // loadGeneralSettings() is already called onValue, so data will be there
-                    break;
-                case 'homepageSettings':
-                    sectionHeaderTitle.textContent = 'إعدادات الصفحة الرئيسية';
-                    sectionHeaderDesc.textContent = 'تخصيص محتوى وتصميم الصفحة الرئيسية.';
-                    break;
-                default:
-                    sectionHeaderTitle.textContent = 'لوحة التحكم';
-                    sectionHeaderDesc.textContent = 'صفحة غير معروفة.';
-            }
-        }
-
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadGeneralSettings(); // Load general settings once for header and settings tab
+            loadGeneralSettings(); // Load settings when the page loads
 
-            // Mobile Navigation Toggle (for the sidebar)
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const mobileNav = document.getElementById('mobileNav');
-            
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileNav.classList.toggle('open');
-            });
-            
-            // Close mobile nav (sidebar) when clicking outside
-            document.addEventListener('click', (event) => {
-                const isClickInsideNav = mobileNav.contains(event.target);
-                const isClickOnMenuBtn = mobileMenuBtn.contains(event.target);
-                const isClickOnHeader = document.querySelector('.mobile-header').contains(event.target);
-
-                // Close sidebar if click is outside sidebar, menu button, and the main header itself
-                if (!isClickInsideNav && !isClickOnMenuBtn && !isClickOnHeader && mobileNav.classList.contains('open')) {
-                    mobileNav.classList.remove('open');
-                }
-            });
-
-            // Event listeners for sidebar navigation items
-            document.querySelectorAll('.mobile-nav .nav-item').forEach(item => {
-                item.addEventListener('click', (event) => {
-                    // Only prevent default if it's not the logout button
-                    if (item.id !== 'mobileLogoutBtn') {
-                        event.preventDefault();
-                        const sectionId = item.getAttribute('data-section'); // Use data-section for clarity
-                        if (sectionId) { // Check if it's a content section link
-                            showSection(sectionId);
-                            mobileNav.classList.remove('open'); // Close sidebar after selecting a section
-                        }
-                    }
-                });
-            });
-
-            // Set initial active section to 'overview'
-            showSection('overview');
-
-            // Save General Settings Button Functionality (in Settings tab)
+            // Event listeners for settings form buttons
             document.getElementById('saveGeneralSettingsBtn').addEventListener('click', saveGeneralSettings);
-            
-            // Add/Update Delivery Price Button (in Settings tab)
             document.getElementById('addUpdateDeliveryPriceBtn').addEventListener('click', addOrUpdateDeliveryPrice);
             
-            // Logout button in mobile nav
-            document.getElementById('mobileLogoutBtn').addEventListener('click', handleLogout);
+            // Optional: Add a logout button listener if you add a logout button to this standalone page
+            // const logoutBtn = document.getElementById('logoutButton');
+            // if (logoutBtn) {
+            //     logoutBtn.addEventListener('click', handleLogout);
+            // }
 
-            // Periodically manage log size (e.g., every 30 seconds)
-            setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
+            // Periodically manage log size (optional for standalone)
+            // setInterval(() => manageAdminLogsSize(10), 30000); 
         });
     </script>
     <style>
@@ -567,138 +432,28 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
-            padding-top: 60px; /* Space for fixed mobile header */
-        }
-
-        /* Mobile Header (Top Bar: Logo + Hamburger Button) */
-        .mobile-header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px; /* Fixed height for header */
-            background-color: var(--primary);
-            color: white;
-            padding: 0.8rem 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .mobile-header .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            flex-shrink: 0;
-        }
-
-        .mobile-header .store-logo {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 50%;
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 3px;
-        }
-
-        .mobile-header .store-name {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: var(--accent);
-            white-space: nowrap;
-        }
-
-        .mobile-menu-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            flex-shrink: 0;
-        }
-
-        /* Mobile Navigation (Sidebar - for all links including Logout) */
-        .mobile-nav {
-            position: fixed;
-            top: 0; /* Starts from top */
-            left: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
-            background-color: var(--primary);
-            color: white;
-            z-index: 1000; /* Above main content, same as header */
-            transform: translateX(100%); /* Hidden by default, slides from right */
-            transition: transform 0.3s ease-in-out;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            padding-top: 60px; /* Space for header */
-            display: flex;
-            flex-direction: column;
-        }
-
-        .mobile-nav.open {
-            transform: translateX(0); /* Slide in */
-            overflow-y: auto; /* Allow scrolling if content is long */
-        }
-
-        .mobile-nav .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem 1.5rem;
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: var(--transition);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .mobile-nav .nav-item:last-child {
-            border-bottom: none;
-        }
-
-        .mobile-nav .nav-item:hover,
-        .mobile-nav .nav-item.active {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: var(--accent);
-        }
-
-        .mobile-nav .nav-item i {
-            font-size: 1.2rem;
-            min-width: 25px;
-            text-align: center;
-        }
-
-        /* Main Content Area */
-        .main-content {
-            flex-grow: 1;
-            padding: 1rem;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+            align-items: center; /* Center content horizontally */
+            padding: 1rem; /* Add some padding around the content */
         }
 
         .section-header {
             text-align: center;
-            margin-bottom: 1.2rem;
+            margin-bottom: 1.5rem;
             position: relative;
             padding-bottom: 0.75rem;
+            width: 100%;
+            max-width: 600px; /* Limit width for better readability */
         }
 
         .section-header h2 {
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             color: var(--primary);
             font-weight: 800;
             margin-bottom: 0.4rem;
         }
 
         .section-header p {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: #6C757D;
             max-width: 100%;
             margin: 0 auto;
@@ -710,72 +465,26 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
+            width: 80px;
+            height: 4px;
             background-color: var(--secondary);
             border-radius: 2px;
         }
-
-        /* Dashboard Summary Cards (for Overview Section) */
-        .summary-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsive grid */
-            gap: 1rem;
-            padding: 0.5rem;
-        }
-
-        .summary-card {
-            background-color: var(--color-admin-card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.2rem;
-            border: 1px solid var(--border);
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 0.8rem;
-            text-decoration: none;
-            color: var(--dark);
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-
-        .summary-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-        }
-
-        .summary-card i {
-            font-size: 2.2rem; /* Slightly smaller icon for summary */
-            color: var(--primary);
-        }
-
-        .summary-card .card-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--accent);
-            margin-top: 0.5rem;
-        }
-
-        .summary-card .card-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #555;
-        }
         
-        /* Settings Section Styles (reused from previous iteration) */
+        /* Settings Section Card (main container) */
         .settings-section-card {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            padding: 1.2rem;
+            padding: 1.5rem;
             border: 1px solid var(--border);
             width: 100%;
+            max-width: 600px; /* Max width for the settings card */
+            margin-bottom: 1.5rem; /* Space below the card */
         }
 
         .settings-section-card h3 {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             color: var(--primary);
             margin-bottom: 1.2rem;
             padding-bottom: 0.75rem;
@@ -838,6 +547,7 @@
             justify-content: center;
             gap: 0.6rem;
             width: 100%; /* Full width buttons on mobile */
+            max-width: 300px; /* Limit button width */
         }
 
         .btn-primary { background-color: var(--primary); }
@@ -933,36 +643,10 @@
             margin-top: 1.5rem;
         }
 
-        /* Customer Replies Section */
-        .customer-replies-section .content-card {
-            background-color: var(--color-admin-card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            text-align: center;
-        }
-        
-        .customer-replies-section .content-card p {
-            font-size: 1rem;
-            color: #555;
-            line-height: 1.6;
-        }
-
-        /* Admin Footer */
-        .admin-footer {
-            background-color: var(--primary);
-            color: white;
-            padding: 0.8rem;
-            text-align: center;
-            font-size: 0.8rem;
-            margin-top: 2rem;
-        }
-
         /* Notification Styles */
         .notification {
             position: fixed;
-            top: 70px; /* Below mobile header */
+            top: 20px; /* Position from top */
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
@@ -1037,243 +721,92 @@
     </style>
 </head>
 <body>
-    <!-- Mobile Header (Top Bar: Logo + Hamburger Button) -->
-    <header class="mobile-header">
-        <div class="logo-container">
-            <img id="mobileStoreLogo" src="https://placehold.co/40x40/1A237E/FFD700?text=شعار" alt="Store Logo" class="store-logo">
-            <div id="mobileStoreName" class="store-name">لوحة التحكم</div>
-        </div>
-        <button class="mobile-menu-btn" id="mobileMenuBtn" title="القائمة">
-            <i class="fas fa-bars"></i>
-        </button>
+    <header class="section-header">
+        <h2>إعدادات المتجر</h2>
+        <p>إدارة معلومات متجرك، أسعار التوصيل، ووقت التوصيل.</p>
     </header>
 
-    <!-- Mobile Navigation (Sidebar - for all links including Logout) -->
-    <nav class="mobile-nav" id="mobileNav">
-        <a href="#" class="nav-item" data-section="overview">
-            <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
-        </a>
-        <a href="#" class="nav-item" data-section="customerReplies">
-            <i class="fas fa-reply"></i> <span>الرد على الزبائن</span>
-        </a>
-        <a href="#" class="nav-item" data-section="requestsAdmin">
-            <i class="fas fa-shopping-bag"></i> <span>الطلبات</span>
-        </a>
-        <a href="#" class="nav-item" data-section="products">
-            <i class="fas fa-box"></i> <span>المنتجات</span>
-        </a>
-        <a href="#" class="nav-item" data-section="users">
-            <i class="fas fa-users"></i> <span>المستخدمون</span>
-        </a>
-        <a href="#" class="nav-item" data-section="categoriesAdmin">
-            <i class="fas fa-list"></i> <span>الأقسام</span>
-        </a>
-        <a href="#" class="nav-item" data-section="settings">
-            <i class="fas fa-cogs"></i> <span>الإعدادات</span>
-        </a>
-        <a href="#" class="nav-item" data-section="homepageSettings">
-            <i class="fas fa-home"></i> <span>إعدادات الصفحة الرئيسية</span>
-        </a>
-        <a href="#" class="nav-item" id="mobileLogoutBtn">
-            <i class="fas fa-sign-out-alt"></i> <span>تسجيل الخروج</span>
-        </a>
-    </nav>
-
-    <!-- Main Content Area - This will hold the dynamically switched sections -->
-    <main class="main-content">
-        <div class="section-header">
-            <!-- Title and description will be updated by JavaScript -->
-            <h2>نظرة عامة على لوحة التحكم</h2>
-            <p>مرحباً بك في لوحة تحكم متجرك.</p>
-        </div>
-
-        <!-- Overview Section (Default active) -->
-        <section id="overviewSection" class="dashboard-section">
-            <div class="summary-cards-grid">
-                <div class="summary-card">
-                    <i class="fas fa-shopping-bag"></i>
-                    <div id="totalOrdersValue" class="card-value">0</div>
-                    <span class="card-title">إجمالي الطلبات</span>
-                </div>
-                <div class="summary-card">
-                    <i class="fas fa-box"></i>
-                    <div id="totalProductsValue" class="card-value">0</div>
-                    <span class="card-title">إجمالي المنتجات</span>
-                </div>
-                <div class="summary-card">
-                    <i class="fas fa-tag"></i>
-                    <div id="totalOffersValue" class="card-value">0</div>
-                    <span class="card-title">إجمالي العروض</span>
-                </div>
-                <div class="summary-card">
-                    <i class="fas fa-list"></i>
-                    <div id="totalCategoriesValue" class="card-value">0</div>
-                    <span class="card-title">إجمالي الأقسام</span>
-                </div>
-                <div class="summary-card">
-                    <i class="fas fa-envelope"></i>
-                    <div id="totalUserMessagesValue" class="card-value">0</div>
-                    <span class="card-title">رسائل المستخدمين</span>
-                </div>
+    <main class="settings-section-card">
+        <form id="generalSettingsForm">
+            <h3>معلومات المتجر</h3>
+            <div class="form-group">
+                <label for="storeNameInput">اسم المتجر:</label>
+                <input type="text" id="storeNameInput" placeholder="أدخل اسم متجرك" required>
             </div>
-            <!-- Removed Quick Tools Section as per user request -->
-        </section>
-
-        <!-- Customer Replies Section (Placeholder) -->
-        <section id="customerRepliesSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>الرد على الزبائن</h3>
-                <p>هذه الصفحة مخصصة لعرض رسائل واستفسارات العملاء والرد عليها.</p>
-                <p>يمكنك بناء وظائف المراسلة هنا، مثل عرض قائمة بالرسائل الواردة، ونموذج للرد، وتتبع حالة المحادثات.</p>
-                <p style="margin-top: 1rem; color: var(--primary); font-weight: 600;">(هذا القسم قيد الإنشاء. يرجى إضافة وظائف المراسلة هنا.)</p>
+            <div class="form-group">
+                <label for="storeLogoUrlInput">رابط شعار المتجر:</label>
+                <input type="url" id="storeLogoUrlInput" placeholder="https://example.com/logo.png">
             </div>
-        </section>
-
-        <!-- Requests Admin Section (Placeholder) -->
-        <section id="requestsAdminSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة الطلبات</h3>
-                <p>هنا ستظهر تفاصيل وإدارة الطلبات.</p>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة الطلبات هنا.</p>
-                </div>
+            <div class="form-group">
+                <label for="phoneNumberInput">رقم الهاتف:</label>
+                <input type="tel" id="phoneNumberInput" placeholder="أدخل رقم الهاتف">
             </div>
-        </section>
-
-        <!-- Products Section (Placeholder) -->
-        <section id="productsSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة المنتجات</h3>
-                <p>هنا ستظهر تفاصيل وإدارة المنتجات.</p>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة المنتجات هنا.</p>
-                </div>
+            <div class="form-group">
+                <label for="emailInput">البريد الإلكتروني:</label>
+                <input type="email" id="emailInput" placeholder="أدخل البريد الإلكتروني">
             </div>
-        </section>
-
-        <!-- Users Section (Placeholder) -->
-        <section id="usersSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة المستخدمين</h3>
-                <p>هنا ستظهر تفاصيل وإدارة المستخدمين.</p>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة المستخدمين هنا.</p>
-                </div>
+            <div class="form-group">
+                <label for="storeAddressInput">عنوان المتجر:</label>
+                <input type="text" id="storeAddressInput" placeholder="أدخل عنوان المتجر">
             </div>
-        </section>
-
-        <!-- Categories Admin Section (Placeholder) -->
-        <section id="categoriesAdminSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة الأقسام</h3>
-                <p>هنا ستظهر تفاصيل وإدارة أقسام المنتجات.</p>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة الأقسام هنا.</p>
-                </div>
+            <div class="form-group">
+                <label for="currencySelect">العملة:</label>
+                <select id="currencySelect">
+                    <option value="IQD">د.ع (دينار عراقي)</option>
+                    <option value="USD">$ (دولار أمريكي)</option>
+                </select>
             </div>
-        </section>
-
-        <!-- Settings Section -->
-        <section id="settingsSection" class="settings-section-card" style="display: none;">
-            <form id="generalSettingsForm">
-                <h3>معلومات المتجر</h3>
-                <div class="form-group">
-                    <label for="storeNameInput">اسم المتجر:</label>
-                    <input type="text" id="storeNameInput" placeholder="أدخل اسم متجرك" required>
-                </div>
-                <div class="form-group">
-                    <label for="storeLogoUrlInput">رابط شعار المتجر:</label>
-                    <input type="url" id="storeLogoUrlInput" placeholder="https://example.com/logo.png">
-                </div>
-                <div class="form-group">
-                    <label for="phoneNumberInput">رقم الهاتف:</label>
-                    <input type="tel" id="phoneNumberInput" placeholder="أدخل رقم الهاتف">
-                </div>
-                <div class="form-group">
-                    <label for="emailInput">البريد الإلكتروني:</label>
-                    <input type="email" id="emailInput" placeholder="أدخل البريد الإلكتروني">
-                </div>
-                <div class="form-group">
-                    <label for="storeAddressInput">عنوان المتجر:</label>
-                    <input type="text" id="storeAddressInput" placeholder="أدخل عنوان المتجر">
-                </div>
-                <div class="form-group">
-                    <label for="currencySelect">العملة:</label>
-                    <select id="currencySelect">
-                        <option value="IQD">د.ع (دينار عراقي)</option>
-                        <option value="USD">$ (دولار أمريكي)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="languageSelect">لغة الواجهة:</label>
-                    <select id="languageSelect">
-                        <option value="ar">العربية</option>
-                        <option value="en">English</option>
-                    </select>
-                </div>
-                
-                <div class="form-actions">
-                    <button type="button" class="btn btn-primary" id="saveGeneralSettingsBtn">
-                        <i class="fas fa-save"></i> حفظ الإعدادات
-                    </button>
-                </div>
-            </form>
-
-            <h3 style="margin-top: 2.5rem;">إدارة أسعار التوصيل</h3>
-            <div class="delivery-prices-table-container">
-                <table class="delivery-prices-table">
-                    <thead>
-                        <tr>
-                            <th>المدينة</th>
-                            <th>السعر</th>
-                            <th>الإجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="deliveryPricesTableBody">
-                        <!-- Delivery prices will be loaded here by JavaScript -->
-                        <tr><td colspan="3" class="no-content-message">جاري تحميل أسعار التوصيل...</td></tr>
-                    </tbody>
-                </table>
+            <div class="form-group">
+                <label for="languageSelect">لغة الواجهة:</label>
+                <select id="languageSelect">
+                    <option value="ar">العربية</option>
+                    <option value="en">English</option>
+                </select>
             </div>
-
-            <h3 style="margin-top: 1.5rem;">إضافة مدينة جديدة</h3>
-            <div class="delivery-input-group">
-                <div class="form-group">
-                    <label for="deliveryCityInput">المدينة:</label>
-                    <input type="text" id="deliveryCityInput" placeholder="اسم المدينة">
-                </div>
-                <div class="form-group">
-                    <label for="deliveryPriceInput">سعر التوصيل:</label>
-                    <input type="number" id="deliveryPriceInput" placeholder="السعر بالدينار العراقي">
-                </div>
-                <button type="button" class="btn btn-success" id="addUpdateDeliveryPriceBtn">
-                    <i class="fas fa-plus-circle"></i> إضافة مدينة
+            <div class="form-group">
+                <label for="deliveryTimeInput">وقت التوصيل (بالساعات):</label>
+                <input type="number" id="deliveryTimeInput" placeholder="مثال: 24" min="0" step="1">
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="saveGeneralSettingsBtn">
+                    <i class="fas fa-save"></i> حفظ الإعدادات
                 </button>
             </div>
-        </section>
+        </form>
 
-        <!-- Homepage Settings Section (Placeholder) -->
-        <section id="homepageSettingsSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إعدادات الصفحة الرئيسية</h3>
-                <p>هنا ستظهر خيارات تخصيص الصفحة الرئيسية.</p>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم توفير خيارات تخصيص الصفحة الرئيسية هنا.</p>
-                </div>
+        <h3 style="margin-top: 2.5rem;">إدارة أسعار التوصيل</h3>
+        <div class="delivery-prices-table-container">
+            <table class="delivery-prices-table">
+                <thead>
+                    <tr>
+                        <th>المدينة</th>
+                        <th>السعر</th>
+                        <th>الإجراء</th>
+                    </tr>
+                </thead>
+                <tbody id="deliveryPricesTableBody">
+                    <!-- Delivery prices will be loaded here by JavaScript -->
+                    <tr><td colspan="3" class="no-content-message">جاري تحميل أسعار التوصيل...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3 style="margin-top: 1.5rem;">إضافة مدينة جديدة</h3>
+        <div class="delivery-input-group">
+            <div class="form-group">
+                <label for="deliveryCityInput">المدينة:</label>
+                <input type="text" id="deliveryCityInput" placeholder="اسم المدينة">
             </div>
-        </section>
-
+            <div class="form-group">
+                <label for="deliveryPriceInput">سعر التوصيل:</label>
+                <input type="number" id="deliveryPriceInput" placeholder="السعر بالدينار العراقي">
+            </div>
+            <button type="button" class="btn btn-success" id="addUpdateDeliveryPriceBtn">
+                <i class="fas fa-plus-circle"></i> إضافة مدينة
+            </button>
+        </div>
     </main>
-    
-    <!-- Admin Footer -->
-    <footer class="admin-footer">
-        <p>&copy; 2025 لوحة تحكم المتجر. جميع الحقوق محفوظة.</p>
-    </footer>
     
     <!-- Notification -->
     <div class="notification" id="notification">
