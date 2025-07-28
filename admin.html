@@ -122,6 +122,7 @@
                     document.getElementById('storeAddressInput').value = settings.address || '';
                     document.getElementById('currencySelect').value = settings.currency || 'IQD'; // Default to IQD
                     document.getElementById('languageSelect').value = settings.language || 'ar'; // Default to Arabic
+                    document.getElementById('deliveryTimeInput').value = settings.deliveryTime || ''; // NEW: Delivery Time
 
                     // Update mobile header
                     const mobileStoreNameElement = document.getElementById('mobileStoreName');
@@ -152,9 +153,14 @@
             const storeAddress = document.getElementById('storeAddressInput').value.trim();
             const currency = document.getElementById('currencySelect').value;
             const language = document.getElementById('languageSelect').value;
+            const deliveryTime = document.getElementById('deliveryTimeInput').value.trim(); // NEW: Get Delivery Time
 
             if (!storeName || !phoneNumber || !email || !storeAddress) {
                 showNotification('الرجاء ملء جميع حقول معلومات المتجر والاتصال.', 'error');
+                return;
+            }
+            if (deliveryTime && (isNaN(deliveryTime) || parseFloat(deliveryTime) <= 0)) {
+                showNotification('الرجاء إدخال وقت توصيل صحيح وموجب.', 'error');
                 return;
             }
 
@@ -170,6 +176,7 @@
                     address: storeAddress,
                     currency: currency,
                     language: language,
+                    deliveryTime: deliveryTime ? parseFloat(deliveryTime) : null, // NEW: Save Delivery Time as number or null
                     deliveryPrices: window.adminData.generalSettings.deliveryPrices || {} // Keep existing delivery prices
                 };
                 await set(generalSettingsRef, newSettings); // Use set to overwrite all settings
@@ -418,6 +425,12 @@
 
         // Function to switch between sections/tabs
         function showSection(sectionId) {
+            // Special case: Redirect for customerReplies
+            if (sectionId === 'customerReplies') {
+                window.location.href = 'Replytocustomers.html'; // Redirect to the new page
+                return; // Stop further execution in this function
+            }
+
             // Hide all content sections
             document.querySelectorAll('.main-content > section').forEach(section => {
                 section.style.display = 'none';
@@ -438,10 +451,10 @@
                     sectionHeaderDesc.textContent = 'مرحباً بك في لوحة تحكم متجرك.';
                     loadOverviewData(); // Load data specifically for overview
                     break;
-                case 'customerReplies':
-                    sectionHeaderTitle.textContent = 'الرد على الزبائن';
-                    sectionHeaderDesc.textContent = 'إدارة رسائل واستفسارات العملاء.';
-                    break;
+                // case 'customerReplies': // This case is now handled by the redirect above
+                //     sectionHeaderTitle.textContent = 'الرد على الزبائن';
+                //     sectionHeaderDesc.textContent = 'إدارة رسائل واستفسارات العملاء.';
+                //     break;
                 case 'requestsAdmin':
                     sectionHeaderTitle.textContent = 'إدارة الطلبات';
                     sectionHeaderDesc.textContent = 'عرض وتتبع وإدارة طلبات العملاء.';
@@ -1118,7 +1131,7 @@
             </div>
         </section>
 
-        <!-- Customer Replies Section (Placeholder - now minimal) -->
+        <!-- Customer Replies Section (Placeholder - will not be shown due to redirect) -->
         <section id="customerRepliesSection" style="display: none;">
             <div class="settings-section-card">
                 <h3>الرد على الزبائن</h3>
@@ -1210,6 +1223,10 @@
                         <option value="ar">العربية</option>
                         <option value="en">English</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label for="deliveryTimeInput">وقت التوصيل (بالساعات):</label>
+                    <input type="number" id="deliveryTimeInput" placeholder="مثال: 24" min="0" step="1">
                 </div>
                 
                 <div class="form-actions">
