@@ -554,6 +554,32 @@
       window.location.reload();
     });
 
+    // مستمع لحالة المصادقة - يعالج التحويل بعد أي تسجيل دخول ناجح
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        // المستخدم مسجل الدخول
+        // إذا كان المستخدم على صفحة login.html وتم تسجيل دخوله بنجاح، قم بالتحويل
+        if (window.location.pathname.includes('login.html')) {
+            showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى الصفحة الرئيسية...', 1500);
+            setTimeout(() => {
+                hideGlobalLoader();
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+      } else {
+        // المستخدم غير مسجل الدخول
+        // تأكد من إخفاء مؤشرات التحميل وإعادة تمكين الأزرار إذا لم يكن هناك مستخدم مسجل الدخول
+        hideGlobalLoader();
+        // إعادة تعيين حالة زر Google في حال فشل المصادقة أو عدم وجود مستخدم
+        const googleBtn = document.getElementById('googleSignInBtn');
+        if (googleBtn) { // تحقق من وجود الزر قبل محاولة الوصول إليه
+            document.getElementById('googleLoader').style.display = 'none';
+            document.getElementById('googleBtnText').textContent = 'تسجيل الدخول بحساب Google';
+            googleBtn.disabled = false;
+        }
+      }
+    });
+
     // تسجيل الدخول - مع معالجة التأخير
     loginForm.addEventListener('submit', e => {
       e.preventDefault();
@@ -578,11 +604,7 @@
       setTimeout(() => {
         auth.signInWithEmailAndPassword(email, pass)
           .then(() => {
-            showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
-            setTimeout(() => {
-              hideGlobalLoader();
-              window.location.href = 'index.html'; 
-            }, 2000);
+            // التحويل سيتم بواسطة onAuthStateChanged
           })
           .catch(err => {
             hideGlobalLoader();
@@ -686,11 +708,7 @@
           return userCredential.user.updateProfile({ displayName: username });
         })
         .then(() => {
-          showNotification('success', 'تم إنشاء الحساب بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
-          setTimeout(() => {
-            hideGlobalLoader();
-            window.location.href = 'index.html'; 
-          }, 2000);
+          // التحويل سيتم بواسطة onAuthStateChanged
         })
         .catch(err => {
           hideGlobalLoader();
@@ -723,14 +741,10 @@
       // إظهار شاشة التحميل العامة
       showGlobalLoader("جاري تسجيل الدخول بحساب Google...");
       
-      // استخدام signInWithPopup بدلاً من signInWithRedirect
+      // استخدام signInWithPopup
       auth.signInWithPopup(provider)
         .then(() => {
-          showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
-          setTimeout(() => {
-            hideGlobalLoader();
-            window.location.href = 'index.html';
-          }, 2000);
+          // التحويل سيتم بواسطة onAuthStateChanged
         })
         .catch(err => {
           hideGlobalLoader();
@@ -752,44 +766,6 @@
           console.error("Google Sign-In (Popup) error:", err); // سجل الخطأ الكامل للمساعدة في التشخيص
         });
     });
-
-    // معالجة نتيجة إعادة التوجيه بعد تسجيل الدخول بحساب Google
-    // هذا الجزء لم يعد ضروريًا بشكل مباشر لـ signInWithPopup، ولكنه لا يضر وجوده
-    // في حالة وجود أي عمليات إعادة توجيه سابقة أو مستقبلية.
-    auth.getRedirectResult()
-      .then((result) => {
-        if (result.user) {
-          showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
-          setTimeout(() => {
-            hideGlobalLoader();
-            window.location.href = 'index.html';
-          }, 2000);
-        } else {
-          hideGlobalLoader();
-          document.getElementById('googleLoader').style.display = 'none';
-          document.getElementById('googleBtnText').textContent = 'تسجيل الدخول بحساب Google';
-          document.getElementById('googleSignInBtn').disabled = false;
-        }
-      })
-      .catch((error) => {
-        hideGlobalLoader();
-        document.getElementById('googleLoader').style.display = 'none';
-        document.getElementById('googleBtnText').textContent = 'تسجيل الدخول بحساب Google';
-        document.getElementById('googleSignInBtn').disabled = false;
-
-        let message = 'حدث خطأ أثناء تسجيل الدخول بحساب Google';
-        if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
-          message = 'تم إلغاء عملية تسجيل الدخول أو إغلاق النافذة';
-        } else if (error.code === 'auth/account-exists-with-different-credential') {
-          message = 'يوجد حساب بالفعل بهذا البريد الإلكتروني باستخدام طريقة تسجيل دخول مختلفة.';
-        } else if (error.code === 'auth/operation-not-supported-in-this-environment') {
-          message = 'هذه العملية غير مدعومة في هذه البيئة. يرجى التأكد من استضافة التطبيق على خادم ويب (http/https).';
-        } else {
-            message = `خطأ غير متوقع: ${error.message}`;
-        }
-        showNotification('error', 'خطأ في تسجيل الدخول', message);
-        console.error("Google Redirect Result error:", error);
-      });
 
     // الدخول كضيف
     function continueAsGuest() { 
