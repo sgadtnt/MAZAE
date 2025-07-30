@@ -39,18 +39,18 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 10px; /* Reduced padding */
     }
     
     .notification {
       position: fixed;
-      top: 20px;
-      right: 20px;
-      max-width: 350px;
-      width: calc(100% - 40px);
+      top: 15px; /* Reduced top position */
+      right: 15px; /* Reduced right position */
+      max-width: 300px; /* Slightly narrower */
+      width: calc(100% - 30px); /* Adjusted width */
       z-index: 1000;
       transition: all 0.3s ease;
-      transform: translateX(calc(100% + 20px));
+      transform: translateX(calc(100% + 15px)); /* Adjusted transform */
     }
     
     .notification.active {
@@ -74,7 +74,7 @@
     }
     
     .progress-bar {
-      height: 4px;
+      height: 3px; /* Reduced height */
       width: 100%;
       background: rgba(255, 255, 255, 0.3);
       position: absolute;
@@ -98,14 +98,14 @@
     }
     
     .auth-card {
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Slightly smaller shadow */
+      border-radius: 12px; /* Slightly smaller radius */
       overflow: hidden;
       position: relative;
       background: white;
       width: 100%;
-      max-width: 420px;
-      padding: 24px;
+      max-width: 380px; /* Reduced max-width */
+      padding: 15px; /* Further reduced padding */
       transition: all 0.3s ease;
     }
     
@@ -120,7 +120,7 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 6px;
+      height: 5px; /* Slightly reduced height */
       background: linear-gradient(90deg, #3B82F6, #10B981, #F59E0B);
     }
     
@@ -148,8 +148,8 @@
       border: 2px solid #f3f3f3;
       border-top: 2px solid #3B82F6;
       border-radius: 50%;
-      width: 20px;
-      height: 20px;
+      width: 18px; /* Slightly smaller */
+      height: 18px; /* Slightly smaller */
       animation: spin 0.8s linear infinite;
       display: none;
     }
@@ -182,23 +182,23 @@
     }
     
     .global-loader .spinner {
-      width: 60px;
-      height: 60px;
-      border: 5px solid #f3f3f3;
-      border-top: 5px solid #3B82F6;
+      width: 50px; /* Smaller */
+      height: 50px; /* Smaller */
+      border: 4px solid #f3f3f3; /* Thinner border */
+      border-top: 4px solid #3B82F6;
       border-radius: 50%;
       animation: spin 1.5s linear infinite;
-      margin-bottom: 20px;
+      margin-bottom: 15px; /* Reduced margin */
     }
     
     .global-loader .dots {
       display: flex;
-      gap: 8px;
+      gap: 6px; /* Reduced gap */
     }
     
     .global-loader .dot {
-      width: 12px;
-      height: 12px;
+      width: 10px; /* Smaller */
+      height: 10px; /* Smaller */
       border-radius: 50%;
       background: #3B82F6;
       animation: pulse 1.5s infinite ease-in-out;
@@ -218,29 +218,29 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-bottom: 20px;
-      padding-top: 10px;
+      margin-bottom: 10px; /* Further reduced margin */
+      padding-top: 0px; /* Removed padding */
     }
     
     .store-logo {
-      width: 80px;
-      height: 80px;
+      width: 60px; /* Even smaller */
+      height: 60px; /* Even smaller */
       border-radius: 50%;
       background: linear-gradient(135deg, #3B82F6, #10B981);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      margin-bottom: 15px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1); /* Smaller shadow */
+      margin-bottom: 8px; /* Further reduced margin */
     }
     
     .store-logo i {
-      font-size: 40px;
+      font-size: 30px; /* Even smaller */
       color: white;
     }
     
     .store-name {
-      font-size: 26px;
+      font-size: 22px; /* Even smaller */
       font-weight: 700;
       color: #1e293b;
       text-align: center;
@@ -253,38 +253,46 @@
     
     .store-slogan {
       color: #64748b;
-      font-size: 14px;
+      font-size: 12px; /* Even smaller */
       text-align: center;
-      margin-top: 4px;
+      margin-top: 0px; /* Removed margin */
       font-weight: 500;
     }
     
     @media (max-width: 480px) {
       .auth-card {
-        padding: 20px 16px;
-        border-radius: 12px;
+        padding: 10px; /* Smallest padding for mobile */
+        border-radius: 10px; /* Smaller radius */
       }
       
       .auth-card::before {
-        height: 4px;
+        height: 3px; /* Smallest height */
       }
       
       .btn-primary {
-        font-size: 16px;
-        padding: 12px;
+        font-size: 14px; /* Smallest font size */
+        padding: 8px; /* Smallest padding */
       }
       
       .form-input {
-        padding: 12px 14px;
+        padding: 8px 10px; /* Smallest padding */
       }
       
       .store-logo {
-        width: 70px;
-        height: 70px;
+        width: 50px; /* Smallest for mobile */
+        height: 50px; /* Smallest for mobile */
+      }
+      
+      .store-logo i {
+        font-size: 26px; /* Smallest */
       }
       
       .store-name {
-        font-size: 22px;
+        font-size: 18px; /* Smallest for mobile */
+      }
+
+      .store-slogan {
+        font-size: 11px; /* Smallest for mobile */
       }
     }
   </style>
@@ -293,7 +301,7 @@
   <!-- شاشة التحميل العامة -->
   <div class="global-loader" id="globalLoader">
     <div class="spinner"></div>
-    <div class="text-xl font-bold text-gray-700 mb-4">جاري تسجيل الدخول...</div>
+    <div class="text-lg font-bold text-gray-700 mb-3">جاري تسجيل الدخول...</div> <!-- Reduced font size and margin -->
     <div class="dots">
       <div class="dot"></div>
       <div class="dot"></div>
@@ -303,15 +311,15 @@
   
   <!-- الإشعارات المنبثقة -->
   <div class="notification" id="notification">
-    <div class="flex items-start p-4 rounded-lg shadow-lg text-white">
-      <div class="mr-3 mt-1">
-        <i class="text-xl" id="notification-icon"></i>
+    <div class="flex items-start p-3 rounded-lg shadow-lg text-white"> <!-- Reduced padding -->
+      <div class="mr-2 mt-0.5"> <!-- Reduced margin and top margin -->
+        <i class="text-lg" id="notification-icon"></i> <!-- Reduced font size -->
       </div>
       <div class="flex-1">
-        <div class="font-bold text-lg" id="notification-title"></div>
-        <div class="mt-1 text-sm" id="notification-message"></div>
+        <div class="font-bold text-base" id="notification-title"></div> <!-- Reduced font size -->
+        <div class="mt-0.5 text-xs" id="notification-message"></div> <!-- Reduced margin and font size -->
       </div>
-      <button class="ml-4 text-white opacity-70 hover:opacity-100 transition-opacity" id="notification-close">
+      <button class="ml-3 text-white opacity-70 hover:opacity-100 transition-opacity text-sm" id="notification-close"> <!-- Reduced margin and font size -->
         <i class="fas fa-times"></i>
       </button>
     </div>
@@ -322,7 +330,7 @@
 
   <!-- بطاقة تسجيل الدخول -->
   <div id="authModal" class="auth-card">
-    <button onclick="window.history.back()" class="absolute top-3 left-3 text-gray-500 hover:text-gray-700">
+    <button onclick="window.history.back()" class="absolute top-1.5 left-1.5 text-gray-500 hover:text-gray-700 text-xs"> <!-- Reduced position and font size -->
       <i class="fas fa-arrow-left"></i>
     </button>
 
@@ -335,94 +343,94 @@
       <p class="store-slogan">أفضل المنتجات بأفضل الأسعار</p>
     </div>
 
-    <div class="flex justify-center mb-6 space-x-4 space-x-reverse">
-      <button id="showLogin" class="text-lg font-semibold border-b-2 border-primary pb-2 px-4">تسجيل الدخول</button>
-      <button id="showSignup" class="text-lg font-semibold text-gray-500 hover:text-gray-800 pb-2 px-4">إنشاء حساب</button>
+    <div class="flex justify-center mb-3 space-x-3 space-x-reverse text-sm"> <!-- Reduced margin, space-x, and font size -->
+      <button id="showLogin" class="font-semibold border-b-2 border-primary pb-1 px-2.5">تسجيل الدخول</button> <!-- Reduced padding -->
+      <button id="showSignup" class="font-semibold text-gray-500 hover:text-gray-800 pb-1 px-2.5">إنشاء حساب</button> <!-- Reduced padding -->
     </div>
 
-    <form id="loginForm" class="space-y-4">
+    <form id="loginForm" class="space-y-2.5"> <!-- Reduced space-y -->
       <div>
-        <label class="block mb-2 font-medium text-gray-700">البريد الإلكتروني</label>
-        <input type="email" id="loginEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="أدخل بريدك الإلكتروني">
+        <label class="block mb-0.5 font-medium text-gray-700 text-xs">البريد الإلكتروني</label> <!-- Reduced margin and font size -->
+        <input type="email" id="loginEmail" required class="w-full border rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-primary focus:border-transparent form-input text-sm" placeholder="أدخل بريدك الإلكتروني"> <!-- Reduced padding, ring, and font size -->
       </div>
       <div>
-        <label class="block mb-2 font-medium text-gray-700">كلمة المرور</label>
+        <label class="block mb-0.5 font-medium text-gray-700 text-xs">كلمة المرور</label> <!-- Reduced margin and font size -->
         <div class="relative">
-          <input type="password" id="loginPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12 form-input" placeholder="••••••••">
-          <button type="button" id="toggleLoginPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
+          <input type="password" id="loginPassword" required class="w-full border rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-primary focus:border-transparent pr-9 form-input text-sm" placeholder="••••••••"> <!-- Reduced padding, ring, and font size -->
+          <button type="button" id="toggleLoginPassword" class="absolute inset-y-0 left-1.5 text-gray-500 toggle-password text-xs"> <!-- Reduced position and font size -->
             <i class="fas fa-eye"></i>
           </button>
         </div>
       </div>
       <div class="text-left">
-        <button type="button" id="showReset" class="text-sm text-primary hover:underline">نسيت كلمة المرور؟</button>
+        <button type="button" id="showReset" class="text-xxs text-primary hover:underline">نسيت كلمة المرور؟</button> <!-- Smallest font size -->
       </div>
-      <button type="submit" class="w-full bg-primary text-white py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium text-lg shadow-md hover:shadow-lg btn-primary flex items-center justify-center">
+      <button type="submit" class="w-full bg-primary text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm shadow-md hover:shadow-lg btn-primary flex items-center justify-center"> <!-- Reduced padding and font size -->
         <span id="loginBtnText">تسجيل الدخول</span>
-        <div class="loader ml-2" id="loginLoader"></div>
+        <div class="loader ml-1.5" id="loginLoader"></div> <!-- Reduced margin -->
       </button>
     </form>
 
-    <div class="my-6 border-t pt-4 text-center text-sm text-gray-500 relative">
-      <span class="px-3 bg-white relative">أو</span>
+    <div class="my-3 border-t pt-2.5 text-center text-xs text-gray-500 relative"> <!-- Reduced margin and padding -->
+      <span class="px-1.5 bg-white relative">أو</span> <!-- Reduced padding -->
     </div>
 
-    <button id="googleSignInBtn" class="w-full border border-gray-300 py-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium flex items-center justify-center shadow-sm">
-      <i class="fab fa-google text-red-500 mr-2"></i> 
+    <button id="googleSignInBtn" class="w-full border border-gray-300 py-2 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium flex items-center justify-center shadow-sm text-sm"> <!-- Reduced padding and font size -->
+      <i class="fab fa-google text-red-500 mr-1.5"></i> <!-- Reduced margin -->
       <span id="googleBtnText">تسجيل الدخول بحساب Google</span>
-      <div class="loader ml-2" id="googleLoader" style="display: none;"></div>
+      <div class="loader ml-1.5" id="googleLoader" style="display: none;"></div> <!-- Reduced margin -->
     </button>
-    <button onclick="continueAsGuest()" class="guest-btn w-full mt-3 text-gray-800 py-3 rounded-lg font-medium text-lg shadow-sm flex items-center justify-center">
+    <button onclick="continueAsGuest()" class="guest-btn w-full mt-2 text-gray-800 py-2 rounded-lg font-medium text-sm shadow-sm flex items-center justify-center"> <!-- Reduced margin, padding, and font size -->
       <span id="guestBtnText">دخول كضيف</span>
-      <div class="loader ml-2" id="guestLoader" style="display: none;"></div>
+      <div class="loader ml-1.5" id="guestLoader" style="display: none;"></div> <!-- Reduced margin -->
     </button>
 
-    <form id="resetForm" class="space-y-4 hidden">
+    <form id="resetForm" class="space-y-2.5 hidden"> <!-- Reduced space-y -->
       <div>
-        <label class="block mb-2 font-medium text-gray-700">أدخل بريدك لإعادة تعيين كلمة المرور</label>
-        <input type="email" id="resetEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="بريدك الإلكتروني">
+        <label class="block mb-0.5 font-medium text-gray-700 text-xs">أدخل بريدك لإعادة تعيين كلمة المرور</label> <!-- Reduced margin and font size -->
+        <input type="email" id="resetEmail" required class="w-full border rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-primary focus:border-transparent form-input text-sm" placeholder="بريدك الإلكتروني"> <!-- Reduced padding, ring, and font size -->
       </div>
-      <button type="submit" class="w-full bg-info text-white py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg btn-primary flex items-center justify-center">
+      <button type="submit" class="w-full bg-info text-white py-2 rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm shadow-md hover:shadow-lg btn-primary flex items-center justify-center"> <!-- Reduced padding and font size -->
         <span id="resetBtnText">إرسال رابط إعادة التعيين</span>
-        <div class="loader ml-2" id="resetLoader"></div>
+        <div class="loader ml-1.5" id="resetLoader"></div> <!-- Reduced margin -->
       </button>
-      <button type="button" id="backToLoginFromReset" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">
+      <button type="button" id="backToLoginFromReset" class="w-full mt-1.5 text-center text-xxs text-gray-600 hover:underline"> <!-- Reduced margin and font size -->
         عودة لتسجيل الدخول
       </button>
     </form>
 
-    <form id="signupForm" class="space-y-4 hidden">
+    <form id="signupForm" class="space-y-2.5 hidden"> <!-- Reduced space-y -->
       <div>
-        <label class="block mb-2 font-medium text-gray-700">اسم المستخدم</label>
-        <input type="text" id="signupUsername" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="مثلاً: سجاد">
+        <label class="block mb-0.5 font-medium text-gray-700 text-xs">اسم المستخدم</label> <!-- Reduced margin and font size -->
+        <input type="text" id="signupUsername" required class="w-full border rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-primary focus:border-transparent form-input text-sm" placeholder="مثلاً: سجاد"> <!-- Reduced padding, ring, and font size -->
       </div>
       <div>
-        <label class="block mb-2 font-medium text-gray-700">البريد الإلكتروني</label>
-        <input type="email" id="signupEmail" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent form-input" placeholder="أدخل بريدك">
+        <label class="block mb-0.5 font-medium text-gray-700 text-xs">البريد الإلكتروني</label> <!-- Reduced margin and font size -->
+        <input type="email" id="signupEmail" required class="w-full border rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-primary focus:border-transparent form-input text-sm" placeholder="أدخل بريدك"> <!-- Reduced padding, ring, and font size -->
       </div>
       <div>
-        <label class="block mb-2 font-medium text-gray-700">كلمة المرور</label>
+        <label class="block mb-0.5 font-medium text-gray-700 text-xs">كلمة المرور</label> <!-- Reduced margin and font size -->
         <div class="relative">
-          <input type="password" id="signupPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12 form-input" placeholder="••••••••">
-          <button type="button" id="toggleSignupPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
+          <input type="password" id="signupPassword" required class="w-full border rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-primary focus:border-transparent pr-9 form-input text-sm" placeholder="••••••••"> <!-- Reduced padding, ring, and font size -->
+          <button type="button" id="toggleSignupPassword" class="absolute inset-y-0 left-1.5 text-gray-500 toggle-password text-xs"> <!-- Reduced position and font size -->
             <i class="fas fa-eye"></i>
           </button>
         </div>
       </div>
       <div>
-        <label class="block mb-2 font-medium text-gray-700">تأكيد كلمة المرور</label>
+        <label class="block mb-0.5 font-medium text-gray-700 text-xs">تأكيد كلمة المرور</label> <!-- Reduced margin and font size -->
         <div class="relative">
-          <input type="password" id="confirmPassword" required class="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-primary focus:border-transparent pr-12 form-input" placeholder="••••••••">
-          <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 left-3 text-gray-500 toggle-password">
+          <input type="password" id="confirmPassword" required class="w-full border rounded-lg px-2.5 py-2 focus:ring-1 focus:ring-primary focus:border-transparent pr-9 form-input text-sm" placeholder="••••••••"> <!-- Reduced padding, ring, and font size -->
+          <button type="button" id="toggleConfirmPassword" class="absolute inset-y-0 left-1.5 text-gray-500 toggle-password text-xs"> <!-- Reduced position and font size -->
             <i class="fas fa-eye"></i>
           </button>
         </div>
       </div>
-      <button type="submit" class="w-full bg-success text-white py-3 rounded-lg hover:bg-green-600 transition-colors font-medium text-lg shadow-md hover:shadow-lg btn-primary flex items-center justify-center">
+      <button type="submit" class="w-full bg-success text-white py-2 rounded-lg hover:bg-green-600 transition-colors font-medium text-sm shadow-md hover:shadow-lg btn-primary flex items-center justify-center"> <!-- Reduced padding and font size -->
         <span id="signupBtnText">إنشاء حساب</span>
-        <div class="loader ml-2" id="signupLoader"></div>
+        <div class="loader ml-1.5" id="signupLoader"></div> <!-- Reduced margin -->
       </button>
-      <button type="button" id="backToLoginFromSignup" class="w-full mt-2 text-center text-sm text-gray-600 hover:underline">
+      <button type="button" id="backToLoginFromSignup" class="w-full mt-1.5 text-center text-xxs text-gray-600 hover:underline"> <!-- Reduced margin and font size -->
         عودة لتسجيل الدخول
       </button>
     </form>
@@ -496,7 +504,7 @@
     // إظهار وإخفاء شاشة التحميل العامة
     function showGlobalLoader(message = "جاري تسجيل الدخول...") {
       const loader = document.getElementById('globalLoader');
-      const loaderText = loader.querySelector('.text-xl');
+      const loaderText = loader.querySelector('.text-lg'); // Adjusted selector
       loaderText.textContent = message;
       loader.classList.add('active');
     }
@@ -507,11 +515,11 @@
 
     // وظائف إظهار/إخفاء كلمة المرور
     function setupPasswordToggle(buttonId, inputId) {
-      document.getElementById(buttonId).addEventListener('click', () => {
+      document.getElementById(buttonId).addEventListener('click', (event) => { // Added event parameter
         const pw = document.getElementById(inputId);
         const type = pw.type === 'password' ? 'text' : 'password';
         pw.type = type;
-        const icon = event.target.querySelector('i') || event.target;
+        const icon = event.target.closest('button').querySelector('i'); // Use closest to get the button, then find i
         icon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
       });
     }
