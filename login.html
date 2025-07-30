@@ -581,7 +581,7 @@
             showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
             setTimeout(() => {
               hideGlobalLoader();
-              window.location.href = 'store.html';
+              window.location.href = 'index.html'; 
             }, 2000);
           })
           .catch(err => {
@@ -687,7 +687,7 @@
           showNotification('success', 'تم إنشاء الحساب بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
           setTimeout(() => {
             hideGlobalLoader();
-            window.location.href = 'store.html';
+            window.location.href = 'index.html'; 
           }, 2000);
         })
         .catch(err => {
@@ -720,29 +720,36 @@
       // إظهار شاشة التحميل العامة
       showGlobalLoader("جاري تسجيل الدخول بحساب Google...");
       
-      auth.signInWithPopup(provider)
-        .then(() => {
+      // استخدام signInWithRedirect بدلاً من signInWithPopup
+      auth.signInWithRedirect(provider);
+    });
+
+    // معالجة نتيجة إعادة التوجيه بعد تسجيل الدخول بحساب Google
+    auth.getRedirectResult()
+      .then((result) => {
+        if (result.user) {
+          // تم تسجيل الدخول بنجاح بعد إعادة التوجيه
           showNotification('success', 'تم تسجيل الدخول بنجاح', 'جاري تحويلك إلى متجر مزار...', 1500);
           setTimeout(() => {
             hideGlobalLoader();
-            window.location.href = 'store.html';
+            window.location.href = 'index.html';
           }, 2000);
-        })
-        .catch(err => {
-          hideGlobalLoader();
-          document.getElementById('googleLoader').style.display = 'none';
-          document.getElementById('googleBtnText').textContent = 'تسجيل الدخول بحساب Google';
-          googleBtn.disabled = false;
-          
-          let message = 'حدث خطأ أثناء تسجيل الدخول بحساب Google';
-          if (err.code === 'auth/popup-closed-by-user') {
-            message = 'تم إغلاق نافذة تسجيل الدخول';
-          } else if (err.code === 'auth/cancelled-popup-request') {
-            message = 'تم إلغاء عملية تسجيل الدخول';
-          }
-          showNotification('error', 'خطأ في تسجيل الدخول', message);
-        });
-    });
+        }
+      })
+      .catch((error) => {
+        hideGlobalLoader();
+        document.getElementById('googleLoader').style.display = 'none';
+        document.getElementById('googleBtnText').textContent = 'تسجيل الدخول بحساب Google';
+        document.getElementById('googleSignInBtn').disabled = false; // إعادة تمكين الزر
+
+        let message = 'حدث خطأ أثناء تسجيل الدخول بحساب Google';
+        if (error.code === 'auth/cancelled-popup-request' || error.code === 'auth/popup-closed-by-user') {
+          message = 'تم إلغاء عملية تسجيل الدخول أو إغلاق النافذة';
+        } else if (error.code === 'auth/account-exists-with-different-credential') {
+          message = 'يوجد حساب بالفعل بهذا البريد الإلكتروني باستخدام طريقة تسجيل دخول مختلفة.';
+        }
+        showNotification('error', 'خطأ في تسجيل الدخول', message);
+      });
 
     // الدخول كضيف
     function continueAsGuest() { 
@@ -761,7 +768,7 @@
         guestBtn.disabled = false;
         
         showNotification('info', 'الدخول كضيف', 'جاري تحويلك إلى متجر مزار...', 1500);
-        setTimeout(() => window.location.href = 'store.html', 2000);
+        setTimeout(() => window.location.href = 'index.html', 2000);
       }, 1000);
     }
   </script>
