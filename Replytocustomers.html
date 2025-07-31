@@ -2,22 +2,20 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>الرد على الزبائن</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة الرد على رسائل الدعم الفني</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Firebase SDK imports -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script type="module">
+        // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, push, update, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getDatabase, ref, onValue, push, serverTimestamp, update, remove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js"; // تم إضافة هذا الاستيراد
 
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
         // Your web app's Firebase configuration
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
         const firebaseConfig = {
-            apiKey: "AIzaSyAG4EKrBB3iLEV2hsB8b08ShpSO6PXDnGjg", // Replace with your actual API key
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
             authDomain: "zio3-8ffdd.firebaseapp.com",
             databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
             projectId: "zio3-8ffdd",
@@ -29,593 +27,1239 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); 
         const db = getDatabase(app);
+        const analytics = getAnalytics(app); // تم إضافة هذا السطر لتهيئة Analytics
 
-        // Firebase Realtime Database references
-        const customerMessagesRef = dbRef(db, 'customerMessages');
-        const adminUsersRef = dbRef(db, `artifacts/${appId}/users`); // Reference to admin users to check isAdmin flag
+        // Global data store for the admin dashboard
+        const adminData = {
+            conversations: [], // جميع المحادثات المحملة
+            filteredConversations: [], // المحادثات بعد تطبيق فلتر البحث
+            selectedConversation: null, // المحادثة المحددة حالياً
+            messages: [] // رسائل المحادثة المحددة
+        };
 
-        let currentSelectedMessageId = null;
-        let isAdmin = false; // Flag to check if the current user is an admin
+        // --- Utility Functions (وظائف مساعدة عامة) ---
 
-        // Function to show notifications (reused from dashboard)
+        // Function to display temporary notifications to the user
         function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            if (!notification) return;
-
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
             notification.textContent = message;
-            notification.className = `notification ${type} show`;
+            document.body.appendChild(notification);
             
+            // Trigger reflow to ensure CSS transition plays
+            void notification.offsetWidth; 
+            notification.classList.add('show');
+            
+            // Hide and remove notification after a delay
             setTimeout(() => {
                 notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300); // Wait for transition to finish before removing
             }, 3000);
         }
 
-        // Function to format timestamp
-        function formatTimestamp(timestamp) {
+        // Helper function to format a timestamp into a time string (e.g., 03:30 PM)
+        function formatTime(timestamp) {
+            if (!timestamp) return '--:--';
             const date = new Date(timestamp);
-            return date.toLocaleString('ar-EG', {
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            return date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
         }
 
-        // Function to check if the current user is an admin
-        async function checkAdminStatus() {
-            if (!auth.currentUser) {
-                isAdmin = false;
-                return;
-            }
-            const adminSnapshot = await get(dbRef(db, `artifacts/${appId}/users/${auth.currentUser.uid}/isAdmin`));
-            isAdmin = adminSnapshot.exists() && adminSnapshot.val() === true;
-            console.log("Admin status:", isAdmin);
+        // Helper function to format a timestamp into a date string (e.g., 25 يوليو 2024)
+        function formatDate(timestamp) {
+            if (!timestamp) return '--/--/----';
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('ar-EG', { day: 'numeric', month: 'long', year: 'numeric' });
         }
 
-        // Function to render the list of messages
-        function renderMessageList(messages) {
-            const messageListDiv = document.getElementById('messageList');
-            messageListDiv.innerHTML = ''; // Clear existing list
+        // Helper function to truncate long text with an ellipsis
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
 
-            if (Object.keys(messages).length === 0) {
-                messageListDiv.innerHTML = '<p class="no-messages">لا توجد رسائل حالياً.</p>';
-                return;
+        // --- Main Application Logic (منطق التطبيق الرئيسي داخل DOMContentLoaded) ---
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- Confirmation Modal Logic (منطق نافذة التأكيد المنبثقة) ---
+            let confirmActionCallback = null;
+
+            function showConfirmationModal(message, callback) {
+                const modal = document.getElementById('confirmationModal');
+                const modalMessage = document.getElementById('confirmMessage');
+                modalMessage.textContent = message;
+                confirmActionCallback = callback;
+                modal.style.display = 'flex';
+                document.body.classList.add('modal-open');
             }
 
-            // Sort messages by last update time (newest first)
-            const sortedMessageIds = Object.keys(messages).sort((a, b) => {
-                const timeA = new Date(messages[a].lastUpdate || messages[a].createdAt).getTime();
-                const timeB = new Date(messages[b].lastUpdate || messages[b].createdAt).getTime();
-                return timeB - timeA;
-            });
+            function hideConfirmationModal() {
+                const modal = document.getElementById('confirmationModal');
+                modal.style.display = 'none';
+                document.body.classList.remove('modal-open');
+                confirmActionCallback = null;
+            }
 
-            sortedMessageIds.forEach(messageId => {
-                const message = messages[messageId];
-                const lastMessage = message.conversation[message.conversation.length - 1];
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message-item');
-                if (messageId === currentSelectedMessageId) {
-                    messageElement.classList.add('active');
+            function handleConfirm() {
+                if (confirmActionCallback) {
+                    confirmActionCallback(true);
                 }
-                if (message.status === 'resolved') {
-                    messageElement.classList.add('resolved');
-                }
+                hideConfirmationModal();
+            }
 
-                // Display sender (user or admin) and subject
-                messageElement.innerHTML = `
-                    <div class="message-header">
-                        <span class="message-sender">${message.subject || 'رسالة جديدة'}</span>
-                        <span class="message-time">${formatTimestamp(lastMessage.timestamp)}</span>
+            function handleCancel() {
+                if (confirmActionCallback) {
+                    confirmActionCallback(false);
+                }
+                hideConfirmationModal();
+            }
+
+            // Function to show conversation modal (primarily for mobile view)
+            function showConversationModal(conversation) {
+                // Update modal header content
+                document.getElementById('modalUserName').textContent = conversation.userName || `مستخدم ${conversation.userId.substring(0, 6)}`;
+                document.getElementById('modalUserStatus').textContent = conversation.isBlocked ? 'محظور' : (conversation.isOnline ? 'متصل الآن' : 'غير متصل');
+                document.getElementById('modalUserAvatar').textContent = conversation.userName ? conversation.userName.charAt(0) : '?';
+                document.getElementById('modalUserStatus').className = `status ${conversation.isBlocked ? 'blocked' : (conversation.isOnline ? 'online' : 'offline')}`;
+                
+                // Update block button in modal header
+                const modalBlockButton = document.getElementById('blockUserButtonModal');
+                modalBlockButton.innerHTML = conversation.isBlocked ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-ban"></i>';
+                modalBlockButton.title = conversation.isBlocked ? 'إلغاء حظر العميل' : 'حظر العميل';
+                modalBlockButton.onclick = () => toggleBlockUser(conversation.userId, conversation.isBlocked);
+                modalBlockButton.style.display = 'block'; // Ensure it's visible when modal is shown
+
+                // Display the modal and prevent body scrolling
+                document.getElementById('conversationModal').style.display = 'flex';
+                document.body.classList.add('modal-open');
+            }
+            
+            // Function to close the conversation modal
+            function closeModal() {
+                document.getElementById('conversationModal').style.display = 'none';
+                document.body.classList.remove('modal-open'); // Re-enable body scrolling
+            }
+
+            // --- Conversation List & Filtering (قائمة المحادثات والتصفية) ---
+
+            // Renders the list of conversations in the sidebar
+            function renderConversations() {
+                const conversationsList = document.getElementById('conversationsList');
+                conversationsList.innerHTML = ''; // مسح القائمة الحالية
+                
+                // عرض رسالة إذا لم توجد محادثات مطابقة للفلتر
+                if (adminData.filteredConversations.length === 0) {
+                    conversationsList.innerHTML = `
+                        <div class="no-conversations">
+                            <i class="fas fa-comments"></i>
+                            <p>لا توجد محادثات مطابقة للبحث</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // تكرار المحادثات المفلترة وإنشاء عناصر واجهة المستخدم
+                adminData.filteredConversations.forEach(conversation => {
+                    // عرض المحادثات التي لم يتم حذفها فقط
+                    if (conversation.deleted) return;
+
+                    const lastMessage = conversation.lastMessage || { text: 'بدون رسائل', timestamp: 0 };
+                    const isActive = adminData.selectedConversation && adminData.selectedConversation.userId === conversation.userId;
+                    const statusClass = conversation.isOnline ? 'online' : 'offline';
+                    
+                    const conversationEl = document.createElement('div');
+                    conversationEl.className = `conversation-item ${isActive ? 'active' : ''}`;
+                    conversationEl.setAttribute('data-user-id', conversation.userId);
+                    conversationEl.innerHTML = `
+                        <div class="conversation-header">
+                            <div class="user-info">
+                                <div class="user-avatar ${statusClass}">${conversation.userName ? conversation.userName.charAt(0) : '?'}</div>
+                                <div>
+                                    <div class="user-name">${conversation.userName || `مستخدم ${conversation.userId.substring(0, 6)}`}</div>
+                                    <div class="last-message-time">${formatTime(lastMessage.timestamp)}</div>
+                                </div>
+                            </div>
+                            <div class="message-count ${conversation.unread > 0 ? 'has-unread' : ''}">
+                                ${conversation.unread > 0 ? conversation.unread : ''}
+                            </div>
+                        </div>
+                        <div class="last-message">${truncateText(lastMessage.text, 30)}</div>
+                    `;
+                    
+                    // إضافة مستمع النقر لتحديد هذه المحادثة
+                    conversationEl.addEventListener('click', () => {
+                        selectConversation(conversation.userId);
+                    });
+                    
+                    conversationsList.appendChild(conversationEl);
+                });
+            }
+
+            // Filters the conversations based on the search term
+            function filterConversations(searchTerm) {
+                if (!searchTerm) {
+                    adminData.filteredConversations = [...adminData.conversations];
+                    renderConversations();
+                    return;
+                }
+                
+                const term = searchTerm.toLowerCase();
+                adminData.filteredConversations = adminData.conversations.filter(conversation => {
+                    // فلترة المحادثات المحذوفة من نتائج البحث أيضاً
+                    if (conversation.deleted) return false;
+
+                    const userName = conversation.userName ? userName.toLowerCase() : '';
+                    const lastMessage = conversation.lastMessage ? conversation.lastMessage.text.toLowerCase() : '';
+                    
+                    return userName.includes(term) || lastMessage.includes(term);
+                });
+                
+                renderConversations();
+            }
+
+            // Selects a specific conversation and updates the UI accordingly
+            function selectConversation(userId) {
+                const conversation = adminData.conversations.find(c => c.userId === userId);
+                if (!conversation || conversation.deleted) { // لا تحدد المحادثة إذا كانت محذوفة
+                    adminData.selectedConversation = null;
+                    renderEmptyMainContent(); // عرض حالة فارغة إذا كانت المحادثة محذوفة
+                    return;
+                }
+                
+                adminData.selectedConversation = conversation;
+                
+                document.querySelectorAll('.conversation-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                const selectedEl = document.querySelector(`.conversation-item[data-user-id="${userId}"]`);
+                if (selectedEl) {
+                    selectedEl.classList.add('active');
+                }
+                
+                // تحديث رأس المحادثة في منطقة المحتوى الرئيسية
+                document.getElementById('conversationUserName').textContent = conversation.userName || `مستخدم ${conversation.userId.substring(0, 6)}`;
+                
+                // تحديث الحالة وزر الحظر
+                const statusText = conversation.isBlocked ? 'محظور' : (conversation.isOnline ? 'متصل الآن' : 'غير متصل');
+                document.getElementById('conversationUserStatus').textContent = statusText;
+                document.getElementById('conversationUserStatus').className = `status ${conversation.isBlocked ? 'blocked' : (conversation.isOnline ? 'online' : 'offline')}`;
+                document.getElementById('conversationUserAvatar').textContent = conversation.userName ? conversation.userName.charAt(0) : '?';
+
+                const blockButton = document.getElementById('blockUserButton');
+                blockButton.innerHTML = conversation.isBlocked ? '<i class="fas fa-unlock"></i>' : '<i class="fas fa-ban"></i>';
+                blockButton.title = conversation.isBlocked ? 'إلغاء حظر العميل' : 'حظر العميل';
+                blockButton.onclick = () => toggleBlockUser(conversation.userId, conversation.isBlocked);
+                // جعل زر الحظر مرئياً عند تحديد محادثة
+                blockButton.style.display = 'block';
+                
+                // إظهار/إخفاء زر حذف المحادثة
+                const deleteConversationButton = document.getElementById('deleteConversationButton');
+                deleteConversationButton.style.display = 'block'; // دائماً أظهر زر الحذف للمحادثة المحددة
+                deleteConversationButton.onclick = () => deleteConversation(conversation.userId);
+
+                // إعادة تعيين عدد الرسائل غير المقروءة للمحادثة المحددة وإعادة عرض القائمة
+                conversation.unread = 0;
+                renderConversations();
+                
+                loadMessages(userId);
+                
+                // تمكين/تعطيل الإدخال بناءً على حالة الحظر
+                const adminMessageInput = document.getElementById('adminMessageInput');
+                const adminSendButton = document.getElementById('adminSendButton');
+                adminMessageInput.disabled = conversation.isBlocked;
+                adminSendButton.disabled = conversation.isBlocked;
+                adminMessageInput.placeholder = conversation.isBlocked ? 'لا يمكنك إرسال رسائل لعميل محظور.' : 'اكتب ردك هنا...';
+
+                // على الهاتف المحمول، أظهر المحادثة في نافذة منبثقة عند تحديد محادثة
+                if (window.innerWidth < 768) {
+                    showConversationModal(conversation);
+                }
+            }
+
+            // Renders the empty state for the main content area
+            function renderEmptyMainContent() {
+                document.getElementById('conversationUserName').textContent = 'اختر محادثة';
+                document.getElementById('conversationUserStatus').textContent = 'غير متصل';
+                document.getElementById('conversationUserStatus').className = 'status offline';
+                document.getElementById('conversationUserAvatar').textContent = '?';
+                document.getElementById('messagesContainer').innerHTML = `
+                    <div class="no-messages">
+                        <i class="fas fa-comment-alt"></i>
+                        <p>مرحباً بك في لوحة تحكم الدعم الفني</p>
+                        <p>اختر محادثة من القائمة الجانبية للبدء</p>
                     </div>
-                    <div class="message-preview">${lastMessage.message.substring(0, 50)}${lastMessage.message.length > 50 ? '...' : ''}</div>
-                    <div class="message-status status-${message.status}">${message.status === 'open' ? 'مفتوحة' : 'محلولة'}</div>
                 `;
-                messageElement.addEventListener('click', () => selectMessage(messageId, message));
-                messageListDiv.appendChild(messageElement);
-            });
-        }
-
-        // Function to select a message and display its conversation
-        function selectMessage(messageId, messageData) {
-            currentSelectedMessageId = messageId;
-            const conversationView = document.getElementById('conversationView');
-            const messageDetails = document.getElementById('messageDetails');
-            const replyForm = document.getElementById('replyForm');
-            const markResolvedBtn = document.getElementById('markResolvedBtn');
-
-            // Update active state in message list
-            document.querySelectorAll('.message-item').forEach(item => item.classList.remove('active'));
-            document.querySelector(`.message-item[data-message-id="${messageId}"]`)?.classList.add('active');
-
-            // Show conversation view and hide placeholder
-            document.getElementById('noMessageSelected').style.display = 'none';
-            conversationView.style.display = 'flex';
-
-            messageDetails.innerHTML = ''; // Clear previous conversation
-
-            // Display conversation messages
-            messageData.conversation.forEach(msg => {
-                const msgElement = document.createElement('div');
-                msgElement.classList.add('chat-bubble', msg.sender === 'user' ? 'user-bubble' : 'admin-bubble');
-                msgElement.innerHTML = `
-                    <p>${msg.message}</p>
-                    <span class="chat-timestamp">${formatTimestamp(msg.timestamp)}</span>
-                `;
-                messageDetails.appendChild(msgElement);
-            });
-
-            // Scroll to the bottom of the conversation
-            messageDetails.scrollTop = messageDetails.scrollHeight;
-
-            // Set up reply form and mark resolved button
-            document.getElementById('replyMessageId').value = messageId;
-            document.getElementById('replySubject').textContent = messageData.subject || 'رسالة جديدة';
-            document.getElementById('replyStatus').textContent = messageData.status === 'open' ? 'مفتوحة' : 'محلولة';
-            document.getElementById('replyStatus').className = `status-${messageData.status}`;
-
-            if (messageData.status === 'resolved') {
-                replyForm.style.display = 'none';
-                markResolvedBtn.style.display = 'none';
-                showNotification('هذه المحادثة محلولة ولا يمكن الرد عليها.', 'info');
-            } else {
-                replyForm.style.display = 'flex';
-                markResolvedBtn.style.display = 'block';
-            }
-        }
-
-        // Function to send a reply
-        async function sendReply() {
-            const messageId = document.getElementById('replyMessageId').value;
-            const replyContent = document.getElementById('replyContent').value.trim();
-
-            if (!replyContent) {
-                showNotification('الرجاء كتابة ردك.', 'error');
-                return;
-            }
-            if (!messageId) {
-                showNotification('لم يتم تحديد رسالة للرد عليها.', 'error');
-                return;
+                document.getElementById('adminMessageInput').disabled = true;
+                document.getElementById('adminSendButton').disabled = true;
+                document.getElementById('adminMessageInput').placeholder = 'اختر محادثة للبدء...';
+                // إخفاء أزرار الحظر والحذف عندما لا تكون هناك محادثة محددة
+                document.getElementById('blockUserButton').style.display = 'none';
+                document.getElementById('deleteConversationButton').style.display = 'none';
+                // Also hide the modal block button if no conversation is selected
+                document.getElementById('blockUserButtonModal').style.display = 'none'; 
+                document.querySelectorAll('.conversation-item').forEach(el => {
+                    el.classList.remove('active');
+                });
+                adminData.selectedConversation = null; // مسح المحادثة المحددة
             }
 
-            showNotification('جاري إرسال الرد...', 'info');
+            // --- Message Loading & Rendering (تحميل وعرض الرسائل) ---
 
-            try {
-                const messageRef = dbRef(db, `customerMessages/${messageId}`);
-                const messageSnapshot = await get(messageRef);
-                const messageData = messageSnapshot.val();
+            // Loads messages for a given userId from Firebase and updates adminData.messages
+            function loadMessages(userId) {
+                const messagesRef = ref(db, `supportChats/${userId}/messages`);
+                
+                onValue(messagesRef, (snapshot) => {
+                    adminData.messages = []; 
+                    if (snapshot.exists()) {
+                        snapshot.forEach((childSnapshot) => {
+                            const message = childSnapshot.val();
+                            adminData.messages.push({
+                                id: childSnapshot.key,
+                                text: message.text,
+                                senderId: message.senderId,
+                                senderType: message.senderType || 'user', 
+                                timestamp: message.timestamp,
+                                deleted: message.deleted || false // التحقق من علامة الحذف
+                            });
+                        });
+                        
+                        adminData.messages.sort((a, b) => a.timestamp - b.timestamp);
+                    }
+                    
+                    renderMessages(); 
+                });
+            }
 
-                if (!messageData) {
-                    showNotification('الرسالة غير موجودة.', 'error');
+            // Renders messages to both the main content area and the modal message container
+            function renderMessages() {
+                const containers = [
+                    document.getElementById('messagesContainer'),
+                    document.getElementById('messagesContainerModal')
+                ];
+                
+                containers.forEach(container => {
+                    if (!container) return; 
+                    
+                    container.innerHTML = ''; 
+                    
+                    if (adminData.messages.length === 0) {
+                        container.innerHTML = `
+                            <div class="no-messages">
+                                <i class="fas fa-comment-alt"></i>
+                                <p>لا توجد رسائل بعد</p>
+                                <p>ابدأ المحادثة مع المستخدم الآن</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const groupedMessages = {};
+                    adminData.messages.forEach(msg => {
+                        const date = formatDate(msg.timestamp);
+                        if (!groupedMessages[date]) {
+                            groupedMessages[date] = [];
+                        }
+                        groupedMessages[date].push(msg);
+                    });
+                    
+                    for (const date in groupedMessages) {
+                        container.innerHTML += `
+                            <div class="date-divider">
+                                <span>${date}</span>
+                            </div>
+                        `;
+                        
+                        groupedMessages[date].forEach(msg => {
+                            const isAdmin = msg.senderType === 'admin';
+                            const messageClass = isAdmin ? 'admin-message' : 'user-message';
+                            const messageText = msg.deleted ? '<i class="fas fa-trash-alt"></i> تم حذف الرسالة' : msg.text;
+                            const deletedClass = msg.deleted ? 'deleted-message' : '';
+                            
+                            container.innerHTML += `
+                                <div class="message ${messageClass} ${deletedClass}" data-message-id="${msg.id}" data-sender-type="${msg.senderType}">
+                                    <div class="message-content">
+                                        ${messageText}
+                                        ${!msg.deleted ? `<button class="delete-message-btn" data-message-id="${msg.id}" title="حذف الرسالة"><i class="fas fa-times"></i></button>` : ''}
+                                    </div>
+                                    <div class="message-time">${formatTime(msg.timestamp)}</div>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    // Add event listeners for delete buttons after rendering
+                    container.querySelectorAll('.delete-message-btn').forEach(button => {
+                        button.addEventListener('click', (event) => {
+                            const messageId = event.currentTarget.dataset.messageId;
+                            const senderType = event.currentTarget.closest('.message').dataset.senderType;
+                            deleteMessage(adminData.selectedConversation.userId, messageId, senderType);
+                        });
+                    });
+
+                    container.scrollTop = container.scrollHeight;
+                });
+            }
+
+            // Sends a message from the admin to the currently selected user
+            async function sendMessage(isModal = false) {
+                const messageInput = isModal 
+                    ? document.getElementById('adminMessageInputModal') 
+                    : document.getElementById('adminMessageInput');
+                    
+                const sendBtn = isModal 
+                    ? document.getElementById('adminSendButtonModal') 
+                    : document.getElementById('adminSendButton');
+                    
+                const messageText = messageInput.value.trim();
+
+                if (!messageText) {
+                    showNotification('الرجاء كتابة رسالة.', 'warning');
                     return;
                 }
 
-                const newConversationEntry = {
-                    sender: 'admin',
-                    timestamp: new Date().toISOString(),
-                    message: replyContent
-                };
-
-                const updatedConversation = [...messageData.conversation, newConversationEntry];
+                if (!adminData.selectedConversation) {
+                    showNotification('الرجاء تحديد محادثة أولاً.', 'warning');
+                    return;
+                }
                 
-                await update(messageRef, {
-                    conversation: updatedConversation,
-                    lastUpdate: newConversationEntry.timestamp,
-                    status: 'open' // Ensure status is open if admin replies
+                // Prevent sending if the user is blocked
+                if (adminData.selectedConversation.isBlocked) {
+                    showNotification('لا يمكنك إرسال رسائل لعميل محظور.', 'error');
+                    return;
+                }
+
+                const originalIcon = sendBtn.innerHTML;
+                sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                sendBtn.disabled = true;
+                messageInput.disabled = true;
+
+                try {
+                    const newMessage = {
+                        text: messageText,
+                        senderType: 'admin',
+                        timestamp: serverTimestamp(),
+                        deleted: false // التأكد من أن الرسائل الجديدة لا تحمل علامة الحذف
+                    };
+                    
+                    const messagesRef = ref(db, `supportChats/${adminData.selectedConversation.userId}/messages`);
+                    await push(messagesRef, newMessage);
+                    
+                    // تحديث آخر رسالة في المحادثة للترتيب
+                    const conversationRef = ref(db, `supportChats/${adminData.selectedConversation.userId}`);
+                    await update(conversationRef, {
+                        lastMessage: {
+                            text: messageText,
+                            timestamp: Date.now() // استخدام ختم الوقت من العميل لتحديث واجهة المستخدم فوراً
+                        }
+                    });
+
+                    messageInput.value = '';
+                    showNotification('تم إرسال الرد بنجاح!', 'success');
+                } catch (error) {
+                    console.error("Error sending message:", error);
+                    showNotification('حدث خطأ أثناء إرسال الرد. يرجى المحاولة مرة أخرى.', 'error');
+                } finally {
+                    sendBtn.innerHTML = originalIcon;
+                    sendBtn.disabled = false;
+                    messageInput.disabled = false;
+                    messageInput.focus();
+                }
+            }
+
+            // --- Firebase Data Loading & Management (تحميل وإدارة بيانات Firebase) ---
+
+            // Loads all conversations from Firebase and populates adminData.conversations
+            function loadConversations() {
+                const conversationsRef = ref(db, 'supportChats');
+                
+                onValue(conversationsRef, (snapshot) => {
+                    adminData.conversations = []; 
+                    if (!snapshot.exists()) {
+                        adminData.filteredConversations = [];
+                        renderConversations();
+                        renderEmptyMainContent(); // التأكد من أن المحتوى الرئيسي فارغ إذا لم توجد محادثات
+                        return;
+                    }
+                    
+                    snapshot.forEach((userSnapshot) => {
+                        const userId = userSnapshot.key;
+                        const userData = userSnapshot.val();
+                        
+                        let lastMessage = null;
+                        let unread = 0;
+                        
+                        if (userData.messages) {
+                            const messages = Object.values(userData.messages);
+                            if (messages.length > 0) {
+                                lastMessage = messages.reduce((latest, current) => 
+                                    current.timestamp > (latest?.timestamp || 0) ? current : latest, null);
+                                
+                                unread = messages.filter(msg => 
+                                    msg.senderType === 'user' && !msg.readByAdmin).length;
+                            }
+                        }
+                        
+                        // محاكاة حالة الاتصال بالإنترنت لأغراض العرض (استبدلها بالحالة الفعلية إذا كانت متاحة)
+                        const isOnline = Math.random() > 0.3;
+                        
+                        adminData.conversations.push({
+                            userId: userId,
+                            userName: userData.userName || `مستخدم ${userId.substring(0, 6)}`,
+                            lastMessage: lastMessage,
+                            unread: unread,
+                            createdAt: userData.createdAt || Date.now(),
+                            isOnline: isOnline,
+                            isBlocked: userData.isBlocked || false, // الحصول على حالة الحظر
+                            deleted: userData.deleted || false // الحصول على حالة الحذف
+                        });
+                    });
+                    
+                    // تصفية المحادثات التي تم وضع علامة عليها كمحذوفة قبل الفرز والعرض
+                    adminData.conversations = adminData.conversations.filter(c => !c.deleted);
+
+                    // فرز المحادثات حسب ختم الوقت لآخر رسالة (الأحدث أولاً)
+                    adminData.conversations.sort((a, b) => {
+                        const aTime = a.lastMessage?.timestamp || a.createdAt;
+                        const bTime = b.lastMessage?.timestamp || b.createdAt; 
+                        return bTime - aTime; // الفرز بترتيب تنازلي (الأحدث أولاً)
+                    });
+                    
+                    adminData.filteredConversations = [...adminData.conversations];
+                    renderConversations(); 
+
+                    // إذا كانت المحادثة المحددة حالياً قد تم حذفها، قم بإلغاء تحديدها
+                    if (adminData.selectedConversation && adminData.selectedConversation.deleted) {
+                        renderEmptyMainContent();
+                    } else if (!adminData.selectedConversation && adminData.conversations.length === 0) {
+                        renderEmptyMainContent();
+                    } else if (adminData.selectedConversation) {
+                        // إعادة تحديد المحادثة لتحديث واجهة المستخدم إذا كانت لا تزال صالحة
+                        selectConversation(adminData.selectedConversation.userId);
+                    } else {
+                        // إذا لم يتم تحديد أي محادثة وهناك محادثات، أظهر المحتوى الرئيسي فارغاً
+                        renderEmptyMainContent();
+                    }
                 });
-
-                document.getElementById('replyContent').value = ''; // Clear reply input
-                showNotification('تم إرسال الرد بنجاح!', 'success');
-
-                // Re-select message to update conversation view
-                selectMessage(messageId, { ...messageData, conversation: updatedConversation, lastUpdate: newConversationEntry.timestamp, status: 'open' });
-
-            } catch (error) {
-                console.error("Error sending reply:", error);
-                showNotification('حدث خطأ أثناء إرسال الرد.', 'error');
-            }
-        }
-
-        // Function to mark a message as resolved
-        async function markAsResolved() {
-            const messageId = document.getElementById('replyMessageId').value;
-
-            if (!messageId) {
-                showNotification('لم يتم تحديد رسالة لتحديد حالتها.', 'error');
-                return;
             }
 
-            showNotification('جاري تحديث حالة الرسالة...', 'info');
+            // --- New Functionalities: Delete Message, Delete Conversation, Block User (الوظائف الجديدة: حذف الرسائل، حذف المحادثات، حظر المستخدمين) ---
 
-            try {
-                const messageRef = dbRef(db, `customerMessages/${messageId}`);
-                await update(messageRef, {
-                    status: 'resolved',
-                    lastUpdate: new Date().toISOString()
+            async function deleteMessage(userId, messageId, senderType) {
+                showConfirmationModal(`هل أنت متأكد أنك تريد حذف هذه الرسالة؟`, async (confirmed) => {
+                    if (confirmed) {
+                        try {
+                            const messageRef = ref(db, `supportChats/${userId}/messages/${messageId}`);
+                            // حذف ناعم عن طريق تعيين علامة 'deleted'
+                            await update(messageRef, { deleted: true });
+                            showNotification('تم حذف الرسالة بنجاح.', 'success');
+                        } catch (error) {
+                            console.error("Error deleting message:", error);
+                            showNotification('حدث خطأ أثناء حذف الرسالة. يرجى المحاولة مرة أخرى.', 'error');
+                        }
+                    }
                 });
-
-                showNotification('تم تحديد الرسالة كمحلولة بنجاح!', 'success');
-                // Re-fetch all messages to update the list and conversation view
-                // This will be handled by the onValue listener
-            } catch (error) {
-                console.error("Error marking as resolved:", error);
-                showNotification('حدث خطأ أثناء تحديث حالة الرسالة.', 'error');
             }
-        }
 
-        // Main listener for customer messages
-        onValue(customerMessagesRef, (snapshot) => {
-            const messages = snapshot.val() || {};
-            renderMessageList(messages);
-
-            // If a message is currently selected, re-render its conversation view
-            if (currentSelectedMessageId && messages[currentSelectedMessageId]) {
-                selectMessage(currentSelectedMessageId, messages[currentSelectedMessageId]);
-            } else if (currentSelectedMessageId && !messages[currentSelectedMessageId]) {
-                // If the selected message was deleted/resolved, clear selection
-                currentSelectedMessageId = null;
-                document.getElementById('noMessageSelected').style.display = 'block';
-                document.getElementById('conversationView').style.display = 'none';
+            async function deleteConversation(userId) {
+                showConfirmationModal(`هل أنت متأكد أنك تريد حذف هذه المحادثة بالكامل؟ هذا الإجراء لا يمكن التراجع عنه.`, async (confirmed) => {
+                    if (confirmed) {
+                        try {
+                            const conversationRef = ref(db, `supportChats/${userId}`);
+                            // حذف ناعم للمحادثة بأكملها
+                            await update(conversationRef, { deleted: true });
+                            showNotification('تم حذف المحادثة بنجاح.', 'success');
+                            renderEmptyMainContent(); // مسح المحتوى الرئيسي بعد الحذف
+                        } catch (error) {
+                            console.error("Error deleting conversation:", error);
+                            showNotification('حدث خطأ أثناء حذف المحادثة. يرجى المحاولة مرة أخرى.', 'error');
+                        }
+                    }
+                });
             }
-        });
 
-        // Event listeners on DOMContentLoaded
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Check admin status on page load (important for security rules)
-            await checkAdminStatus();
+            async function toggleBlockUser(userId, isCurrentlyBlocked) {
+                const action = isCurrentlyBlocked ? 'إلغاء حظر' : 'حظر';
+                showConfirmationModal(`هل أنت متأكد أنك تريد ${action} هذا العميل؟`, async (confirmed) => {
+                    if (confirmed) {
+                        try {
+                            const conversationRef = ref(db, `supportChats/${userId}`);
+                            await update(conversationRef, { isBlocked: !isCurrentlyBlocked });
+                            showNotification(`تم ${action} العميل بنجاح.`, 'success');
+                        } catch (error) {
+                            console.error("Error toggling block status:", error);
+                            showNotification(`حدث خطأ أثناء ${action} العميل. يرجى المحاولة مرة أخرى.`, 'error');
+                        }
+                    }
+                });
+            }
 
-            document.getElementById('sendReplyBtn').addEventListener('click', sendReply);
-            document.getElementById('markResolvedBtn').addEventListener('click', markAsResolved);
-        });
+            // --- Initialization of Event Listeners (تهيئة مستمعي الأحداث) ---
+            
+            // Start loading conversations from Firebase
+            loadConversations();
+            renderEmptyMainContent(); // التأكد من أن المحتوى الرئيسي فارغ عند التحميل الأولي
+
+            // Event listeners for sending messages
+            document.getElementById('adminSendButton').addEventListener('click', () => sendMessage(false));
+            document.getElementById('adminSendButtonModal').addEventListener('click', () => sendMessage(true));
+            
+            // Event listeners for 'Enter' key press in message input fields
+            document.getElementById('adminMessageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); 
+                    sendMessage(false);
+                }
+            });
+            
+            document.getElementById('adminMessageInputModal').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); 
+                    sendMessage(true);
+                }
+            });
+            
+            // Event listener for search input to filter conversations
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                filterConversations(e.target.value);
+            });
+            
+            // Listen for Firebase connection status
+            const connectedRef = ref(db, ".info/connected");
+            onValue(connectedRef, (snap) => {
+                const connectionStatusEl = document.querySelector('.connection-status');
+                if (snap.val() === true) {
+                    connectionStatusEl.innerHTML = '<i class="fas fa-circle" style="color: #2ECC71; margin-left: 5px;"></i> متصل بقاعدة البيانات';
+                } else {
+                    connectionStatusEl.innerHTML = '<i class="fas fa-circle" style="color: #E74C3C; margin-left: 5px;"></i> غير متصل بقاعدة البيانات';
+                }
+            });
+            
+            // Modal close buttons
+            document.getElementById('closeModal').addEventListener('click', closeModal);
+            document.getElementById('confirmationModalCancel').addEventListener('click', handleCancel);
+            document.getElementById('confirmationModalConfirm').addEventListener('click', handleConfirm);
+            
+            // Close modals when clicking outside their content
+            document.getElementById('conversationModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('conversationModal')) {
+                    closeModal();
+                }
+            });
+            document.getElementById('confirmationModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('confirmationModal')) {
+                    hideConfirmationModal();
+                }
+            });
+        }); // End of DOMContentLoaded
     </script>
     <style>
+        /* Base styles and variables */
         :root {
             --color-primary-dark-blue: #1A237E;
             --color-secondary-gold: #FFD700;
-            --color-admin-bg: #F0F2F5;
-            --color-admin-card-bg: #FFFFFF;
-            --color-admin-text: #343A40;
-            --color-admin-border: #E0E0E0;
+            --color-background-light: #f0f2f5;
+            --color-text-dark: #212121;
+            --color-border-medium-blue: #d0d0d0;
+            --color-admin-message: #e3f2fd;
+            --color-user-message: #f5f5f5;
+            --color-unread: #f44336;
             --primary: var(--color-primary-dark-blue);
             --secondary: var(--color-secondary-gold);
             --accent: var(--color-secondary-gold);
-            --light: var(--color-admin-bg);
-            --dark: var(--color-admin-text);
-            --success: #28A745;
+            --light: var(--color-background-light);
+            --dark: var(--color-text-dark);
+            --success: #2ECC71;
             --warning: #FFC107;
-            --error: #DC3545;
-            --info: #17A2B8;
-            --border: #DEE2E6;
-            --shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.05);
-            --radius: 0.8rem;
+            --error: #E74C3C;
+            --border: var(--color-border-medium-blue);
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
             --transition: all 0.2s ease-in-out;
-            font-family: 'Cairo', sans-serif;
-            font-size: 16px;
-            direction: rtl;
+            font-size: 14px;
         }
-
+        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
-
+        
         body {
             background-color: var(--light);
             color: var(--dark);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 1rem;
+            direction: rtl; 
+            font-family: 'Cairo', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        
+        body.modal-open {
+            overflow: hidden; /* Prevent scrolling when modal is open */
         }
 
-        .header-bar {
-            width: 100%;
-            max-width: 900px; /* Wider for message list */
-            background-color: var(--primary);
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--color-primary-dark-blue), #283593);
             color: white;
-            padding: 0.8rem 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 1.5rem;
-        }
-
-        .header-bar .back-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.4rem;
-            cursor: pointer;
-            padding: 0.5rem;
-            transition: transform 0.2s ease-in-out;
-        }
-        .header-bar .back-btn:hover {
-            transform: translateX(5px);
-        }
-
-        .header-bar .page-title {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--accent);
-        }
-
-        .messages-container {
-            display: flex;
-            flex-direction: column; /* Stack vertically on mobile */
-            width: 100%;
-            max-width: 900px;
-            background-color: var(--color-admin-card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            overflow: hidden; /* For rounded corners */
-        }
-
-        .message-list {
-            flex: 1;
-            padding: 1rem;
-            border-bottom: 1px solid var(--border); /* Separator on mobile */
-            max-height: 400px; /* Limit height for message list on mobile */
-            overflow-y: auto;
-        }
-
-        .message-item {
-            padding: 0.8rem 1rem;
-            border-bottom: 1px solid #eee;
-            cursor: pointer;
-            transition: background-color 0.2s ease-in-out;
-        }
-
-        .message-item:last-child {
-            border-bottom: none;
-        }
-
-        .message-item:hover {
-            background-color: #f8f8f8;
-        }
-
-        .message-item.active {
-            background-color: var(--light);
-            border-right: 4px solid var(--primary); /* Highlight active message */
-            padding-right: calc(1rem - 4px); /* Adjust padding for border */
-        }
-
-        .message-item.resolved {
-            opacity: 0.7;
-            background-color: #f0f0f0;
-        }
-
-        .message-header {
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 0.3rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
         }
 
-        .message-sender {
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%; 
+            justify-content: center; 
+        }
+
+        .logo-container i {
+            font-size: 1.5rem;
+            color: var(--secondary);
+        }
+
+        .logo-container h1 {
+            font-size: 1.3rem;
             font-weight: 700;
-            color: var(--primary);
-            font-size: 1rem;
         }
 
-        .message-time {
-            font-size: 0.8rem;
-            color: #888;
-        }
-
-        .message-preview {
+        .connection-status {
+            display: flex;
+            align-items: center;
             font-size: 0.9rem;
-            color: #555;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            gap: 5px;
         }
 
-        .message-status {
-            font-size: 0.75rem;
-            padding: 0.2rem 0.5rem;
-            border-radius: 0.5rem;
-            margin-top: 0.5rem;
-            display: inline-block;
-            font-weight: 600;
+        .connection-status i {
+            font-size: 0.8rem;
+        }
+        
+        /* Admin Container */
+        .admin-container {
+            display: flex;
+            min-height: calc(100vh - 65px); /* Subtract the header height */
+            padding-top: 65px; /* Offset for fixed header */
+            flex: 1; /* Take available space */
         }
 
-        .status-open {
-            background-color: var(--warning);
-            color: white;
-        }
-
-        .status-resolved {
-            background-color: var(--success);
-            color: white;
-        }
-
-        .no-messages {
-            text-align: center;
-            color: #6C757D;
-            padding: 1.5rem;
-            font-size: 1rem;
-        }
-
-        .conversation-area {
-            flex: 2;
-            padding: 1rem;
+        /* Sidebar Styles */
+        .sidebar {
+            width: 320px;
+            background-color: white;
+            border-left: 1px solid var(--border);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            height: 100%; /* Take full height of parent flex container */
-            min-height: 300px; /* Minimum height for conversation area */
+            height: calc(100vh - 65px); /* Full height minus header */
+            transition: transform 0.3s ease;
+            z-index: 900;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--color-primary-dark-blue), #283593);
+            color: white;
+            text-align: center;
+            position: relative;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.3rem;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+        }
+
+        .conversations-search {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px 10px 40px; 
+            border: 1px solid var(--border);
+            border-radius: 25px;
+            font-size: 0.9rem;
+            background-color: #f9f9f9;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 30px; 
+            top: 50%;
+            transform: translateY(-50%);
+            color: #777;
+        }
+
+        .conversations-list {
+            flex-grow: 1;
+            overflow-y: scroll; 
+        }
+
+        .conversation-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .conversation-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .conversation-item.active {
+            background-color: var(--light);
+            border-right: 3px solid var(--accent); 
         }
 
         .conversation-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-bottom: 0.8rem;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 1rem;
+            margin-bottom: 8px;
         }
 
-        .conversation-header h3 {
-            font-size: 1.2rem;
-            color: var(--primary);
-            margin: 0;
-        }
-
-        .conversation-header .status {
-            font-size: 0.9rem;
-            font-weight: 600;
-            padding: 0.3rem 0.7rem;
-            border-radius: 0.5rem;
-        }
-
-        .message-details {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding-right: 0.5rem; /* For scrollbar */
-            margin-bottom: 1rem;
+        .user-info {
             display: flex;
-            flex-direction: column;
-            gap: 0.8rem;
+            align-items: center;
+            gap: 10px;
         }
 
-        .chat-bubble {
-            max-width: 80%;
-            padding: 0.7rem 1rem;
-            border-radius: var(--radius);
-            font-size: 0.9rem;
-            line-height: 1.5;
-            word-wrap: break-word; /* Ensure long words wrap */
-        }
-
-        .user-bubble {
-            background-color: #E0F2F7; /* Light blue */
-            color: #333;
-            align-self: flex-start; /* Align to left (user) */
-        }
-
-        .admin-bubble {
+        .user-avatar {
+            width: 40px;
+            height: 40px;
             background-color: var(--primary);
             color: white;
-            align-self: flex-end; /* Align to right (admin) */
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            position: relative;
         }
 
-        .chat-timestamp {
+        .user-avatar.online::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            background-color: var(--success);
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .user-avatar.offline::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            background-color: #bbb;
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        .user-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .last-message-time {
+            font-size: 0.75rem;
+            color: #777;
+            margin-top: 3px;
+        }
+
+        .message-count {
+            width: 22px;
+            height: 22px;
+            background-color: #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 0.7rem;
-            color: #888;
-            display: block;
-            margin-top: 0.3rem;
-            text-align: end;
-        }
-        .admin-bubble .chat-timestamp {
-            color: rgba(255, 255, 255, 0.7);
+            font-weight: bold;
         }
 
-        .reply-form {
+        .message-count.has-unread {
+            background-color: var(--color-unread);
+            color: white;
+        }
+
+        .last-message {
+            font-size: 0.85rem;
+            color: #555;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding-right: 10px;
+        }
+
+        .no-conversations {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+        }
+
+        .no-conversations i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            gap: 0.8rem;
-            padding-top: 1rem;
+            min-height: 100%; 
+            background-color: #f8f9fa;
+        }
+
+        .conversation-header-bar {
+            padding: 15px 20px;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .conversation-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .conversation-user-avatar {
+            width: 45px;
+            height: 45px;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+        }
+
+        .conversation-user-details {
+            line-height: 1.4;
+        }
+
+        .conversation-user-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status.online::before {
+            background-color: var(--success);
+        }
+
+        .status.offline::before {
+            background-color: #bbb;
+        }
+        .status.blocked::before { /* New style for blocked status */
+            background-color: var(--error);
+        }
+
+
+        .conversation-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-button {
+            background: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.1rem;
+            color: #555;
+            transition: var(--transition);
+        }
+
+        .action-button:hover {
+            background-color: #f0f0f0;
+            color: var(--primary);
+        }
+
+        /* Messages Area */
+        .messages-area {
+            flex-grow: 1; 
+            min-height: 0; 
+            padding: 20px;
+            background-color: #f8f9fa;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 100%; 
+        }
+
+        .no-messages {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .no-messages i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.3;
+        }
+
+        .no-messages p {
+            margin: 5px 0;
+        }
+
+        .date-divider {
+            text-align: center;
+            margin: 15px 0;
+            position: relative;
+        }
+
+        .date-divider span {
+            background-color: #e0e0e0;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: #555;
+            position: relative;
+            z-index: 1;
+        }
+
+        .date-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #ddd;
+            z-index: 0;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 15px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user-message {
+            background-color: var(--color-user-message);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .admin-message {
+            background-color: var(--color-admin-message);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message-content {
+            word-wrap: break-word;
+            line-height: 1.4;
+            position: relative; /* Needed for delete button positioning */
+        }
+
+        .message-time {
+            font-size: 0.7rem;
+            color: #777;
+            margin-top: 5px;
+            text-align: left;
+        }
+
+        .admin-message .message-time {
+            text-align: right;
+        }
+        
+        /* Delete message button */
+        .delete-message-btn {
+            background: none;
+            border: none;
+            color: #999;
+            font-size: 0.9rem;
+            cursor: pointer;
+            position: absolute;
+            top: 5px; /* Adjust as needed */
+            left: 5px; /* Adjust as needed */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.2s ease;
+            padding: 5px;
+            border-radius: 50%;
+        }
+
+        .message:hover .delete-message-btn {
+            opacity: 1; /* Show on message hover */
+        }
+
+        .delete-message-btn:hover {
+            color: var(--error);
+            background-color: rgba(255, 0, 0, 0.1);
+        }
+
+        .deleted-message {
+            font-style: italic;
+            color: #888;
+            background-color: #e0e0e0 !important; /* Override message background */
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        .deleted-message .message-time {
+            text-align: center;
+        }
+
+
+        /* Message Input Area */
+        .message-input-area {
+            padding: 15px;
+            background-color: white;
             border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
         }
 
-        .reply-form textarea {
-            width: 100%;
-            padding: 0.8rem;
+        .admin-message-input {
+            flex-grow: 1;
+            padding: 12px 18px;
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            font-family: 'Cairo', sans-serif;
+            border-radius: 25px;
             font-size: 0.95rem;
-            min-height: 80px;
-            resize: vertical;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            transition: var(--transition);
         }
 
-        .reply-form textarea:focus {
+        .admin-message-input:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
         }
 
-        .reply-actions {
-            display: flex;
-            gap: 0.8rem;
-            flex-wrap: wrap;
-            justify-content: flex-end; /* Align buttons to the right */
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
+        .admin-send-button {
+            background-color: var(--accent);
+            color: var(--dark);
             border: none;
-            padding: 0.8rem 1.2rem;
-            border-radius: var(--radius);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
             cursor: pointer;
-            font-weight: 700;
-            font-size: 0.9rem;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            flex-grow: 1; /* Allow buttons to grow */
-            min-width: 120px; /* Minimum width for buttons */
-        }
-        .btn:hover {
-            background-color: #151B6B;
-            transform: translateY(-2px);
-        }
-        .btn-success { background-color: var(--success); }
-        .btn-success:hover {
-            background-color: #218838;
-        }
-        .btn-secondary {
-            background-color: #6C757D;
-        }
-        .btn-secondary:hover {
-            background-color: #5A6268;
-        }
-
-        .no-message-selected {
-            text-align: center;
-            padding: 2rem;
-            color: #6C757D;
             font-size: 1.1rem;
+            transition: var(--transition);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
-        }
-        .no-message-selected i {
-            font-size: 3rem;
-            color: #ccc;
-            margin-bottom: 1rem;
+            flex-shrink: 0;
         }
 
-        /* Notification Styles (reused from dashboard) */
+        .admin-send-button:hover:not(:disabled) {
+            background-color: #DAA520;
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+        }
+
+        .admin-send-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Notification */
         .notification {
             position: fixed;
-            top: 20px; /* Position from top */
+            top: 70px;
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
             color: white;
             padding: 12px 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
             opacity: 0;
             transition: transform 0.3s ease-out, opacity 0.3s ease-out;
             z-index: 2000;
             font-weight: bold;
             font-size: 0.9rem;
-            min-width: 80%;
-            max-width: 90%;
+            min-width: 200px;
             text-align: center;
         }
 
@@ -624,100 +1268,428 @@
             opacity: 1;
         }
 
-        .notification.info { background-color: var(--info); }
+        .notification.info { background-color: var(--primary); }
         .notification.warning { background-color: var(--warning); }
         .notification.error { background-color: var(--error); }
 
-        .admin-footer {
-            background-color: var(--primary);
-            color: white;
-            padding: 0.8rem;
-            text-align: center;
-            font-size: 0.8rem;
-            margin-top: auto; /* Push footer to the bottom */
+        /* Modal (for mobile conversation view) */
+        #conversationModal {
+            display: none; 
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 3000;
+            justify-content: center;
+            align-items: center;
+            padding: 0; 
         }
 
-        /* Desktop/Tablet Layout */
-        @media (min-width: 768px) {
-            .messages-container {
-                flex-direction: row; /* Side-by-side on larger screens */
-                height: 70vh; /* Fixed height for better experience */
+        .modal-content {
+            background-color: white;
+            width: 100%;
+            max-width: 800px; 
+            border-radius: 0; 
+            display: flex;
+            flex-direction: column;
+            max-height: 100vh; 
+            height: 100%; 
+            box-shadow: none; 
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, var(--color-primary-dark-blue), #283593);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top-left-radius: 0; 
+            border-top-right-radius: 0; 
+        }
+
+        .modal-header .conversation-user-info {
+            color: white;
+        }
+
+        .modal-header .conversation-user-avatar {
+            background-color: white;
+            color: var(--primary);
+        }
+
+        .modal-header .status {
+            color: rgba(255,255,255,0.9);
+        }
+
+        .modal-header .action-button {
+            color: white;
+            background: rgba(255,255,255,0.2);
+        }
+
+        .modal-header .action-button:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .modal-body {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+        }
+
+        .modal-footer {
+            padding: 15px;
+            background-color: white;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Confirmation Modal */
+        #confirmationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 4000; /* Higher than other modals */
+        }
+
+        .confirmation-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+        }
+
+        .confirmation-content h3 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: var(--dark);
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .confirmation-buttons button {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: var(--transition);
+        }
+
+        #confirmationModalConfirm {
+            background-color: var(--error);
+            color: white;
+        }
+
+        #confirmationModalConfirm:hover {
+            background-color: #c0392b;
+        }
+
+        #confirmationModalCancel {
+            background-color: #ccc;
+            color: var(--dark);
+        }
+
+        #confirmationModalCancel:hover {
+            background-color: #bbb;
+        }
+
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 280px;
+            }
+        }
+
+        /* Mobile specific styles */
+        @media (max-width: 768px) {
+            .app-header {
+                padding: 12px 15px;
+            }
+            
+            .logo-container h1 {
+                font-size: 1.1rem;
+            }
+            
+            .connection-status {
+                font-size: 0.8rem;
+            }
+            
+            /* Hide toggle button as sidebar is always visible */
+            #toggleSidebar {
+                display: none; 
             }
 
-            .message-list {
-                flex: 1; /* Takes 1/3 of the width */
-                min-width: 250px;
-                max-width: 350px;
-                border-bottom: none;
-                border-left: 1px solid var(--border); /* Vertical separator */
-                max-height: none; /* Remove height limit */
+            /* Adjust header logo container to center content */
+            .app-header .logo-container {
+                justify-content: center;
+                width: 100%;
+            }
+            
+            .admin-container {
+                flex-direction: column; 
+            }
+            
+            .sidebar {
+                position: relative; 
+                width: 100%; 
+                height: calc(100vh - 65px); 
+                box-shadow: none; 
+                border-left: none; 
+                display: flex; 
+                transform: translateX(0); 
+            }
+            
+            .conversations-list {
+                max-height: none; 
+            }
+            
+            .main-content {
+                display: none; 
+            }
+            
+            /* Modal styles for mobile */
+            #conversationModal {
+                /* display property controlled by JS */
+            }
+            
+            .modal-content {
+                border-radius: 0; 
             }
 
-            .conversation-area {
-                flex: 2; /* Takes 2/3 of the width */
-                min-height: auto; /* Remove minimum height */
+            /* Remove sidebar overlay as it's not needed with always visible sidebar */
+            .sidebar-overlay {
+                display: none !important;
             }
+        }
 
-            .btn {
-                width: auto; /* Auto width on desktop */
-                flex-grow: 0; /* No growing on desktop */
+        /* Ensure desktop layout is maintained */
+        @media (min-width: 769px) {
+            #conversationModal {
+                display: none !important; 
             }
+            .main-content {
+                display: flex !important; 
+            }
+            .sidebar {
+                position: relative; 
+                left: 0;
+                box-shadow: 2px 0 10px rgba(0,0,0,0.05); 
+                width: 320px; 
+                height: calc(100vh - 65px); 
+            }
+            #toggleSidebar {
+                display: none; 
+            }
+            .app-header .logo-container {
+                justify-content: flex-start; 
+                width: auto; 
+            }
+        }
+
+        @media (max-width: 576px) {
+            .app-header h1 {
+                font-size: 1rem;
+            }
+            
+            .connection-status {
+                font-size: 0.75rem;
+            }
+            
+            .sidebar-header {
+                padding: 15px;
+            }
+            
+            .conversation-user-avatar {
+                width: 38px;
+                height: 38px;
+            }
+            
+            .conversation-user-name {
+                font-size: 1rem;
+            }
+            
+            .message {
+                max-width: 85%;
+            }
+            
+            .admin-message-input {
+                padding: 10px 15px;
+            }
+            
+            .admin-send-button {
+                width: 45px;
+                height: 45px;
+            }
+            
+            .modal-header {
+                padding: 12px 15px;
+            }
+            
+            .modal-footer {
+                padding: 10px;
+            }
+        }
+        
+        .sidebar-overlay {
+            display: none !important; 
         }
     </style>
 </head>
 <body>
-    <header class="header-bar">
-        <button class="back-btn" onclick="window.location.href='index.html'">
-            <i class="fas fa-arrow-right"></i> <!-- Arrow pointing right for RTL back -->
-        </button>
-        <div class="page-title">الرد على الزبائن</div>
-        <div></div> <!-- Placeholder for alignment -->
-    </header>
-
-    <main class="messages-container">
-        <div class="message-list" id="messageList">
-            <!-- Messages will be loaded here by JavaScript -->
-            <p class="no-messages">جاري تحميل الرسائل...</p>
+    <!-- App Header -->
+    <div class="app-header">
+        <div class="logo-container">
+            <i class="fas fa-headset"></i>
+            <h1>لوحة الدعم الفني</h1>
         </div>
-
-        <div class="conversation-area" id="conversationArea">
-            <div id="noMessageSelected" class="no-message-selected">
-                <i class="fas fa-inbox"></i>
-                <p>الرجاء تحديد رسالة لعرض المحادثة.</p>
+        <div class="connection-status">
+            <i class="fas fa-circle"></i>
+            <span>جاري الاتصال بقاعدة البيانات...</span>
+        </div>
+    </div>
+    
+    <!-- Admin Dashboard -->
+    <div class="admin-container">
+        <!-- Sidebar with conversations list -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h2>مركز الدعم الفني</h2>
+                <p>إدارة محادثات العملاء</p>
             </div>
-
-            <div id="conversationView" style="display: none;">
-                <div class="conversation-header">
-                    <h3 id="replySubject"></h3>
-                    <span id="replyStatus" class="status-open"></span>
+            
+            <div class="conversations-search">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="ابحث في المحادثات...">
+            </div>
+            
+            <div id="conversationsList" class="conversations-list">
+                <!-- Conversations will be loaded by JavaScript -->
+                <div class="no-conversations">
+                    <i class="fas fa-comments"></i>
+                    <p>جاري تحميل المحادثات...</p>
                 </div>
-                <div class="message-details" id="messageDetails">
-                    <!-- Conversation bubbles will be loaded here -->
+            </div>
+        </div>
+        
+        <!-- Main Content Area (Desktop View) -->
+        <div class="main-content">
+            <!-- Conversation Header -->
+            <div class="conversation-header-bar">
+                <div class="conversation-user-info">
+                    <div id="conversationUserAvatar" class="conversation-user-avatar">?</div>
+                    <div class="conversation-user-details">
+                        <div id="conversationUserName" class="conversation-user-name">اختر محادثة</div>
+                        <div id="conversationUserStatus" class="status offline">غير متصل</div>
+                    </div>
                 </div>
-                <div class="reply-form" id="replyForm">
-                    <input type="hidden" id="replyMessageId">
-                    <textarea id="replyContent" placeholder="اكتب ردك هنا..."></textarea>
-                    <div class="reply-actions">
-                        <button type="button" class="btn btn-secondary" id="markResolvedBtn">
-                            <i class="fas fa-check-circle"></i> تحديد كمحلولة
-                        </button>
-                        <button type="button" class="btn btn-primary" id="sendReplyBtn">
-                            <i class="fas fa-paper-plane"></i> إرسال الرد
-                        </button>
+                
+                <div class="conversation-actions">
+                    <!-- New: Block/Unblock User Button -->
+                    <!-- هذا الزر يكون مخفياً افتراضياً ويظهر عند تحديد محادثة -->
+                    <button id="blockUserButton" class="action-button" title="حظر العميل" style="display: none;">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    <!-- New: Delete Conversation Button -->
+                    <!-- هذا الزر يكون مخفياً افتراضياً ويظهر عند تحديد محادثة -->
+                    <button id="deleteConversationButton" class="action-button" title="حذف المحادثة" style="display: none;">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="action-button">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Messages Area -->
+            <div class="messages-area">
+                <div id="messagesContainer" class="messages-container">
+                    <div class="no-messages">
+                        <i class="fas fa-comment-alt"></i>
+                        <p>مرحباً بك في لوحة تحكم الدعم الفني</p>
+                        <p>اختر محادثة من القائمة الجانبية للبدء</p>
                     </div>
                 </div>
             </div>
+            
+            <!-- Message Input Area -->
+            <div class="message-input-area">
+                <textarea id="adminMessageInput" class="admin-message-input" placeholder="اختر محادثة للبدء..." rows="1" disabled></textarea>
+                <button id="adminSendButton" class="admin-send-button" disabled>
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
         </div>
-    </main>
-
-    <!-- Notification -->
-    <div class="notification" id="notification">
-        <!-- Notification messages will appear here -->
     </div>
     
-    <footer class="admin-footer">
-        <p>&copy; 2025 لوحة تحكم المتجر. جميع الحقوق محفوظة.</p>
-    </footer>
+    <!-- Conversation Modal (Mobile View) -->
+    <div id="conversationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="conversation-user-info">
+                    <div id="modalUserAvatar" class="conversation-user-avatar">?</div>
+                    <div class="conversation-user-details">
+                        <div id="modalUserName" class="conversation-user-name">مستخدم</div>
+                        <div id="modalUserStatus" class="status offline">غير متصل</div>
+                    </div>
+                </div>
+                <!-- Action buttons for the modal header -->
+                <div class="conversation-actions">
+                    <!-- New: Block/Unblock User Button for Modal -->
+                    <button id="blockUserButtonModal" class="action-button" title="حظر العميل" style="display: none;">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    <button id="closeModal" class="action-button">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div id="messagesContainerModal" class="messages-container">
+                    <div class="no-messages">
+                        <i class="fas fa-comment-alt"></i>
+                        <p>جاري تحميل الرسائل...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div class="message-input-area">
+                    <textarea id="adminMessageInputModal" class="admin-message-input" placeholder="اكتب ردك هنا..." rows="1"></textarea>
+                    <button id="adminSendButtonModal" class="admin-send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal HTML -->
+    <div id="confirmationModal" class="modal">
+        <div class="confirmation-content">
+            <h3 id="confirmMessage">هل أنت متأكد من هذا الإجراء؟</h3>
+            <div class="confirmation-buttons">
+                <button id="confirmationModalConfirm">تأكيد</button>
+                <button id="confirmationModalCancel">إلغاء</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
