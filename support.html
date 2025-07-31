@@ -3,286 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الدعم الفني - نسخة محسنة للشاشات الكبيرة</title>
+    <title>الدعم الفني - متجر إلكتروني</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref, set, onValue, push, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-            authDomain: "zio3-8ffdd.firebaseapp.com",
-            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-            projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
-            messagingSenderId: "560939348415",
-            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-            measurementId: "G-CVN2B2D0RD"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const auth = getAuth(app);
-        const db = getDatabase(app); 
-
-        // Global data storage for frontend
-        window.frontendData = {
-            settings: {},
-            homepageSettings: {},
-            currentUser: null,
-            authReady: false,
-            chatMessages: [] 
-        };
-
-        // Function to show notifications
-        function showNotification(message, type = 'success') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            // Force reflow to ensure transition plays
-            void notification.offsetWidth;
-
-            notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    document.body.removeChild(notification);
-                }, 300);
-            }, 3000);
-        }
-        
-        // Load frontend data from Firebase Realtime Database
-        async function loadFrontendData() {
-            try {
-                // Load store settings - تم التصحيح هنا
-                const settingsRef = ref(db, 'settings'); // تغيير المسار إلى 'settings'
-                onValue(settingsRef, (snapshot) => {
-                    const settings = snapshot.val();
-                    if (settings) {
-                        window.frontendData.settings = settings;
-                        
-                        // Update store name and logo - تم التصحيح هنا
-                        const storeNameElement = document.getElementById('storeName');
-                        const storeLogoElement = document.getElementById('storeLogo');
-                        
-                        if (settings.storeName) {
-                            storeNameElement.textContent = settings.storeName;
-                        } else {
-                            storeNameElement.textContent = 'متجرنا الإلكتروني';
-                        }
-                        
-                        if (settings.logoUrl) {
-                            storeLogoElement.src = settings.logoUrl;
-                        } else {
-                            storeLogoElement.src = 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
-                        }
-                    }
-                });
-                
-                // Load homepage settings
-                const homepageRef = ref(db, 'homepageSettings');
-                onValue(homepageRef, (snapshot) => {
-                    const homepageSettings = snapshot.val();
-                    if (homepageSettings) {
-                        window.frontendData.homepageSettings = homepageSettings;
-                    }
-                });
-                
-            } catch (error) {
-                console.error('Error loading data:', error);
-                document.querySelectorAll('.loading').forEach(el => {
-                    el.innerHTML = '<p>حدث خطأ في تحميل البيانات. يرجى تحديث الصفحة.</p>';
-                });
-            }
-            
-            // تعيين حالة التنقل النشطة
-            const navItems = document.querySelectorAll('.bottom-nav-item');
-            const currentPath = window.location.pathname.split('/').pop();
-            
-            navItems.forEach(item => {
-                const itemHref = item.getAttribute('href');
-                if (itemHref === currentPath || (currentPath === '' && itemHref === 'index.html')) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-
-            // Set active state for top bar support link
-            const supportLink = document.querySelector('.top-right-group a[href="support.html"]');
-            if (supportLink && currentPath === 'support.html') {
-                supportLink.classList.add('active');
-            } else if (supportLink) {
-                supportLink.classList.remove('active');
-            }
-        }
-
-        // Function to render chat messages
-        function renderChatMessages(messages) {
-            const chatMessagesContainer = document.getElementById('chatMessages');
-            chatMessagesContainer.innerHTML = '';
-
-            if (messages.length === 0) {
-                // Display initial greeting if no messages
-                chatMessagesContainer.innerHTML = `
-                    <div class="message-bubble support-message">
-                        <p>مرحباً بك في الدعم الفني! كيف يمكننا مساعدتك اليوم؟</p>
-                        <span class="timestamp">${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                `;
-            } else {
-                messages.forEach(msg => {
-                    const isUserMessage = msg.senderId === window.frontendData.currentUser.uid;
-                    const messageClass = isUserMessage ? 'user-message' : 'support-message';
-                    
-                    // Properly handle Firebase timestamps
-                    const timestamp = msg.timestamp 
-                        ? new Date(msg.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-                        : '';
-
-                    chatMessagesContainer.innerHTML += `
-                        <div class="message-bubble ${messageClass}">
-                            <p>${msg.text}</p>
-                            <span class="timestamp">${timestamp}</span>
-                        </div>
-                    `;
-                });
-            }
-            // Scroll to the bottom of the chat
-            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-        }
-
-        // Function to send a message
-        async function sendMessage() {
-            const messageInput = document.getElementById('messageInput');
-            const messageText = messageInput.value.trim();
-            const sendBtn = document.getElementById('sendButton');
-
-            if (!messageText) {
-                showNotification('الرجاء كتابة رسالة.', 'warning');
-                return;
-            }
-
-            if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
-                showNotification('الرجاء تسجيل الدخول أو تحديث الصفحة لبدء المحادثة.', 'error');
-                return;
-            }
-
-            // Hide bottom bar
-            document.body.classList.add('hide-bottom-bar');
-
-            sendBtn.disabled = true;
-            messageInput.disabled = true;
-
-            try {
-                const userId = window.frontendData.currentUser.uid;
-                
-                // Create a new message object
-                const newMessage = {
-                    senderId: userId,
-                    text: messageText,
-                    timestamp: serverTimestamp()
-                };
-                
-                // Save message to Firebase
-                const messagesRef = ref(db, `supportChats/${userId}/messages`);
-                await push(messagesRef, newMessage);
-                
-                // Clear input
-                messageInput.value = '';
-                showNotification('تم إرسال رسالتك بنجاح!', 'success');
-            } catch (error) {
-                console.error("Error sending message:", error);
-                showNotification('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.', 'error');
-            } finally {
-                sendBtn.disabled = false;
-                messageInput.disabled = false;
-                messageInput.focus();
-                setTimeout(() => {
-                    document.body.classList.remove('hide-bottom-bar');
-                }, 500);
-            }
-        }
-
-        // Function to load chat messages from Firebase
-        function loadChatMessages(userId) {
-            const messagesRef = ref(db, `supportChats/${userId}/messages`);
-            
-            onValue(messagesRef, (snapshot) => {
-                const messages = [];
-                snapshot.forEach((childSnapshot) => {
-                    const message = childSnapshot.val();
-                    messages.push({
-                        id: childSnapshot.key,
-                        text: message.text,
-                        senderId: message.senderId,
-                        timestamp: message.timestamp
-                    });
-                });
-                
-                // Sort messages by timestamp
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                
-                window.frontendData.chatMessages = messages;
-                renderChatMessages(messages);
-                
-                // Hide spinner and show chat
-                document.getElementById('chatLoadingSpinner').style.display = 'none';
-                document.getElementById('chatContent').style.display = 'flex';
-            }, {
-                onlyOnce: false
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const chatMessagesContainer = document.getElementById('chatMessages');
-            const chatLoadingSpinner = document.getElementById('chatLoadingSpinner');
-            const chatContent = document.getElementById('chatContent');
-
-            // Show loading spinner initially
-            chatLoadingSpinner.style.display = 'flex';
-            chatContent.style.display = 'none';
-
-            // Authenticate user anonymously
-            signInAnonymously(auth)
-                .then(() => {
-                    onAuthStateChanged(auth, (user) => {
-                        if (user) {
-                            // User is signed in anonymously
-                            window.frontendData.currentUser = user;
-                            loadChatMessages(user.uid);
-                            loadFrontendData(); // تحميل إعدادات المتجر
-                        } else {
-                            // User is signed out
-                            showNotification('حدث خطأ في المصادقة. يرجى تحديث الصفحة.', 'error');
-                        }
-                    });
-                })
-                .catch((error) => {
-                    console.error("Authentication error:", error);
-                    showNotification('حدث خطأ في المصادقة. يرجى تحديث الصفحة.', 'error');
-                });
-
-            // Add event listener for the send button
-            document.getElementById('sendButton').addEventListener('click', sendMessage);
-
-            // Allow sending message with Enter key
-            document.getElementById('messageInput').addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-        });
-    </script>
     <style>
         :root {
             --color-primary-dark-blue: #1A237E;
@@ -566,13 +289,13 @@
         }
 
         .message-bubble {
-            max-width: 80%;
+            max-width: 95%; 
             padding: 10px 15px;
             border-radius: 18px;
             line-height: 1.4;
             word-wrap: break-word;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            position: relative;
+            position: relative; 
             font-size: 0.95rem;
             animation: fadeIn 0.3s ease-out;
         }
@@ -587,6 +310,7 @@
             color: white;
             align-self: flex-end;
             border-bottom-right-radius: 4px;
+            padding-left: 35px; 
         }
 
         .support-message {
@@ -605,6 +329,55 @@
         }
         .support-message .timestamp {
             color: #777;
+        }
+
+        .deleted-message {
+            background-color: #e0e0e0 !important; 
+            color: #888 !important; 
+            font-style: italic;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            box-shadow: none; 
+        }
+        .deleted-message .timestamp {
+            color: #888 !important;
+        }
+        .deleted-message p {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .deleted-message i {
+            font-size: 0.85rem;
+        }
+
+        .delete-message-btn {
+            background: transparent; 
+            border: none;
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 1rem; 
+            cursor: pointer;
+            position: absolute;
+            top: 50%; 
+            transform: translateY(-50%);
+            left: 5px; 
+            right: auto; 
+            transition: color 0.2s ease, background-color 0.2s ease;
+            width: 25px; 
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10; 
+        }
+
+        .user-message:hover .delete-message-btn {
+            color: white;
+            background-color: rgba(255, 0, 0, 0.3); 
         }
 
         .chat-input-area {
@@ -727,10 +500,74 @@
             padding: 20px;
         }
 
-        /* تحسينات للشاشات الكبيرة */
+        #confirmationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 4000; 
+        }
+
+        .confirmation-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+        }
+
+        .confirmation-content h3 {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            color: var(--dark);
+        }
+
+        .confirmation-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .confirmation-buttons button {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: var(--transition);
+        }
+
+        #confirmationModalConfirm {
+            background-color: var(--error);
+            color: white;
+        }
+
+        #confirmationModalConfirm:hover {
+            background-color: #c0392b;
+        }
+
+        #confirmationModalCancel {
+            background-color: #ccc;
+            color: var(--dark);
+        }
+
+        #confirmationModalCancel:hover {
+            background-color: #bbb;
+        }
+
         @media (min-width: 1200px) {
             :root {
-                font-size: 16px; /* زيادة حجم الخط الأساسي */
+                font-size: 16px; 
             }
             
             .top-bar {
@@ -778,7 +615,7 @@
             }
             
             .message-bubble {
-                max-width: 70%;
+                max-width: 95%; 
                 padding: 15px 22px;
                 font-size: 1.1rem;
                 border-radius: 25px;
@@ -786,6 +623,7 @@
             
             .user-message {
                 border-bottom-right-radius: 10px;
+                padding-left: 45px; 
             }
             
             .support-message {
@@ -811,6 +649,11 @@
                 width: 55px;
                 height: 55px;
                 font-size: 1.3rem;
+            }
+            .delete-message-btn {
+                font-size: 1.2rem; 
+                width: 30px;
+                height: 30px;
             }
         }
 
@@ -866,6 +709,9 @@
                 padding: 8px 12px;
                 font-size: 0.85rem;
             }
+            .user-message {
+                padding-left: 30px; 
+            }
             .message-bubble .timestamp {
                 font-size: 0.65rem;
             }
@@ -886,6 +732,11 @@
                 top: 60px;
                 padding: 10px 15px;
                 font-size: 0.8rem;
+            }
+            .delete-message-btn {
+                font-size: 0.9rem; 
+                width: 20px;
+                height: 20px;
             }
         }
         
@@ -981,5 +832,454 @@
             <span>العروض</span>
         </a>
     </nav>
+
+    <!-- Confirmation Modal HTML -->
+    <div id="confirmationModal" class="modal">
+        <div class="confirmation-content">
+            <h3 id="confirmMessage">هل أنت متأكد من هذا الإجراء؟</h3>
+            <div class="confirmation-buttons">
+                <button id="confirmationModalConfirm">تأكيد</button>
+                <button id="confirmationModalCancel">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getDatabase, ref, set, onValue, push, serverTimestamp, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js";
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getDatabase(app); 
+
+        // Global data storage for frontend
+        window.frontendData = {
+            settings: {},
+            homepageSettings: {},
+            currentUser: null,
+            authReady: false,
+            chatMessages: [],
+            isBlocked: false
+        };
+
+        // Function to show notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Force reflow to ensure transition plays
+            void notification.offsetWidth;
+
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Load frontend data from Firebase Realtime Database
+        async function loadFrontendData() {
+            try {
+                // Load store settings
+                const settingsRef = ref(db, 'settings');
+                onValue(settingsRef, (snapshot) => {
+                    const settings = snapshot.val();
+                    if (settings) {
+                        window.frontendData.settings = settings;
+                        
+                        // Update store name and logo
+                        const storeNameElement = document.getElementById('storeName');
+                        const storeLogoElement = document.getElementById('storeLogo');
+                        
+                        if (settings.storeName) {
+                            storeNameElement.textContent = settings.storeName;
+                        } else {
+                            storeNameElement.textContent = 'متجرنا الإلكتروني';
+                        }
+                        
+                        if (settings.logoUrl) {
+                            storeLogoElement.src = settings.logoUrl;
+                        } else {
+                            storeLogoElement.src = 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
+                        }
+                    }
+                });
+                
+                // Load homepage settings
+                const homepageRef = ref(db, 'homepageSettings');
+                onValue(homepageRef, (snapshot) => {
+                    const homepageSettings = snapshot.val();
+                    if (homepageSettings) {
+                        window.frontendData.homepageSettings = homepageSettings;
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.innerHTML = '<p>حدث خطأ في تحميل البيانات. يرجى تحديث الصفحة.</p>';
+                });
+            }
+            
+            // تعيين حالة التنقل النشطة
+            const navItems = document.querySelectorAll('.bottom-nav-item');
+            const currentPath = window.location.pathname.split('/').pop();
+            
+            navItems.forEach(item => {
+                const itemHref = item.getAttribute('href');
+                if (itemHref === currentPath || (currentPath === '' && itemHref === 'index.html')) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Set active state for top bar support link
+            const supportLink = document.querySelector('.top-right-group a[href="support.html"]');
+            if (supportLink && currentPath === 'support.html') {
+                supportLink.classList.add('active');
+            } else if (supportLink) {
+                supportLink.classList.remove('active');
+            }
+        }
+
+        // Function to render chat messages
+        function renderChatMessages(messages) {
+            const chatMessagesContainer = document.getElementById('chatMessages');
+            chatMessagesContainer.innerHTML = '';
+
+            if (messages.length === 0) {
+                // Display initial greeting if no messages
+                chatMessagesContainer.innerHTML = `
+                    <div class="message-bubble support-message">
+                        <p>مرحباً بك في الدعم الفني! كيف يمكننا مساعدتك اليوم؟</p>
+                        <span class="timestamp">${new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                `;
+            } else {
+                messages.forEach(msg => {
+                    const isUserMessage = msg.senderId === window.frontendData.currentUser.uid;
+                    const messageClass = isUserMessage ? 'user-message' : 'support-message';
+                    
+                    // Properly handle Firebase timestamps
+                    const timestamp = msg.timestamp 
+                        ? new Date(msg.timestamp).toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+                        : '';
+
+                    let messageContentHtml = `<p>${msg.text}</p>`;
+                    let messageBubbleClass = messageClass;
+                    let deleteButtonHtml = '';
+
+                    // Check if the message is marked as deleted
+                    if (msg.deleted) {
+                        messageContentHtml = `<p><i class="fas fa-trash-alt"></i> تم حذف الرسالة</p>`;
+                        messageBubbleClass += ' deleted-message'; // Add a class for styling deleted messages
+                    } else if (isUserMessage) {
+                        // Add delete button only for user's own messages that are not deleted
+                        deleteButtonHtml = `<button class="delete-message-btn" data-message-id="${msg.id}" title="حذف الرسالة"><i class="fas fa-times"></i></button>`;
+                    }
+
+                    chatMessagesContainer.innerHTML += `
+                        <div class="message-bubble ${messageBubbleClass}" data-message-id="${msg.id}">
+                            <div class="message-content">
+                                ${messageContentHtml}
+                            </div>
+                            ${deleteButtonHtml} <!-- Place button directly inside message-bubble for easier positioning -->
+                            <span class="timestamp">${timestamp}</span>
+                        </div>
+                    `;
+                });
+            }
+            // Scroll to the bottom of the chat
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+
+            // Add event listeners for delete buttons after rendering
+            chatMessagesContainer.querySelectorAll('.delete-message-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const messageId = event.currentTarget.dataset.messageId;
+                    deleteMessage(window.frontendData.currentUser.uid, messageId);
+                });
+            });
+        }
+
+        // Function to send a message
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const messageText = messageInput.value.trim();
+            const sendBtn = document.getElementById('sendButton');
+
+            if (!messageText) {
+                showNotification('الرجاء كتابة رسالة.', 'warning');
+                return;
+            }
+
+            if (!window.frontendData.currentUser || !window.frontendData.currentUser.uid) {
+                showNotification('الرجاء تسجيل الدخول أو تحديث الصفحة لبدء المحادثة.', 'error');
+                return;
+            }
+
+            // Prevent sending if the user is blocked
+            if (window.frontendData.isBlocked) {
+                showNotification('لا يمكنك إرسال رسائل لأنك محظور.', 'error');
+                return;
+            }
+
+            // Hide bottom bar
+            document.body.classList.add('hide-bottom-bar');
+
+            sendBtn.disabled = true;
+            messageInput.disabled = true;
+
+            try {
+                const userId = window.frontendData.currentUser.uid;
+                
+                // Create a new message object
+                const newMessage = {
+                    senderId: userId,
+                    text: messageText,
+                    timestamp: serverTimestamp(),
+                    deleted: false // Ensure new messages are not marked as deleted
+                };
+                
+                // Save message to Firebase
+                const messagesRef = ref(db, `supportChats/${userId}/messages`);
+                await push(messagesRef, newMessage);
+                
+                // Clear input
+                messageInput.value = '';
+                showNotification('تم إرسال رسالتك بنجاح!', 'success');
+            } catch (error) {
+                console.error("Error sending message:", error);
+                showNotification('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى.', 'error');
+            } finally {
+                sendBtn.disabled = false;
+                messageInput.disabled = false;
+                messageInput.focus();
+                setTimeout(() => {
+                    document.body.classList.remove('hide-bottom-bar');
+                }, 500);
+            }
+        }
+
+        // Function to load chat messages from Firebase
+        function loadChatMessages(userId) {
+            // First, try to load from local storage (cache)
+            const cachedMessages = localStorage.getItem('chatMessages_' + userId);
+            if (cachedMessages) {
+                const messages = JSON.parse(cachedMessages);
+                renderChatMessages(messages);
+                console.log('Loaded chat messages from local cache.');
+                
+                // Hide spinner and show chat immediately
+                document.getElementById('chatLoadingSpinner').style.display = 'none';
+                document.getElementById('chatContent').style.display = 'flex';
+            } else {
+                console.log('No chat messages in local cache, fetching from server...');
+            }
+
+            // Then, set up the real-time listener to get the latest messages
+            const messagesRef = ref(db, `supportChats/${userId}/messages`);
+            
+            onValue(messagesRef, (snapshot) => {
+                const messages = [];
+                snapshot.forEach((childSnapshot) => {
+                    const message = childSnapshot.val();
+                    messages.push({
+                        id: childSnapshot.key,
+                        text: message.text,
+                        senderId: message.senderId,
+                        timestamp: message.timestamp,
+                        deleted: message.deleted || false // Capture the deleted status
+                    });
+                });
+                
+                // Sort messages by timestamp
+                messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+                
+                window.frontendData.chatMessages = messages;
+                renderChatMessages(messages);
+                
+                // Update local storage with the latest data from the server
+                localStorage.setItem('chatMessages_' + userId, JSON.stringify(messages));
+                console.log('Updated chat messages in local cache from server.');
+
+                // Hide spinner and show chat
+                document.getElementById('chatLoadingSpinner').style.display = 'none';
+                document.getElementById('chatContent').style.display = 'flex';
+            }, {
+                onlyOnce: false
+            });
+        }
+
+        // --- Confirmation Modal Logic (منطق نافذة التأكيد المنبثقة) ---
+        let confirmActionCallback = null;
+
+        function showConfirmationModal(message, callback) {
+            const modal = document.getElementById('confirmationModal');
+            const modalMessage = document.getElementById('confirmMessage');
+            modalMessage.textContent = message;
+            confirmActionCallback = callback;
+            modal.style.display = 'flex';
+            document.body.classList.add('modal-open');
+        }
+
+        function hideConfirmationModal() {
+            const modal = document.getElementById('confirmationModal');
+            modal.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            confirmActionCallback = null;
+        }
+
+        function handleConfirm() {
+            if (confirmActionCallback) {
+                confirmActionCallback(true);
+            }
+            hideConfirmationModal();
+        }
+
+        function handleCancel() {
+            if (confirmActionCallback) {
+                confirmActionCallback(false);
+            }
+            hideConfirmationModal();
+        }
+
+        // Function to delete a message (mark as deleted)
+        async function deleteMessage(userId, messageId) {
+            showConfirmationModal('هل أنت متأكد أنك تريد حذف هذه الرسالة؟', async (confirmed) => {
+                if (confirmed) {
+                    try {
+                        const messageRef = ref(db, `supportChats/${userId}/messages/${messageId}`);
+                        await update(messageRef, { deleted: true });
+                        showNotification('تم حذف الرسالة بنجاح.', 'success');
+
+                        // Update local cache after successful deletion
+                        let messages = JSON.parse(localStorage.getItem('chatMessages_' + userId) || '[]');
+                        messages = messages.map(msg => {
+                            if (msg.id === messageId) {
+                                return { ...msg, deleted: true };
+                            }
+                            return msg;
+                        });
+                        localStorage.setItem('chatMessages_' + userId, JSON.stringify(messages));
+
+                    } catch (error) {
+                        console.error("Error deleting message:", error);
+                        showNotification('حدث خطأ أثناء حذف الرسالة. يرجى المحاولة مرة أخرى.', 'error');
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chatMessagesContainer = document.getElementById('chatMessages');
+            const chatLoadingSpinner = document.getElementById('chatLoadingSpinner');
+            const chatContent = document.getElementById('chatContent');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+
+            // Show loading spinner initially
+            chatLoadingSpinner.style.display = 'flex';
+            chatContent.style.display = 'none';
+
+            // Authenticate user anonymously
+            signInAnonymously(auth)
+                .then(() => {
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            window.frontendData.currentUser = user;
+                            
+                            // Listen for block status
+                            const userBlockedRef = ref(db, `supportChats/${user.uid}/isBlocked`);
+                            onValue(userBlockedRef, (snapshot) => {
+                                window.frontendData.isBlocked = snapshot.val() || false;
+                                if (window.frontendData.isBlocked) {
+                                    messageInput.disabled = true;
+                                    sendButton.disabled = true;
+                                    messageInput.placeholder = 'لا يمكنك إرسال رسائل لأنك محظور من الدعم الفني.';
+                                    showNotification('لقد تم حظرك من الدعم الفني. لا يمكنك إرسال رسائل.', 'error');
+                                } else {
+                                    messageInput.disabled = false;
+                                    sendButton.disabled = false;
+                                    messageInput.placeholder = 'اكتب رسالتك هنا...';
+                                    // Only show unblocked notification if it was previously blocked
+                                    // This check prevents showing "unblocked" on initial load if not blocked
+                                    if (messageInput.disabled === true) { 
+                                        showNotification('تم إلغاء حظرك من الدعم الفني. يمكنك الآن إرسال الرسائل.', 'success');
+                                    }
+                                }
+                            });
+
+                            loadChatMessages(user.uid);
+                            loadFrontendData(); // تحميل إعدادات المتجر
+                        } else {
+                            // User is signed out
+                            showNotification('حدث خطأ في المصادقة. يرجى تحديث الصفحة.', 'error');
+                        }
+                    });
+                })
+                .catch((error) => {
+                    console.error("Authentication error:", error);
+                    showNotification('حدث خطأ في المصادقة. يرجى تحديث الصفحة.', 'error');
+                });
+
+            // Add event listener for the send button
+            document.getElementById('sendButton').addEventListener('click', sendMessage);
+
+            // Allow sending message with Enter key
+            document.getElementById('messageInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Event listeners for confirmation modal buttons
+            document.getElementById('confirmationModalCancel').addEventListener('click', handleCancel);
+            document.getElementById('confirmationModalConfirm').addEventListener('click', handleConfirm);
+            
+            // Close modals when clicking outside their content
+            document.getElementById('confirmationModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('confirmationModal')) {
+                    hideConfirmationModal();
+                }
+            });
+            
+            // إصلاح الروابط في الشريط السفلي
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    // تجنب إعادة تحميل الصفحة الحالية إذا كانت الصفحة الهدف هي الصفحة الحالية
+                    const href = this.getAttribute('href');
+                    const currentPage = window.location.pathname.split('/').pop();
+                    
+                    if (href !== currentPage) {
+                        window.location.href = href;
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
