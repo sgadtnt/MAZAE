@@ -7,540 +7,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Firebase SDK imports -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getDatabase, ref as dbRef, onValue, set, get, update, remove, push, query, orderByChild, limitToLast } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-        import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-
-        // Global variables provided by the Canvas environment
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-            authDomain: "zio3-8ffdd.firebaseapp.com",
-            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-            projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
-            messagingSenderId: "560939348415",
-            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-            measurementId: "G-CVN2B2D0RD"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app); 
-        const db = getDatabase(app);
-        const storage = getStorage(app);
-
-        // Realtime Database references
-        const generalSettingsRef = dbRef(db, "settings"); // General settings node
-        const adminLogsRef = dbRef(db, "adminLogs");
-
-        // Global data storage for frontend
-        window.adminData = {
-            generalSettings: {}, // To store fetched settings
-            currentUser: { uid: 'anonymous_admin' }, // Simulate a user for logging purposes
-            authReady: true // Always ready as no auth is required
-        };
-
-        // Function to show notifications
-        function showNotification(message, type = 'success') {
-            const notification = document.getElementById('notification');
-            if (!notification) return;
-
-            notification.textContent = message;
-            notification.className = `notification ${type} show`;
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-
-        // Function to show a custom confirmation modal
-        function showConfirmModal(message, onConfirm, onCancel = () => {}) {
-            const modal = document.getElementById('confirmationModal');
-            const cityNameSpan = document.getElementById('cityName');
-            const confirmBtn = document.getElementById('confirmDeleteBtn');
-            const cancelBtn = document.getElementById('cancelDeleteBtn');
-
-            if (!modal || !cityNameSpan || !confirmBtn || !cancelBtn) {
-                console.error("Confirmation modal elements not found.");
-                return;
-            }
-
-            // Update modal message (assuming message contains the city name or is generic)
-            cityNameSpan.textContent = message.split('"')[1] || ''; // Extract city name if present, or leave empty
-            if (!cityNameSpan.textContent) { // If no city name extracted, just show generic message
-                modal.querySelector('p').textContent = message;
-            } else {
-                modal.querySelector('p').textContent = `هل أنت متأكد أنك تريد حذف سعر التوصيل لمدينة "${cityNameSpan.textContent}"؟`;
-            }
-
-            modal.style.display = 'flex'; // Show the modal
-            document.body.style.overflow = 'hidden'; // Prevent scrolling background
-
-            // Clear previous listeners to prevent multiple calls
-            confirmBtn.onclick = null;
-            cancelBtn.onclick = null;
-
-            confirmBtn.onclick = () => {
-                onConfirm();
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            };
-            cancelBtn.onclick = () => {
-                onCancel();
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            };
-
-            // Close modal when clicking outside
-            window.onclick = (event) => {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                    onCancel(); // Call cancel if user clicks outside
-                }
-            };
-        }
-
-        // Function to load general settings from Firebase (for Settings tab)
-        async function loadGeneralSettings() {
-            try {
-                // Listen for real-time updates to general settings
-                onValue(generalSettingsRef, (snapshot) => {
-                    const settings = snapshot.val() || {};
-                    window.adminData.generalSettings = settings;
-
-                    // Populate form fields for General Info and Contact Info in Settings Tab
-                    document.getElementById('storeNameInput').value = settings.storeName || '';
-                    document.getElementById('storeLogoUrlInput').value = settings.logoUrl || '';
-                    document.getElementById('phoneNumberInput').value = settings.phoneNumber || '';
-                    document.getElementById('emailInput').value = settings.email || '';
-                    document.getElementById('storeAddressInput').value = settings.address || '';
-                    document.getElementById('currencySelect').value = settings.currency || 'IQD'; // Default to IQD
-                    document.getElementById('languageSelect').value = settings.language || 'ar'; // Default to Arabic
-                    document.getElementById('deliveryTimeInput').value = settings.deliveryTime || ''; // NEW: Delivery Time
-
-                    // Update mobile header
-                    const mobileStoreNameElement = document.getElementById('mobileStoreName');
-                    if (mobileStoreNameElement) {
-                        mobileStoreNameElement.textContent = settings.storeName || 'لوحة التحكم';
-                    }
-                    const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
-                    if (mobileStoreLogoElement) {
-                        mobileStoreLogoElement.src = settings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
-                    }
-
-                    // Render delivery prices table in Settings Tab
-                    renderDeliveryPricesTable(settings.deliveryPrices || {});
-                    // showNotification('تم تحميل الإعدادات بنجاح.', 'info'); // Only show when settings tab is active
-                });
-            } catch (error) {
-                console.error("Error loading general settings:", error);
-                showNotification('حدث خطأ أثناء تحميل الإعدادات.', 'error');
-            }
-        }
-
-        // Function to save general settings
-        async function saveGeneralSettings() {
-            const storeName = document.getElementById('storeNameInput').value.trim();
-            const storeLogoUrl = document.getElementById('storeLogoUrlInput').value.trim();
-            const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
-            const email = document.getElementById('emailInput').value.trim();
-            const storeAddress = document.getElementById('storeAddressInput').value.trim();
-            const currency = document.getElementById('currencySelect').value;
-            const language = document.getElementById('languageSelect').value;
-            const deliveryTime = document.getElementById('deliveryTimeInput').value.trim(); // NEW: Get Delivery Time
-
-            if (!storeName || !phoneNumber || !email || !storeAddress) {
-                showNotification('الرجاء ملء جميع حقول معلومات المتجر والاتصال.', 'error');
-                return;
-            }
-            if (deliveryTime && (isNaN(deliveryTime) || parseFloat(deliveryTime) <= 0)) {
-                showNotification('الرجاء إدخال وقت توصيل صحيح وموجب.', 'error');
-                return;
-            }
-
-            showNotification('جاري حفظ الإعدادات...', 'info');
-
-            try {
-                const oldSettings = { ...window.adminData.generalSettings }; // Clone for logging
-                const newSettings = {
-                    storeName: storeName,
-                    logoUrl: storeLogoUrl,
-                    phoneNumber: phoneNumber,
-                    email: email,
-                    address: storeAddress,
-                    currency: currency,
-                    language: language,
-                    deliveryTime: deliveryTime ? parseFloat(deliveryTime) : null, // NEW: Save Delivery Time as number or null
-                    deliveryPrices: window.adminData.generalSettings.deliveryPrices || {} // Keep existing delivery prices
-                };
-                await set(generalSettingsRef, newSettings); // Use set to overwrite all settings
-                window.adminData.generalSettings = newSettings; // Update global state
-                showNotification('تم حفظ الإعدادات بنجاح!', 'success');
-
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'UPDATE_GENERAL_SETTINGS',
-                    adminId: window.adminData.currentUser.uid,
-                    oldSettings: oldSettings,
-                    newSettings: newSettings,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10); // Keep logs clean
-                
-                // Update mobile header immediately after saving
-                const mobileStoreNameElement = document.getElementById('mobileStoreName');
-                if (mobileStoreNameElement) {
-                    mobileStoreNameElement.textContent = newSettings.storeName || 'لوحة التحكم';
-                }
-                const mobileStoreLogoElement = document.getElementById('mobileStoreLogo');
-                if (mobileStoreLogoElement) {
-                    mobileStoreLogoElement.src = newSettings.logoUrl || 'https://placehold.co/40x40/1A237E/FFD700?text=شعار';
-                }
-
-            } catch (error) {
-                console.error("Error saving general settings:", error);
-                if (error.code) {
-                    console.error("Firebase Error Code:", error.code);
-                }
-                if (error.message) {
-                    console.error("Firebase Error Message:", error.message);
-                }
-                showNotification('حدث خطأ أثناء حفظ الإعدادات. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
-            }
-        }
-
-        // Function to render delivery prices table
-        function renderDeliveryPricesTable(deliveryPrices) {
-            const deliveryPricesTableBody = document.getElementById('deliveryPricesTableBody');
-            deliveryPricesTableBody.innerHTML = ''; // Clear previous rows
-
-            const pricesArray = Object.entries(deliveryPrices).map(([city, price]) => ({ city, price }));
-
-            if (pricesArray.length === 0) {
-                deliveryPricesTableBody.innerHTML = `<tr><td colspan="3" class="no-content-message">لا توجد أسعار توصيل محددة.</td></tr>`;
-                return;
-            }
-
-            pricesArray.forEach(item => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${item.city}</td>
-                    <td>${item.price.toLocaleString('ar-EG')} د.ع</td>
-                    <td>
-                        <button class="delivery-action-btn delete-delivery-btn" data-city="${item.city}" title="حذف">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </td>
-                `;
-                deliveryPricesTableBody.appendChild(row);
-            });
-
-            // Add event listeners for delete buttons (re-attach after rendering)
-            document.querySelectorAll('.delete-delivery-btn').forEach(button => {
-                button.addEventListener('click', (event) => {
-                    const cityToDelete = event.target.dataset.city || event.target.closest('[data-city]')?.dataset.city;
-                    if (cityToDelete) {
-                        showConfirmModal(`هل أنت متأكد أنك تريد حذف سعر التوصيل للمدينة "${cityToDelete}"؟`, () => {
-                            deleteDeliveryPrice(cityToDelete);
-                        });
-                    }
-                });
-            });
-        }
-
-        // Function to add or update a delivery price
-        async function addOrUpdateDeliveryPrice() {
-            const cityInput = document.getElementById('deliveryCityInput').value.trim();
-            const priceInput = document.getElementById('deliveryPriceInput').value.trim();
-
-            if (!cityInput || !priceInput) {
-                showNotification('الرجاء إدخال المدينة وسعر التوصيل.', 'error');
-                return;
-            }
-
-            const price = parseFloat(priceInput);
-            if (isNaN(price) || price <= 0) {
-                showNotification('الرجاء إدخال سعر توصيل صحيح وموجب.', 'error');
-                return;
-            }
-
-            showNotification('جاري إضافة/تحديث سعر التوصيل...', 'info');
-
-            try {
-                const currentDeliveryPrices = window.adminData.generalSettings.deliveryPrices || {};
-                const oldPrice = currentDeliveryPrices[cityInput];
-                
-                const newDeliveryPrices = {
-                    ...currentDeliveryPrices,
-                    [cityInput]: price
-                };
-
-                await update(generalSettingsRef, { deliveryPrices: newDeliveryPrices });
-                window.adminData.generalSettings.deliveryPrices = newDeliveryPrices; // Update global state
-                
-                showNotification('تم إضافة/تحديث سعر التوصيل بنجاح!', 'success');
-                
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'UPDATE_DELIVERY_PRICE',
-                    adminId: window.adminData.currentUser.uid,
-                    city: cityInput,
-                    oldPrice: oldPrice || 'غير موجود',
-                    newPrice: price,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10);
-
-                // Clear input fields
-                document.getElementById('deliveryCityInput').value = '';
-                document.getElementById('deliveryPriceInput').value = '';
-
-            } catch (error) {
-                console.error("Error adding/updating delivery price:", error);
-                if (error.code) {
-                    console.error("Firebase Error Code:", error.code);
-                }
-                if (error.message) {
-                    console.error("Firebase Error Message:", error.message);
-                }
-                showNotification('حدث خطأ أثناء إضافة/تحديث سعر التوصيل. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
-            }
-        }
-
-        // Function to delete a delivery price
-        async function deleteDeliveryPrice(city) {
-            showNotification('جاري حذف سعر التوصيل...', 'info');
-
-            try {
-                const currentDeliveryPrices = window.adminData.generalSettings.deliveryPrices || {};
-                const priceToDelete = currentDeliveryPrices[city];
-                
-                // Create a new object without the city to delete
-                const newDeliveryPrices = { ...currentDeliveryPrices };
-                delete newDeliveryPrices[city];
-
-                await update(generalSettingsRef, { deliveryPrices: newDeliveryPrices });
-                window.adminData.generalSettings.deliveryPrices = newDeliveryPrices; // Update global state
-
-                showNotification('تم حذف سعر التوصيل بنجاح!', 'success');
-                
-                // Log admin activity
-                await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                    action: 'DELETE_DELIVERY_PRICE',
-                    adminId: window.adminData.currentUser.uid,
-                    city: city,
-                    deletedPrice: priceToDelete,
-                    timestamp: new Date().toISOString()
-                });
-                manageAdminLogsSize(10);
-
-            } catch (error) {
-                console.error("Error deleting delivery price:", error);
-                if (error.code) {
-                    console.error("Firebase Error Code:", error.code);
-                }
-                if (error.message) {
-                    console.error("Firebase Error Message:", error.message);
-                }
-                showNotification('حدث خطأ أثناء حذف سعر التوصيل. يرجى التحقق من لوحة التحكم للمزيد من التفاصيل.', 'error');
-            }
-        }
-
-        // Function to manage the size of admin logs in Firebase
-        async function manageAdminLogsSize(maxLogs = 10) {
-            try {
-                const snapshot = await get(adminLogsRef); 
-                const logs = [];
-                snapshot.forEach(childSnapshot => {
-                    logs.push({ id: childSnapshot.key, timestamp: childSnapshot.val().timestamp });
-                });
-
-                logs.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
-
-                if (logs.length > maxLogs) {
-                    const logsToDelete = logs.slice(0, logs.length - maxLogs);
-
-                    for (const log of logsToDelete) {
-                        await remove(dbRef(db, `adminLogs/${log.id}`));
-                        console.log(`Removed old log: ${log.id}`);
-                    }
-                }
-            } catch (error) {
-                console.error("Error managing admin logs size:", error);
-            }
-        }
-
-        // Function to handle logout
-        async function handleLogout() {
-            try {
-                if (auth.currentUser) {
-                    await signOut(auth);
-                }
-                showNotification('تم تسجيل الخروج بنجاح (لا يوجد مستخدم مصادق عليه).', 'info');
-                // Redirect to admin_login.html relative to the current origin
-                window.location.replace(window.location.origin + '/admin_login.html'); 
-            } catch (error) {
-                console.error("Error during logout (no active session expected):", error);
-                showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
-            }
-        }
-
-        // Function to load overview data from Firebase
-        async function loadOverviewData() {
-            try {
-                showNotification('جاري تحميل بيانات النظرة العامة...', 'info');
-
-                // Fetch total orders
-                const ordersSnapshot = await get(dbRef(db, 'orders'));
-                document.getElementById('totalOrdersValue').textContent = ordersSnapshot.exists() ? Object.keys(ordersSnapshot.val()).length : 0;
-
-                // Fetch total products
-                const productsSnapshot = await get(dbRef(db, 'products'));
-                document.getElementById('totalProductsValue').textContent = productsSnapshot.exists() ? Object.keys(productsSnapshot.val()).length : 0;
-
-                // Fetch total offers (assuming a 'offers' node)
-                const offersSnapshot = await get(dbRef(db, 'offers'));
-                document.getElementById('totalOffersValue').textContent = offersSnapshot.exists() ? Object.keys(offersSnapshot.val()).length : 0;
-
-                // Fetch total categories
-                const categoriesSnapshot = await get(dbRef(db, 'categories'));
-                document.getElementById('totalCategoriesValue').textContent = categoriesSnapshot.exists() ? Object.keys(categoriesSnapshot.val()).length : 0;
-
-                // Fetch total customer messages (assuming a 'customerMessages' node)
-                const customerMessagesSnapshot = await get(dbRef(db, 'customerMessages'));
-                document.getElementById('totalUserMessagesValue').textContent = customerMessagesSnapshot.exists() ? Object.keys(customerMessagesSnapshot.val()).length : 0;
-
-                showNotification('تم تحميل بيانات النظرة العامة بنجاح!', 'success');
-            } catch (error) {
-                console.error("Error loading overview data:", error);
-                showNotification('حدث خطأ أثناء تحميل بيانات النظرة العامة.', 'error');
-            }
-        }
-
-        // Function to switch between sections/tabs
-        function showSection(sectionId) {
-            // Special case: Redirect for customerReplies
-            if (sectionId === 'customerReplies') {
-                window.location.href = 'Replytocustomers.html'; // Redirect to the new page
-                return; // Stop further execution in this function
-            }
-
-            // Hide all content sections
-            document.querySelectorAll('.main-content > section').forEach(section => {
-                section.style.display = 'none';
-            });
-            // Show the selected content section
-            const targetSection = document.getElementById(sectionId + 'Section');
-            if (targetSection) {
-                targetSection.style.display = 'block';
-            }
-
-            // Update section header title and description
-            const sectionHeaderTitle = document.querySelector('.section-header h2');
-            const sectionHeaderDesc = document.querySelector('.section-header p');
-
-            switch (sectionId) {
-                case 'overview':
-                    sectionHeaderTitle.textContent = 'نظرة عامة على لوحة التحكم';
-                    sectionHeaderDesc.textContent = 'مرحباً بك في لوحة تحكم متجرك.';
-                    loadOverviewData(); // Load data specifically for overview
-                    break;
-                // case 'customerReplies': // This case is now handled by the redirect above
-                //     sectionHeaderTitle.textContent = 'الرد على الزبائن';
-                //     sectionHeaderDesc.textContent = 'إدارة رسائل واستفسارات العملاء.';
-                //     break;
-                case 'requestsAdmin':
-                    sectionHeaderTitle.textContent = 'إدارة الطلبات';
-                    sectionHeaderDesc.textContent = 'عرض وتتبع وإدارة طلبات العملاء.';
-                    break;
-                case 'products':
-                    sectionHeaderTitle.textContent = 'إدارة المنتجات';
-                    sectionHeaderDesc.textContent = 'إضافة وتعديل وحذف المنتجات.';
-                    break;
-                case 'users':
-                    sectionHeaderTitle.textContent = 'إدارة المستخدمين';
-                    sectionHeaderDesc.textContent = 'عرض وإدارة حسابات المستخدمين.';
-                    break;
-                case 'categoriesAdmin':
-                    sectionHeaderTitle.textContent = 'إدارة الأقسام';
-                    sectionHeaderDesc.textContent = 'تنظيم أقسام المنتجات في متجرك.';
-                    break;
-                case 'settings':
-                    sectionHeaderTitle.textContent = 'الإعدادات العامة';
-                    sectionHeaderDesc.textContent = 'إدارة معلومات متجرك وتحديث الإعدادات.';
-                    // loadGeneralSettings() is already called onValue, so data will be there
-                    break;
-                case 'homepageSettings':
-                    sectionHeaderTitle.textContent = 'إعدادات الصفحة الرئيسية';
-                    sectionHeaderDesc.textContent = 'تخصيص محتوى وتصميم الصفحة الرئيسية.';
-                    break;
-                default:
-                    sectionHeaderTitle.textContent = 'لوحة التحكم';
-                    sectionHeaderDesc.textContent = 'صفحة غير معروفة.';
-            }
-        }
-
-
-        document.addEventListener('DOMContentLoaded', () => {
-            loadGeneralSettings(); // Load general settings once for header and settings tab
-
-            // Mobile Navigation Toggle (for the sidebar)
-            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-            const mobileNav = document.getElementById('mobileNav');
-            
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileNav.classList.toggle('open');
-            });
-            
-            // Close mobile nav (sidebar) when clicking outside
-            document.addEventListener('click', (event) => {
-                const isClickInsideNav = mobileNav.contains(event.target);
-                const isClickOnMenuBtn = mobileMenuBtn.contains(event.target);
-                const isClickOnHeader = document.querySelector('.mobile-header').contains(event.target);
-
-                // Close sidebar if click is outside sidebar, menu button, and the main header itself
-                if (!isClickInsideNav && !isClickOnMenuBtn && !isClickOnHeader && mobileNav.classList.contains('open')) {
-                    mobileNav.classList.remove('open');
-                }
-            });
-
-            // Event listeners for sidebar navigation items
-            document.querySelectorAll('.mobile-nav .nav-item').forEach(item => {
-                item.addEventListener('click', (event) => {
-                    // Only prevent default if it's not the logout button
-                    if (item.id !== 'mobileLogoutBtn') {
-                        event.preventDefault();
-                        const sectionId = item.getAttribute('data-section'); // Use data-section for clarity
-                        if (sectionId) { // Check if it's a content section link
-                            showSection(sectionId);
-                            mobileNav.classList.remove('open'); // Close sidebar after selecting a section
-                        }
-                    }
-                });
-            });
-
-            // Set initial active section to 'overview'
-            showSection('overview');
-
-            // Save General Settings Button Functionality (in Settings tab)
-            document.getElementById('saveGeneralSettingsBtn').addEventListener('click', saveGeneralSettings);
-            
-            // Add/Update Delivery Price Button (in Settings tab)
-            document.getElementById('addUpdateDeliveryPriceBtn').addEventListener('click', addOrUpdateDeliveryPrice);
-            
-            // Logout button in mobile nav
-            document.getElementById('mobileLogoutBtn').addEventListener('click', handleLogout);
-
-            // Periodically manage log size (e.g., every 30 seconds)
-            setInterval(() => manageAdminLogsSize(10), 30000); // Check every 30 seconds
-        });
-    </script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics-compat.js"></script>
     <style>
         :root {
             --color-primary-dark-blue: #1A237E;
@@ -581,16 +51,16 @@
             display: flex;
             flex-direction: column;
             overflow-x: hidden;
-            padding-top: 60px; /* Space for fixed mobile header */
+            padding-top: 60px;
         }
 
-        /* Mobile Header (Top Bar: Logo + Hamburger Button) */
+        /* Mobile Header */
         .mobile-header {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
-            height: 60px; /* Fixed height for header */
+            height: 60px;
             background-color: var(--primary);
             color: white;
             padding: 0.8rem 1rem;
@@ -634,27 +104,27 @@
             flex-shrink: 0;
         }
 
-        /* Mobile Navigation (Sidebar - for all links including Logout) */
+        /* Mobile Navigation */
         .mobile-nav {
             position: fixed;
-            top: 0; /* Starts from top */
+            top: 0;
             left: 0;
-            width: 100%; /* Full width */
-            height: 100%; /* Full height */
+            width: 100%;
+            height: 100%;
             background-color: var(--primary);
             color: white;
-            z-index: 1000; /* Above main content, same as header */
-            transform: translateX(100%); /* Hidden by default, slides from right */
+            z-index: 1000;
+            transform: translateX(100%);
             transition: transform 0.3s ease-in-out;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-            padding-top: 60px; /* Space for header */
+            padding-top: 60px;
             display: flex;
             flex-direction: column;
         }
 
         .mobile-nav.open {
-            transform: translateX(0); /* Slide in */
-            overflow-y: auto; /* Allow scrolling if content is long */
+            transform: translateX(0);
+            overflow-y: auto;
         }
 
         .mobile-nav .nav-item {
@@ -729,10 +199,10 @@
             border-radius: 2px;
         }
 
-        /* Dashboard Summary Cards (for Overview Section) */
+        /* Dashboard Summary Cards */
         .summary-cards-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsive grid */
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 1rem;
             padding: 0.5rem;
         }
@@ -760,7 +230,7 @@
         }
 
         .summary-card i {
-            font-size: 2.2rem; /* Slightly smaller icon for summary */
+            font-size: 2.2rem;
             color: var(--primary);
         }
 
@@ -777,7 +247,7 @@
             color: #555;
         }
         
-        /* Settings Section Styles (reused from previous iteration) */
+        /* Settings Section Styles */
         .settings-section-card {
             background-color: var(--color-admin-card-bg);
             border-radius: var(--radius);
@@ -850,7 +320,7 @@
             align-items: center;
             justify-content: center;
             gap: 0.6rem;
-            width: 100%; /* Full width buttons on mobile */
+            width: 100%;
         }
 
         .btn-primary { background-color: var(--primary); }
@@ -878,20 +348,20 @@
 
         /* Delivery Prices Table */
         .delivery-prices-table-container {
-            overflow-x: auto; /* Allows horizontal scrolling for the table if content is too wide */
+            overflow-x: auto;
             margin-top: 1.2rem;
             border: 1px solid var(--border);
             border-radius: var(--radius);
             padding: 0.5rem;
             background: white;
-            max-height: 300px; /* Limit height and add scroll for long lists */
+            max-height: 300px;
             overflow-y: auto;
         }
 
         .delivery-prices-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 100%; /* Ensure it takes full width of its container */
+            min-width: 100%;
         }
 
         .delivery-prices-table th,
@@ -907,7 +377,7 @@
             background-color: var(--primary);
             color: white;
             font-weight: 700;
-            position: sticky; /* Keeps header visible when scrolling table */
+            position: sticky;
             top: 0;
         }
 
@@ -922,7 +392,7 @@
         .delivery-action-btn {
             background: none;
             border: none;
-            color: var(--primary); /* Use primary color for action icons */
+            color: var(--primary);
             font-size: 1rem;
             cursor: pointer;
             padding: 0.3rem;
@@ -933,7 +403,7 @@
             transform: scale(1.1);
         }
         .delivery-action-btn.delete-delivery-btn {
-            color: var(--error); /* Red for delete button */
+            color: var(--error);
         }
         .delivery-action-btn.delete-delivery-btn:hover {
             color: #C82333;
@@ -941,25 +411,9 @@
 
         .delivery-input-group {
             display: flex;
-            flex-direction: column; /* Stack inputs vertically on mobile */
+            flex-direction: column;
             gap: 1rem;
             margin-top: 1.5rem;
-        }
-
-        /* Customer Replies Section */
-        .customer-replies-section .content-card {
-            background-color: var(--color-admin-card-bg);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            text-align: center;
-        }
-        
-        .customer-replies-section .content-card p {
-            font-size: 1rem;
-            color: #555;
-            line-height: 1.6;
         }
 
         /* Admin Footer */
@@ -975,7 +429,7 @@
         /* Notification Styles */
         .notification {
             position: fixed;
-            top: 70px; /* Below mobile header */
+            top: 70px;
             left: 50%;
             transform: translateX(-50%) translateY(-100%);
             background-color: var(--primary);
@@ -1047,10 +501,40 @@
             width: auto;
             padding: 0.8rem 1.2rem;
         }
+        
+        .redirect-info {
+            background-color: var(--info);
+            color: white;
+            padding: 1rem;
+            border-radius: var(--radius);
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <!-- Mobile Header (Top Bar: Logo + Hamburger Button) -->
+    <!-- Mobile Header -->
     <header class="mobile-header">
         <div class="logo-container">
             <img id="mobileStoreLogo" src="https://placehold.co/40x40/1A237E/FFD700?text=شعار" alt="Store Logo" class="store-logo">
@@ -1061,7 +545,7 @@
         </button>
     </header>
 
-    <!-- Mobile Navigation (Sidebar - for all links including Logout) -->
+    <!-- Mobile Navigation -->
     <nav class="mobile-nav" id="mobileNav">
         <a href="#" class="nav-item" data-section="overview">
             <i class="fas fa-tachometer-alt"></i> <span>نظرة عامة</span>
@@ -1092,15 +576,14 @@
         </a>
     </nav>
 
-    <!-- Main Content Area - This will hold the dynamically switched sections -->
+    <!-- Main Content Area -->
     <main class="main-content">
         <div class="section-header">
-            <!-- Title and description will be updated by JavaScript -->
             <h2>نظرة عامة على لوحة التحكم</h2>
-            <p>مرحباً بك في لوحة تحكم متجرك.</p>
+            <p>مرحباً بك في لوحة تحكم متجرك</p>
         </div>
 
-        <!-- Overview Section (Default active) -->
+        <!-- Overview Section -->
         <section id="overviewSection" class="dashboard-section">
             <div class="summary-cards-grid">
                 <div class="summary-card">
@@ -1129,60 +612,9 @@
                     <span class="card-title">رسائل المستخدمين</span>
                 </div>
             </div>
-        </section>
-
-        <!-- Customer Replies Section (Placeholder - will not be shown due to redirect) -->
-        <section id="customerRepliesSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>الرد على الزبائن</h3>
-                <div class="no-content-message">
-                    <i class="fas fa-tools"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم إضافة وظائف الرد على الزبائن هنا قريباً.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Requests Admin Section (Placeholder) -->
-        <section id="requestsAdminSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة الطلبات</h3>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة الطلبات هنا.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Products Section (Placeholder) -->
-        <section id="productsSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة المنتجات</h3>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة المنتجات هنا.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Users Section (Placeholder) -->
-        <section id="usersSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة المستخدمين</h3>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة المستخدمين هنا.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Categories Admin Section (Placeholder) -->
-        <section id="categoriesAdminSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إدارة الأقسام</h3>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم عرض قائمة الأقسام هنا.</p>
-                </div>
+            
+            <div class="redirect-info">
+                <p>ملاحظة: سيتم توجيهك إلى صفحات مستقلة عند الضغط على الروابط في القائمة الجانبية</p>
             </div>
         </section>
 
@@ -1247,7 +679,6 @@
                         </tr>
                     </thead>
                     <tbody id="deliveryPricesTableBody">
-                        <!-- Delivery prices will be loaded here by JavaScript -->
                         <tr><td colspan="3" class="no-content-message">جاري تحميل أسعار التوصيل...</td></tr>
                     </tbody>
                 </table>
@@ -1269,16 +700,13 @@
             </div>
         </section>
 
-        <!-- Homepage Settings Section (Placeholder) -->
-        <section id="homepageSettingsSection" style="display: none;">
-            <div class="settings-section-card">
-                <h3>إعدادات الصفحة الرئيسية</h3>
-                <div class="no-content-message">
-                    <i class="fas fa-info-circle"></i>
-                    <p>هذا القسم قيد الإنشاء. سيتم توفير خيارات تخصيص الصفحة الرئيسية هنا.</p>
-                </div>
-            </div>
-        </section>
+        <!-- Placeholder Sections (Hidden by default) -->
+        <section id="customerRepliesSection" style="display: none;"></section>
+        <section id="requestsAdminSection" style="display: none;"></section>
+        <section id="productsSection" style="display: none;"></section>
+        <section id="usersSection" style="display: none;"></section>
+        <section id="categoriesAdminSection" style="display: none;"></section>
+        <section id="homepageSettingsSection" style="display: none;"></section>
 
     </main>
     
@@ -1288,9 +716,7 @@
     </footer>
     
     <!-- Notification -->
-    <div class="notification" id="notification">
-        <!-- Notification messages will appear here -->
-    </div>
+    <div class="notification" id="notification"></div>
     
     <!-- Modal for Confirmation -->
     <div class="custom-modal" id="confirmationModal" style="display: none;">
@@ -1303,5 +729,456 @@
         </div>
     </div>
     
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const analytics = firebase.analytics();
+        const database = firebase.database();
+        const auth = firebase.auth();
+        
+        // Global variables
+        let deliveryPrices = {};
+        let adminUserId = "anonymous_admin";
+        
+        // Function to show notifications
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            if (!notification) return;
+
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // Function to show loading indicator
+        function showLoading(elementId) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = '<div class="loading-indicator"><div class="spinner"></div></div>';
+            }
+        }
+        
+        // Function to hide loading indicator
+        function hideLoading(elementId, content) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = content || '';
+            }
+        }
+        
+        // Function to load overview data from Firebase
+        async function loadOverviewData() {
+            try {
+                showLoading('totalOrdersValue');
+                showLoading('totalProductsValue');
+                showLoading('totalOffersValue');
+                showLoading('totalCategoriesValue');
+                showLoading('totalUserMessagesValue');
+                
+                // Fetch total orders
+                const ordersSnapshot = await database.ref('orders').once('value');
+                const ordersCount = ordersSnapshot.exists() ? Object.keys(ordersSnapshot.val()).length : 0;
+                document.getElementById('totalOrdersValue').textContent = ordersCount;
+                
+                // Fetch total products
+                const productsSnapshot = await database.ref('products').once('value');
+                const productsCount = productsSnapshot.exists() ? Object.keys(productsSnapshot.val()).length : 0;
+                document.getElementById('totalProductsValue').textContent = productsCount;
+                
+                // Fetch total offers
+                const offersSnapshot = await database.ref('offers').once('value');
+                const offersCount = offersSnapshot.exists() ? Object.keys(offersSnapshot.val()).length : 0;
+                document.getElementById('totalOffersValue').textContent = offersCount;
+                
+                // Fetch total categories
+                const categoriesSnapshot = await database.ref('categories').once('value');
+                const categoriesCount = categoriesSnapshot.exists() ? Object.keys(categoriesSnapshot.val()).length : 0;
+                document.getElementById('totalCategoriesValue').textContent = categoriesCount;
+                
+                // Fetch total customer messages
+                const customerMessagesSnapshot = await database.ref('customerMessages').once('value');
+                const messagesCount = customerMessagesSnapshot.exists() ? Object.keys(customerMessagesSnapshot.val()).length : 0;
+                document.getElementById('totalUserMessagesValue').textContent = messagesCount;
+                
+                showNotification('تم تحميل بيانات النظرة العامة بنجاح!', 'success');
+            } catch (error) {
+                console.error("Error loading overview data:", error);
+                showNotification('حدث خطأ أثناء تحميل بيانات النظرة العامة.', 'error');
+                
+                // Hide loading indicators
+                hideLoading('totalOrdersValue', '0');
+                hideLoading('totalProductsValue', '0');
+                hideLoading('totalOffersValue', '0');
+                hideLoading('totalCategoriesValue', '0');
+                hideLoading('totalUserMessagesValue', '0');
+            }
+        }
+        
+        // Function to load general settings
+        async function loadGeneralSettings() {
+            try {
+                const settingsRef = database.ref('settings');
+                
+                settingsRef.on('value', (snapshot) => {
+                    const settings = snapshot.val() || {};
+                    
+                    // Populate form fields
+                    document.getElementById('storeNameInput').value = settings.storeName || '';
+                    document.getElementById('storeLogoUrlInput').value = settings.logoUrl || '';
+                    document.getElementById('phoneNumberInput').value = settings.phoneNumber || '';
+                    document.getElementById('emailInput').value = settings.email || '';
+                    document.getElementById('storeAddressInput').value = settings.address || '';
+                    document.getElementById('currencySelect').value = settings.currency || 'IQD';
+                    document.getElementById('languageSelect').value = settings.language || 'ar';
+                    document.getElementById('deliveryTimeInput').value = settings.deliveryTime || '';
+                    
+                    // Update header
+                    document.getElementById('mobileStoreName').textContent = settings.storeName || 'لوحة التحكم';
+                    if (settings.logoUrl) {
+                        document.getElementById('mobileStoreLogo').src = settings.logoUrl;
+                    }
+                    
+                    // Load delivery prices
+                    deliveryPrices = settings.deliveryPrices || {};
+                    renderDeliveryPricesTable();
+                });
+                
+            } catch (error) {
+                console.error("Error loading settings:", error);
+                showNotification('حدث خطأ أثناء تحميل الإعدادات.', 'error');
+            }
+        }
+        
+        // Function to render delivery prices table
+        function renderDeliveryPricesTable() {
+            const tbody = document.getElementById('deliveryPricesTableBody');
+            tbody.innerHTML = '';
+            
+            if (!deliveryPrices || Object.keys(deliveryPrices).length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="no-content-message">لا توجد أسعار توصيل محددة.</td></tr>`;
+                return;
+            }
+            
+            Object.entries(deliveryPrices).forEach(([city, price]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${city}</td>
+                    <td>${price.toLocaleString('ar-EG')} د.ع</td>
+                    <td>
+                        <button class="delivery-action-btn delete-delivery-btn" data-city="${city}" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-delivery-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const city = this.getAttribute('data-city');
+                    showConfirmModal(city);
+                });
+            });
+        }
+        
+        // Function to show confirmation modal for deleting delivery price
+        function showConfirmModal(city) {
+            const modal = document.getElementById('confirmationModal');
+            const cityNameSpan = document.getElementById('cityName');
+            
+            cityNameSpan.textContent = city;
+            modal.style.display = 'flex';
+            
+            // Handle confirm button
+            document.getElementById('confirmDeleteBtn').onclick = function() {
+                deleteDeliveryPrice(city);
+                modal.style.display = 'none';
+            };
+            
+            // Handle cancel button
+            document.getElementById('cancelDeleteBtn').onclick = function() {
+                modal.style.display = 'none';
+            };
+            
+            // Close modal when clicking outside
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+        
+        // Function to delete a delivery price
+        async function deleteDeliveryPrice(city) {
+            try {
+                if (deliveryPrices && deliveryPrices[city]) {
+                    delete deliveryPrices[city];
+                    
+                    // Update database
+                    await database.ref('settings/deliveryPrices').set(deliveryPrices);
+                    renderDeliveryPricesTable();
+                    showNotification(`تم حذف سعر التوصيل لمدينة ${city} بنجاح`, 'success');
+                }
+            } catch (error) {
+                console.error("Error deleting delivery price:", error);
+                showNotification('حدث خطأ أثناء حذف سعر التوصيل.', 'error');
+            }
+        }
+        
+        // Function to save general settings
+        async function saveGeneralSettings() {
+            try {
+                const storeName = document.getElementById('storeNameInput').value.trim();
+                const storeLogoUrl = document.getElementById('storeLogoUrlInput').value.trim();
+                const phoneNumber = document.getElementById('phoneNumberInput').value.trim();
+                const email = document.getElementById('emailInput').value.trim();
+                const storeAddress = document.getElementById('storeAddressInput').value.trim();
+                const currency = document.getElementById('currencySelect').value;
+                const language = document.getElementById('languageSelect').value;
+                const deliveryTime = document.getElementById('deliveryTimeInput').value.trim();
+                
+                if (!storeName || !phoneNumber || !email || !storeAddress) {
+                    showNotification('الرجاء ملء جميع الحقول المطلوبة.', 'error');
+                    return;
+                }
+                
+                const settings = {
+                    storeName,
+                    logoUrl: storeLogoUrl,
+                    phoneNumber,
+                    email,
+                    address: storeAddress,
+                    currency,
+                    language,
+                    deliveryTime: deliveryTime ? parseFloat(deliveryTime) : null,
+                    deliveryPrices
+                };
+                
+                // Update database
+                await database.ref('settings').set(settings);
+                
+                // Update header
+                document.getElementById('mobileStoreName').textContent = storeName;
+                if (storeLogoUrl) {
+                    document.getElementById('mobileStoreLogo').src = storeLogoUrl;
+                }
+                
+                showNotification('تم حفظ الإعدادات بنجاح!', 'success');
+                
+            } catch (error) {
+                console.error("Error saving settings:", error);
+                showNotification('حدث خطأ أثناء حفظ الإعدادات.', 'error');
+            }
+        }
+        
+        // Function to add or update delivery price
+        async function addOrUpdateDeliveryPrice() {
+            try {
+                const city = document.getElementById('deliveryCityInput').value.trim();
+                const price = parseFloat(document.getElementById('deliveryPriceInput').value);
+                
+                if (!city || isNaN(price) || price <= 0) {
+                    showNotification('الرجاء إدخال اسم المدينة وسعر صحيح.', 'error');
+                    return;
+                }
+                
+                // Update local object
+                deliveryPrices[city] = price;
+                
+                // Update database
+                await database.ref('settings/deliveryPrices').set(deliveryPrices);
+                
+                // Update UI
+                renderDeliveryPricesTable();
+                
+                // Clear inputs
+                document.getElementById('deliveryCityInput').value = '';
+                document.getElementById('deliveryPriceInput').value = '';
+                
+                showNotification(`تم تحديث سعر التوصيل لمدينة ${city} بنجاح`, 'success');
+                
+            } catch (error) {
+                console.error("Error updating delivery price:", error);
+                showNotification('حدث خطأ أثناء تحديث سعر التوصيل.', 'error');
+            }
+        }
+        
+        // Function to redirect to other pages
+        function redirectToPage(page) {
+            showNotification(`جاري تحويلك إلى صفحة ${page}...`, 'info');
+            
+            setTimeout(() => {
+                switch(page) {
+                    case 'الرد على الزبائن':
+                        window.location.href = 'Replytocustomers.html';
+                        break;
+                    case 'الطلبات':
+                        window.location.href = 'orders.html';
+                        break;
+                    case 'المنتجات':
+                        window.location.href = 'products.html';
+                        break;
+                    case 'المستخدمون':
+                        window.location.href = 'users.html';
+                        break;
+                    case 'الأقسام':
+                        window.location.href = 'categories.html';
+                        break;
+                    case 'إعدادات الصفحة الرئيسية':
+                        window.location.href = 'homepage.html';
+                        break;
+                    default:
+                        showNotification('صفحة غير معروفة', 'error');
+                }
+            }, 1000);
+        }
+        
+        // Function to switch sections
+        function showSection(sectionId) {
+            // Redirect for other sections
+            if (sectionId === 'customerReplies') {
+                redirectToPage('الرد على الزبائن');
+                return;
+            }
+            if (sectionId === 'requestsAdmin') {
+                redirectToPage('الطلبات');
+                return;
+            }
+            if (sectionId === 'products') {
+                redirectToPage('المنتجات');
+                return;
+            }
+            if (sectionId === 'users') {
+                redirectToPage('المستخدمون');
+                return;
+            }
+            if (sectionId === 'categoriesAdmin') {
+                redirectToPage('الأقسام');
+                return;
+            }
+            if (sectionId === 'homepageSettings') {
+                redirectToPage('إعدادات الصفحة الرئيسية');
+                return;
+            }
+
+            // Hide all sections
+            document.querySelectorAll('.main-content > section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show the selected section
+            const targetSection = document.getElementById(sectionId + 'Section');
+            if (targetSection) {
+                targetSection.style.display = 'block';
+            }
+
+            // Update section header
+            const sectionHeaderTitle = document.querySelector('.section-header h2');
+            const sectionHeaderDesc = document.querySelector('.section-header p');
+
+            switch (sectionId) {
+                case 'overview':
+                    sectionHeaderTitle.textContent = 'نظرة عامة على لوحة التحكم';
+                    sectionHeaderDesc.textContent = 'مرحباً بك في لوحة تحكم متجرك.';
+                    loadOverviewData();
+                    break;
+                case 'settings':
+                    sectionHeaderTitle.textContent = 'الإعدادات العامة';
+                    sectionHeaderDesc.textContent = 'إدارة معلومات متجرك وتحديث الإعدادات.';
+                    break;
+                default:
+                    sectionHeaderTitle.textContent = 'لوحة التحكم';
+                    sectionHeaderDesc.textContent = 'صفحة غير معروفة.';
+            }
+        }
+        
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize Firebase
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    adminUserId = user.uid;
+                    showNotification('تم تسجيل الدخول بنجاح', 'success');
+                } else {
+                    // Redirect to login if not authenticated
+                    window.location.href = 'admin_login.html';
+                }
+            });
+            
+            // Load settings
+            loadGeneralSettings();
+            
+            // Mobile navigation toggle
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileNav = document.getElementById('mobileNav');
+            
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileNav.classList.toggle('open');
+            });
+            
+            // Close mobile nav when clicking outside
+            document.addEventListener('click', (event) => {
+                const isClickInsideNav = mobileNav.contains(event.target);
+                const isClickOnMenuBtn = mobileMenuBtn.contains(event.target);
+                const isClickOnHeader = document.querySelector('.mobile-header').contains(event.target);
+
+                if (!isClickInsideNav && !isClickOnMenuBtn && !isClickOnHeader && mobileNav.classList.contains('open')) {
+                    mobileNav.classList.remove('open');
+                }
+            });
+
+            // Event listeners for sidebar items
+            document.querySelectorAll('.mobile-nav .nav-item').forEach(item => {
+                item.addEventListener('click', (event) => {
+                    if (item.id !== 'mobileLogoutBtn') {
+                        event.preventDefault();
+                        const sectionId = item.getAttribute('data-section');
+                        if (sectionId) {
+                            showSection(sectionId);
+                            mobileNav.classList.remove('open');
+                        }
+                    }
+                });
+            });
+
+            // Set initial active section
+            showSection('overview');
+
+            // Save settings button
+            document.getElementById('saveGeneralSettingsBtn').addEventListener('click', saveGeneralSettings);
+            
+            // Add/update delivery price button
+            document.getElementById('addUpdateDeliveryPriceBtn').addEventListener('click', addOrUpdateDeliveryPrice);
+            
+            // Logout button
+            document.getElementById('mobileLogoutBtn').addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    showNotification('تم تسجيل الخروج بنجاح', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'admin_login.html';
+                    }, 1500);
+                }).catch(error => {
+                    console.error("Logout error:", error);
+                    showNotification('حدث خطأ أثناء تسجيل الخروج', 'error');
+                });
+            });
+        });
+    </script>
 </body>
 </html>
