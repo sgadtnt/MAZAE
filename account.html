@@ -3,23 +3,1257 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حسابي</title>
+    <title>الدعم الفني - لوحة العميل</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <!-- Updated Firebase SDK imports for version 9+ modular SDK -->
-    <script type="module">
-        // تم تحديث روابط Firebase SDK إلى الإصدار 9.23.0
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, addDoc, setDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
-        import { getDatabase, ref as dbRef, onValue, set, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
-
-
-        // Global variables provided by the Canvas environment (appId is still used for collection paths)
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <style>
+        :root {
+            --color-primary-blue: #1A237E;
+            --color-secondary-gold: #FFD700;
+            --color-background-light: #f0f2f5;
+            --color-text-dark: #212121;
+            --color-border-medium-blue: #d0d0d0;
+            --color-admin-message: #e3f2fd;
+            --color-user-message: #f5f5f5;
+            --primary: var(--color-primary-blue);
+            --secondary: var(--color-secondary-gold);
+            --accent: var(--color-secondary-gold);
+            --light: var(--color-background-light);
+            --dark: var(--color-text-dark);
+            --success: #2ECC71;
+            --warning: #FFC107;
+            --error: #E74C3C;
+            --border: var(--color-border-medium-blue);
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease-in-out;
+            font-size: 14px;
+        }
         
-        // Your web app's Firebase configuration (provided by the user)
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Cairo', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa, #e4e7f1);
+            color: var(--dark);
+            min-height: 100vh;
+            direction: rtl; 
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--color-primary-blue), #283593);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            border-bottom: 3px solid var(--color-secondary-gold);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-container i {
+            font-size: 1.8rem;
+            color: var(--secondary);
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .logo-container h1 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 12px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+            color: white;
+            transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .connection-status i {
+            font-size: 0.8rem;
+            color: #2ECC71;
+        }
+        
+        .connection-status.offline i {
+            color: #E74C3C;
+        }
+        
+        /* Admin Layout */
+        .admin-container {
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 65px);
+            padding-top: 65px;
+        }
+
+        /* Admin Content */
+        .admin-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 65px);
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* Conversation Header */
+        .conversation-header-bar {
+            padding: 15px 25px;
+            background-color: white;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.07);
+            position: sticky;
+            top: 65px;
+            z-index: 500;
+        }
+
+        .conversation-user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .conversation-user-avatar {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--color-primary-blue), #283593);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+        }
+
+        .conversation-user-details {
+            line-height: 1.4;
+        }
+
+        .conversation-user-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #2c3e50;
+        }
+
+        .status {
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status::before {
+            content: '';
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .status.online::before {
+            background-color: var(--success);
+            box-shadow: 0 0 6px var(--success);
+        }
+
+        .status.offline::before {
+            background-color: #bbb;
+        }
+        
+        .status.blocked::before {
+            background-color: var(--error);
+            box-shadow: 0 0 6px var(--error);
+        }
+        
+        /* Messages Area */
+        .messages-area {
+            flex-grow: 1; 
+            min-height: 0; 
+            padding: 20px;
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-height: 100%; 
+            padding: 10px;
+        }
+
+        .no-messages {
+            text-align: center;
+            padding: 40px 20px;
+            color: #777;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+        }
+
+        .no-messages i {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.2;
+            color: #7f8c8d;
+        }
+
+        .no-messages p {
+            margin: 8px 0;
+            font-size: 1.1rem;
+            color: #5c6770;
+        }
+
+        .date-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .date-divider span {
+            background: linear-gradient(to right, #e0e0e0, #f0f0f0);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: #5c6770;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .date-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.05));
+            z-index: 0;
+        }
+
+        .message {
+            max-width: 78%;
+            padding: 14px 18px;
+            border-radius: 20px;
+            position: relative;
+            animation: fadeIn 0.4s ease-out;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.07);
+            transition: var(--transition);
+            transform-origin: bottom;
+        }
+
+        .message:hover {
+            transform: translateY(-2px);
+        }
+
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(15px) scale(0.95); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+
+        .user-message {
+            background: linear-gradient(to bottom, #ffffff, #f5f7fa);
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+
+        .admin-message {
+            background: linear-gradient(to bottom, #e3f2fd, #d0e5ff);
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+            border: 1px solid #c5daf8;
+        }
+        
+        .notification-message {
+            background: linear-gradient(to bottom, #fff8e1, #ffecb3);
+            align-self: center;
+            max-width: 90%;
+            text-align: center;
+            border: 1px solid #ffd54f;
+        }
+
+        .message-content {
+            word-wrap: break-word;
+            line-height: 1.5;
+            position: relative;
+            font-size: 1.05rem;
+            color: #333;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 8px;
+            text-align: left;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+
+        .admin-message .message-time {
+            text-align: right;
+        }
+        
+        .user-message .message-time {
+            text-align: left;
+        }
+        
+        .message-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            background: rgba(0,0,0,0.05);
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: background 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .typing-indicator {
+            background: var(--color-admin-message);
+            padding: 10px 15px;
+            border-radius: 20px;
+            align-self: flex-start;
+            display: inline-flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #666;
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-5px); }
+        }
+        
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            padding: 30px 20px;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(26, 35, 126, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 18px 28px;
+            border-radius: 12px;
+            color: white;
+            font-weight: bold;
+            box-shadow: var(--shadow);
+            z-index: 2000;
+            opacity: 0;
+            transform: translateY(-30px);
+            transition: opacity 0.3s, transform 0.3s;
+            min-width: 300px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .notification.success {
+            background: linear-gradient(to right, rgba(46, 204, 113, 0.9), rgba(39, 174, 96, 0.9));
+        }
+        
+        .notification.error {
+            background: linear-gradient(to right, rgba(231, 76, 60, 0.9), rgba(192, 57, 43, 0.9));
+        }
+        
+        .notification.warning {
+            background: linear-gradient(to right, rgba(255, 193, 7, 0.9), rgba(230, 126, 34, 0.9));
+            color: var(--dark);
+        }
+        
+        .notification.info {
+            background: linear-gradient(to right, rgba(52, 152, 219, 0.9), rgba(41, 128, 185, 0.9));
+        }
+
+        /* Message Input Area */
+        .message-input-area {
+            display: flex;
+            padding: 18px;
+            background-color: white;
+            border-top: 1px solid var(--border);
+            align-items: center;
+            box-shadow: 0 -3px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            gap: 12px;
+        }
+
+        .customer-message-input {
+            flex-grow: 1;
+            padding: 14px 18px;
+            border: 1px solid #dde2e8;
+            border-radius: 30px;
+            resize: none;
+            min-height: 55px;
+            max-height: 150px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: #f8fafc;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .customer-message-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2), inset 0 2px 4px rgba(0,0,0,0.05);
+            background: white;
+        }
+
+        .customer-send-button {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #283593);
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3);
+            position: relative;
+            z-index: 101;
+        }
+
+        .customer-send-button:hover {
+            background: linear-gradient(135deg, #283593, #1A237E);
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(26, 35, 126, 0.4);
+        }
+
+        .customer-send-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .customer-send-button .fa-paper-plane {
+            transition: transform 0.3s ease;
+        }
+        
+        .customer-send-button.sending .fa-paper-plane {
+            transform: translateX(5px) translateY(-5px);
+        }
+        
+        .help-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e0e0e0;
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+        }
+
+        .help-header {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .help-card {
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .help-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(to bottom, #e3f2fd, #d0e5ff);
+        }
+
+        .help-card i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .help-card h3 {
+            font-size: 1.2rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+
+        .help-card p {
+            font-size: 0.95rem;
+            color: #5c6770;
+        }
+        
+        .chat-history {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e0e0e0;
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+        }
+        
+        .history-header {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .history-item:hover {
+            background-color: #f5f7fa;
+        }
+        
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        
+        .history-info h3 {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 5px;
+        }
+        
+        .history-info p {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+        
+        .history-date {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .history-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .status-resolved {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .status-pending {
+            background-color: #fff8e1;
+            color: #f57f17;
+        }
+        
+        .status-closed {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        /* FAQ Section */
+        .faq-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            margin: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid #e0e0e0;
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+        }
+        
+        .faq-header {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .faq-item {
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .faq-question {
+            padding: 15px 20px;
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .faq-question i {
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.open .faq-question i {
+            transform: rotate(180deg);
+        }
+        
+        .faq-answer {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .faq-item.open .faq-answer {
+            padding: 15px 20px;
+            max-height: 500px;
+        }
+        
+        .faq-answer p {
+            color: #5c6770;
+            line-height: 1.6;
+        }
+
+        /* Contact buttons */
+        .contact-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .contact-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--color-primary-blue), #283593);
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3);
+            min-width: 200px;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .contact-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(26, 35, 126, 0.4);
+        }
+        
+        .contact-button.whatsapp {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+        }
+        
+        .contact-button.email {
+            background: linear-gradient(135deg, #EA4335, #BB001B);
+        }
+        
+        .back-button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            margin-right: 10px;
+            transition: var(--transition);
+        }
+        
+        .back-button:hover {
+            transform: translateX(-5px);
+            color: var(--color-primary-blue);
+        }
+
+        /* New styles for blocked and closed chat */
+        .blocked-chat-message {
+            text-align: center;
+            padding: 25px;
+            background: #ffebee;
+            border-radius: var(--radius);
+            margin: 20px;
+            border: 1px solid #ffcdd2;
+        }
+        
+        .new-chat-button {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3);
+        }
+        
+        .new-chat-button:hover {
+            background: #283593;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(26, 35, 126, 0.4);
+        }
+        
+        .closed-chat-message {
+            text-align: center;
+            padding: 25px;
+            background: #fff8e1;
+            border-radius: var(--radius);
+            margin: 20px;
+            border: 1px solid #ffecb3;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            :root {
+                font-size: 13px;
+            }
+            
+            .app-header {
+                padding: 10px 12px;
+            }
+            
+            .logo-container h1 {
+                font-size: 1.05rem;
+            }
+            
+            .connection-status {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+            
+            .conversation-header-bar {
+                padding: 10px 15px;
+            }
+            
+            .conversation-user-avatar {
+                width: 42px;
+                height: 42px;
+                font-size: 1.3rem;
+            }
+            
+            .conversation-user-name {
+                font-size: 1.05rem;
+            }
+            
+            .messages-area {
+                padding: 12px;
+            }
+            
+            .message {
+                max-width: 90%;
+                padding: 12px 15px;
+            }
+            
+            .message-content {
+                font-size: 0.95rem;
+            }
+            
+            .date-divider span {
+                padding: 6px 15px;
+                font-size: 0.8rem;
+            }
+            
+            .message-input-area {
+                padding: 12px;
+            }
+            
+            .customer-message-input {
+                padding: 12px 15px;
+                min-height: 48px;
+                font-size: 0.95rem;
+            }
+            
+            .customer-send-button {
+                width: 48px;
+                height: 48px;
+                font-size: 1.2rem;
+            }
+            
+            .contact-button {
+                min-width: 160px;
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            :root {
+                font-size: 12px;
+            }
+            
+            .app-header {
+                padding: 8px 10px;
+            }
+            
+            .logo-container h1 {
+                font-size: 0.95rem;
+            }
+            
+            .logo-container i {
+                font-size: 1.5rem;
+            }
+            
+            .connection-status {
+                font-size: 0.7rem;
+                padding: 3px 8px;
+            }
+            
+            .conversation-header-bar {
+                padding: 8px 12px;
+            }
+            
+            .conversation-user-avatar {
+                width: 38px;
+                height: 38px;
+                font-size: 1.2rem;
+            }
+            
+            .conversation-user-name {
+                font-size: 0.95rem;
+            }
+            
+            .messages-area {
+                padding: 10px 8px;
+            }
+            
+            .message {
+                max-width: 92%;
+                padding: 10px 12px;
+                border-radius: 18px;
+            }
+            
+            .no-messages i {
+                font-size: 3.5rem;
+            }
+            
+            .no-messages p {
+                font-size: 0.95rem;
+            }
+            
+            .message-input-area {
+                padding: 10px;
+            }
+            
+            .customer-message-input {
+                padding: 10px 12px;
+                min-height: 44px;
+                font-size: 0.9rem;
+            }
+            
+            .customer-send-button {
+                width: 44px;
+                height: 44px;
+                font-size: 1.1rem;
+            }
+            
+            .notification {
+                min-width: 260px;
+                padding: 15px 20px;
+                font-size: 0.9rem;
+            }
+            
+            .contact-button {
+                min-width: 140px;
+                padding: 8px 12px;
+                font-size: 0.85rem;
+            }
+        }
+        
+        .messages-container {
+            padding-bottom: 15px;
+        }
+        
+        .notification-message {
+            font-size: 0.9rem;
+            padding: 10px 15px;
+        }
+
+        .messages-area {
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
+        }
+        
+        .active-chat {
+            display: block;
+        }
+        
+        .inactive-chat {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- App Header -->
+    <div class="app-header">
+        <div class="logo-container">
+            <i class="fas fa-headset"></i>
+            <h1>الدعم الفني - لوحة العميل</h1>
+        </div>
+        <div id="connectionStatus" class="connection-status">
+            <i class="fas fa-circle"></i>
+            <span>متصل</span>
+        </div>
+    </div>
+    
+    <!-- Help Section -->
+    <div id="helpSection" class="help-section active-chat">
+        <div class="help-header">
+            <i class="fas fa-question-circle"></i>
+            <h2>كيف يمكننا مساعدتك اليوم؟</h2>
+        </div>
+        <div class="help-grid">
+            <div class="help-card" onclick="startNewChat()">
+                <i class="fas fa-comments"></i>
+                <h3>بدء محادثة جديدة</h3>
+                <p>تواصل مع ممثل الدعم لحل مشكلتك</p>
+            </div>
+            <div class="help-card" onclick="showChatHistory()">
+                <i class="fas fa-history"></i>
+                <h3>عرض المحادثات السابقة</h3>
+                <p>راجع سجل محادثاتك مع الدعم الفني</p>
+            </div>
+            <div class="help-card" onclick="showFAQ()">
+                <i class="fas fa-book"></i>
+                <h3>الأسئلة الشائعة</h3>
+                <p>ابحث عن حلول للمشكلات الشائعة</p>
+            </div>
+            <div class="help-card" onclick="callSupport()">
+                <i class="fas fa-phone-alt"></i>
+                <h3>الاتصال بالدعم</h3>
+                <p>اتصل بنا مباشرة على الرقم +9647823053419</p>
+            </div>
+        </div>
+        
+        <!-- Contact Buttons -->
+        <div class="contact-buttons">
+            <a href="tel:+9647823053419" class="contact-button">
+                <i class="fas fa-phone-alt"></i>
+                اتصل الآن
+            </a>
+            <a href="https://wa.me/9647823053419" class="contact-button whatsapp" target="_blank">
+                <i class="fab fa-whatsapp"></i>
+                مراسلة عبر واتساب
+            </a>
+            <a href="mailto:kaokabmazar@gmail.com" class="contact-button email">
+                <i class="fas fa-envelope"></i>
+                ارسل بريد إلكتروني
+            </a>
+        </div>
+    </div>
+    
+    <!-- Chat History -->
+    <div id="chatHistory" class="chat-history inactive-chat">
+        <div class="history-header">
+            <button class="back-button" onclick="goBackToHelp()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <i class="fas fa-history"></i>
+            <h2>المحادثات السابقة</h2>
+        </div>
+        <div class="history-item" onclick="openChat('chat_1')">
+            <div class="history-info">
+                <h3>مشكلة في تسجيل الدخول</h3>
+                <p>لم أتمكن من تسجيل الدخول إلى حسابي</p>
+                <span class="history-status status-resolved">تم الحل</span>
+            </div>
+            <div class="history-date">15 أغسطس 2025</div>
+        </div>
+        <div class="history-item" onclick="openChat('chat_2')">
+            <div class="history-info">
+                <h3>استفسار عن الفاتورة</h3>
+                <p>أحتاج إلى توضيح بخصوص الفاتورة الأخيرة</p>
+                <span class="history-status status-resolved">تم الحل</span>
+            </div>
+            <div class="history-date">10 أغسطس 2025</div>
+        </div>
+        <div class="history-item" onclick="openChat('chat_3')">
+            <div class="history-info">
+                <h3>مشكلة في المنتج</h3>
+                <p>المنتج الذي استلمته لا يعمل بشكل صحيح</p>
+                <span class="history-status status-pending">قيد المعالجة</span>
+            </div>
+            <div class="history-date">5 أغسطس 2025</div>
+        </div>
+        <div class="history-item" onclick="openChat('chat_4')">
+            <div class="history-info">
+                <h3>تغيير معلومات الحساب</h3>
+                <p>أرغب في تحديث معلومات حسابي</p>
+                <span class="history-status status-closed">مغلق</span>
+            </div>
+            <div class="history-date">25 يوليو 2025</div>
+        </div>
+    </div>
+    
+    <!-- FAQ Section -->
+    <div id="faqSection" class="faq-section inactive-chat">
+        <div class="faq-header">
+            <button class="back-button" onclick="goBackToHelp()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <i class="fas fa-question-circle"></i>
+            <h2>الأسئلة الشائعة</h2>
+        </div>
+        <div class="faq-list">
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>كيف يمكنني إعادة تعيين كلمة المرور؟</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك إعادة تعيين كلمة المرور بالذهاب إلى صفحة تسجيل الدخول والنقر على "نسيت كلمة المرور". اتبع التعليمات لإعادة التعيين.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>كيف يمكنني تحديث معلومات حسابي؟</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>تحديث معلومات الحساب متاح من خلال صفحة الملف الشخصي. بعد تسجيل الدخول، انقر على اسمك في الزاوية العلوية واختر "الملف الشخصي" لتعديل معلوماتك.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>ما هي طرق الدفع المتاحة؟</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>نحن نقبل الدفع عند الاستلام فقط.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>كيف يمكنني تتبع طلبي؟</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>بعد تأكيد الطلب، ستصلك رسالة برابط التتبع. يمكنك أيضًا تسجيل الدخول إلى حسابك وزيارة قسم "طلباتي" لمشاهدة حالة الطلب وتفاصيل الشحن.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFAQ(this)">
+                    <span>ما هي سياسة الإرجاع والاستبدال؟</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>يمكنك إرجاع أو استبدال المنتجات خلال 14 يومًا من استلامها، بشرط أن تكون بحالة جيدة وفي عبوتها الأصلية. بعض المنتجات مثل السلع الشخصية غير قابلة للإرجاع.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Admin Container -->
+    <div class="admin-container">
+        <!-- Admin Content -->
+        <div id="chatContainer" class="admin-content inactive-chat">
+            <!-- Conversation Header -->
+            <div class="conversation-header-bar">
+                <button class="back-button" onclick="goBackToHelp()">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <div class="conversation-user-info">
+                    <div class="conversation-user-avatar">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <div class="conversation-user-details">
+                        <div class="conversation-user-name">محادثة الدعم الفني</div>
+                        <div id="conversationUserStatus" class="status online">متصل الآن</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Messages Area -->
+            <div class="messages-area">
+                <div id="messagesContainer" class="messages-container">
+                    <div class="no-messages">
+                        <i class="fas fa-comment-alt"></i>
+                        <p>مرحباً بك في خدمة الدعم الفني</p>
+                        <p>اكتب رسالتك للتواصل مع ممثل الدعم</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Message Input Area -->
+            <div class="message-input-area">
+                <textarea id="customerMessageInput" class="customer-message-input" placeholder="اكتب رسالتك هنا..." rows="1" autofocus></textarea>
+                <button id="customerSendButton" class="customer-send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // تهيئة Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
             authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -31,1088 +1265,472 @@
             measurementId: "G-CVN2B2D0RD"
         };
 
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app); 
-        const auth = getAuth(app);
-        const storage = getStorage(app); 
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // متغيرات التطبيق
+        let userId = localStorage.getItem('supportUserId') || generateUserId();
+        let isFirstMessage = localStorage.getItem('isFirstMessage') !== 'false';
+        let isChatStarted = false;
+        let chatRef = null;
 
-        // Realtime Database references
-        const settingsRef = dbRef(db, "settings");
-        const homepageSettingsRef = dbRef(db, "homepageSettings"); 
-        const usersDbRef = dbRef(db, "users"); // مرجع لبيانات المستخدمين في Realtime Database
+        // حفظ معرف المستخدم في التخزين المحلي
+        localStorage.setItem('supportUserId', userId);
+        localStorage.setItem('isFirstMessage', isFirstMessage);
 
-        // Global data storage for frontend
-        window.frontendData = {
-            settings: {},
-            homepageSettings: {},
-            currentUser: null, // لتخزين بيانات المستخدم الحالي من Firebase Auth
-            userProfile: {} // لتخزين بيانات ملف تعريف المستخدم من Realtime Database
-        };
-
-        // Function to show notifications
-        function showNotification(message, type = 'success') {
+        // تهيئة الصفحة عند التحميل
+        document.addEventListener('DOMContentLoaded', () => {
+            // تكبير حقل النص تلقائياً
+            const customerInput = document.getElementById('customerMessageInput');
+            function autoResize(textarea) {
+                textarea.style.height = 'auto';
+                textarea.style.height = (textarea.scrollHeight) + 'px';
+            }
+            customerInput.addEventListener('input', () => autoResize(customerInput));
+            
+            // إرسال الرسالة عند الضغط على زر الإرسال
+            document.getElementById('customerSendButton').addEventListener('click', sendMessage);
+            
+            // إرسال الرسالة عند الضغط على Enter
+            customerInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            // تحميل المحادثة السابقة إذا كانت موجودة
+            loadExistingChat();
+        });
+        
+        // توليد معرف فريد للمستخدم
+        function generateUserId() {
+            return 'user_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // بدء محادثة جديدة
+        function startNewChat() {
+            document.getElementById('helpSection').classList.add('inactive-chat');
+            document.getElementById('chatHistory').classList.add('inactive-chat');
+            document.getElementById('faqSection').classList.add('inactive-chat');
+            document.getElementById('chatContainer').classList.remove('inactive-chat');
+            document.getElementById('chatContainer').classList.add('active-chat');
+            
+            // إعادة تعيين حالة الرسالة الأولى
+            isFirstMessage = true;
+            localStorage.setItem('isFirstMessage', true);
+            isChatStarted = true;
+            
+            // إنشاء مرجع جديد للمحادثة
+            chatRef = database.ref(`supportChats/${userId}`);
+            
+            // إعداد المحادثة الجديدة
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.innerHTML = `
+                <div class="no-messages">
+                    <i class="fas fa-comment-alt"></i>
+                    <p>مرحباً بك في خدمة الدعم الفني</p>
+                    <p>اكتب رسالتك للتواصل مع ممثل الدعم</p>
+                </div>
+            `;
+            
+            // التركيز على حقل الإدخال
+            setTimeout(() => {
+                document.getElementById('customerMessageInput').focus();
+            }, 100);
+        }
+        
+        // عرض سجل المحادثات
+        function showChatHistory() {
+            document.getElementById('helpSection').classList.add('inactive-chat');
+            document.getElementById('chatContainer').classList.add('inactive-chat');
+            document.getElementById('faqSection').classList.add('inactive-chat');
+            document.getElementById('chatHistory').classList.remove('inactive-chat');
+            document.getElementById('chatHistory').classList.add('active-chat');
+        }
+        
+        // عرض الأسئلة الشائعة
+        function showFAQ() {
+            document.getElementById('helpSection').classList.add('inactive-chat');
+            document.getElementById('chatContainer').classList.add('inactive-chat');
+            document.getElementById('chatHistory').classList.add('inactive-chat');
+            document.getElementById('faqSection').classList.remove('inactive-chat');
+            document.getElementById('faqSection').classList.add('active-chat');
+        }
+        
+        // الرجوع إلى صفحة المساعدة الرئيسية
+        function goBackToHelp() {
+            document.getElementById('helpSection').classList.remove('inactive-chat');
+            document.getElementById('helpSection').classList.add('active-chat');
+            
+            document.getElementById('chatContainer').classList.add('inactive-chat');
+            document.getElementById('chatHistory').classList.add('inactive-chat');
+            document.getElementById('faqSection').classList.add('inactive-chat');
+        }
+        
+        // فتح محادثة سابقة
+        function openChat(chatId) {
+            startNewChat();
+            showNotification('جاري تحميل المحادثة المحددة', 'info');
+            
+            // في التطبيق الحقيقي، سيتم جلب المحادثة من الخادم
+            setTimeout(() => {
+                const messagesContainer = document.getElementById('messagesContainer');
+                messagesContainer.innerHTML = `
+                    <div class="date-divider">
+                        <span>15 أغسطس 2025</span>
+                    </div>
+                    <div class="message admin-message">
+                        <div class="message-content">
+                            مرحبًا، كيف يمكنني مساعدتك اليوم؟
+                        </div>
+                        <div class="message-time">10:24 صباحًا</div>
+                    </div>
+                    <div class="message user-message">
+                        <div class="message-content">
+                            مرحبًا، لدي مشكلة في حسابي. لا يمكنني تسجيل الدخول منذ صباح اليوم.
+                        </div>
+                        <div class="message-time">10:25 صباحًا</div>
+                    </div>
+                    <div class="message admin-message">
+                        <div class="message-content">
+                            شكرًا لتواصلك معنا. سأحاول مساعدتك في حل هذه المشكلة. هل يمكنك إخباري إذا كانت تظهر لك أي رسالة خطأ عند محاولة تسجيل الدخول؟
+                        </div>
+                        <div class="message-time">10:28 صباحًا</div>
+                    </div>
+                    <div class="message user-message">
+                        <div class="message-content">
+                            نعم، تظهر رسالة "كلمة المرور غير صحيحة" رغم أنني متأكد من كلمة المرور.
+                        </div>
+                        <div class="message-time">10:30 صباحًا</div>
+                    </div>
+                    <div class="message admin-message">
+                        <div class="message-content">
+                            حسنًا، يمكنني مساعدتك في إعادة تعيين كلمة المرور. هل تفضل أن أرسل لك رابط إعادة تعيين على بريدك الإلكتروني المسجل؟
+                        </div>
+                        <div class="message-time">10:32 صباحًا</div>
+                    </div>
+                    <div class="message user-message">
+                        <div class="message-content">
+                            نعم من فضلك، هذا سيكون مفيدًا. شكرًا لك.
+                        </div>
+                        <div class="message-time">10:33 صباحًا</div>
+                    </div>
+                    <div class="message admin-message">
+                        <div class="message-content">
+                            تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد أو مجلد الرسائل غير المرغوب فيها. دعني أعرف إذا كنت بحاجة إلى أي مساعدة إضافية.
+                        </div>
+                        <div class="message-time">10:35 صباحًا</div>
+                    </div>
+                    <div class="message notification-message">
+                        <div class="message-content">
+                            <i class="fas fa-info-circle"></i> تم إرسال رابط إعادة تعيين كلمة المرور بنجاح
+                        </div>
+                    </div>
+                    <div class="message user-message">
+                        <div class="message-content">
+                            شكرًا لك، لقد استلمت الرابط وسأجرب الآن.
+                        </div>
+                        <div class="message-time">10:36 صباحًا</div>
+                    </div>
+                    <div class="message admin-message">
+                        <div class="message-content">
+                            تفضل، نحن هنا لمساعدتك. إذا واجهتك أي مشكلة أخرى، لا تتردد في التواصل معنا.
+                        </div>
+                        <div class="message-time">10:40 صباحًا</div>
+                    </div>
+                `;
+                showNotification('تم تحميل المحادثة بنجاح', 'success');
+                isFirstMessage = false;
+                localStorage.setItem('isFirstMessage', false);
+            }, 1000);
+        }
+        
+        // تحميل المحادثة الحالية من Firebase
+        function loadExistingChat() {
+            chatRef = database.ref(`supportChats/${userId}`);
+            
+            chatRef.on('value', (snapshot) => {
+                const chatData = snapshot.val();
+                
+                if (chatData && chatData.messages) {
+                    // التحقق من حالة المحادثة
+                    if (chatData.blocked) {
+                        handleBlockedUser();
+                        return;
+                    }
+                    
+                    if (chatData.closed) {
+                        handleClosedChat();
+                        return;
+                    }
+                    
+                    // عرض المحادثة
+                    document.getElementById('helpSection').classList.add('inactive-chat');
+                    document.getElementById('chatHistory').classList.add('inactive-chat');
+                    document.getElementById('faqSection').classList.add('inactive-chat');
+                    document.getElementById('chatContainer').classList.remove('inactive-chat');
+                    document.getElementById('chatContainer').classList.add('active-chat');
+                    
+                    // عرض الرسائل
+                    const messagesContainer = document.getElementById('messagesContainer');
+                    messagesContainer.innerHTML = '';
+                    
+                    // ترتيب الرسائل حسب الوقت
+                    const messages = Object.values(chatData.messages);
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+                    
+                    // عرض الرسائل
+                    messages.forEach(msg => {
+                        const isAdmin = msg.senderType === 'admin';
+                        const messageClass = isAdmin ? 'admin-message' : 'user-message';
+                        const timeString = getCurrentTime(msg.timestamp);
+                        
+                        const messageElement = document.createElement('div');
+                        messageElement.className = `message ${messageClass}`;
+                        messageElement.innerHTML = `
+                            <div class="message-content">${msg.text}</div>
+                            <div class="message-time">${timeString}</div>
+                        `;
+                        messagesContainer.appendChild(messageElement);
+                    });
+                    
+                    // تمرير للأسفل لرؤية آخر رسالة
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    
+                    // تحديث حالة الرسالة الأولى
+                    isFirstMessage = false;
+                    localStorage.setItem('isFirstMessage', false);
+                }
+            });
+            
+            // مراقبة حذف المحادثة من قبل الإدارة
+            chatRef.on('child_removed', (snapshot) => {
+                if (snapshot.key === 'messages') {
+                    // تم حذف المحادثة
+                    showNotification('تم حذف المحادثة من قبل الإدارة', 'warning');
+                    goBackToHelp();
+                }
+            });
+        }
+        
+        // إرسال الرسالة
+        function sendMessage() {
+            const messageInput = document.getElementById('customerMessageInput');
+            const message = messageInput.value.trim();
+            
+            if (message) {
+                const messagesContainer = document.getElementById('messagesContainer');
+                const now = new Date();
+                const timeString = getCurrentTime();
+                
+                // إضافة رسالة المستخدم
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message user-message new-message';
+                messageElement.innerHTML = `
+                    <div class="message-content">${message}</div>
+                    <div class="message-time">${timeString}</div>
+                `;
+                
+                if (messagesContainer.querySelector('.no-messages')) {
+                    messagesContainer.innerHTML = '';
+                }
+                
+                messagesContainer.appendChild(messageElement);
+                
+                // مسح حقل الإدخال
+                messageInput.value = '';
+                autoResize(messageInput);
+                
+                // تمرير للأسفل لرؤية الرسالة الجديدة
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // حفظ الرسالة في Firebase
+                saveMessageToFirebase(message);
+                
+                // إظهار مؤشر الكتابة من الدعم
+                showTypingIndicator();
+                
+                // إرسال رد الدعم بعد تأخير
+                setTimeout(() => {
+                    removeTypingIndicator();
+                    
+                    // إضافة رد الدعم فقط عند أول رسالة
+                    if (isFirstMessage) {
+                        // إرسال رسالة الترحيب الأولى
+                        const adminMessage1 = document.createElement('div');
+                        adminMessage1.className = 'message admin-message new-message';
+                        adminMessage1.innerHTML = `
+                            <div class="message-content">مرحبًا بك في خدمة الدعم الفني. شكرًا لتواصلك معنا.</div>
+                            <div class="message-time">${getCurrentTime()}</div>
+                        `;
+                        messagesContainer.appendChild(adminMessage1);
+                        
+                        // حفظ رسالة الترحيب في Firebase
+                        saveAdminReply("مرحبًا بك في خدمة الدعم الفني. شكرًا لتواصلك معنا.");
+                        
+                        // إرسال رسالة طلب التفاصيل بعد تأخير
+                        setTimeout(() => {
+                            const adminMessage2 = document.createElement('div');
+                            adminMessage2.className = 'message admin-message new-message';
+                            adminMessage2.innerHTML = `
+                                <div class="message-content">هل يمكنك إخباري بالمزيد من التفاصيل حول مشكلتك؟</div>
+                                <div class="message-time">${getCurrentTime()}</div>
+                            `;
+                            messagesContainer.appendChild(adminMessage2);
+                            saveAdminReply("هل يمكنك إخباري بالمزيد من التفاصيل حول مشكلتك؟");
+                            
+                            // تمرير للأسفل لرؤية الرد
+                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        }, 1000);
+                        
+                        // تحديث حالة الرسالة الأولى
+                        isFirstMessage = false;
+                        localStorage.setItem('isFirstMessage', false);
+                    }
+                }, 2000);
+            }
+        }
+        
+        // حفظ رسالة المستخدم في Firebase
+        function saveMessageToFirebase(message) {
+            if (!isChatStarted) return;
+            
+            if (!chatRef) {
+                chatRef = database.ref(`supportChats/${userId}`);
+            }
+            
+            // إنشاء المحادثة إذا لم تكن موجودة
+            chatRef.once('value').then(snapshot => {
+                if (!snapshot.exists()) {
+                    chatRef.set({
+                        createdAt: Date.now(),
+                        userName: 'مستخدم جديد',
+                        isOnline: true,
+                        blocked: false,
+                        closed: false
+                    });
+                }
+                
+                // إرسال رسالة المستخدم
+                chatRef.child('messages').push().set({
+                    text: message,
+                    senderType: 'user',
+                    timestamp: Date.now()
+                });
+            });
+        }
+        
+        // حفظ رد الدعم في Firebase
+        function saveAdminReply(reply) {
+            if (!chatRef) return;
+            
+            // إرسال رد الدعم
+            chatRef.child('messages').push().set({
+                text: reply,
+                senderType: 'admin',
+                timestamp: Date.now()
+            });
+        }
+        
+        // إظهار مؤشر الكتابة
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const typingElement = document.createElement('div');
+            typingElement.className = 'typing-indicator';
+            typingElement.innerHTML = `
+                <span></span>
+                <span></span>
+                <span></span>
+                <span>ممثل الدعم يكتب...</span>
+            `;
+            messagesContainer.appendChild(typingElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // إزالة مؤشر الكتابة
+        function removeTypingIndicator() {
+            const typingElement = document.querySelector('.typing-indicator');
+            if (typingElement) {
+                typingElement.remove();
+            }
+        }
+        
+        // الحصول على الوقت الحالي
+        function getCurrentTime(timestamp = null) {
+            const now = timestamp ? new Date(timestamp) : new Date();
+            return now.toLocaleTimeString('ar-AR', { hour: 'numeric', minute: 'numeric' });
+        }
+        
+        // دالة لإظهار الإشعارات
+        function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
-            notification.className = `notification ${type}`; // Add type for styling (success, info, warning, error)
+            notification.className = `notification ${type}`;
             notification.textContent = message;
             document.body.appendChild(notification);
             
-            // Force reflow to ensure transition plays
             void notification.offsetWidth;
-
             notification.classList.add('show');
             
             setTimeout(() => {
                 notification.classList.remove('show');
                 setTimeout(() => {
                     document.body.removeChild(notification);
-                }, 300); // Match CSS transition duration
-            }, 3000); // Notification visible for 3 seconds
+                }, 300);
+            }, 3000);
         }
-
-        // وظيفة عرض التذييل
-        function renderFooter(settings) {
-            const footer = document.getElementById('mainFooter');
-            const hpSettings = window.frontendData.homepageSettings.footer || {};
+        
+        // تكبير حقل النص تلقائياً
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        }
+        
+        // تبديل فتح/إغلاق إجابة السؤال في الأسئلة الشائعة
+        function toggleFAQ(element) {
+            const faqItem = element.parentElement;
+            faqItem.classList.toggle('open');
+        }
+        
+        // الاتصال بالدعم
+        function callSupport() {
+            window.location.href = "tel:+9647823053419";
+        }
+        
+        // معالجة حالة حظر المستخدم
+        function handleBlockedUser() {
+            document.getElementById('customerMessageInput').disabled = true;
+            document.getElementById('customerSendButton').disabled = true;
             
-            // Construct contact info HTML conditionally
-            let contactInfoHtml = '';
-            if (hpSettings.contactEnabled && settings) {
-                if (settings.contactPhone) contactInfoHtml += `<p><i class="fas fa-phone"></i> ${settings.contactPhone}</p>`;
-                if (settings.contactEmail) contactInfoHtml += `<p><i class="fas fa-envelope"></i> ${settings.contactEmail}</p>`;
-            }
-
-            // Construct social links HTML conditionally
-            let socialLinksHtml = '';
-            if (hpSettings.socialEnabled) {
-                const socialLinks = [];
-                if (hpSettings.facebook) socialLinks.push({ platform: 'facebook', url: hpSettings.facebook });
-                if (hpSettings.instagram) socialLinks.push({ platform: 'instagram', url: hpSettings.instagram });
-                if (hpSettings.twitter) socialLinks.push({ platform: 'twitter', url: hpSettings.twitter });
-                if (hpSettings.linkedin) socialLinks.push({ platform: 'linkedin', url: hpSettings.linkedin });
-
-                if (socialLinks.length > 0) {
-                    socialLinksHtml = `
-                        <div class="social-links">
-                            ${socialLinks.map(link => `
-                                <a href="${link.url}" class="social-link" target="_blank">
-                                    <i class="fab fa-${link.platform}"></i>
-                                </a>
-                            `).join('')}
-                        </div>
-                    `;
-                }
-            }
-
-            // Construct footer links HTML conditionally
-            let footerLinksHtml = '';
-            if (hpSettings.customLinksEnabled && hpSettings.customLinks && hpSettings.customLinks.length > 0) {
-                footerLinksHtml = `
-                    <ul class="footer-links">
-                        ${hpSettings.customLinks.map(link => `
-                            <li>
-                                <a href="${link.link}" target="_blank">
-                                    <i class="fas fa-arrow-left"></i> ${link.text}
-                                </a>
-                            </li>
-                        `).join('')}
-                    </ul>
-                `;
-            }
-            
-            // Removed "حول المتجر" section entirely
-            const aboutHtml = ''; 
-            
-            // Removed copyright text
-            const copyrightText = '';
-
-            footer.innerHTML = `
-                <div class="footer-content">
-                    ${contactInfoHtml.trim() || socialLinksHtml.trim() ? `
-                    <div class="footer-section">
-                        <h3>اتصل بنا</h3>
-                        <div class="contact-info">
-                            ${contactInfoHtml}
-                        </div>
-                        ${socialLinksHtml}
-                    </div>` : ''}
-                    
-                    ${footerLinksHtml.trim() ? `
-                    <div class="footer-section">
-                        <h3>روابط مهمة</h3>
-                        ${footerLinksHtml}
-                    </div>` : ''}
-                    
-                    ${aboutHtml.trim() ? `
-                    <div class="footer-section">
-                        <h3>حول المتجر</h3>
-                        ${aboutHtml}
-                    </div>` : ''}
-                </div>
-                <div class="copyright">
-                    <p>${copyrightText}</p>
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.innerHTML = `
+                <div class="blocked-chat-message">
+                    <i class="fas fa-ban" style="font-size: 3rem; color: #c62828; margin-bottom: 15px;"></i>
+                    <h2 style="color: #c62828;">تم حظر حسابك</h2>
+                    <p>لقد تم حظرك من إرسال الرسائل في نظام الدعم الفني.</p>
+                    <p>للاستفسار، يرجى الاتصال بالدعم على الرقم +9647823053419</p>
                 </div>
             `;
         }
         
-        // وظيفة تحميل بيانات الواجهة الأمامية من Realtime Database
-        async function loadFrontendData() {
-            try {
-                // Load Settings
-                onValue(settingsRef, (snapshot) => {
-                    window.frontendData.settings = snapshot.val() || {};
-                    renderFooter(window.frontendData.settings);
-                    document.getElementById('storeName').textContent = window.frontendData.settings.storeName || 'متجر إلكتروني';
-                    document.getElementById('storeLogo').src = window.frontendData.settings.logoUrl || 'https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر';
-                });
-
-                // Load Homepage Settings (needed for footer rendering)
-                onValue(homepageSettingsRef, (snapshot) => {
-                    window.frontendData.homepageSettings = snapshot.val() || {};
-                    renderFooter(window.frontendData.settings); // Re-render footer with new homepage settings
-                });
-                
-            } catch (error) {
-                console.error('Error loading data:', error);
-                // No need for a spinner here, as it's handled by the main content loading
-            }
+        // معالجة حالة إغلاق المحادثة
+        function handleClosedChat() {
+            document.getElementById('customerMessageInput').disabled = true;
+            document.getElementById('customerSendButton').disabled = true;
             
-            // تعيين حالة التنقل النشطة
-            const navItems = document.querySelectorAll('.bottom-nav-item');
-            const currentPath = window.location.pathname.split('/').pop();
-            
-            navItems.forEach(item => {
-                const itemHref = item.getAttribute('href');
-                if (itemHref === currentPath || (currentPath === '' && itemHref === 'index.html')) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
-
-            // Set active state for top bar account link
-            const accountLink = document.querySelector('.top-right-group a[href="account.html"]');
-            if (accountLink && currentPath === 'account.html') {
-                accountLink.classList.add('active');
-            } else if (accountLink) {
-                accountLink.classList.remove('active');
-            }
-        }
-
-        // Function to show loading spinner for user info
-        function showUserInfoLoading() {
-            const userInfoContainer = document.getElementById('userInfoContainer');
-            userInfoContainer.innerHTML = `
-                <div class="loading-spinner-container">
-                    <div class="spinner"></div>
-                    <p>جاري تحميل معلومات الحساب...</p>
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.innerHTML = `
+                <div class="closed-chat-message">
+                    <i class="fas fa-lock" style="font-size: 3rem; color: #f57f17; margin-bottom: 15px;"></i>
+                    <h2 style="color: #f57f17;">تم إغلاق هذه المحادثة</h2>
+                    <p>لبدء محادثة جديدة، يرجى الضغط على الزر أدناه</p>
+                    <button class="new-chat-button" onclick="startNewChat()">
+                        بدء محادثة جديدة
+                    </button>
                 </div>
             `;
         }
-
-        // وظيفة عرض معلومات المستخدم
-        function renderUserInfo(user) {
-            const userInfoContainer = document.getElementById('userInfoContainer');
-            if (user) {
-                const userProfile = window.frontendData.userProfile || {};
-                userInfoContainer.innerHTML = `
-                    <div class="user-info-group">
-                        <p><strong>معرف المستخدم (UID):</strong> ${user.uid}</p>
-                        <p><strong>البريد الإلكتروني:</strong> ${user.email || 'غير متوفر'}</p>
-                        <p><strong>حالة المصادقة:</strong> ${user.isAnonymous ? 'مجهول' : 'مسجل'}</p>
-                    </div>
-                    
-                    <div class="user-profile-form">
-                        <h3>معلومات الملف الشخصي</h3>
-                        <div class="form-group">
-                            <label for="fullName">الاسم الكامل:</label>
-                            <input type="text" id="fullName" value="${userProfile.fullName || ''}" placeholder="أدخل اسمك الكامل">
-                        </div>
-                        <div class="form-group">
-                            <label for="phoneNumber">رقم الهاتف:</label>
-                            <input type="tel" id="phoneNumber" value="${userProfile.phoneNumber || ''}" placeholder="أدخل رقم هاتفك">
-                        </div>
-                        <div class="form-group">
-                            <label for="shippingAddress">عنوان الشحن:</label>
-                            <textarea id="shippingAddress" placeholder="أدخل عنوان الشحن الكامل">${userProfile.shippingAddress || ''}</textarea>
-                        </div>
-                        <button id="saveProfileBtn" class="save-profile-btn">حفظ التغييرات <i class="fas fa-save"></i></button>
-                    </div>
-
-                    <button id="signOutBtn" class="sign-out-btn">تسجيل الخروج <i class="fas fa-sign-out-alt"></i></button>
-                `;
-
-                // Add event listener for saving profile
-                document.getElementById('saveProfileBtn').addEventListener('click', async () => {
-                    const fullName = document.getElementById('fullName').value;
-                    const phoneNumber = document.getElementById('phoneNumber').value;
-                    const shippingAddress = document.getElementById('shippingAddress').value;
-
-                    if (user && user.uid) {
-                        try {
-                            await set(dbRef(db, `users/${user.uid}/profile`), {
-                                fullName: fullName,
-                                phoneNumber: phoneNumber,
-                                shippingAddress: shippingAddress
-                            });
-                            showNotification('تم حفظ التغييرات بنجاح!', 'success');
-                        } catch (error) {
-                            console.error("خطأ في حفظ معلومات الملف الشخصي:", error);
-                            showNotification('حدث خطأ أثناء حفظ التغييرات.', 'error');
-                        }
-                    }
-                });
-
-                // Add event listener for signing out
-                document.getElementById('signOutBtn').addEventListener('click', async () => {
-                    try {
-                        await signOut(auth);
-                        console.log("تم تسجيل الخروج بنجاح.");
-                        showNotification('تم تسجيل الخروج بنجاح.', 'success');
-                        renderUserInfo(null); // مسح معلومات المستخدم
-                    } catch (error) {
-                        console.error("خطأ في تسجيل الخروج:", error);
-                        showNotification('حدث خطأ أثناء تسجيل الخروج.', 'error');
-                    }
-                });
-            } else {
-                userInfoContainer.innerHTML = `
-                    <div class="not-logged-in-message">
-                        <i class="fas fa-user-slash fa-3x"></i>
-                        <p>أنت غير مسجل الدخول حالياً.</p>
-                        <p>يمكنك تسجيل الدخول أو إنشاء حساب للوصول إلى ميزات الحساب.</p>
-                        <!-- يمكنك إضافة أزرار لتسجيل الدخول/التسجيل هنا إذا كانت هناك صفحات منفصلة لذلك -->
-                    </div>
-                `;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            showUserInfoLoading(); // Show loading spinner initially for user info
-
-            // تهيئة الصفحة
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    window.frontendData.currentUser = user;
-                    // Listen for user profile data from Realtime Database
-                    onValue(dbRef(db, `users/${user.uid}/profile`), (snapshot) => {
-                        window.frontendData.userProfile = snapshot.val() || {};
-                        renderUserInfo(user); // Render with updated profile data
-                    }, (error) => {
-                        console.error("Error fetching user profile:", error);
-                        showNotification('حدث خطأ في تحميل ملف تعريف المستخدم.', 'error');
-                        renderUserInfo(user); // Render even if profile fetch fails
-                    });
-                } else {
-                    // لا يوجد مستخدم مسجل الدخول، حاول المصادقة
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        try {
-                            const userCredential = await signInWithCustomToken(auth, __initial_auth_token);
-                            window.frontendData.currentUser = userCredential.user;
-                            // Listen for user profile data for the newly signed-in user
-                            onValue(dbRef(db, `users/${userCredential.user.uid}/profile`), (snapshot) => {
-                                window.frontendData.userProfile = snapshot.val() || {};
-                                renderUserInfo(userCredential.user);
-                            }, (error) => {
-                                console.error("Error fetching user profile:", error);
-                                showNotification('حدث خطأ في تحميل ملف تعريف المستخدم بعد تسجيل الدخول.', 'error');
-                                renderUserInfo(userCredential.user);
-                            });
-                        } catch (error) {
-                            if (error.code !== 'auth/custom-token-mismatch') {
-                                console.error("Error signing in with custom token:", error);
-                            } else {
-                                console.warn("Custom token mismatch detected, falling back to anonymous sign-in.");
-                            }
-                            // إذا فشل الرمز المميز المخصص، قم بتسجيل الدخول كمجهول
-                            try {
-                                const userCredential = await signInAnonymously(auth);
-                                window.frontendData.currentUser = userCredential.user;
-                                // Listen for user profile data for the anonymous user (if any)
-                                onValue(dbRef(db, `users/${userCredential.user.uid}/profile`), (snapshot) => {
-                                    window.frontendData.userProfile = snapshot.val() || {};
-                                    renderUserInfo(userCredential.user);
-                                }, (error) => {
-                                    console.error("Error fetching user profile:", error);
-                                    showNotification('حدث خطأ في تحميل ملف تعريف المستخدم المجهول.', 'error');
-                                    renderUserInfo(userCredential.user);
-                                });
-                            } catch (anonError) {
-                                console.error("Error signing in anonymously:", anonError);
-                                showNotification('خطأ في تسجيل الدخول المجهول. يرجى المحاولة لاحقاً.', 'error');
-                                renderUserInfo(null); // عرض رسالة عدم تسجيل الدخول
-                            }
-                        }
-                    } else {
-                        // إذا لم يتوفر رمز مميز مخصص، قم بتسجيل الدخول كمجهول مباشرة
-                        try {
-                            const userCredential = await signInAnonymously(auth);
-                            window.frontendData.currentUser = userCredential.user;
-                            // Listen for user profile data for the anonymous user (if any)
-                            onValue(dbRef(db, `users/${userCredential.user.uid}/profile`), (snapshot) => {
-                                window.frontendData.userProfile = snapshot.val() || {};
-                                renderUserInfo(userCredential.user);
-                            }, (error) => {
-                                console.error("Error fetching user profile:", error);
-                                showNotification('حدث خطأ في تحميل ملف تعريف المستخدم المجهول.', 'error');
-                                renderUserInfo(userCredential.user);
-                            });
-                        } catch (anonError) {
-                            console.error("Error signing in anonymously:", anonError);
-                            showNotification('خطأ في تسجيل الدخول المجهول. يرجى المحاولة لاحقاً.', 'error');
-                            renderUserInfo(null); // عرض رسالة عدم تسجيل الدخول
-                        }
-                    }
-                }
-                loadFrontendData(); // تحميل بيانات الواجهة الأمامية الأخرى
-            });
-        });
     </script>
-    <style>
-        :root {
-            /* Main Colors */
-            --color-primary-dark-blue: #1A237E; /* Primary */
-            --color-secondary-gold: #FFD700; /* Secondary / Accent */
-            
-            /* Derived Colors */
-            --color-background-light: #E8EAF6; /* Light Indigo for body background */
-            --color-text-dark: #212121; /* Dark Gray for main text */
-            --color-border-medium-blue: #9FA8DA; /* Medium Indigo for borders/subtle elements */
-
-            /* Mapped to general variables for consistency */
-            --primary: var(--color-primary-dark-blue);
-            --secondary: var(--color-secondary-gold);
-            --accent: var(--color-secondary-gold); /* Using secondary as accent */
-            --light: var(--color-background-light); /* General body background */
-            --dark: var(--color-text-dark); /* Main text color */
-            --success: #2ECC71; /* Standard Green */
-            --warning: #FFC107; /* Standard Amber for warnings */
-            --error: #E74C3C; /* Standard Red */
-            --border: var(--color-border-medium-blue); /* Solid border color */
-            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Standard shadow */
-            --radius: 12px; /* Standard rounded corners */
-            --transition: all 0.2s ease-in-out; /* Faster, snappier transitions */
-
-            /* Font size base */
-            font-size: 14px; /* Overall base font size reduced */
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background-color: var(--light); /* Solid light background */
-            color: var(--dark);
-            min-height: 100vh;
-            padding: 70px 0 90px;
-            direction: rtl; 
-            display: flex;
-            flex-direction: column;
-            font-family: 'Cairo', sans-serif;
-            line-height: 1.6;
-            overflow-x: hidden; /* Prevent horizontal scroll */
-        }
-        
-        .top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--primary); /* Solid Dark Blue */
-            color: white;
-            display: flex;
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 0 15px;
-            height: 65px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            z-index: 1000;
-            border-bottom: 1px solid var(--color-border-medium-blue); /* Solid border */
-        }
-        
-        .top-left {
-            display: flex;
-            align-items: center; 
-            gap: 10px;
-            height: 100%;
-        }
-        
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none; 
-            color: white; 
-            transition: var(--transition);
-            height: 100%;
-        }
-        
-        .logo-container:hover {
-            transform: scale(1.01);
-            opacity: 0.95;
-        }
-
-        .store-logo {
-            height: 90%;
-            width: auto;
-            object-fit: contain; 
-            background-color: transparent;
-            padding: 5px 0;
-        }
-        
-        .store-name {
-            font-size: 1.1rem;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            color: var(--accent); /* Accent for store name */
-        }
-        
-        .top-right-group {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .icon-btn {
-            background: transparent;
-            border: none;
-            color: white;
-            font-size: 1rem;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            position: relative;
-            transition: var(--transition);
-            padding: 6px 10px;
-            text-decoration: none; 
-            border-radius: var(--radius);
-        }
-        
-        .icon-btn:hover {
-            transform: translateY(-2px) scale(1.03);
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        /* Added active state for top bar icons */
-        .icon-btn.active {
-            color: var(--accent); /* Highlight active icon */
-            transform: translateY(-2px) scale(1.03);
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-        
-        .icon-label {
-            font-size: 0.75rem;
-            margin-top: 4px;
-            font-weight: 700; 
-        }
-        
-        .bottom-bar {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: var(--primary); /* Solid Dark Blue */
-            color: white;
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-            z-index: 1000;
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
-            height: 80px;
-            border-top: 1px solid var(--color-border-medium-blue); /* Solid border */
-        }
-        
-        .bottom-nav-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: white;
-            font-size: 0.85rem;
-            text-decoration: none;
-            transition: var(--transition);
-            flex: 1;
-            padding: 8px 0;
-            font-weight: 700; 
-            position: relative;
-        }
-        
-        .bottom-nav-item i {
-            font-size: 1.3rem;
-            margin-bottom: 4px;
-            transition: var(--transition);
-        }
-        
-        .bottom-nav-item:hover, .bottom-nav-item.active {
-            color: var(--accent); /* Accent for active/hover */
-            transform: translateY(-3px) scale(1.05);
-        }
-        
-        .bottom-nav-item.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 3px;
-            background-color: var(--accent);
-            border-radius: 1.5px;
-        }
-
-        .main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 20px 15px;
-            max-width: 1000px;
-            margin: 0 auto;
-            width: 100%;
-            background-color: white; /* Solid white background for content */
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin-top: 15px;
-            margin-bottom: 15px;
-            min-height: calc(100vh - 160px);
-            border: 1px solid var(--border); /* Solid border */
-        }
-        
-        /* Account Section Specific Styles */
-        .account-section {
-            margin-bottom: 30px; /* Consistent margin */
-            text-align: center;
-        }
-
-        .section-header {
-            text-align: center;
-            margin-bottom: 40px;
-            position: relative;
-            padding-bottom: 15px;
-        }
-
-        .section-header h2 {
-            font-size: 1.8rem; /* Adjusted for consistency with other pages */
-            color: var(--dark);
-            font-weight: 800;
-            margin-bottom: 10px;
-        }
-
-        .section-header p {
-            font-size: 0.9rem; /* Adjusted for consistency with other pages */
-            color: #777;
-        }
-
-        .section-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80px;
-            height: 4px;
-            background-color: var(--secondary);
-            border-radius: 2px;
-        }
-
-        .account-info-card {
-            background-color: white; /* Solid white background */
-            border-radius: var(--radius);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.07); /* Reduced shadow */
-            padding: 25px; /* Reduced padding */
-            max-width: 600px;
-            margin: 20px auto; /* Reduced margin */
-            text-align: right; /* Align text to the right for RTL */
-            border: 1px solid var(--border); /* Solid border */
-        }
-
-        .account-info-card p {
-            font-size: 1rem; /* Reduced font size */
-            margin-bottom: 8px; /* Reduced margin */
-            color: #444;
-        }
-
-        .account-info-card p strong {
-            color: var(--dark);
-        }
-
-        .user-info-group {
-            margin-bottom: 25px; /* Reduced margin */
-            padding-bottom: 15px; /* Reduced padding */
-            border-bottom: 1px solid var(--border);
-        }
-
-        .user-profile-form {
-            margin-bottom: 25px; /* Reduced margin */
-        }
-
-        .user-profile-form h3 {
-            font-size: 1.3rem; /* Reduced font size */
-            color: var(--primary);
-            margin-bottom: 20px;
-            text-align: center;
-            position: relative;
-            padding-bottom: 10px;
-        }
-        .user-profile-form h3::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
-            height: 3px;
-            background-color: var(--secondary);
-            border-radius: 1.5px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            text-align: right;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 0.95rem;
-            color: var(--dark);
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .form-group input[type="text"],
-        .form-group input[type="tel"],
-        .form-group textarea {
-            width: 100%;
-            padding: 10px 12px; /* Reduced padding */
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-size: 0.9rem; /* Reduced font size */
-            color: var(--dark);
-            background-color: #F8F8F8; /* Slightly off-white for inputs */
-            transition: var(--transition);
-        }
-
-        .form-group input[type="text"]:focus,
-        .form-group input[type="tel"]:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.4); /* Gold shadow */
-            background-color: white;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
-        }
-
-        .save-profile-btn {
-            background-color: var(--secondary);
-            color: var(--dark); /* Dark text for contrast */
-            border: none;
-            padding: 12px 25px; /* Consistent padding */
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem; /* Consistent font size */
-            transition: var(--transition);
-            margin-top: 10px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .save-profile-btn:hover {
-            background-color: #DAA520; /* Darker gold on hover */
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-        }
-
-        .sign-out-btn {
-            background-color: var(--error);
-            color: white;
-            border: none;
-            padding: 12px 25px; /* Consistent padding */
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: 700;
-            font-size: 1rem; /* Consistent font size */
-            transition: var(--transition);
-            margin-top: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .sign-out-btn:hover {
-            background-color: #C0392B;
-            transform: translateY(-2px) scale(1.02);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-        }
-
-        .not-logged-in-message {
-            padding: 40px; /* Reduced padding */
-            text-align: center;
-            color: #888;
-            font-size: 1.1rem; /* Reduced font size */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 200px; /* Ensure it takes up some space */
-        }
-
-        .not-logged-in-message i {
-            font-size: 3rem; /* Reduced icon size */
-            color: var(--primary);
-            margin-bottom: 15px; /* Reduced margin */
-        }
-        .not-logged-in-message p {
-            margin-bottom: 8px; /* Reduced margin */
-            line-height: 1.5;
-        }
-
-        /* Loading Spinner Styles */
-        .loading-spinner-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 200px; /* Adjust height for account page */
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .spinner {
-            border: 3px solid rgba(0, 0, 0, 0.1);
-            border-top: 3px solid var(--primary);
-            width: 30px;
-            height: 30px;
-            animation: spin 0.8s linear infinite;
-            border-radius: 50%;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Notification Styles */
-        .notification {
-            position: fixed;
-            top: 70px; /* Adjusted to be below top bar */
-            left: 50%;
-            transform: translateX(-50%) translateY(-100%);
-            background-color: var(--primary); /* Solid Dark Blue */
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            opacity: 0;
-            transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-            z-index: 2000;
-            font-weight: bold;
-            font-size: 0.9rem;
-            min-width: 200px;
-            text-align: center;
-        }
-
-        .notification.show {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
-
-        .notification.info { background-color: var(--primary); }
-        .notification.warning { background-color: var(--warning); } /* Standard Amber for warning */
-        .notification.error { background-color: var(--error); } /* Standard Red for error */
-
-        /* Footer Styling (reused from other pages) */
-        #mainFooter {
-            background-color: var(--primary); /* Primary color for footer */
-            color: white;
-            padding: 30px 20px; /* Adjusted padding */
-            border-top-left-radius: var(--radius);
-            border-top-right-radius: var(--radius);
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-            margin-top: auto; /* يدفع التذييل للأسفل */
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjusted min-width */
-            gap: 20px; /* Reduced gap */
-            max-width: 1000px; /* Adjusted max-width */
-            margin: 0 auto 20px auto; /* Adjusted margin */
-        }
-
-        .footer-section h3 {
-            font-size: 1.2rem; /* Adjusted font size */
-            margin-bottom: 15px; /* Adjusted margin */
-            color: var(--secondary); /* Secondary color for headings */
-            position: relative;
-            padding-bottom: 8px; /* Adjusted padding */
-        }
-
-        .footer-section h3::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 40px; /* Adjusted width */
-            height: 2px;
-            background-color: var(--secondary); /* Secondary color for underline */
-            border-radius: 1px;
-        }
-
-        .footer-section p, .footer-links li {
-            font-size: 0.85rem; /* Adjusted font size */
-            line-height: 1.6;
-            color: #E0E0E0;
-        }
-
-        .contact-info p {
-            display: flex;
-            align-items: center;
-            gap: 8px; /* Reduced gap */
-            margin-bottom: 6px; /* Reduced margin */
-        }
-
-        .contact-info i {
-            color: var(--secondary); /* Secondary color for icons */
-            font-size: 1rem; /* Adjusted font size */
-        }
-
-        .social-links {
-            display: flex;
-            gap: 10px; /* Reduced gap */
-            margin-top: 10px; /* Reduced margin */
-        }
-
-        .social-link {
-            color: white;
-            font-size: 1.2rem; /* Adjusted font size */
-            transition: var(--transition);
-        }
-
-        .social-link:hover {
-            color: var(--secondary); /* Secondary color on hover */
-            transform: translateY(-2px) scale(1.1);
-        }
-
-        .footer-links {
-            list-style: none;
-        }
-
-        .footer-links li {
-            margin-bottom: 6px; /* Reduced margin */
-        }
-
-        .footer-links a {
-            color: #E0E0E0;
-            text-decoration: none;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            gap: 6px; /* Reduced gap */
-        }
-
-        .footer-links a:hover {
-            color: var(--secondary); /* Secondary color on hover */
-            transform: translateX(-3px);
-        }
-
-        .footer-links i {
-            font-size: 0.7rem; /* Adjusted font size */
-        }
-
-        .copyright {
-            text-align: center;
-            font-size: 0.75rem; /* Adjusted font size */
-            color: #B0B0B0;
-            padding-top: 15px; /* Adjusted padding */
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .no-content-message {
-            text-align: center;
-            color: #888;
-            font-size: 1rem; /* Adjusted font size */
-            padding: 20px; /* Adjusted padding */
-        }
-
-        @media (max-width: 768px) {
-            body {
-                padding: 60px 0 80px;
-            }
-            .top-bar {
-                height: 55px;
-                padding: 0 10px;
-            }
-            .store-name {
-                font-size: 1rem;
-            }
-            .icon-btn {
-                font-size: 0.9rem;
-                padding: 4px 8px;
-            }
-            .icon-label {
-                font-size: 0.7rem;
-            }
-            .bottom-bar {
-                height: 70px;
-                padding: 8px 0;
-            }
-            .bottom-nav-item i {
-                font-size: 1.2rem;
-            }
-            .bottom-nav-item span {
-                font-size: 0.75rem;
-            }
-            .main-content {
-                padding: 10px;
-                min-height: calc(100vh - 135px);
-            }
-            .section-header h2 {
-                font-size: 1.6rem;
-            }
-            .section-header p {
-                font-size: 0.8rem;
-            }
-            .account-info-card {
-                padding: 20px;
-                margin: 15px auto;
-            }
-            .account-info-card p {
-                font-size: 0.9rem;
-            }
-            .user-profile-form h3 {
-                font-size: 1.1rem;
-            }
-            .form-group label {
-                font-size: 0.85rem;
-            }
-            .form-group input, .form-group textarea {
-                padding: 8px 10px;
-                font-size: 0.8rem;
-            }
-            .save-profile-btn, .sign-out-btn {
-                padding: 10px 20px;
-                font-size: 0.9rem;
-            }
-            .not-logged-in-message {
-                font-size: 1rem;
-                padding: 30px;
-            }
-            .not-logged-in-message i {
-                font-size: 2.5rem;
-            }
-            .footer-content {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
-            .footer-section h3::after {
-                left: 50%;
-                transform: translateX(-50%);
-            }
-            .contact-info p, .footer-links a {
-                justify-content: center;
-            }
-            .notification {
-                top: 60px;
-                padding: 10px 15px;
-                font-size: 0.8rem;
-            }
-        }
-        
-        @media (max-width: 576px) {
-            .top-right-group {
-                gap: 10px;
-            }
-            .bottom-nav-item {
-                font-size: 0.7rem;
-                padding: 6px 0;
-            }
-            .bottom-nav-item i {
-                font-size: 1.1rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Top Bar -->
-    <header class="top-bar">
-        <div class="top-left">
-            <a href="index.html" class="logo-container">
-                <img id="storeLogo" src="https://placehold.co/150x70/1A237E/FFD700?text=شعار+متجر" alt="شعار المتجر" class="store-logo">
-                <div id="storeName" class="store-name">متجر إلكتروني</div>
-            </a>
-        </div>
-        
-        <div class="top-right-group">
-            <a href="support.html" class="icon-btn">
-                <i class="fas fa-headset"></i>
-                <span class="icon-label">الدعم الفني</span>
-            </a>
-            
-            <a href="account.html" class="icon-btn active"> <!-- Active state for account link -->
-                <i class="fas fa-user-circle"></i>
-                <span class="icon-label">حسابي</span>
-            </a>
-        </div>
-    </header>
-    
-    <!-- Main Content -->
-    <div class="main-content">
-        <section class="account-section">
-            <div class="section-header">
-                <h2>حسابي</h2>
-                <p>إدارة معلومات حسابك.</p>
-            </div>
-            <div class="account-info-card" id="userInfoContainer">
-                <!-- User info will be loaded by JavaScript -->
-                <p>جاري تحميل معلومات الحساب...</p>
-            </div>
-        </section>
-    </div>
-    
-    <!-- Footer -->
-    <footer id="mainFooter">
-        <div class="loading">
-            <div class="spinner"></div>
-        </div>
-    </footer>
-    
-    <!-- Fixed Bottom Bar -->
-    <nav class="bottom-bar">
-        <a href="index.html" class="bottom-nav-item">
-            <i class="fas fa-home"></i>
-            <span>الرئيسية</span>
-        </a>
-        <a href="categories.html" class="bottom-nav-item">
-            <i class="fas fa-list"></i>
-            <span>الأقسام</span>
-        </a>
-        <a href="favorites.html" class="bottom-nav-item">
-            <i class="fas fa-heart"></i>
-            <span>المفضلة</span>
-        </a>
-        <a href="cart.html" class="bottom-nav-item">
-            <i class="fas fa-shopping-cart"></i>
-            <span>السلة</span>
-        </a>
-        <a href="orders.html" class="bottom-nav-item">
-            <i class="fas fa-shopping-bag"></i>
-            <span>الطلبات</span>
-        </a>
-        <a href="offers.html" class="bottom-nav-item">
-            <i class="fas fa-tag"></i>
-            <span>العروض</span>
-        </a>
-    </nav>
-    
 </body>
 </html>
