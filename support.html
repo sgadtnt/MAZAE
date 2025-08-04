@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الدعم الفني</title>
+    <title>نظام الدعم الفني والحساب الشخصي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -13,8 +12,12 @@
         :root {
             --color-primary-blue: #1A237E;
             --color-secondary-gold: #FFD700;
+            --color-light: #f0f2f5;
+            --color-dark: #212121;
+            --color-accent: #4CAF50;
+            --color-warning: #FF9800;
+            --color-danger: #F44336;
             --color-background-light: #f0f2f5;
-            --color-text-dark: #212121;
             --color-border-medium-blue: #d0d0d0;
             --color-admin-message: #e3f2fd;
             --color-user-message: #f5f5f5;
@@ -37,7 +40,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Segoe UI', 'Cairo', sans-serif;
         }
         
         body {
@@ -49,6 +52,7 @@
             overflow-x: hidden;
         }
         
+        /* شريط التنقل */
         .app-header {
             background: linear-gradient(135deg, var(--color-primary-blue), #283593);
             color: white;
@@ -91,6 +95,76 @@
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .nav-link {
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 20px;
+            transition: var(--transition);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .nav-link i {
+            font-size: 1.1rem;
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .user-info-small {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 5px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .user-info-small img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary);
+        }
+        
+        .user-info-small span {
+            font-size: 0.9rem;
+        }
+        
+        .logout-btn {
+            background: rgba(231, 76, 60, 0.2);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 15px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(231, 76, 60, 0.3);
+        }
+        
         .connection-status {
             display: flex;
             align-items: center;
@@ -101,7 +175,6 @@
             border-radius: 20px;
             backdrop-filter: blur(5px);
             color: white;
-            transition: var(--transition);
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
@@ -110,26 +183,27 @@
             color: #2ECC71;
         }
         
+        /* المحتوى الرئيسي */
         .main-container {
-            padding-top: 75px;
-            min-height: calc(100vh - 75px);
+            padding-top: 85px;
+            min-height: calc(100vh - 85px);
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             padding: 20px;
         }
         
-        .registration-section {
+        .content-section {
             background: white;
             border-radius: var(--radius);
-            padding: 35px;
+            padding: 30px;
             box-shadow: var(--shadow);
             border: 1px solid #e0e0e0;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
-            text-align: center;
             transition: var(--transition);
             animation: fadeIn 0.6s ease-out;
+            display: none;
         }
         
         @keyframes fadeIn {
@@ -137,11 +211,12 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .registration-header {
+        .section-header {
             margin-bottom: 25px;
+            text-align: center;
         }
         
-        .registration-header i {
+        .section-header i {
             font-size: 3.5rem;
             color: var(--primary);
             margin-bottom: 15px;
@@ -154,18 +229,145 @@
             60% { transform: translateY(-10px); }
         }
         
-        .registration-header h2 {
+        .section-header h2 {
             font-size: 1.8rem;
             color: var(--primary);
             margin-bottom: 10px;
         }
         
-        .registration-header p {
+        .section-header p {
             color: #5c6770;
             font-size: 1.1rem;
             line-height: 1.6;
         }
         
+        /* قسم الحساب */
+        .account-container {
+            max-width: 500px;
+        }
+        
+        .google-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: white;
+            color: #555;
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
+        }
+        
+        .google-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .google-btn i {
+            font-size: 1.5rem;
+            color: #4285F4;
+        }
+        
+        .user-details {
+            display: none;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .user-details img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            border: 3px solid var(--secondary);
+            object-fit: cover;
+            background: white;
+            padding: 3px;
+        }
+        
+        .user-details h2 {
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .info-container {
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin: 15px 0;
+            text-align: right;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: var(--primary);
+            flex: 1;
+        }
+        
+        .info-value {
+            text-align: left;
+            flex: 2;
+            direction: ltr;
+            padding-left: 10px;
+            word-break: break-all;
+            color: #555;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        
+        .action-btn:hover {
+            background: #283593;
+            transform: translateY(-2px);
+        }
+        
+        .username-status {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        /* قسم الدعم الفني */
         .registration-form {
             display: flex;
             flex-direction: column;
@@ -233,38 +435,20 @@
             box-shadow: 0 6px 20px rgba(26, 35, 126, 0.45);
         }
         
-        .register-btn:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        .help-section {
+        .help-section-content {
             background: white;
             border-radius: var(--radius);
             padding: 25px;
             box-shadow: var(--shadow);
             border: 1px solid #e0e0e0;
-            max-width: 800px;
             width: 100%;
-            display: none;
-        }
-        
-        .help-header {
-            font-size: 1.4rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
         }
         
         .help-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
+            margin-top: 20px;
         }
         
         .help-card {
@@ -357,6 +541,29 @@
             min-width: 25px;
         }
         
+        /* العناصر المشتركة */
+        .loading {
+            display: none;
+            margin: 20px 0;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid var(--color-secondary-gold);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         .notification {
             position: fixed;
             top: 50%;
@@ -399,62 +606,124 @@
             background: linear-gradient(to right, rgba(52, 152, 219, 0.9), rgba(41, 128, 185, 0.9));
         }
         
-        .loading {
+        .error-message {
+            background: rgba(231, 76, 60, 0.1);
+            color: #E74C3C;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            text-align: center;
+            border: 1px solid rgba(231, 76, 60, 0.3);
             display: none;
-            margin: 20px 0;
-            flex-direction: column;
+        }
+        
+        /* مودال تغيير المعرف */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
             align-items: center;
+            animation: fadeIn 0.3s ease;
         }
         
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--color-secondary-gold);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 10px;
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 400px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            position: relative;
+            animation: scaleIn 0.4s ease;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #ccc;
+        }
+        
+        .close-btn:hover {
+            color: var(--primary);
+        }
+        
+        .modal-title {
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: #f8fafc;
+            color: var(--dark);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .submit-btn {
+            background: var(--secondary);
+            color: var(--primary);
+            border: none;
+            border-radius: 50px;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* التكيف مع الأجهزة المختلفة */
         @media (max-width: 768px) {
             :root {
                 font-size: 13px;
             }
             
             .app-header {
-                padding: 10px 12px;
+                flex-wrap: wrap;
+                padding: 10px;
             }
             
             .logo-container h1 {
                 font-size: 1.05rem;
             }
             
-            .connection-status {
-                font-size: 0.75rem;
-                padding: 4px 10px;
+            .nav-links {
+                order: 3;
+                width: 100%;
+                margin-top: 10px;
+                justify-content: center;
             }
             
-            .registration-section {
+            .content-section {
                 padding: 25px;
-            }
-            
-            .registration-header h2 {
-                font-size: 1.5rem;
-            }
-            
-            .form-group input {
-                padding: 12px 15px;
-                font-size: 1rem;
-            }
-            
-            .register-btn {
-                padding: 12px 20px;
-                font-size: 1.1rem;
             }
         }
         
@@ -464,7 +733,7 @@
             }
             
             .app-header {
-                padding: 8px 10px;
+                padding: 8px;
             }
             
             .logo-container h1 {
@@ -475,150 +744,196 @@
                 font-size: 1.5rem;
             }
             
-            .connection-status {
-                font-size: 0.7rem;
-                padding: 3px 8px;
+            .nav-link {
+                padding: 6px 10px;
+                font-size: 0.9rem;
             }
             
-            .registration-section {
+            .content-section {
                 padding: 20px 15px;
             }
             
-            .registration-header i {
+            .section-header i {
                 font-size: 2.8rem;
             }
             
-            .registration-header h2 {
+            .section-header h2 {
                 font-size: 1.3rem;
-            }
-            
-            .form-group input {
-                padding: 10px 12px;
-                font-size: 0.95rem;
-            }
-            
-            .register-btn {
-                padding: 10px 16px;
-                font-size: 1.05rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- App Header -->
+    <!-- شريط التنقل -->
     <div class="app-header">
         <div class="logo-container">
-            <i class="fas fa-headset"></i>
-            <h1>الدعم الفني - لوحة العميل</h1>
+            <i class="fas fa-user-shield"></i>
+            <h1>نظام الحساب والدعم الفني</h1>
         </div>
-        <div id="connectionStatus" class="connection-status">
-            <i class="fas fa-circle"></i>
-            <span>متصل</span>
+        
+        <div class="nav-links">
+            <a href="#" class="nav-link active" data-section="accountSection">
+                <i class="fas fa-user-circle"></i> حسابي
+            </a>
+            <a href="#" class="nav-link" data-section="supportSection">
+                <i class="fas fa-headset"></i> الدعم الفني
+            </a>
+        </div>
+        
+        <div class="user-actions">
+            <div class="user-info-small" id="userNavInfo" style="display:none;">
+                <img id="navUserPhoto" src="https://ui-avatars.com/api/?name=User&background=random" alt="صورة المستخدم">
+                <span id="navUserName">مستخدم</span>
+            </div>
+            <button id="logoutBtn" class="logout-btn" style="display:none;">
+                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+            </button>
+            <div class="connection-status">
+                <i class="fas fa-circle"></i>
+                <span>متصل</span>
+            </div>
         </div>
     </div>
     
-    <!-- Main Container -->
+    <!-- المحتوى الرئيسي -->
     <div class="main-container">
-        <!-- Registration Section -->
-        <div id="registrationSection" class="registration-section">
-            <div class="registration-header">
-                <i class="fas fa-user-circle"></i>
-                <h2>تسجيل المستخدم</h2>
-                <p>يرجى تسجيل اسمك لبدء استخدام خدمة الدعم الفني</p>
+        <!-- قسم الحساب -->
+        <div id="accountSection" class="content-section account-container">
+            <div class="section-header">
+                <i class="fas fa-user-shield"></i>
+                <h2>إدارة حسابك الشخصي</h2>
+                <p>سجل الدخول باستخدام حساب Google لإدارة معلومات حسابك</p>
             </div>
             
-            <div id="loading" class="loading">
+            <div id="accountLoading" class="loading">
                 <div class="spinner"></div>
-                <p>جاري تحميل بيانات المستخدم...</p>
+                <p>جاري التحقق من حالة الدخول...</p>
             </div>
             
-            <div class="user-info" id="userInfo" style="display: none;">
-                <h3>معلومات المستخدم من حسابك:</h3>
-                <div class="user-info-item">
-                    <i class="fas fa-user"></i>
-                    <span id="accountName">محمود أحمد</span>
-                </div>
-                <div class="user-info-item">
-                    <i class="fas fa-id-card"></i>
-                    <span id="accountUsername">user123</span>
-                </div>
-                <div class="user-info-item">
-                    <i class="fas fa-phone"></i>
-                    <span id="accountPhone">+9647823053419</span>
-                </div>
-                <div class="user-info-item">
-                    <i class="fas fa-envelope"></i>
-                    <span id="accountEmail">mohamed@example.com</span>
-                </div>
-                <p style="margin-top: 15px; font-size: 0.95rem; color: #1A237E;">
-                    <i class="fas fa-info-circle"></i> سيتم استخدام هذه المعلومات للتواصل معك
-                </p>
-            </div>
+            <div id="accountError" class="error-message"></div>
             
-            <div class="registration-form">
-                <div class="form-group">
-                    <label for="userNameInput">
-                        <i class="fas fa-user"></i>
-                        اسم المستخدم:
-                    </label>
-                    <input type="text" id="userNameInput" placeholder="أدخل اسمك الكامل" required>
+            <button id="googleSignIn" class="google-btn">
+                <i class="fab fa-google"></i>
+                <span>تسجيل الدخول باستخدام Google</span>
+            </button>
+            
+            <div id="userDetails" class="user-details">
+                <img id="userPhoto" src="https://ui-avatars.com/api/?name=User&background=random" alt="صورة المستخدم">
+                <h2 id="userName"></h2>
+                
+                <div class="info-container">
+                    <div class="info-row">
+                        <span class="info-label">المعرف:</span>
+                        <span id="username" class="info-value"></span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="info-label">البريد الإلكتروني:</span>
+                        <span id="userEmail" class="info-value"></span>
+                    </div>
+                    
+                    <div class="info-row">
+                        <span class="info-label">تاريخ التسجيل:</span>
+                        <span id="joinDate" class="info-value"></span>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="userPhone">
-                        <i class="fas fa-phone"></i>
-                        رقم الهاتف (اختياري):
-                    </label>
-                    <input type="tel" id="userPhone" placeholder="أدخل رقم هاتفك">
+                <div class="action-buttons">
+                    <button id="changeUsernameBtn" class="action-btn">
+                        <i class="fas fa-edit"></i> تغيير المعرف
+                    </button>
                 </div>
                 
-                <div class="form-group">
-                    <label for="userEmail">
-                        <i class="fas fa-envelope"></i>
-                        البريد الإلكتروني (اختياري):
-                    </label>
-                    <input type="email" id="userEmail" placeholder="أدخل بريدك الإلكتروني">
+                <div class="username-status" id="usernameStatus">
+                    يمكنك تغيير المعرف مرة واحدة مجانًا
                 </div>
-                
-                <button id="registerBtn" class="register-btn">
-                    <i class="fas fa-check"></i>
-                    تسجيل والحفظ
-                </button>
             </div>
         </div>
         
-        <!-- Help Section -->
-        <div id="helpSection" class="help-section">
-            <div class="help-header">
-                <i class="fas fa-question-circle"></i>
-                <h2>كيف يمكننا مساعدتك اليوم؟</h2>
+        <!-- قسم الدعم الفني -->
+        <div id="supportSection" class="content-section">
+            <div class="section-header">
+                <i class="fas fa-headset"></i>
+                <h2>مركز الدعم الفني</h2>
+                <p>كيف يمكننا مساعدتك اليوم؟</p>
             </div>
-            <div class="help-grid">
-                <div class="help-card" id="startChatBtn">
-                    <i class="fas fa-comments"></i>
-                    <h3>بدء محادثة جديدة</h3>
-                    <p>تواصل مع ممثل الدعم لحل مشكلتك</p>
+            
+            <div id="supportLoading" class="loading">
+                <div class="spinner"></div>
+                <p>جاري تحميل بيانات الدعم...</p>
+            </div>
+            
+            <div id="supportError" class="error-message"></div>
+            
+            <div class="help-section-content">
+                <div class="user-info" id="supportUserInfo" style="display: none;">
+                    <h3>معلومات المستخدم:</h3>
+                    <div class="user-info-item">
+                        <i class="fas fa-user"></i>
+                        <span id="supportUserName">محمود أحمد</span>
+                    </div>
+                    <div class="user-info-item">
+                        <i class="fas fa-id-card"></i>
+                        <span id="supportUserUsername">user123</span>
+                    </div>
+                    <div class="user-info-item">
+                        <i class="fas fa-envelope"></i>
+                        <span id="supportUserEmail">mohamed@example.com</span>
+                    </div>
                 </div>
-                <div class="help-card" id="faqBtn">
-                    <i class="fas fa-book"></i>
-                    <h3>الأسئلة الشائعة</h3>
-                    <p>ابحث عن حلول للمشكلات الشائعة</p>
-                </div>
-                <div class="help-card" id="callSupportBtn">
-                    <i class="fas fa-phone-alt"></i>
-                    <h3>الاتصال بالدعم</h3>
-                    <p>اتصل بنا مباشرة على الرقم +9647823053419</p>
-                </div>
-                <div class="whatsapp-card" id="whatsappBtn">
-                    <i class="fab fa-whatsapp"></i>
-                    <h3>واتساب الدعم الفني</h3>
-                    <p>تواصل معنا عبر واتساب لحل مشكلتك</p>
+                
+                <div class="help-grid">
+                    <div class="help-card" id="startChatBtn">
+                        <i class="fas fa-comments"></i>
+                        <h3>بدء محادثة جديدة</h3>
+                        <p>تواصل مع ممثل الدعم لحل مشكلتك</p>
+                    </div>
+                    <div class="help-card" id="faqBtn">
+                        <i class="fas fa-book"></i>
+                        <h3>الأسئلة الشائعة</h3>
+                        <p>ابحث عن حلول للمشكلات الشائعة</p>
+                    </div>
+                    <div class="help-card" id="callSupportBtn">
+                        <i class="fas fa-phone-alt"></i>
+                        <h3>الاتصال بالدعم</h3>
+                        <p>اتصل بنا مباشرة على الرقم +9647823053419</p>
+                    </div>
+                    <div class="whatsapp-card" id="whatsappBtn">
+                        <i class="fab fa-whatsapp"></i>
+                        <h3>واتساب الدعم الفني</h3>
+                        <p>تواصل معنا عبر واتساب لحل مشكلتك</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- Notification Container -->
+    <!-- مودال تغيير المعرف -->
+    <div id="usernameModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" id="closeUsernameModal">&times;</span>
+            <h3 class="modal-title">تغيير المعرف</h3>
+            
+            <div class="form-group">
+                <label for="newUsername">المعرف الجديد:</label>
+                <input type="text" id="newUsername" placeholder="أدخل معرفاً جديداً">
+                <div id="usernameAvailability" class="username-availability"></div>
+            </div>
+            
+            <div id="usernameInfo" class="username-status" style="text-align: center; margin: 15px 0;">
+                <p>يمكنك تغيير المعرف مرة واحدة مجانًا</p>
+                <p>التغيير التالي بعد <span class="countdown" id="countdownDays">5</span> أيام</p>
+            </div>
+            
+            <div id="usernameError" class="error-message" style="display: none;">
+                <p id="usernameErrorText"></p>
+            </div>
+            
+            <button id="confirmUsernameChange" class="submit-btn">تأكيد التغيير</button>
+        </div>
+    </div>
+    
+    <!-- إشعارات -->
     <div id="notificationContainer"></div>
 
     <script>
@@ -640,18 +955,72 @@
         const db = firebase.firestore();
         
         // متغيرات التطبيق
-        let userName = "";
-        let userPhone = "";
-        let userEmail = "";
-        let isUserRegistered = false;
         let currentUser = null;
+        let usernameChangeHistory = {
+            lastChange: null,
+            changeCount: 0,
+            freeChangeUsed: false
+        };
+        let isUserRegistered = false;
 
+        // عناصر DOM
+        const accountSection = document.getElementById('accountSection');
+        const supportSection = document.getElementById('supportSection');
+        const accountLoading = document.getElementById('accountLoading');
+        const supportLoading = document.getElementById('supportLoading');
+        const accountError = document.getElementById('accountError');
+        const supportError = document.getElementById('supportError');
+        const googleSignInBtn = document.getElementById('googleSignIn');
+        const userDetails = document.getElementById('userDetails');
+        const userPhoto = document.getElementById('userPhoto');
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const username = document.getElementById('username');
+        const joinDate = document.getElementById('joinDate');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+        const usernameStatus = document.getElementById('usernameStatus');
+        const supportUserInfo = document.getElementById('supportUserInfo');
+        const supportUserName = document.getElementById('supportUserName');
+        const supportUserUsername = document.getElementById('supportUserUsername');
+        const supportUserEmail = document.getElementById('supportUserEmail');
+        const navUserInfo = document.getElementById('userNavInfo');
+        const navUserPhoto = document.getElementById('navUserPhoto');
+        const navUserName = document.getElementById('navUserName');
+        
+        // عناصر المودال
+        const usernameModal = document.getElementById('usernameModal');
+        const closeUsernameModal = document.getElementById('closeUsernameModal');
+        const newUsernameInput = document.getElementById('newUsername');
+        const confirmUsernameChange = document.getElementById('confirmUsernameChange');
+        const usernameError = document.getElementById('usernameError');
+        const usernameErrorText = document.getElementById('usernameErrorText');
+        const countdownDays = document.getElementById('countdownDays');
+        
+        // الروابط
+        const navLinks = document.querySelectorAll('.nav-link');
+        
         // تهيئة الصفحة عند التحميل
         document.addEventListener('DOMContentLoaded', () => {
-            // زر تسجيل المستخدم
-            document.getElementById('registerBtn').addEventListener('click', registerUser);
+            // إظهار قسم الحساب أولاً
+            showSection('accountSection');
             
-            // أزرار المساعدة
+            // معالجات الأحداث
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const section = link.getAttribute('data-section');
+                    showSection(section);
+                });
+            });
+            
+            googleSignInBtn.addEventListener('click', signInWithGoogle);
+            logoutBtn.addEventListener('click', signOut);
+            changeUsernameBtn.addEventListener('click', openUsernameModal);
+            closeUsernameModal.addEventListener('click', closeModal);
+            confirmUsernameChange.addEventListener('click', changeUsername);
+            
+            // معالجات أزرار الدعم
             document.getElementById('startChatBtn').addEventListener('click', startNewChat);
             document.getElementById('faqBtn').addEventListener('click', showFAQ);
             document.getElementById('callSupportBtn').addEventListener('click', callSupport);
@@ -660,151 +1029,480 @@
             // مراقبة حالة المصادقة
             auth.onAuthStateChanged(user => {
                 if (user) {
-                    // المستخدم مسجل الدخول
                     currentUser = user;
-                    // جلب بيانات المستخدم من Firestore
-                    loadUserData(user.uid);
+                    handleAuthenticatedUser();
                 } else {
-                    // المستخدم غير مسجل الدخول
-                    document.getElementById('registrationSection').style.display = 'block';
-                    document.getElementById('helpSection').style.display = 'none';
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('userInfo').style.display = 'none';
+                    handleUnauthenticatedUser();
                 }
             });
         });
         
-        // جلب بيانات المستخدم من Firestore
-        async function loadUserData(userId) {
-            const loading = document.getElementById('loading');
-            const registrationSection = document.getElementById('registrationSection');
-            const userInfo = document.getElementById('userInfo');
+        // إظهار قسم معين وإخفاء الآخرين
+        function showSection(sectionId) {
+            // إخفاء جميع الأقسام
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
             
-            loading.style.display = 'flex';
-            registrationSection.style.display = 'block';
-            userInfo.style.display = 'none';
+            // إظهار القسم المطلوب
+            document.getElementById(sectionId).style.display = 'block';
+            
+            // تحديث روابط التنقل
+            navLinks.forEach(link => {
+                if (link.getAttribute('data-section') === sectionId) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+        
+        // تسجيل الدخول باستخدام Google
+        async function signInWithGoogle() {
+            accountLoading.style.display = 'flex';
+            accountError.style.display = 'none';
+            
+            const provider = new firebase.auth.GoogleAuthProvider();
             
             try {
-                const userDoc = await db.collection('users').doc(userId).get();
-                if (userDoc.exists) {
-                    const userData = userDoc.data();
-                    
-                    // عرض بيانات المستخدم
-                    displayUserInfo(userData);
-                    
-                    // تعبئة حقول الإدخال
-                    document.getElementById('userNameInput').value = userData.displayName || "";
-                    document.getElementById('userPhone').value = userData.phoneNumber || "";
-                    document.getElementById('userEmail').value = userData.email || "";
-                    
-                    // إظهار قسم المساعدة
-                    showHelpSection();
-                    
-                    showNotification('تم تحميل بيانات حسابك بنجاح', 'success');
-                } else {
-                    // لا يوجد بيانات للمستخدم، نعرض النموذج
-                    document.getElementById('userInfo').style.display = 'none';
-                    showNotification('لم يتم العثور على بيانات حسابك، الرجاء إكمال التسجيل', 'warning');
-                }
+                const result = await auth.signInWithPopup(provider);
+                currentUser = result.user;
+                await showUserInfo(currentUser);
+                showNotification('تم تسجيل الدخول بنجاح!', 'success');
             } catch (error) {
-                console.error("خطأ في جلب بيانات المستخدم:", error);
-                showNotification('حدث خطأ أثناء جلب بيانات المستخدم', 'error');
+                console.error('خطأ في تسجيل الدخول:', error);
+                accountError.textContent = 'حدث خطأ أثناء تسجيل الدخول: ' + error.message;
+                accountError.style.display = 'block';
             } finally {
-                loading.style.display = 'none';
+                accountLoading.style.display = 'none';
             }
+        }
+        
+        // تسجيل الخروج
+        function signOut() {
+            auth.signOut().then(() => {
+                showNotification('تم تسجيل الخروج بنجاح', 'success');
+            }).catch((error) => {
+                console.error('خطأ في تسجيل الخروج:', error);
+                showNotification('حدث خطأ أثناء تسجيل الخروج', 'error');
+            });
+        }
+        
+        // التعامل مع المستخدم المسجل
+        async function handleAuthenticatedUser() {
+            // إظهار أزرار المستخدم
+            logoutBtn.style.display = 'block';
+            navUserInfo.style.display = 'flex';
+            
+            // تحديث واجهة المستخدم
+            await showUserInfo(currentUser);
+            
+            // تحميل بيانات الدعم
+            loadSupportData();
+        }
+        
+        // التعامل مع المستخدم غير المسجل
+        function handleUnauthenticatedUser() {
+            // إخفاء تفاصيل المستخدم
+            userDetails.style.display = 'none';
+            supportUserInfo.style.display = 'none';
+            googleSignInBtn.style.display = 'block';
+            
+            // إخفاء أزرار المستخدم
+            logoutBtn.style.display = 'none';
+            navUserInfo.style.display = 'none';
+            
+            // إظهار رسالة في قسم الدعم
+            supportLoading.style.display = 'none';
+            supportError.textContent = 'يجب تسجيل الدخول أولاً للاستفادة من خدمات الدعم';
+            supportError.style.display = 'block';
         }
         
         // عرض معلومات المستخدم
-        function displayUserInfo(userData) {
-            const userInfo = document.getElementById('userInfo');
-            const accountName = document.getElementById('accountName');
-            const accountUsername = document.getElementById('accountUsername');
-            const accountPhone = document.getElementById('accountPhone');
-            const accountEmail = document.getElementById('accountEmail');
-            
-            // تعبئة البيانات من Firestore
-            accountName.textContent = userData.displayName || "غير متوفر";
-            accountUsername.textContent = userData.username || "غير متوفر";
-            accountPhone.textContent = userData.phoneNumber || "غير متوفر";
-            accountEmail.textContent = userData.email || "غير متوفر";
-            
-            // إظهار قسم معلومات المستخدم
-            userInfo.style.display = 'block';
+        async function showUserInfo(user) {
+            try {
+                accountLoading.style.display = 'flex';
+                const userDoc = await db.collection('users').doc(user.uid).get();
+                let userUsername = "";
+                
+                if (!userDoc.exists) {
+                    userUsername = await createNewUser(user);
+                } else {
+                    const userData = userDoc.data();
+                    userUsername = userData.username;
+                }
+                
+                // تحديث قسم الحساب
+                userPhoto.src = user.photoURL || "https://ui-avatars.com/api/?name=User&background=random";
+                userName.textContent = user.displayName || "مستخدم جديد";
+                userEmail.textContent = user.email;
+                username.textContent = userUsername;
+                
+                // تحديث شريط التنقل
+                navUserPhoto.src = user.photoURL || "https://ui-avatars.com/api/?name=User&background=random";
+                navUserName.textContent = user.displayName || "مستخدم";
+                
+                // تحميل تاريخ التسجيل
+                const joinDateValue = user.metadata.creationTime ? new Date(user.metadata.creationTime) : new Date();
+                joinDate.textContent = formatDate(joinDateValue);
+                
+                // تحميل بيانات تغيير المعرف
+                await loadUsernameChangeHistory(user.uid);
+                
+                // تحديث حالة تغيير المعرف
+                updateUsernameChangeStatus();
+                
+                userDetails.style.display = 'block';
+                googleSignInBtn.style.display = 'none';
+                
+                // تحميل بيانات الدعم
+                loadSupportData();
+            } catch (error) {
+                console.error("خطأ في عرض بيانات المستخدم:", error);
+                accountError.textContent = 'حدث خطأ أثناء تحميل بيانات المستخدم';
+                accountError.style.display = 'block';
+            } finally {
+                accountLoading.style.display = 'none';
+            }
         }
         
-        // تسجيل المستخدم
-        async function registerUser() {
-            const nameInput = document.getElementById('userNameInput');
-            const phoneInput = document.getElementById('userPhone');
-            const emailInput = document.getElementById('userEmail');
+        // تحميل بيانات الدعم
+        async function loadSupportData() {
+            if (!currentUser) return;
             
-            const name = nameInput.value.trim();
-            const phone = phoneInput.value.trim();
-            const email = emailInput.value.trim();
+            supportLoading.style.display = 'flex';
+            supportError.style.display = 'none';
             
-            if (!name) {
-                showNotification('يرجى إدخال اسم المستخدم', 'error');
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    
+                    // تحديث قسم الدعم
+                    supportUserName.textContent = userData.displayName || "غير متوفر";
+                    supportUserUsername.textContent = userData.username || "غير متوفر";
+                    supportUserEmail.textContent = userData.email || "غير متوفر";
+                    
+                    supportUserInfo.style.display = 'block';
+                    isUserRegistered = true;
+                }
+            } catch (error) {
+                console.error("خطأ في جلب بيانات الدعم:", error);
+                supportError.textContent = 'حدث خطأ أثناء جلب بيانات الدعم';
+                supportError.style.display = 'block';
+            } finally {
+                supportLoading.style.display = 'none';
+            }
+        }
+        
+        // إنشاء مستخدم جديد في Firestore
+        async function createNewUser(user) {
+            try {
+                const defaultUsername = user.email.split('@')[0];
+                
+                // التحقق من توفر المعرف الافتراضي
+                let finalUsername = defaultUsername;
+                let counter = 1;
+                
+                while (!(await checkUsernameAvailability(finalUsername))) {
+                    finalUsername = `${defaultUsername}${counter}`;
+                    counter++;
+                }
+                
+                // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات
+                const batch = db.batch();
+                
+                // إنشاء مستخدم جديد
+                const userRef = db.collection('users').doc(user.uid);
+                batch.set(userRef, {
+                    displayName: user.displayName || "مستخدم جديد",
+                    email: user.email,
+                    photoURL: user.photoURL || "https://ui-avatars.com/api/?name=User&background=random",
+                    username: finalUsername,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // تسجيل المعرف الافتراضي
+                const usernameRef = db.collection('usernames').doc(finalUsername);
+                batch.set(usernameRef, {
+                    userId: user.uid,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // تنفيذ الدفعة
+                await batch.commit();
+                
+                return finalUsername;
+            } catch (error) {
+                console.error("خطأ في إنشاء مستخدم جديد:", error);
+                throw new Error("حدث خطأ أثناء إنشاء الحساب");
+            }
+        }
+        
+        // فتح نافذة تغيير المعرف
+        function openUsernameModal() {
+            // تحديث حالة العداد قبل فتح المودال
+            updateModalCountdown();
+            usernameModal.style.display = 'flex';
+            newUsernameInput.value = '';
+            usernameError.style.display = 'none';
+        }
+        
+        // إغلاق نافذة تغيير المعرف
+        function closeModal() {
+            usernameModal.style.display = 'none';
+            usernameError.style.display = 'none';
+            newUsernameInput.value = '';
+        }
+        
+        // تغيير المعرف
+        async function changeUsername() {
+            const newUsername = newUsernameInput.value.trim();
+            const oldUsername = username.textContent;
+            
+            // التحقق من وجود قيمة
+            if (!newUsername) {
+                showUsernameError('الرجاء إدخال معرف جديد');
                 return;
             }
             
-            try {
-                // تحديث بيانات المستخدم في Firestore
-                if (currentUser) {
-                    await db.collection('users').doc(currentUser.uid).set({
-                        displayName: name,
-                        phoneNumber: phone,
-                        email: email
-                    }, { merge: true });
+            // التحقق من الطول
+            if (newUsername.length < 4) {
+                showUsernameError('يجب أن يكون المعرف 4 أحرف على الأقل');
+                return;
+            }
+            
+            // التحقق من أن المعرف الجديد مختلف عن القديم
+            if (newUsername === oldUsername) {
+                showUsernameError('هذا المعرف هو نفس المعرف الحالي');
+                return;
+            }
+            
+            // التحقق من القيود الزمنية
+            const now = new Date();
+            
+            if (usernameChangeHistory.changeCount === 0) {
+                // التغيير الأول مجانًا
+                usernameChangeHistory.freeChangeUsed = true;
+                usernameChangeHistory.changeCount = 1;
+                usernameChangeHistory.lastChange = now;
+                
+                // تحديث المعرف في قاعدة البيانات
+                try {
+                    await registerNewUsername(currentUser.uid, oldUsername, newUsername);
                     
-                    showNotification('تم تحديث بياناتك بنجاح!', 'success');
+                    // حفظ بيانات التغيير
+                    await saveUsernameChangeHistory(currentUser.uid);
                     
-                    // إعادة تحميل البيانات
-                    loadUserData(currentUser.uid);
-                } else {
-                    // لا يوجد مستخدم مسجل، يجب تسجيل الدخول أولاً
-                    showNotification('يجب تسجيل الدخول أولاً', 'error');
+                    // تحديث العرض
+                    username.textContent = newUsername;
+                    supportUserUsername.textContent = newUsername;
+                    usernameModal.style.display = 'none';
+                    showNotification('تم تغيير المعرف بنجاح!', 'success');
+                    updateUsernameChangeStatus();
+                } catch (error) {
+                    showUsernameError(error.message);
                 }
-            } catch (error) {
-                console.error("خطأ في تسجيل المستخدم:", error);
-                showNotification('حدث خطأ أثناء تسجيل المستخدم', 'error');
+            } 
+            else if (usernameChangeHistory.changeCount > 0) {
+                const lastChangeDate = usernameChangeHistory.lastChange;
+                const diffTime = Math.abs(now - lastChangeDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 5) {
+                    showUsernameError(`يجب الانتظار ${5 - diffDays} أيام قبل التغيير مرة أخرى`);
+                    return;
+                }
+                
+                // السماح بالتغيير بعد 5 أيام
+                usernameChangeHistory.changeCount++;
+                usernameChangeHistory.lastChange = now;
+                
+                // تحديث المعرف في قاعدة البيانات
+                try {
+                    await registerNewUsername(currentUser.uid, oldUsername, newUsername);
+                    
+                    // حفظ بيانات التغيير
+                    await saveUsernameChangeHistory(currentUser.uid);
+                    
+                    // تحديث العرض
+                    username.textContent = newUsername;
+                    supportUserUsername.textContent = newUsername;
+                    usernameModal.style.display = 'none';
+                    showNotification('تم تغيير المعرف بنجاح!', 'success');
+                    updateUsernameChangeStatus();
+                } catch (error) {
+                    showUsernameError(error.message);
+                }
             }
         }
         
-        // إظهار قسم المساعدة
-        function showHelpSection() {
-            document.getElementById('registrationSection').style.display = 'none';
-            document.getElementById('helpSection').style.display = 'block';
-            isUserRegistered = true;
-        }
-        
-        // بدء محادثة جديدة
+        // وظائف الدعم الفني
         function startNewChat() {
             if (!isUserRegistered) {
-                showNotification('يرجى تسجيل معلوماتك أولاً', 'warning');
+                showNotification('يرجى تسجيل الدخول أولاً', 'warning');
                 return;
             }
             
             showNotification('جاري بدء محادثة جديدة مع الدعم...', 'info');
         }
         
-        // عرض الأسئلة الشائعة
         function showFAQ() {
             if (!isUserRegistered) {
-                showNotification('يرجى تسجيل معلوماتك أولاً', 'warning');
+                showNotification('يرجى تسجيل الدخول أولاً', 'warning');
                 return;
             }
             
             showNotification('جاري تحميل الأسئلة الشائعة...', 'info');
         }
         
-        // فتح واتساب
         function openWhatsApp() {
             window.open('https://wa.me/9647823053419', '_blank');
         }
         
-        // الاتصال بالدعم
         function callSupport() {
             window.location.href = "tel:+9647823053419";
+        }
+        
+        // ===== وظائف مساعدة =====
+        
+        // التحقق من توفر المعرف في قاعدة البيانات
+        async function checkUsernameAvailability(username) {
+            try {
+                if (!username || username.length < 4) return false;
+                
+                const doc = await db.collection('usernames').doc(username).get();
+                return !doc.exists;
+            } catch (error) {
+                console.error("خطأ في التحقق من توفر المعرف:", error);
+                return false;
+            }
+        }
+        
+        // تحميل بيانات تغيير المعرف من Firestore
+        async function loadUsernameChangeHistory(userId) {
+            try {
+                const docRef = db.collection('usernameHistory').doc(userId);
+                const doc = await docRef.get();
+                
+                if (doc.exists) {
+                    const data = doc.data();
+                    usernameChangeHistory = {
+                        lastChange: data.lastChange ? data.lastChange.toDate() : null,
+                        changeCount: data.changeCount || 0,
+                        freeChangeUsed: data.freeChangeUsed || false
+                    };
+                }
+            } catch (error) {
+                console.error("خطأ في تحميل تاريخ تغيير المعرف:", error);
+            }
+        }
+        
+        // حفظ بيانات تغيير المعرف إلى Firestore
+        async function saveUsernameChangeHistory(userId) {
+            try {
+                const dataToSave = {
+                    ...usernameChangeHistory,
+                    lastChange: usernameChangeHistory.lastChange ? firebase.firestore.Timestamp.fromDate(usernameChangeHistory.lastChange) : null
+                };
+                
+                await db.collection('usernameHistory').doc(userId).set(dataToSave);
+            } catch (error) {
+                console.error("خطأ في حفظ تاريخ تغيير المعرف:", error);
+            }
+        }
+        
+        // تسجيل معرف جديد في قاعدة البيانات
+        async function registerNewUsername(userId, oldUsername, newUsername) {
+            try {
+                // التحقق مرة أخرى من توفر المعرف
+                const isAvailable = await checkUsernameAvailability(newUsername);
+                if (!isAvailable) {
+                    throw new Error('هذا المعرف مستخدم من قبل، الرجاء اختيار معرف آخر');
+                }
+                
+                // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات
+                const batch = db.batch();
+                
+                // تحديث معرف المستخدم
+                const userRef = db.collection('users').doc(userId);
+                batch.update(userRef, {
+                    username: newUsername
+                });
+                
+                // حذف المعرف القديم
+                const oldUsernameRef = db.collection('usernames').doc(oldUsername);
+                batch.delete(oldUsernameRef);
+                
+                // إضافة المعرف الجديد
+                const newUsernameRef = db.collection('usernames').doc(newUsername);
+                batch.set(newUsernameRef, {
+                    userId: userId,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                // تنفيذ الدفعة
+                await batch.commit();
+                
+                return true;
+            } catch (error) {
+                console.error("خطأ في تسجيل المعرف الجديد:", error);
+                throw new Error("حدث خطأ أثناء تسجيل المعرف الجديد");
+            }
+        }
+        
+        // تحديث حالة تغيير المعرف
+        function updateUsernameChangeStatus() {
+            if (usernameChangeHistory.changeCount === 0) {
+                usernameStatus.textContent = "يمكنك تغيير المعرف مرة واحدة مجانًا";
+                usernameStatus.style.color = "#1A237E";
+            } else {
+                const now = new Date();
+                const lastChangeDate = usernameChangeHistory.lastChange;
+                const diffTime = Math.abs(now - lastChangeDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 5) {
+                    usernameStatus.innerHTML = `يمكنك تغيير المعرف بعد <span style="color:${colorWarning}">${5 - diffDays}</span> أيام`;
+                    usernameStatus.style.color = "#FF9800";
+                } else {
+                    usernameStatus.textContent = "يمكنك تغيير المعرف الآن";
+                    usernameStatus.style.color = "#4CAF50";
+                }
+            }
+            
+            // تحديث العداد في المودال
+            updateModalCountdown();
+        }
+        
+        // تحديث العداد في نافذة تغيير المعرف
+        function updateModalCountdown() {
+            if (usernameChangeHistory.changeCount === 0) {
+                countdownDays.textContent = "5";
+            } else {
+                const now = new Date();
+                const lastChangeDate = usernameChangeHistory.lastChange;
+                const diffTime = Math.abs(now - lastChangeDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                if (diffDays < 5) {
+                    countdownDays.textContent = (5 - diffDays);
+                } else {
+                    countdownDays.textContent = "0";
+                }
+            }
+        }
+        
+        // تنسيق التاريخ
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('ar-EG', options);
+        }
+        
+        // عرض خطأ في نافذة تغيير المعرف
+        function showUsernameError(message) {
+            usernameErrorText.textContent = message;
+            usernameError.style.display = 'block';
         }
         
         // دالة لإظهار الإشعارات
