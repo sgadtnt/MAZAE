@@ -649,7 +649,7 @@
                 freeChangeUsed: false
             };
             
-            // الحل الجديد: استخدام المعرف كمفتاح رئيسي لمنع التكرار
+            // التحقق من توفر المعرف في قاعدة البيانات
             async function checkUsernameAvailability(username) {
                 try {
                     const doc = await db.collection('usernames').doc(username).get();
@@ -660,7 +660,7 @@
                 }
             }
             
-            // تحديث حالة توفر المعرف
+            // تحديث حالة توفر المعرف أثناء الكتابة
             newUsernameInput.addEventListener('input', async function() {
                 const username = this.value.trim();
                 if (username.length < 4) {
@@ -672,10 +672,10 @@
                 usernameAvailability.style.display = 'block';
                 
                 if (isAvailable) {
-                    usernameAvailability.textContent = "المعرف متاح ✓";
+                    usernameAvailability.textContent = "✓ المعرف متاح";
                     usernameAvailability.className = "username-availability available";
                 } else {
-                    usernameAvailability.textContent = "المعرف مستخدم ✗";
+                    usernameAvailability.textContent = "✗ المعرف غير متاح";
                     usernameAvailability.className = "username-availability not-available";
                 }
             });
@@ -979,6 +979,13 @@
                 // التحقق من أن المعرف الجديد مختلف عن القديم
                 if (newUsername === oldUsername) {
                     showUsernameError('هذا المعرف هو نفس المعرف الحالي');
+                    return;
+                }
+                
+                // التحقق من توفر المعرف
+                const isAvailable = await checkUsernameAvailability(newUsername);
+                if (!isAvailable) {
+                    showUsernameError('هذا المعرف مستخدم من قبل، الرجاء اختيار معرف آخر');
                     return;
                 }
                 
