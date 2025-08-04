@@ -463,6 +463,66 @@
             display: none;
         }
         
+        .back-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 10;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: rotate(-15deg);
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .btn-skip {
+            background: transparent;
+            color: #ccc;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-skip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 8px;
+        }
+        
+        .step {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .step.active {
+            background: var(--color-secondary-gold);
+            transform: scale(1.2);
+        }
+        
         @media (max-width: 576px) {
             .login-container {
                 padding: 30px 20px;
@@ -504,6 +564,9 @@
 <body>
     <div class="login-container">
         <div class="wave-top"></div>
+        <div class="back-btn" id="backBtn" style="display: none;">
+            <i class="fas fa-arrow-right"></i>
+        </div>
         <div class="logo">
             <i class="fas fa-user-shield"></i>
         </div>
@@ -580,7 +643,7 @@
         </div>
         
         <div class="footer">
-            <p>جميع الحقوق محفوظة &copy; 2023 - نظام حسابي الشخصي</p>
+            <p>جميع الحقوق محفوظة &copy; 2025 - نظام حسابي الشخصي</p>
         </div>
     </div>
     
@@ -608,21 +671,88 @@
         </div>
     </div>
     
+    <!-- Modal لتحديد الاسم -->
+    <div id="nameModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">تحديد الاسم</h3>
+            
+            <div class="form-group">
+                <label for="userNameInput">اسمك:</label>
+                <input type="text" id="userNameInput" placeholder="أدخل اسمك">
+            </div>
+            
+            <div class="step-indicator">
+                <div class="step active"></div>
+                <div class="step"></div>
+                <div class="step"></div>
+            </div>
+            
+            <div id="nameError" class="error" style="display: none;">
+                <p id="nameErrorText"></p>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="skipNameBtn" class="submit-btn btn-skip">تخطي</button>
+                <button id="saveNameBtn" class="submit-btn">حفظ</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Modal لإدخال العمر -->
     <div id="ageModal" class="modal">
         <div class="modal-content">
-            <h3 class="modal-title">أكمل ملفك الشخصي</h3>
+            <h3 class="modal-title">تحديد العمر</h3>
             
             <div class="form-group">
                 <label for="userAgeInput">عمرك:</label>
                 <input type="number" id="userAgeInput" min="10" max="100" placeholder="أدخل عمرك">
             </div>
             
+            <div class="step-indicator">
+                <div class="step"></div>
+                <div class="step active"></div>
+                <div class="step"></div>
+            </div>
+            
             <div id="ageError" class="error" style="display: none;">
                 <p id="ageErrorText"></p>
             </div>
             
-            <button id="saveAgeBtn" class="submit-btn">حفظ المعلومات</button>
+            <div class="modal-footer">
+                <button id="skipAgeBtn" class="submit-btn btn-skip">تخطي</button>
+                <button id="saveAgeBtn" class="submit-btn">حفظ</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal لتحديد المعرف -->
+    <div id="usernameSetupModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">تحديد المعرف</h3>
+            
+            <div class="form-group">
+                <label for="newUsernameSetup">المعرف:</label>
+                <input type="text" id="newUsernameSetup" placeholder="أدخل معرفاً">
+            </div>
+            
+            <div id="usernameSetupInfo" class="username-change-info">
+                <p><i class="fas fa-info-circle"></i> يمكنك تغيير المعرف مرة واحدة بعد التسجيل الأول</p>
+            </div>
+            
+            <div class="step-indicator">
+                <div class="step"></div>
+                <div class="step"></div>
+                <div class="step active"></div>
+            </div>
+            
+            <div id="usernameSetupError" class="error" style="display: none;">
+                <p id="usernameSetupErrorText"></p>
+            </div>
+            
+            <div class="modal-footer">
+                <button id="skipUsernameSetupBtn" class="submit-btn btn-skip">تخطي</button>
+                <button id="saveUsernameSetupBtn" class="submit-btn">حفظ</button>
+            </div>
         </div>
     </div>
 
@@ -668,6 +798,7 @@
         const logoutBtn = document.getElementById('logoutBtn');
         const changeUsernameBtn = document.getElementById('changeUsernameBtn');
         const firstChangeNotice = document.getElementById('firstChangeNotice');
+        const backBtn = document.getElementById('backBtn');
         
         // Modal elements
         const usernameModal = document.getElementById('usernameModal');
@@ -678,11 +809,30 @@
         const usernameErrorText = document.getElementById('usernameErrorText');
         const nextChangeDate = document.getElementById('nextChangeDate');
         
+        const nameModal = document.getElementById('nameModal');
+        const userNameInput = document.getElementById('userNameInput');
+        const saveNameBtn = document.getElementById('saveNameBtn');
+        const skipNameBtn = document.getElementById('skipNameBtn');
+        const nameError = document.getElementById('nameError');
+        const nameErrorText = document.getElementById('nameErrorText');
+        
         const ageModal = document.getElementById('ageModal');
         const userAgeInput = document.getElementById('userAgeInput');
         const saveAgeBtn = document.getElementById('saveAgeBtn');
+        const skipAgeBtn = document.getElementById('skipAgeBtn');
         const ageError = document.getElementById('ageError');
         const ageErrorText = document.getElementById('ageErrorText');
+        
+        const usernameSetupModal = document.getElementById('usernameSetupModal');
+        const newUsernameSetup = document.getElementById('newUsernameSetup');
+        const saveUsernameSetupBtn = document.getElementById('saveUsernameSetupBtn');
+        const skipUsernameSetupBtn = document.getElementById('skipUsernameSetupBtn');
+        const usernameSetupError = document.getElementById('usernameSetupError');
+        const usernameSetupErrorText = document.getElementById('usernameSetupErrorText');
+
+        // متغيرات لتخزين بيانات المستخدم أثناء التسجيل
+        let tempUserData = {};
+        let currentUser = null;
 
         // تسجيل الدخول باستخدام Google
         googleSignInBtn.addEventListener('click', () => {
@@ -694,6 +844,7 @@
             auth.signInWithPopup(provider)
                 .then((result) => {
                     loadingDiv.style.display = 'none';
+                    currentUser = result.user;
                     // تحقق إذا كان المستخدم جديداً
                     checkIfNewUser(result.user);
                 })
@@ -709,10 +860,18 @@
                 userInfoDiv.style.display = 'none';
                 firstChangeNotice.style.display = 'none';
                 googleSignInBtn.style.display = 'flex';
+                backBtn.style.display = 'none';
                 successDiv.style.display = 'none';
             }).catch((error) => {
                 showError(error.message);
             });
+        });
+
+        // زر الرجوع
+        backBtn.addEventListener('click', () => {
+            if (userInfoDiv.style.display === 'block') {
+                auth.signOut();
+            }
         });
 
         // فتح نافذة تغيير المعرف
@@ -813,6 +972,24 @@
             }
         });
 
+        // حفظ الاسم
+        saveNameBtn.addEventListener('click', () => {
+            const name = userNameInput.value.trim();
+            if (!name) {
+                showNameError('الرجاء إدخال اسمك');
+                return;
+            }
+            
+            tempUserData.displayName = name;
+            nameModal.style.display = 'none';
+            ageModal.style.display = 'flex';
+        });
+
+        skipNameBtn.addEventListener('click', () => {
+            nameModal.style.display = 'none';
+            ageModal.style.display = 'flex';
+        });
+
         // حفظ العمر
         saveAgeBtn.addEventListener('click', () => {
             const age = userAgeInput.value.trim();
@@ -821,24 +998,43 @@
                 return;
             }
             
-            const user = auth.currentUser;
-            if (user) {
-                database.ref('users/' + user.uid).update({
-                    age: parseInt(age),
-                    joinDate: Date.now()
-                })
-                .then(() => {
-                    ageModal.style.display = 'none';
-                    showSuccess('تم حفظ معلوماتك بنجاح!');
-                    loadUserInfo(user);
-                    
-                    // عرض إشعار تغيير المعرف لأول مرة
-                    firstChangeNotice.style.display = 'block';
-                })
-                .catch(error => {
-                    showAgeError('حدث خطأ أثناء حفظ العمر: ' + error.message);
-                });
+            tempUserData.age = parseInt(age);
+            ageModal.style.display = 'none';
+            usernameSetupModal.style.display = 'flex';
+        });
+
+        skipAgeBtn.addEventListener('click', () => {
+            ageModal.style.display = 'none';
+            usernameSetupModal.style.display = 'flex';
+        });
+
+        // حفظ المعرف
+        saveUsernameSetupBtn.addEventListener('click', () => {
+            const username = newUsernameSetup.value.trim();
+            if (!username) {
+                showUsernameSetupError('الرجاء إدخال معرف');
+                return;
             }
+            
+            if (username.length < 4) {
+                showUsernameSetupError('يجب أن يكون المعرف 4 أحرف على الأقل');
+                return;
+            }
+            
+            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                showUsernameSetupError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
+                return;
+            }
+            
+            tempUserData.username = username;
+            saveUserData(currentUser, tempUserData);
+            usernameSetupModal.style.display = 'none';
+        });
+
+        skipUsernameSetupBtn.addEventListener('click', () => {
+            tempUserData.username = generateUsername(currentUser);
+            saveUserData(currentUser, tempUserData);
+            usernameSetupModal.style.display = 'none';
         });
 
         // تحقق إذا كان المستخدم جديداً
@@ -848,15 +1044,29 @@
                     if (snapshot.exists()) {
                         // المستخدم موجود، عرض معلوماته
                         showUserInfo(snapshot.val());
+                        backBtn.style.display = 'flex';
                         
                         // إذا لم يغير المعرف من قبل، عرض الإشعار
                         if (!snapshot.val().usernameChanged) {
                             firstChangeNotice.style.display = 'block';
                         }
                     } else {
-                        // مستخدم جديد، عرض نافذة إدخال العمر
-                        ageModal.style.display = 'flex';
-                        generateUsername(user);
+                        // مستخدم جديد، بدء عملية التسجيل
+                        tempUserData = {
+                            uid: user.uid,
+                            displayName: user.displayName || '',
+                            email: user.email,
+                            photoURL: user.photoURL,
+                            age: null,
+                            username: generateUsername(user),
+                            joinDate: Date.now(),
+                            lastUsernameChange: Date.now(),
+                            usernameChanged: false
+                        };
+                        
+                        // عرض نافذة تحديد الاسم
+                        nameModal.style.display = 'flex';
+                        userNameInput.value = user.displayName || '';
                     }
                 });
         }
@@ -871,33 +1081,17 @@
         }
 
         // حفظ بيانات المستخدم في قاعدة البيانات
-        function saveUserData(user, age) {
-            const username = generateUsername(user);
-            const userData = {
-                uid: user.uid,
-                displayName: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL,
-                age: parseInt(age),
-                username: username,
-                joinDate: Date.now(),
-                lastUsernameChange: Date.now(),
-                usernameChanged: false // لم يغير المعرف بعد
-            };
-            
+        function saveUserData(user, userData) {
             // حفظ البيانات في Realtime Database
             const updates = {};
             updates['users/' + user.uid] = userData;
-            updates['usernames/' + username] = { uid: user.uid };
+            updates['usernames/' + userData.username] = { uid: user.uid };
             
             database.ref().update(updates)
                 .then(() => {
-                    console.log('تم حفظ بيانات المستخدم بنجاح');
-                    ageModal.style.display = 'none';
                     showUserInfo(userData);
-                    
-                    // عرض إشعار تغيير المعرف لأول مرة
                     firstChangeNotice.style.display = 'block';
+                    backBtn.style.display = 'flex';
                 })
                 .catch((error) => {
                     console.error('حدث خطأ في حفظ بيانات المستخدم:', error);
@@ -909,7 +1103,7 @@
         function showUserInfo(userData) {
             userPhoto.src = userData.photoURL || 'https://via.placeholder.com/100';
             userName.textContent = userData.displayName || 'مستخدم';
-            userEmail.textContent = userData.email;
+            userEmail.textContent = userData.email || 'غير محدد';
             userAge.textContent = userData.age ? userData.age + ' سنة' : 'غير محدد';
             username.textContent = userData.username || generateUsername(auth.currentUser);
             
@@ -948,6 +1142,7 @@
                 .then((snapshot) => {
                     if (snapshot.exists()) {
                         showUserInfo(snapshot.val());
+                        backBtn.style.display = 'flex';
                         
                         // إذا لم يغير المعرف من قبل، عرض الإشعار
                         if (!snapshot.val().usernameChanged) {
@@ -989,6 +1184,16 @@
             ageErrorText.textContent = message;
             ageError.style.display = 'block';
         }
+        
+        function showNameError(message) {
+            nameErrorText.textContent = message;
+            nameError.style.display = 'block';
+        }
+        
+        function showUsernameSetupError(message) {
+            usernameSetupErrorText.textContent = message;
+            usernameSetupError.style.display = 'block';
+        }
 
         // مراقبة حالة المصادقة
         auth.onAuthStateChanged(user => {
@@ -1000,6 +1205,7 @@
                 userInfoDiv.style.display = 'none';
                 firstChangeNotice.style.display = 'none';
                 googleSignInBtn.style.display = 'flex';
+                backBtn.style.display = 'none';
             }
         });
     </script>
