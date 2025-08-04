@@ -11,20 +11,23 @@
             --color-secondary-gold: #FFD700;
             --color-background-light: #f0f2f5;
             --color-text-dark: #212121;
-            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
+            --color-accent: #4CAF50;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            --radius: 16px;
             --transition: all 0.3s ease-in-out;
+            --gradient-primary: linear-gradient(135deg, #1A237E, #283593);
+            --gradient-gold: linear-gradient(135deg, #FFD700, #FFA000);
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Cairo', sans-serif;
+            font-family: 'Cairo', 'Segoe UI', sans-serif;
         }
         
         body {
-            background: linear-gradient(135deg, #1A237E, #283593);
+            background: var(--gradient-primary);
             color: white;
             min-height: 100vh;
             display: flex;
@@ -35,88 +38,140 @@
         }
         
         .login-container {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
             border-radius: var(--radius);
             padding: 40px 30px;
             width: 100%;
             max-width: 500px;
             box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             text-align: center;
             position: relative;
+            overflow: hidden;
+        }
+        
+        /* Wave decoration at top */
+        .wave-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,117.3C672,107,768,117,864,138.7C960,160,1056,192,1152,192C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+            background-size: cover;
+            z-index: -1;
         }
         
         .logo {
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 2;
         }
         
         .logo i {
-            font-size: 3.5rem;
-            color: var(--color-secondary-gold);
+            font-size: 4.5rem;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
             animation: pulse 2s infinite;
+            filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.3));
         }
         
         @keyframes pulse {
             0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 0.9; }
             100% { transform: scale(1); opacity: 1; }
         }
         
         h1 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             margin-bottom: 10px;
             text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            background: linear-gradient(to right, #FFD700, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-weight: 800;
         }
         
-        p {
-            font-size: 1rem;
-            margin-bottom: 25px;
-            opacity: 0.8;
+        .subtitle {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.85;
+            line-height: 1.6;
+            max-width: 90%;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .google-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
             background: #ffffff;
-            color: #757575;
+            color: #555;
             border: none;
             border-radius: 50px;
-            padding: 12px 25px;
-            font-size: 1rem;
-            font-weight: 600;
+            padding: 14px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
             width: 100%;
             transition: var(--transition);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .google-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(245,245,245,0.8));
+            transition: all 0.5s ease;
+            z-index: -1;
         }
         
         .google-btn:hover {
-            background: #f5f5f5;
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            color: #333;
+        }
+        
+        .google-btn:hover::before {
+            width: 100%;
         }
         
         .google-btn i {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             color: #4285F4;
+            transition: transform 0.3s ease;
+        }
+        
+        .google-btn:hover i {
+            transform: scale(1.1);
         }
         
         .loading {
             display: none;
-            margin-top: 20px;
+            margin-top: 25px;
         }
         
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-top: 4px solid var(--color-secondary-gold);
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 35px;
+            height: 35px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
+            margin: 0 auto 15px auto;
         }
         
         @keyframes spin {
@@ -127,85 +182,121 @@
         .user-info {
             display: none;
             margin-top: 30px;
-            padding-top: 20px;
+            padding-top: 25px;
             border-top: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .user-info img {
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
-            margin-bottom: 15px;
-            border: 3px solid var(--color-secondary-gold);
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            border: 4px solid var(--color-secondary-gold);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            object-fit: cover;
         }
         
         .user-info h2 {
-            margin-bottom: 10px;
-            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-size: 1.7rem;
+            color: #FFD700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        .user-info p {
-            margin-bottom: 5px;
-            font-size: 1rem;
+        .info-container {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin: 10px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin: 15px 0;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 1.05rem;
         }
         
         .info-label {
             font-weight: bold;
             color: var(--color-secondary-gold);
+            flex: 1;
         }
         
         .info-value {
             text-align: left;
+            flex: 2;
+            direction: ltr;
+            padding-left: 10px;
+            font-weight: 500;
+        }
+        
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
         }
         
         .action-btn {
-            display: inline-block;
-            background: rgba(255, 255, 255, 0.1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.15);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 50px;
-            padding: 8px 20px;
-            margin: 10px 5px;
+            padding: 10px 25px;
             cursor: pointer;
             transition: var(--transition);
-            font-size: 0.9rem;
+            font-size: 1rem;
+            font-weight: 600;
+            min-width: 180px;
+            justify-content: center;
         }
         
         .action-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
         .logout-btn {
-            background: rgba(231, 76, 60, 0.2);
+            background: rgba(231, 76, 60, 0.25);
         }
         
         .logout-btn:hover {
-            background: rgba(231, 76, 60, 0.3);
+            background: rgba(231, 76, 60, 0.35);
         }
         
         .error {
-            background: rgba(231, 76, 60, 0.2);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 20px;
+            background: rgba(231, 76, 60, 0.25);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 25px;
             display: none;
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            text-align: center;
         }
         
         .success {
-            background: rgba(46, 204, 113, 0.2);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 20px;
+            background: rgba(46, 204, 113, 0.25);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 25px;
             display: none;
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            text-align: center;
         }
         
         .modal {
@@ -215,94 +306,161 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
             z-index: 1000;
             justify-content: center;
             align-items: center;
+            animation: fadeIn 0.3s ease;
         }
         
         .modal-content {
             background: linear-gradient(135deg, #1A237E, #283593);
-            padding: 30px;
+            padding: 35px;
             border-radius: var(--radius);
             width: 90%;
             max-width: 500px;
             box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             position: relative;
+            animation: scaleIn 0.4s ease;
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         
         .close-btn {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 1.5rem;
+            top: 20px;
+            left: 20px;
+            font-size: 1.8rem;
             cursor: pointer;
             color: #ccc;
+            transition: all 0.3s ease;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .close-btn:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(90deg);
         }
         
         .modal-title {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: center;
             color: var(--color-secondary-gold);
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             font-weight: bold;
+            font-size: 1.1rem;
+            text-align: right;
         }
         
         .form-group input {
             width: 100%;
-            padding: 12px;
+            padding: 14px 20px;
             border-radius: var(--radius);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: 1rem;
+            font-size: 1.1rem;
+            transition: var(--transition);
         }
         
         .form-group input:focus {
             outline: none;
             border-color: var(--color-secondary-gold);
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
         }
         
         .submit-btn {
-            background: var(--color-secondary-gold);
-            color: var(--color-primary-blue);
+            background: var(--gradient-gold);
+            color: #1A237E;
             border: none;
             border-radius: 50px;
-            padding: 12px 25px;
-            font-size: 1rem;
+            padding: 14px 30px;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
             transition: var(--transition);
-            margin-top: 10px;
+            margin-top: 15px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(90deg, rgba(255,255,255,0.4), rgba(255,255,255,0.2));
+            transition: all 0.5s ease;
+            z-index: -1;
         }
         
         .submit-btn:hover {
-            background: #ffcc00;
             transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+        }
+        
+        .submit-btn:hover::before {
+            width: 100%;
         }
         
         .username-change-info {
-            background: rgba(255, 215, 0, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 15px;
-            font-size: 0.9rem;
+            background: rgba(255, 215, 0, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 1rem;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            text-align: right;
+        }
+        
+        .username-change-info i {
+            color: var(--color-secondary-gold);
+            margin-left: 8px;
         }
         
         .footer {
-            margin-top: 30px;
-            font-size: 0.9rem;
-            opacity: 0.7;
+            margin-top: 35px;
+            font-size: 0.95rem;
+            opacity: 0.8;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        
+        .first-change-notice {
+            background: rgba(46, 204, 113, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(46, 204, 113, 0.4);
+            text-align: center;
+            display: none;
         }
         
         @media (max-width: 576px) {
@@ -311,40 +469,46 @@
             }
             
             .logo i {
-                font-size: 3rem;
+                font-size: 3.5rem;
             }
             
             h1 {
-                font-size: 1.5rem;
+                font-size: 1.7rem;
             }
             
-            p {
-                font-size: 0.9rem;
+            .subtitle {
+                font-size: 1rem;
             }
             
             .google-btn {
-                padding: 10px 20px;
-                font-size: 0.95rem;
+                padding: 12px 20px;
+                font-size: 1rem;
             }
             
             .user-info img {
-                width: 80px;
-                height: 80px;
+                width: 95px;
+                height: 95px;
             }
             
             .modal-content {
-                padding: 20px;
+                padding: 25px 20px;
+            }
+            
+            .action-btn {
+                min-width: 140px;
+                padding: 8px 15px;
             }
         }
     </style>
 </head>
 <body>
     <div class="login-container">
+        <div class="wave-top"></div>
         <div class="logo">
-            <i class="fas fa-user-circle"></i>
+            <i class="fas fa-user-shield"></i>
         </div>
         <h1>تسجيل الدخول إلى حسابك</h1>
-        <p>سجل الدخول باستخدام حساب Google للاستمرار</p>
+        <p class="subtitle">سجل الدخول باستخدام حساب Google للاستمرار إلى حسابك الشخصي والتمتع بميزاتنا الحصرية</p>
         
         <button id="googleSignIn" class="google-btn">
             <i class="fab fa-google"></i>
@@ -364,51 +528,59 @@
             <p id="successText"></p>
         </div>
         
+        <div id="firstChangeNotice" class="first-change-notice">
+            <p><i class="fas fa-gift"></i> يمكنك تغيير المعرف الخاص بك مرة واحدة مجاناً بعد تسجيل الدخول الأول</p>
+        </div>
+        
         <div id="userInfo" class="user-info">
             <img id="userPhoto" src="" alt="صورة المستخدم">
             <h2 id="userName"></h2>
             
-            <div class="info-row">
-                <span class="info-label">البريد الإلكتروني:</span>
-                <span id="userEmail" class="info-value"></span>
+            <div class="info-container">
+                <div class="info-row">
+                    <span class="info-label">البريد الإلكتروني:</span>
+                    <span id="userEmail" class="info-value"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">العمر:</span>
+                    <span id="userAge" class="info-value"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">المعرف:</span>
+                    <span id="username" class="info-value"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">تاريخ التسجيل:</span>
+                    <span id="joinDate" class="info-value"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">تاريخ آخر تغيير للمعرف:</span>
+                    <span id="lastUsernameChange" class="info-value"></span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">التغيير القادم متاح بعد:</span>
+                    <span id="nextChangeIn" class="info-value"></span>
+                </div>
             </div>
             
-            <div class="info-row">
-                <span class="info-label">العمر:</span>
-                <span id="userAge" class="info-value"></span>
+            <div class="action-buttons">
+                <button id="changeUsernameBtn" class="action-btn">
+                    <i class="fas fa-edit"></i> تغيير المعرف
+                </button>
+                
+                <button id="logoutBtn" class="action-btn logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
             </div>
-            
-            <div class="info-row">
-                <span class="info-label">المعرف:</span>
-                <span id="username" class="info-value"></span>
-            </div>
-            
-            <div class="info-row">
-                <span class="info-label">تاريخ التسجيل:</span>
-                <span id="joinDate" class="info-value"></span>
-            </div>
-            
-            <div class="info-row">
-                <span class="info-label">تاريخ آخر تغيير للمعرف:</span>
-                <span id="lastUsernameChange" class="info-value"></span>
-            </div>
-            
-            <div class="info-row">
-                <span class="info-label">التغيير القادم متاح بعد:</span>
-                <span id="nextChangeIn" class="info-value"></span>
-            </div>
-            
-            <button id="changeUsernameBtn" class="action-btn">
-                <i class="fas fa-edit"></i> تغيير المعرف
-            </button>
-            
-            <button id="logoutBtn" class="action-btn logout-btn">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </button>
         </div>
         
         <div class="footer">
-            <p>جميع الحقوق محفوظة &copy; 2023</p>
+            <p>جميع الحقوق محفوظة &copy; 2023 - نظام حسابي الشخصي</p>
         </div>
     </div>
     
@@ -495,6 +667,7 @@
         const nextChangeIn = document.getElementById('nextChangeIn');
         const logoutBtn = document.getElementById('logoutBtn');
         const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+        const firstChangeNotice = document.getElementById('firstChangeNotice');
         
         // Modal elements
         const usernameModal = document.getElementById('usernameModal');
@@ -534,6 +707,7 @@
         logoutBtn.addEventListener('click', () => {
             auth.signOut().then(() => {
                 userInfoDiv.style.display = 'none';
+                firstChangeNotice.style.display = 'none';
                 googleSignInBtn.style.display = 'flex';
                 successDiv.style.display = 'none';
             }).catch((error) => {
@@ -553,6 +727,13 @@
                             // تحقق إذا كان مسموحاً بتغيير المعرف
                             const lastChange = userData.lastUsernameChange || userData.joinDate;
                             const daysSinceLastChange = Math.floor((Date.now() - lastChange) / (1000 * 60 * 60 * 24));
+                            
+                            // إذا لم يسبق تغيير المعرف (أول مرة)
+                            if (!userData.usernameChanged) {
+                                usernameModal.style.display = 'flex';
+                                nextChangeDate.textContent = `هذه فرصتك الأولى لتغيير المعرف مجاناً!`;
+                                return;
+                            }
                             
                             if (daysSinceLastChange < 10) {
                                 const daysLeft = 10 - daysSinceLastChange;
@@ -588,6 +769,11 @@
                 return;
             }
             
+            if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+                showUsernameError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
+                return;
+            }
+            
             const user = auth.currentUser;
             if (user) {
                 // تحقق من توفر المعرف
@@ -600,6 +786,7 @@
                             const updates = {};
                             updates['users/' + user.uid + '/username'] = newUsername;
                             updates['users/' + user.uid + '/lastUsernameChange'] = Date.now();
+                            updates['users/' + user.uid + '/usernameChanged'] = true;
                             updates['usernames/' + newUsername] = { uid: user.uid };
                             
                             // احذف المعرف القديم
@@ -615,6 +802,7 @@
                                             usernameModal.style.display = 'none';
                                             showSuccess('تم تغيير المعرف بنجاح!');
                                             loadUserInfo(user);
+                                            firstChangeNotice.style.display = 'none';
                                         })
                                         .catch(error => {
                                             showUsernameError('حدث خطأ أثناء تغيير المعرف: ' + error.message);
@@ -643,6 +831,9 @@
                     ageModal.style.display = 'none';
                     showSuccess('تم حفظ معلوماتك بنجاح!');
                     loadUserInfo(user);
+                    
+                    // عرض إشعار تغيير المعرف لأول مرة
+                    firstChangeNotice.style.display = 'block';
                 })
                 .catch(error => {
                     showAgeError('حدث خطأ أثناء حفظ العمر: ' + error.message);
@@ -657,6 +848,11 @@
                     if (snapshot.exists()) {
                         // المستخدم موجود، عرض معلوماته
                         showUserInfo(snapshot.val());
+                        
+                        // إذا لم يغير المعرف من قبل، عرض الإشعار
+                        if (!snapshot.val().usernameChanged) {
+                            firstChangeNotice.style.display = 'block';
+                        }
                     } else {
                         // مستخدم جديد، عرض نافذة إدخال العمر
                         ageModal.style.display = 'flex';
@@ -667,8 +863,10 @@
 
         // إنشاء معرف تلقائي
         function generateUsername(user) {
-            const prefix = user.displayName ? user.displayName.replace(/\s+/g, '').toLowerCase().substring(0, 3) : 'user';
-            const randomNum = Math.floor(100 + Math.random() * 900);
+            const prefix = user.displayName ? 
+                user.displayName.replace(/\s+/g, '').toLowerCase().substring(0, 3) : 
+                'user';
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
             return prefix + randomNum;
         }
 
@@ -683,7 +881,8 @@
                 age: parseInt(age),
                 username: username,
                 joinDate: Date.now(),
-                lastUsernameChange: Date.now()
+                lastUsernameChange: Date.now(),
+                usernameChanged: false // لم يغير المعرف بعد
             };
             
             // حفظ البيانات في Realtime Database
@@ -696,6 +895,9 @@
                     console.log('تم حفظ بيانات المستخدم بنجاح');
                     ageModal.style.display = 'none';
                     showUserInfo(userData);
+                    
+                    // عرض إشعار تغيير المعرف لأول مرة
+                    firstChangeNotice.style.display = 'block';
                 })
                 .catch((error) => {
                     console.error('حدث خطأ في حفظ بيانات المستخدم:', error);
@@ -746,13 +948,18 @@
                 .then((snapshot) => {
                     if (snapshot.exists()) {
                         showUserInfo(snapshot.val());
+                        
+                        // إذا لم يغير المعرف من قبل، عرض الإشعار
+                        if (!snapshot.val().usernameChanged) {
+                            firstChangeNotice.style.display = 'block';
+                        }
                     }
                 });
         }
 
         // تنسيق التاريخ
         function formatDate(date) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             return date.toLocaleDateString('ar-EG', options);
         }
 
@@ -791,6 +998,7 @@
             } else {
                 // لا يوجد مستخدم مسجل الدخول
                 userInfoDiv.style.display = 'none';
+                firstChangeNotice.style.display = 'none';
                 googleSignInBtn.style.display = 'flex';
             }
         });
