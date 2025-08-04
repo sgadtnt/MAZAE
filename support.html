@@ -619,83 +619,38 @@
             color: #5c6770;
         }
         
-        .chat-history {
-            background: white;
+        /* WhatsApp Card */
+        .whatsapp-card {
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
             border-radius: var(--radius);
             padding: 20px;
-            margin: 20px;
-            box-shadow: var(--shadow);
+            text-align: center;
             border: 1px solid #e0e0e0;
-            max-width: 800px;
-            width: 100%;
-            margin: 20px auto;
-        }
-        
-        .history-header {
-            font-size: 1.4rem;
-            color: var(--primary);
-            margin-bottom: 15px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .history-item {
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            transition: var(--transition);
             cursor: pointer;
-            transition: background-color 0.2s;
         }
-        
-        .history-item:hover {
-            background-color: #f5f7fa;
+
+        .whatsapp-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(to bottom, #e3f2fd, #d0e5ff);
         }
-        
-        .history-item:last-child {
-            border-bottom: none;
+
+        .whatsapp-card i {
+            font-size: 2.5rem;
+            color: #25D366;
+            margin-bottom: 15px;
         }
-        
-        .history-info h3 {
-            font-size: 1.1rem;
+
+        .whatsapp-card h3 {
+            font-size: 1.2rem;
             color: var(--dark);
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
-        
-        .history-info p {
-            font-size: 0.9rem;
-            color: #7f8c8d;
-        }
-        
-        .history-date {
-            font-size: 0.85rem;
-            color: #7f8c8d;
-        }
-        
-        .history-status {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.8rem;
-            margin-top: 5px;
-        }
-        
-        .status-resolved {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        .status-pending {
-            background-color: #fff8e1;
-            color: #f57f17;
-        }
-        
-        .status-closed {
-            background-color: #ffebee;
-            color: #c62828;
+
+        .whatsapp-card p {
+            font-size: 0.95rem;
+            color: #5c6770;
         }
         
         /* FAQ Section */
@@ -805,10 +760,8 @@
         
         .contact-button.whatsapp {
             background: linear-gradient(135deg, #25D366, #128C7E);
-        }
-        
-        .contact-button.email {
-            background: linear-gradient(135deg, #EA4335, #BB001B);
+            min-width: 280px;
+            font-size: 1.1rem;
         }
         
         .back-button {
@@ -865,6 +818,93 @@
             border-radius: var(--radius);
             margin: 20px;
             border: 1px solid #ffecb3;
+        }
+        
+        /* New message indicator */
+        .new-message {
+            animation: messageAppear 0.5s ease-out;
+        }
+        
+        @keyframes messageAppear {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Sound notification */
+        .sound-notification {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+            visibility: hidden;
+        }
+        
+        /* Delete confirmation modal */
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        
+        .confirmation-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 10px 25px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        
+        .modal-btn.confirm {
+            background: var(--error);
+            color: white;
+        }
+        
+        .modal-btn.cancel {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
 
         /* Responsive Design */
@@ -1045,6 +1085,75 @@
         .inactive-chat {
             display: none;
         }
+        
+        .chat-delay-message {
+            text-align: center;
+            padding: 15px;
+            background: #fff8e1;
+            border-radius: 20px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+        
+        /* WhatsApp button styling */
+        .whatsapp-contact-button {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            min-width: 280px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 50px;
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(26, 35, 126, 0.3);
+            text-align: center;
+        }
+        
+        .whatsapp-contact-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(26, 35, 126, 0.4);
+        }
+        
+        /* New style for resume chat card */
+        .resume-card {
+            background: linear-gradient(135deg, #4CAF50, #2E7D32);
+            color: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            transition: var(--transition);
+            cursor: pointer;
+            grid-column: span 2;
+            margin-top: 15px;
+        }
+        
+        .resume-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background: linear-gradient(135deg, #43A047, #2E7D32);
+        }
+        
+        .resume-card i {
+            font-size: 2.5rem;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .resume-card h3 {
+            font-size: 1.3rem;
+            color: white;
+            margin-bottom: 10px;
+        }
+        
+        .resume-card p {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.9);
+        }
     </style>
 </head>
 <body>
@@ -1072,11 +1181,6 @@
                 <h3>بدء محادثة جديدة</h3>
                 <p>تواصل مع ممثل الدعم لحل مشكلتك</p>
             </div>
-            <div class="help-card" onclick="showChatHistory()">
-                <i class="fas fa-history"></i>
-                <h3>عرض المحادثات السابقة</h3>
-                <p>راجع سجل محادثاتك مع الدعم الفني</p>
-            </div>
             <div class="help-card" onclick="showFAQ()">
                 <i class="fas fa-book"></i>
                 <h3>الأسئلة الشائعة</h3>
@@ -1087,65 +1191,17 @@
                 <h3>الاتصال بالدعم</h3>
                 <p>اتصل بنا مباشرة على الرقم +9647823053419</p>
             </div>
-        </div>
-        
-        <!-- Contact Buttons -->
-        <div class="contact-buttons">
-            <a href="tel:+9647823053419" class="contact-button">
-                <i class="fas fa-phone-alt"></i>
-                اتصل الآن
-            </a>
-            <a href="https://wa.me/9647823053419" class="contact-button whatsapp" target="_blank">
+            <div class="whatsapp-card" onclick="openWhatsApp()">
                 <i class="fab fa-whatsapp"></i>
-                مراسلة عبر واتساب
-            </a>
-            <a href="mailto:kaokabmazar@gmail.com" class="contact-button email">
-                <i class="fas fa-envelope"></i>
-                ارسل بريد إلكتروني
-            </a>
+                <h3>واتساب الدعم الفني</h3>
+                <p>تواصل معنا عبر واتساب لحل مشكلتك</p>
+            </div>
         </div>
-    </div>
-    
-    <!-- Chat History -->
-    <div id="chatHistory" class="chat-history inactive-chat">
-        <div class="history-header">
-            <button class="back-button" onclick="goBackToHelp()">
-                <i class="fas fa-arrow-left"></i>
-            </button>
+        <!-- Resume Chat Card (only shows if there's an active chat) -->
+        <div id="resumeChatCard" class="resume-card inactive-chat">
             <i class="fas fa-history"></i>
-            <h2>المحادثات السابقة</h2>
-        </div>
-        <div class="history-item" onclick="openChat('chat_1')">
-            <div class="history-info">
-                <h3>مشكلة في تسجيل الدخول</h3>
-                <p>لم أتمكن من تسجيل الدخول إلى حسابي</p>
-                <span class="history-status status-resolved">تم الحل</span>
-            </div>
-            <div class="history-date">15 أغسطس 2025</div>
-        </div>
-        <div class="history-item" onclick="openChat('chat_2')">
-            <div class="history-info">
-                <h3>استفسار عن الفاتورة</h3>
-                <p>أحتاج إلى توضيح بخصوص الفاتورة الأخيرة</p>
-                <span class="history-status status-resolved">تم الحل</span>
-            </div>
-            <div class="history-date">10 أغسطس 2025</div>
-        </div>
-        <div class="history-item" onclick="openChat('chat_3')">
-            <div class="history-info">
-                <h3>مشكلة في المنتج</h3>
-                <p>المنتج الذي استلمته لا يعمل بشكل صحيح</p>
-                <span class="history-status status-pending">قيد المعالجة</span>
-            </div>
-            <div class="history-date">5 أغسطس 2025</div>
-        </div>
-        <div class="history-item" onclick="openChat('chat_4')">
-            <div class="history-info">
-                <h3>تغيير معلومات الحساب</h3>
-                <p>أرغب في تحديث معلومات حسابي</p>
-                <span class="history-status status-closed">مغلق</span>
-            </div>
-            <div class="history-date">25 يوليو 2025</div>
+            <h3>استئناف المحادثة السابقة</h3>
+            <p>لديك محادثة قائمة مع الدعم الفني</p>
         </div>
     </div>
     
@@ -1198,16 +1254,6 @@
                     <p>بعد تأكيد الطلب، ستصلك رسالة برابط التتبع. يمكنك أيضًا تسجيل الدخول إلى حسابك وزيارة قسم "طلباتي" لمشاهدة حالة الطلب وتفاصيل الشحن.</p>
                 </div>
             </div>
-            
-            <div class="faq-item">
-                <div class="faq-question" onclick="toggleFAQ(this)">
-                    <span>ما هي سياسة الإرجاع والاستبدال؟</span>
-                    <i class="fas fa-chevron-down"></i>
-                </div>
-                <div class="faq-answer">
-                    <p>يمكنك إرجاع أو استبدال المنتجات خلال 14 يومًا من استلامها، بشرط أن تكون بحالة جيدة وفي عبوتها الأصلية. بعض المنتجات مثل السلع الشخصية غير قابلة للإرجاع.</p>
-                </div>
-            </div>
         </div>
     </div>
     
@@ -1244,10 +1290,28 @@
             
             <!-- Message Input Area -->
             <div class="message-input-area">
-                <textarea id="customerMessageInput" class="customer-message-input" placeholder="اكتب رسالتك هنا..." rows="1" autofocus></textarea>
-                <button id="customerSendButton" class="customer-send-button">
+                <textarea id="customerMessageInput" class="customer-message-input" placeholder="اكتب رسالتك هنا..." rows="1" autofocus disabled></textarea>
+                <button id="customerSendButton" class="customer-send-button" disabled>
                     <i class="fas fa-paper-plane"></i>
                 </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sound Notification -->
+    <audio id="messageSound" class="sound-notification">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3" type="audio/mpeg">
+    </audio>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmationModal" class="confirmation-modal">
+        <div class="modal-content">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c; margin-bottom: 15px;"></i>
+            <h3>تأكيد حذف الرسالة</h3>
+            <p>هل أنت متأكد أنك تريد حذف هذه الرسالة؟</p>
+            <div class="modal-buttons">
+                <button class="modal-btn confirm" onclick="confirmDelete()">نعم، احذف</button>
+                <button class="modal-btn cancel" onclick="cancelDelete()">إلغاء</button>
             </div>
         </div>
     </div>
@@ -1270,14 +1334,21 @@
         const database = firebase.database();
         
         // متغيرات التطبيق
-        let userId = localStorage.getItem('supportUserId') || generateUserId();
-        let isFirstMessage = localStorage.getItem('isFirstMessage') !== 'false';
-        let isChatStarted = false;
+        let userId = sessionStorage.getItem('supportUserId') || generateUserId();
+        let isFirstMessage = sessionStorage.getItem('isFirstMessage') !== 'false';
         let chatRef = null;
+        let messagesListener = null;
+        let chatMetadataListener = null;
+        let lastMessageTime = 0;
+        let isSending = false; // لمنع الإرسال المتزامن
+        let userMessageCount = 0; // تتبع عدد رسائل المستخدم
+        let pendingDeleteMessageId = null; // لتخزين معرف الرسالة المراد حذفها
+        let currentChatId = sessionStorage.getItem('currentChatId') || null; // تخزين معرف المحادثة الحالية
+        let isBlocked = false; // حالة حظر المستخدم
 
-        // حفظ معرف المستخدم في التخزين المحلي
-        localStorage.setItem('supportUserId', userId);
-        localStorage.setItem('isFirstMessage', isFirstMessage);
+        // حفظ معرف المستخدم في التخزين المؤقت
+        sessionStorage.setItem('supportUserId', userId);
+        sessionStorage.setItem('isFirstMessage', isFirstMessage);
 
         // تهيئة الصفحة عند التحميل
         document.addEventListener('DOMContentLoaded', () => {
@@ -1300,8 +1371,8 @@
                 }
             });
             
-            // تحميل المحادثة السابقة إذا كانت موجودة
-            loadExistingChat();
+            // التحقق من وجود محادثة حالية لإظهار زر الاستئناف
+            checkExistingChat();
         });
         
         // توليد معرف فريد للمستخدم
@@ -1309,52 +1380,347 @@
             return 'user_' + Math.random().toString(36).substr(2, 9);
         }
         
+        // توليد معرف فريد للمحادثة
+        function generateChatId() {
+            return 'chat_' + Math.random().toString(36).substr(2, 9);
+        }
+        
+        // التحقق من وجود محادثة حالية
+        function checkExistingChat() {
+            const existingUserId = sessionStorage.getItem('supportUserId');
+            const existingChatId = sessionStorage.getItem('currentChatId');
+            
+            if (existingUserId && existingChatId) {
+                const chatRef = database.ref(`supportChats/${existingChatId}`);
+                chatRef.once('value').then(snapshot => {
+                    if (snapshot.exists() && !snapshot.child('closed').val() && 
+                        !snapshot.child('deleted').val() && !snapshot.child('blocked').val()) {
+                        // إظهار زر استئناف المحادثة في صفحة المساعدة
+                        document.getElementById('resumeChatCard').classList.remove('inactive-chat');
+                        document.getElementById('resumeChatCard').classList.add('active-chat');
+                        document.getElementById('resumeChatCard').onclick = () => {
+                            loadExistingChat(existingChatId);
+                        };
+                    }
+                });
+            }
+        }
+        
         // بدء محادثة جديدة
         function startNewChat() {
+            // إظهار مؤشر تحميل
+            showNotification('جاري بدء محادثة جديدة...', 'info');
+            
+            // إنشاء معرف مستخدم جديد
+            userId = generateUserId();
+            const chatId = generateChatId();
+            
+            // حفظ المعرفات في التخزين المؤقت
+            sessionStorage.setItem('supportUserId', userId);
+            sessionStorage.setItem('currentChatId', chatId);
+            isFirstMessage = true;
+            sessionStorage.setItem('isFirstMessage', true);
+            userMessageCount = 0; // إعادة تعيين عداد الرسائل
+            
+            // إخفاء الأقسام الأخرى وإظهار قسم المحادثة
             document.getElementById('helpSection').classList.add('inactive-chat');
-            document.getElementById('chatHistory').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.add('inactive-chat');
+            document.getElementById('resumeChatCard').classList.add('inactive-chat');
             document.getElementById('chatContainer').classList.remove('inactive-chat');
             document.getElementById('chatContainer').classList.add('active-chat');
             
-            // إعادة تعيين حالة الرسالة الأولى
-            isFirstMessage = true;
-            localStorage.setItem('isFirstMessage', true);
-            isChatStarted = true;
-            
-            // إنشاء مرجع جديد للمحادثة
-            chatRef = database.ref(`supportChats/${userId}`);
-            
-            // إعداد المحادثة الجديدة
+            // إعداد واجهة المحادثة
             const messagesContainer = document.getElementById('messagesContainer');
             messagesContainer.innerHTML = `
-                <div class="no-messages">
-                    <i class="fas fa-comment-alt"></i>
-                    <p>مرحباً بك في خدمة الدعم الفني</p>
-                    <p>اكتب رسالتك للتواصل مع ممثل الدعم</p>
+                <div class="loading-indicator">
+                    <div class="spinner"></div>
+                    <p>جاري تهيئة المحادثة...</p>
                 </div>
             `;
             
-            // التركيز على حقل الإدخال
-            setTimeout(() => {
-                document.getElementById('customerMessageInput').focus();
-            }, 100);
+            // إنشاء مرجع جديد للمحادثة
+            chatRef = database.ref(`supportChats/${chatId}`);
+            
+            // إنشاء المحادثة الجديدة في Firebase
+            chatRef.set({
+                createdAt: Date.now(),
+                userId: userId,
+                userName: 'مستخدم جديد',
+                isOnline: true,
+                blocked: false,
+                closed: false,
+                deleted: false
+            }).then(() => {
+                showNotification('تم بدء محادثة جديدة بنجاح', 'success');
+                
+                // تحديث واجهة المحادثة
+                messagesContainer.innerHTML = `
+                    <div class="no-messages">
+                        <i class="fas fa-comment-alt"></i>
+                        <p>مرحباً بك في خدمة الدعم الفني</p>
+                        <p>اكتب رسالتك للتواصل مع ممثل الدعم</p>
+                    </div>
+                    <div class="chat-delay-message">
+                        <i class="fas fa-clock"></i>
+                        جاري تهيئة نظام الدعم، سيتم تمكين الإرسال خلال 4 ثوانٍ
+                    </div>
+                `;
+                
+                // تمكين حقل الإدخال وزر الإرسال بعد تأخير
+                setTimeout(() => {
+                    document.getElementById('customerMessageInput').disabled = false;
+                    document.getElementById('customerSendButton').disabled = false;
+                    document.getElementById('customerMessageInput').focus();
+                    
+                    // إزالة رسالة التأخير
+                    const delayMessage = document.querySelector('.chat-delay-message');
+                    if (delayMessage) delayMessage.remove();
+                    
+                }, 4000); // تأخير 4 ثوانٍ
+                
+                // إضافة مستمع للرسائل الجديدة
+                setupMessagesListener();
+                
+                // إضافة مستمع لتغيرات بيانات المحادثة
+                setupChatMetadataListener();
+                
+            }).catch(error => {
+                console.error('Error starting new chat:', error);
+                showNotification('حدث خطأ في بدء المحادثة', 'error');
+            });
         }
         
-        // عرض سجل المحادثات
-        function showChatHistory() {
+        // تحميل محادثة موجودة
+        function loadExistingChat(chatId) {
+            userId = sessionStorage.getItem('supportUserId');
+            chatRef = database.ref(`supportChats/${chatId}`);
+            
+            // إخفاء الأقسام الأخرى وإظهار قسم المحادثة
             document.getElementById('helpSection').classList.add('inactive-chat');
-            document.getElementById('chatContainer').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.add('inactive-chat');
-            document.getElementById('chatHistory').classList.remove('inactive-chat');
-            document.getElementById('chatHistory').classList.add('active-chat');
+            document.getElementById('resumeChatCard').classList.add('inactive-chat');
+            document.getElementById('chatContainer').classList.remove('inactive-chat');
+            document.getElementById('chatContainer').classList.add('active-chat');
+            
+            // إعداد واجهة المحادثة
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.innerHTML = `
+                <div class="loading-indicator">
+                    <div class="spinner"></div>
+                    <p>جاري تحميل المحادثة...</p>
+                </div>
+            `;
+            
+            // تحميل بيانات المحادثة
+            chatRef.once('value').then(snapshot => {
+                const chatData = snapshot.val();
+                
+                // التحقق من حالة المحادثة
+                if (chatData.closed) {
+                    handleClosedChat();
+                    return;
+                }
+                
+                if (chatData.blocked) {
+                    handleBlockedUser();
+                    return;
+                }
+                
+                if (chatData.deleted) {
+                    showNotification('تم حذف هذه المحادثة', 'error');
+                    startNewChat();
+                    return;
+                }
+                
+                // تحميل الرسائل
+                messagesContainer.innerHTML = '';
+                chatRef.child('messages').once('value', messagesSnapshot => {
+                    messagesSnapshot.forEach(childSnapshot => {
+                        const msg = childSnapshot.val();
+                        if (msg.deleted) return;
+                        
+                        const isAdmin = msg.senderType === 'admin';
+                        const messageClass = isAdmin ? 'admin-message' : 'user-message';
+                        const timeString = getCurrentTime(msg.timestamp);
+                        
+                        const messageElement = document.createElement('div');
+                        messageElement.className = `message ${messageClass}`;
+                        messageElement.dataset.messageId = childSnapshot.key;
+                        
+                        // إضافة زر الحذف للرسائل التي أرسلها المستخدم
+                        let deleteButton = '';
+                        if (!isAdmin) {
+                            deleteButton = `
+                                <div class="message-actions">
+                                    <button class="action-btn delete-btn" title="حذف الرسالة" onclick="requestDeleteMessage('${childSnapshot.key}')">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            `;
+                        }
+                        
+                        messageElement.innerHTML = `
+                            <div class="message-content">${msg.text}</div>
+                            <div class="message-time">${timeString}</div>
+                            ${deleteButton}
+                        `;
+                        
+                        messagesContainer.appendChild(messageElement);
+                    });
+                    
+                    if (messagesContainer.children.length === 0) {
+                        messagesContainer.innerHTML = `
+                            <div class="no-messages">
+                                <i class="fas fa-comment-alt"></i>
+                                <p>مرحباً بك في خدمة الدعم الفني</p>
+                                <p>اكتب رسالتك للتواصل مع ممثل الدعم</p>
+                            </div>
+                        `;
+                    }
+                    
+                    // تمرير للأسفل لرؤية آخر رسالة
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    
+                    // تمكين حقل الإدخال وزر الإرسال
+                    document.getElementById('customerMessageInput').disabled = false;
+                    document.getElementById('customerSendButton').disabled = false;
+                    document.getElementById('customerMessageInput').focus();
+                });
+                
+                // إعداد مستمع الرسائل الجديدة
+                setupMessagesListener();
+                
+                // إعداد مستمع لتغيرات بيانات المحادثة
+                setupChatMetadataListener();
+                
+            }).catch(error => {
+                console.error('Error loading chat:', error);
+                showNotification('حدث خطأ في تحميل المحادثة', 'error');
+            });
+        }
+        
+        // إعداد مستمع الرسائل
+        function setupMessagesListener() {
+            if (messagesListener) {
+                chatRef.child('messages').off('child_added', messagesListener);
+            }
+            
+            messagesListener = chatRef.child('messages').on('child_added', (snapshot) => {
+                const msg = snapshot.val();
+                const currentTime = Date.now();
+                
+                // تجاهل الرسائل المحذوفة
+                if (msg.deleted) return;
+                
+                // تجاهل الرسائل الموجودة بالفعل في الواجهة
+                if (document.querySelector(`[data-message-id="${snapshot.key}"]`)) {
+                    return;
+                }
+                
+                const isAdmin = msg.senderType === 'admin';
+                const messageClass = isAdmin ? 'admin-message' : 'user-message';
+                const timeString = getCurrentTime(msg.timestamp);
+                
+                const messageElement = document.createElement('div');
+                messageElement.className = `message ${messageClass} new-message`;
+                messageElement.dataset.messageId = snapshot.key;
+                
+                // إضافة زر الحذف للرسائل التي أرسلها المستخدم
+                let deleteButton = '';
+                if (!isAdmin) {
+                    deleteButton = `
+                        <div class="message-actions">
+                            <button class="action-btn delete-btn" title="حذف الرسالة" onclick="requestDeleteMessage('${snapshot.key}')">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                messageElement.innerHTML = `
+                    <div class="message-content">${msg.text}</div>
+                    <div class="message-time">${timeString}</div>
+                    ${deleteButton}
+                `;
+                
+                const messagesContainer = document.getElementById('messagesContainer');
+                if (messagesContainer.querySelector('.no-messages')) {
+                    messagesContainer.innerHTML = '';
+                }
+                
+                messagesContainer.appendChild(messageElement);
+                
+                // تمرير للأسفل لرؤية آخر رسالة
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // تشغيل صوت الإشعار للرسائل الجديدة من الدعم
+                if (isAdmin && currentTime - lastMessageTime > 1000) {
+                    playNotificationSound();
+                    lastMessageTime = currentTime;
+                }
+            });
+            
+            // استمع للتغيرات في الرسائل (للحذف)
+            chatRef.child('messages').on('child_changed', (snapshot) => {
+                const msg = snapshot.val();
+                if (msg.deleted) {
+                    // إزالة الرسالة من الواجهة إذا تم حذفها من قبل الإدارة
+                    const messageElement = document.querySelector(`[data-message-id="${snapshot.key}"]`);
+                    if (messageElement) {
+                        messageElement.remove();
+                    }
+                }
+            });
+        }
+        
+        // إعداد مستمع لتغيرات بيانات المحادثة
+        function setupChatMetadataListener() {
+            if (chatMetadataListener) {
+                chatRef.off('value', chatMetadataListener);
+            }
+            
+            chatMetadataListener = chatRef.on('value', (snapshot) => {
+                const chatData = snapshot.val();
+                
+                // إذا تم حذف المحادثة
+                if (!snapshot.exists() || chatData.deleted) {
+                    showNotification('تم حذف هذه المحادثة', 'error');
+                    goBackToHelp();
+                    return;
+                }
+                
+                // إذا تم حظر المستخدم
+                if (chatData.blocked) {
+                    isBlocked = true;
+                    handleBlockedUser();
+                    return;
+                } else {
+                    isBlocked = false;
+                }
+                
+                // إذا تم إغلاق المحادثة
+                if (chatData.closed) {
+                    handleClosedChat();
+                    return;
+                }
+                
+                // تحديث حالة الاتصال
+                const statusElement = document.getElementById('conversationUserStatus');
+                if (chatData.isOnline) {
+                    statusElement.className = 'status online';
+                    statusElement.textContent = 'متصل الآن';
+                } else {
+                    statusElement.className = 'status offline';
+                    statusElement.textContent = 'غير متصل';
+                }
+            });
         }
         
         // عرض الأسئلة الشائعة
         function showFAQ() {
             document.getElementById('helpSection').classList.add('inactive-chat');
             document.getElementById('chatContainer').classList.add('inactive-chat');
-            document.getElementById('chatHistory').classList.add('inactive-chat');
+            document.getElementById('resumeChatCard').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.remove('inactive-chat');
             document.getElementById('faqSection').classList.add('active-chat');
         }
@@ -1365,260 +1731,110 @@
             document.getElementById('helpSection').classList.add('active-chat');
             
             document.getElementById('chatContainer').classList.add('inactive-chat');
-            document.getElementById('chatHistory').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.add('inactive-chat');
+            
+            // إزالة المستمعين عند الخروج من المحادثة
+            if (messagesListener && chatRef) {
+                chatRef.child('messages').off('child_added', messagesListener);
+            }
+            
+            if (chatMetadataListener && chatRef) {
+                chatRef.off('value', chatMetadataListener);
+            }
+            
+            // التحقق من وجود محادثة حالية لإظهار زر الاستئناف
+            checkExistingChat();
         }
         
-        // فتح محادثة سابقة
-        function openChat(chatId) {
-            startNewChat();
-            showNotification('جاري تحميل المحادثة المحددة', 'info');
-            
-            // في التطبيق الحقيقي، سيتم جلب المحادثة من الخادم
-            setTimeout(() => {
-                const messagesContainer = document.getElementById('messagesContainer');
-                messagesContainer.innerHTML = `
-                    <div class="date-divider">
-                        <span>15 أغسطس 2025</span>
-                    </div>
-                    <div class="message admin-message">
-                        <div class="message-content">
-                            مرحبًا، كيف يمكنني مساعدتك اليوم؟
-                        </div>
-                        <div class="message-time">10:24 صباحًا</div>
-                    </div>
-                    <div class="message user-message">
-                        <div class="message-content">
-                            مرحبًا، لدي مشكلة في حسابي. لا يمكنني تسجيل الدخول منذ صباح اليوم.
-                        </div>
-                        <div class="message-time">10:25 صباحًا</div>
-                    </div>
-                    <div class="message admin-message">
-                        <div class="message-content">
-                            شكرًا لتواصلك معنا. سأحاول مساعدتك في حل هذه المشكلة. هل يمكنك إخباري إذا كانت تظهر لك أي رسالة خطأ عند محاولة تسجيل الدخول؟
-                        </div>
-                        <div class="message-time">10:28 صباحًا</div>
-                    </div>
-                    <div class="message user-message">
-                        <div class="message-content">
-                            نعم، تظهر رسالة "كلمة المرور غير صحيحة" رغم أنني متأكد من كلمة المرور.
-                        </div>
-                        <div class="message-time">10:30 صباحًا</div>
-                    </div>
-                    <div class="message admin-message">
-                        <div class="message-content">
-                            حسنًا، يمكنني مساعدتك في إعادة تعيين كلمة المرور. هل تفضل أن أرسل لك رابط إعادة تعيين على بريدك الإلكتروني المسجل؟
-                        </div>
-                        <div class="message-time">10:32 صباحًا</div>
-                    </div>
-                    <div class="message user-message">
-                        <div class="message-content">
-                            نعم من فضلك، هذا سيكون مفيدًا. شكرًا لك.
-                        </div>
-                        <div class="message-time">10:33 صباحًا</div>
-                    </div>
-                    <div class="message admin-message">
-                        <div class="message-content">
-                            تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني. يرجى التحقق من صندوق الوارد أو مجلد الرسائل غير المرغوب فيها. دعني أعرف إذا كنت بحاجة إلى أي مساعدة إضافية.
-                        </div>
-                        <div class="message-time">10:35 صباحًا</div>
-                    </div>
-                    <div class="message notification-message">
-                        <div class="message-content">
-                            <i class="fas fa-info-circle"></i> تم إرسال رابط إعادة تعيين كلمة المرور بنجاح
-                        </div>
-                    </div>
-                    <div class="message user-message">
-                        <div class="message-content">
-                            شكرًا لك، لقد استلمت الرابط وسأجرب الآن.
-                        </div>
-                        <div class="message-time">10:36 صباحًا</div>
-                    </div>
-                    <div class="message admin-message">
-                        <div class="message-content">
-                            تفضل، نحن هنا لمساعدتك. إذا واجهتك أي مشكلة أخرى، لا تتردد في التواصل معنا.
-                        </div>
-                        <div class="message-time">10:40 صباحًا</div>
-                    </div>
-                `;
-                showNotification('تم تحميل المحادثة بنجاح', 'success');
-                isFirstMessage = false;
-                localStorage.setItem('isFirstMessage', false);
-            }, 1000);
-        }
-        
-        // تحميل المحادثة الحالية من Firebase
-        function loadExistingChat() {
-            chatRef = database.ref(`supportChats/${userId}`);
-            
-            chatRef.on('value', (snapshot) => {
-                const chatData = snapshot.val();
-                
-                if (chatData && chatData.messages) {
-                    // التحقق من حالة المحادثة
-                    if (chatData.blocked) {
-                        handleBlockedUser();
-                        return;
-                    }
-                    
-                    if (chatData.closed) {
-                        handleClosedChat();
-                        return;
-                    }
-                    
-                    // عرض المحادثة
-                    document.getElementById('helpSection').classList.add('inactive-chat');
-                    document.getElementById('chatHistory').classList.add('inactive-chat');
-                    document.getElementById('faqSection').classList.add('inactive-chat');
-                    document.getElementById('chatContainer').classList.remove('inactive-chat');
-                    document.getElementById('chatContainer').classList.add('active-chat');
-                    
-                    // عرض الرسائل
-                    const messagesContainer = document.getElementById('messagesContainer');
-                    messagesContainer.innerHTML = '';
-                    
-                    // ترتيب الرسائل حسب الوقت
-                    const messages = Object.values(chatData.messages);
-                    messages.sort((a, b) => a.timestamp - b.timestamp);
-                    
-                    // عرض الرسائل
-                    messages.forEach(msg => {
-                        const isAdmin = msg.senderType === 'admin';
-                        const messageClass = isAdmin ? 'admin-message' : 'user-message';
-                        const timeString = getCurrentTime(msg.timestamp);
-                        
-                        const messageElement = document.createElement('div');
-                        messageElement.className = `message ${messageClass}`;
-                        messageElement.innerHTML = `
-                            <div class="message-content">${msg.text}</div>
-                            <div class="message-time">${timeString}</div>
-                        `;
-                        messagesContainer.appendChild(messageElement);
-                    });
-                    
-                    // تمرير للأسفل لرؤية آخر رسالة
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                    
-                    // تحديث حالة الرسالة الأولى
-                    isFirstMessage = false;
-                    localStorage.setItem('isFirstMessage', false);
-                }
-            });
-            
-            // مراقبة حذف المحادثة من قبل الإدارة
-            chatRef.on('child_removed', (snapshot) => {
-                if (snapshot.key === 'messages') {
-                    // تم حذف المحادثة
-                    showNotification('تم حذف المحادثة من قبل الإدارة', 'warning');
-                    goBackToHelp();
-                }
-            });
+        // فتح واتساب
+        function openWhatsApp() {
+            window.open('https://wa.me/9647823053419', '_blank');
         }
         
         // إرسال الرسالة
         function sendMessage() {
+            if (isSending || isBlocked) {
+                if (isBlocked) {
+                    showNotification('تم حظرك من إرسال الرسائل', 'error');
+                }
+                return;
+            }
+            
             const messageInput = document.getElementById('customerMessageInput');
             const message = messageInput.value.trim();
             
             if (message) {
-                const messagesContainer = document.getElementById('messagesContainer');
-                const now = new Date();
-                const timeString = getCurrentTime();
+                isSending = true; // تعيين حالة الإرسال
                 
-                // إضافة رسالة المستخدم
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message user-message new-message';
-                messageElement.innerHTML = `
-                    <div class="message-content">${message}</div>
-                    <div class="message-time">${timeString}</div>
-                `;
-                
-                if (messagesContainer.querySelector('.no-messages')) {
-                    messagesContainer.innerHTML = '';
-                }
-                
-                messagesContainer.appendChild(messageElement);
-                
-                // مسح حقل الإدخال
-                messageInput.value = '';
-                autoResize(messageInput);
-                
-                // تمرير للأسفل لرؤية الرسالة الجديدة
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                // إظهار حالة الإرسال
+                const sendButton = document.getElementById('customerSendButton');
+                sendButton.disabled = true;
+                sendButton.classList.add('sending');
                 
                 // حفظ الرسالة في Firebase
-                saveMessageToFirebase(message);
-                
-                // إظهار مؤشر الكتابة من الدعم
-                showTypingIndicator();
-                
-                // إرسال رد الدعم بعد تأخير
-                setTimeout(() => {
-                    removeTypingIndicator();
+                saveMessageToFirebase(message, () => {
+                    // إشعار إرسال الرسالة
+                    showNotification('تم إرسال رسالتك بنجاح', 'success');
                     
-                    // إضافة رد الدعم فقط عند أول رسالة
-                    if (isFirstMessage) {
-                        // إرسال رسالة الترحيب الأولى
-                        const adminMessage1 = document.createElement('div');
-                        adminMessage1.className = 'message admin-message new-message';
-                        adminMessage1.innerHTML = `
-                            <div class="message-content">مرحبًا بك في خدمة الدعم الفني. شكرًا لتواصلك معنا.</div>
-                            <div class="message-time">${getCurrentTime()}</div>
-                        `;
-                        messagesContainer.appendChild(adminMessage1);
+                    // مسح حقل الإدخال
+                    messageInput.value = '';
+                    autoResize(messageInput);
+                    
+                    // إعادة تمكين زر الإرسال
+                    sendButton.disabled = false;
+                    sendButton.classList.remove('sending');
+                    isSending = false;
+                    
+                    // زيادة عداد رسائل المستخدم
+                    userMessageCount++;
+                    
+                    // إظهار مؤشر الكتابة من الدعم
+                    showTypingIndicator();
+                    
+                    // إرسال رد الدعم بعد تأخير
+                    setTimeout(() => {
+                        removeTypingIndicator();
                         
-                        // حفظ رسالة الترحيب في Firebase
-                        saveAdminReply("مرحبًا بك في خدمة الدعم الفني. شكرًا لتواصلك معنا.");
-                        
-                        // إرسال رسالة طلب التفاصيل بعد تأخير
-                        setTimeout(() => {
-                            const adminMessage2 = document.createElement('div');
-                            adminMessage2.className = 'message admin-message new-message';
-                            adminMessage2.innerHTML = `
-                                <div class="message-content">هل يمكنك إخباري بالمزيد من التفاصيل حول مشكلتك؟</div>
-                                <div class="message-time">${getCurrentTime()}</div>
-                            `;
-                            messagesContainer.appendChild(adminMessage2);
+                        // إضافة رد الدعم فقط عند أول رسالة
+                        if (isFirstMessage) {
+                            // إرسال رسالة الترحيب الأولى
+                            saveAdminReply("مرحبًا بك في خدمة الدعم الفني. شكرًا لتواصلك معنا.");
+                            
+                            // تحديث حالة الرسالة الأولى
+                            isFirstMessage = false;
+                            sessionStorage.setItem('isFirstMessage', false);
+                        }
+                        // إرسال سؤال المزيد من التفاصيل بعد الرسالة الثانية فقط
+                        else if (userMessageCount === 2) {
                             saveAdminReply("هل يمكنك إخباري بالمزيد من التفاصيل حول مشكلتك؟");
                             
-                            // تمرير للأسفل لرؤية الرد
-                            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                        }, 1000);
-                        
-                        // تحديث حالة الرسالة الأولى
-                        isFirstMessage = false;
-                        localStorage.setItem('isFirstMessage', false);
-                    }
-                }, 2000);
+                            // إشعار استلام الرسالة
+                            showNotification('تم استلام رد من الدعم', 'info');
+                            playNotificationSound();
+                        }
+                    }, 2000);
+                });
+            } else {
+                isSending = false;
             }
         }
         
         // حفظ رسالة المستخدم في Firebase
-        function saveMessageToFirebase(message) {
-            if (!isChatStarted) return;
-            
+        function saveMessageToFirebase(message, callback) {
             if (!chatRef) {
-                chatRef = database.ref(`supportChats/${userId}`);
+                const chatId = sessionStorage.getItem('currentChatId');
+                chatRef = database.ref(`supportChats/${chatId}`);
             }
             
-            // إنشاء المحادثة إذا لم تكن موجودة
-            chatRef.once('value').then(snapshot => {
-                if (!snapshot.exists()) {
-                    chatRef.set({
-                        createdAt: Date.now(),
-                        userName: 'مستخدم جديد',
-                        isOnline: true,
-                        blocked: false,
-                        closed: false
-                    });
-                }
-                
-                // إرسال رسالة المستخدم
-                chatRef.child('messages').push().set({
-                    text: message,
-                    senderType: 'user',
-                    timestamp: Date.now()
-                });
+            // إرسال رسالة المستخدم
+            const newMessageRef = chatRef.child('messages').push();
+            newMessageRef.set({
+                text: message,
+                senderType: 'user',
+                timestamp: Date.now(),
+                deleted: false
+            }, () => {
+                if (callback) callback();
             });
         }
         
@@ -1627,10 +1843,12 @@
             if (!chatRef) return;
             
             // إرسال رد الدعم
-            chatRef.child('messages').push().set({
+            const newMessageRef = chatRef.child('messages').push();
+            newMessageRef.set({
                 text: reply,
                 senderType: 'admin',
-                timestamp: Date.now()
+                timestamp: Date.now(),
+                deleted: false
             });
         }
         
@@ -1655,6 +1873,13 @@
             if (typingElement) {
                 typingElement.remove();
             }
+        }
+        
+        // تشغيل صوت الإشعار
+        function playNotificationSound() {
+            const sound = document.getElementById('messageSound');
+            sound.currentTime = 0;
+            sound.play().catch(e => console.log('Sound play failed:', e));
         }
         
         // الحصول على الوقت الحالي
@@ -1710,8 +1935,13 @@
                     <h2 style="color: #c62828;">تم حظر حسابك</h2>
                     <p>لقد تم حظرك من إرسال الرسائل في نظام الدعم الفني.</p>
                     <p>للاستفسار، يرجى الاتصال بالدعم على الرقم +9647823053419</p>
+                    <button class="new-chat-button" onclick="startNewChat()">
+                        بدء محادثة جديدة
+                    </button>
                 </div>
             `;
+            
+            showNotification('تم حظر حسابك من إرسال الرسائل', 'error');
         }
         
         // معالجة حالة إغلاق المحادثة
@@ -1730,6 +1960,45 @@
                     </button>
                 </div>
             `;
+            
+            showNotification('تم إغلاق هذه المحادثة', 'warning');
+        }
+        
+        // طلب حذف رسالة
+        function requestDeleteMessage(messageId) {
+            pendingDeleteMessageId = messageId;
+            const modal = document.getElementById('deleteConfirmationModal');
+            modal.classList.add('show');
+        }
+        
+        // تأكيد حذف الرسالة
+        function confirmDelete() {
+            if (pendingDeleteMessageId && chatRef) {
+                const messageRef = chatRef.child('messages').child(pendingDeleteMessageId);
+                messageRef.update({ deleted: true })
+                    .then(() => {
+                        // إزالة الرسالة من الواجهة
+                        const messageElement = document.querySelector(`[data-message-id="${pendingDeleteMessageId}"]`);
+                        if (messageElement) {
+                            messageElement.remove();
+                        }
+                        showNotification('تم حذف الرسالة بنجاح', 'success');
+                    })
+                    .catch(error => {
+                        console.error('Error deleting message:', error);
+                        showNotification('فشل في حذف الرسالة', 'error');
+                    })
+                    .finally(() => {
+                        cancelDelete();
+                    });
+            }
+        }
+        
+        // إلغاء حذف الرسالة
+        function cancelDelete() {
+            pendingDeleteMessageId = null;
+            const modal = document.getElementById('deleteConfirmationModal');
+            modal.classList.remove('show');
         }
     </script>
 </body>
