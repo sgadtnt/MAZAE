@@ -763,451 +763,478 @@
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-            authDomain: "zio3-8ffdd.firebaseapp.com",
-            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-            projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
-            messagingSenderId: "560939348415",
-            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-            measurementId: "G-CVN2B2D0RD"
-        };
+        document.addEventListener('DOMContentLoaded', function() {
+            // Firebase configuration
+            const firebaseConfig = {
+                apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+                authDomain: "zio3-8ffdd.firebaseapp.com",
+                databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+                projectId: "zio3-8ffdd",
+                storageBucket: "zio3-8ffdd.firebasestorage.app",
+                messagingSenderId: "560939348415",
+                appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+                measurementId: "G-CVN2B2D0RD"
+            };
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const database = firebase.database();
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const database = firebase.database();
 
-        // Elements
-        const googleSignInBtn = document.getElementById('googleSignIn');
-        const loadingDiv = document.getElementById('loading');
-        const errorDiv = document.getElementById('errorMessage');
-        const errorText = document.getElementById('errorText');
-        const successDiv = document.getElementById('successMessage');
-        const successText = document.getElementById('successText');
-        const userInfoDiv = document.getElementById('userInfo');
-        const userPhoto = document.getElementById('userPhoto');
-        const userName = document.getElementById('userName');
-        const userEmail = document.getElementById('userEmail');
-        const userAge = document.getElementById('userAge');
-        const username = document.getElementById('username');
-        const joinDate = document.getElementById('joinDate');
-        const lastUsernameChange = document.getElementById('lastUsernameChange');
-        const nextChangeIn = document.getElementById('nextChangeIn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const changeUsernameBtn = document.getElementById('changeUsernameBtn');
-        const firstChangeNotice = document.getElementById('firstChangeNotice');
-        const backBtn = document.getElementById('backBtn');
-        
-        // Modal elements
-        const usernameModal = document.getElementById('usernameModal');
-        const closeUsernameModal = document.getElementById('closeUsernameModal');
-        const newUsernameInput = document.getElementById('newUsername');
-        const confirmUsernameChange = document.getElementById('confirmUsernameChange');
-        const usernameError = document.getElementById('usernameError');
-        const usernameErrorText = document.getElementById('usernameErrorText');
-        const nextChangeDate = document.getElementById('nextChangeDate');
-        
-        const nameModal = document.getElementById('nameModal');
-        const userNameInput = document.getElementById('userNameInput');
-        const saveNameBtn = document.getElementById('saveNameBtn');
-        const skipNameBtn = document.getElementById('skipNameBtn');
-        const nameError = document.getElementById('nameError');
-        const nameErrorText = document.getElementById('nameErrorText');
-        
-        const ageModal = document.getElementById('ageModal');
-        const userAgeInput = document.getElementById('userAgeInput');
-        const saveAgeBtn = document.getElementById('saveAgeBtn');
-        const skipAgeBtn = document.getElementById('skipAgeBtn');
-        const ageError = document.getElementById('ageError');
-        const ageErrorText = document.getElementById('ageErrorText');
-        
-        const usernameSetupModal = document.getElementById('usernameSetupModal');
-        const newUsernameSetup = document.getElementById('newUsernameSetup');
-        const saveUsernameSetupBtn = document.getElementById('saveUsernameSetupBtn');
-        const skipUsernameSetupBtn = document.getElementById('skipUsernameSetupBtn');
-        const usernameSetupError = document.getElementById('usernameSetupError');
-        const usernameSetupErrorText = document.getElementById('usernameSetupErrorText');
-
-        // متغيرات لتخزين بيانات المستخدم أثناء التسجيل
-        let tempUserData = {};
-        let currentUser = null;
-
-        // تسجيل الدخول باستخدام Google
-        googleSignInBtn.addEventListener('click', () => {
-            loadingDiv.style.display = 'block';
-            errorDiv.style.display = 'none';
-            successDiv.style.display = 'none';
+            // Elements
+            const googleSignInBtn = document.getElementById('googleSignIn');
+            const loadingDiv = document.getElementById('loading');
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            const successDiv = document.getElementById('successMessage');
+            const successText = document.getElementById('successText');
+            const userInfoDiv = document.getElementById('userInfo');
+            const userPhoto = document.getElementById('userPhoto');
+            const userName = document.getElementById('userName');
+            const userEmail = document.getElementById('userEmail');
+            const userAge = document.getElementById('userAge');
+            const username = document.getElementById('username');
+            const joinDate = document.getElementById('joinDate');
+            const lastUsernameChange = document.getElementById('lastUsernameChange');
+            const nextChangeIn = document.getElementById('nextChangeIn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+            const firstChangeNotice = document.getElementById('firstChangeNotice');
+            const backBtn = document.getElementById('backBtn');
             
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    loadingDiv.style.display = 'none';
-                    currentUser = result.user;
-                    // تحقق إذا كان المستخدم جديداً
-                    checkIfNewUser(result.user);
-                })
-                .catch((error) => {
-                    loadingDiv.style.display = 'none';
+            // Modal elements
+            const usernameModal = document.getElementById('usernameModal');
+            const closeUsernameModal = document.getElementById('closeUsernameModal');
+            const newUsernameInput = document.getElementById('newUsername');
+            const confirmUsernameChange = document.getElementById('confirmUsernameChange');
+            const usernameError = document.getElementById('usernameError');
+            const usernameErrorText = document.getElementById('usernameErrorText');
+            const nextChangeDate = document.getElementById('nextChangeDate');
+            
+            const nameModal = document.getElementById('nameModal');
+            const userNameInput = document.getElementById('userNameInput');
+            const saveNameBtn = document.getElementById('saveNameBtn');
+            const skipNameBtn = document.getElementById('skipNameBtn');
+            const nameError = document.getElementById('nameError');
+            const nameErrorText = document.getElementById('nameErrorText');
+            
+            const ageModal = document.getElementById('ageModal');
+            const userAgeInput = document.getElementById('userAgeInput');
+            const saveAgeBtn = document.getElementById('saveAgeBtn');
+            const skipAgeBtn = document.getElementById('skipAgeBtn');
+            const ageError = document.getElementById('ageError');
+            const ageErrorText = document.getElementById('ageErrorText');
+            
+            const usernameSetupModal = document.getElementById('usernameSetupModal');
+            const newUsernameSetup = document.getElementById('newUsernameSetup');
+            const saveUsernameSetupBtn = document.getElementById('saveUsernameSetupBtn');
+            const skipUsernameSetupBtn = document.getElementById('skipUsernameSetupBtn');
+            const usernameSetupError = document.getElementById('usernameSetupError');
+            const usernameSetupErrorText = document.getElementById('usernameSetupErrorText');
+
+            // متغيرات لتخزين بيانات المستخدم أثناء التسجيل
+            let tempUserData = {};
+            let currentUser = null;
+
+            // تسجيل الدخول باستخدام Google
+            googleSignInBtn.addEventListener('click', () => {
+                loadingDiv.style.display = 'block';
+                errorDiv.style.display = 'none';
+                successDiv.style.display = 'none';
+                
+                const provider = new firebase.auth.GoogleAuthProvider();
+                auth.signInWithPopup(provider)
+                    .then((result) => {
+                        loadingDiv.style.display = 'none';
+                        currentUser = result.user;
+                        // تحقق إذا كان المستخدم جديداً
+                        checkIfNewUser(result.user);
+                    })
+                    .catch((error) => {
+                        loadingDiv.style.display = 'none';
+                        showError(error.message);
+                    });
+            });
+
+            // تسجيل الخروج
+            logoutBtn.addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    location.reload(); // إعادة تحميل الصفحة
+                }).catch((error) => {
                     showError(error.message);
                 });
-        });
-
-        // تسجيل الخروج
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                userInfoDiv.style.display = 'none';
-                firstChangeNotice.style.display = 'none';
-                googleSignInBtn.style.display = 'flex';
-                backBtn.style.display = 'none';
-                successDiv.style.display = 'none';
-            }).catch((error) => {
-                showError(error.message);
             });
-        });
 
-        // زر الرجوع
-        backBtn.addEventListener('click', () => {
-            if (userInfoDiv.style.display === 'block') {
-                auth.signOut();
-            }
-        });
+            // زر الرجوع
+            backBtn.addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    location.reload(); // إعادة تحميل الصفحة
+                });
+            });
 
-        // فتح نافذة تغيير المعرف
-        changeUsernameBtn.addEventListener('click', () => {
-            // احصل على معلومات المستخدم
-            const user = auth.currentUser;
-            if (user) {
+            // فتح نافذة تغيير المعرف
+            changeUsernameBtn.addEventListener('click', () => {
+                // احصل على معلومات المستخدم
+                const user = auth.currentUser;
+                if (user) {
+                    database.ref('users/' + user.uid).once('value')
+                        .then((snapshot) => {
+                            const userData = snapshot.val();
+                            if (userData) {
+                                // تحقق إذا كان مسموحاً بتغيير المعرف
+                                const lastChange = userData.lastUsernameChange || userData.joinDate;
+                                const daysSinceLastChange = Math.floor((Date.now() - lastChange) / (1000 * 60 * 60 * 24));
+                                
+                                // إذا لم يسبق تغيير المعرف (أول مرة)
+                                if (!userData.usernameChanged) {
+                                    usernameModal.style.display = 'flex';
+                                    nextChangeDate.textContent = `هذه فرصتك الأولى لتغيير المعرف مجاناً!`;
+                                    return;
+                                }
+                                
+                                if (daysSinceLastChange < 10) {
+                                    const daysLeft = 10 - daysSinceLastChange;
+                                    if (daysLeft === 1) {
+                                        showError('يمكنك تغيير المعرف غداً');
+                                    } else {
+                                        showError(`يمكنك تغيير المعرف بعد ${daysLeft} يوم${daysLeft > 2 ? 'ات' : 'ين'}`);
+                                    }
+                                } else {
+                                    // فتح النافذة
+                                    usernameModal.style.display = 'flex';
+                                    const nextChange = new Date(lastChange + 10 * 24 * 60 * 60 * 1000);
+                                    nextChangeDate.textContent = `الموعد القادم للتغيير: ${formatDate(nextChange)}`;
+                                }
+                            }
+                        });
+                }
+            });
+
+            // إغلاق نافذة تغيير المعرف
+            closeUsernameModal.addEventListener('click', () => {
+                usernameModal.style.display = 'none';
+                usernameError.style.display = 'none';
+                newUsernameInput.value = '';
+            });
+
+            // تأكيد تغيير المعرف
+            confirmUsernameChange.addEventListener('click', () => {
+                const newUsername = newUsernameInput.value.trim();
+                if (!newUsername) {
+                    showUsernameError('الرجاء إدخال معرف جديد');
+                    return;
+                }
+                
+                if (newUsername.length < 4) {
+                    showUsernameError('يجب أن يكون المعرف 4 أحرف على الأقل');
+                    return;
+                }
+                
+                if (newUsername.length > 20) {
+                    showUsernameError('يجب أن لا يتجاوز المعرف 20 حرفاً');
+                    return;
+                }
+                
+                if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
+                    showUsernameError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
+                    return;
+                }
+                
+                const user = auth.currentUser;
+                if (user) {
+                    // تحقق من توفر المعرف
+                    database.ref('usernames').orderByChild('username').equalTo(newUsername).once('value')
+                        .then(snapshot => {
+                            if (snapshot.exists()) {
+                                showUsernameError('هذا المعرف مستخدم من قبل');
+                            } else {
+                                // تحديث المعرف
+                                const updates = {};
+                                updates['users/' + user.uid + '/username'] = newUsername;
+                                updates['users/' + user.uid + '/lastUsernameChange'] = Date.now();
+                                updates['users/' + user.uid + '/usernameChanged'] = true;
+                                updates['usernames/' + newUsername] = { uid: user.uid };
+                                
+                                // احذف المعرف القديم
+                                database.ref('users/' + user.uid).once('value')
+                                    .then(userSnapshot => {
+                                        const oldUsername = userSnapshot.val().username;
+                                        if (oldUsername) {
+                                            updates['usernames/' + oldUsername] = null;
+                                        }
+                                        
+                                        database.ref().update(updates)
+                                            .then(() => {
+                                                usernameModal.style.display = 'none';
+                                                showSuccess('تم تغيير المعرف بنجاح!');
+                                                loadUserInfo(user);
+                                                firstChangeNotice.style.display = 'none';
+                                            })
+                                            .catch(error => {
+                                                showUsernameError('حدث خطأ أثناء تغيير المعرف: ' + error.message);
+                                            });
+                                    });
+                            }
+                        });
+                }
+            });
+
+            // حفظ الاسم
+            saveNameBtn.addEventListener('click', () => {
+                const name = userNameInput.value.trim();
+                if (!name) {
+                    showNameError('الرجاء إدخال اسمك');
+                    return;
+                }
+                
+                tempUserData.displayName = name;
+                nameModal.style.display = 'none';
+                ageModal.style.display = 'flex';
+            });
+
+            skipNameBtn.addEventListener('click', () => {
+                nameModal.style.display = 'none';
+                ageModal.style.display = 'flex';
+            });
+
+            // حفظ العمر
+            saveAgeBtn.addEventListener('click', () => {
+                const age = userAgeInput.value.trim();
+                if (!age || isNaN(age) || age < 10 || age > 100) {
+                    showAgeError('الرجاء إدخال عمر صحيح (10-100)');
+                    return;
+                }
+                
+                tempUserData.age = parseInt(age);
+                ageModal.style.display = 'none';
+                usernameSetupModal.style.display = 'flex';
+            });
+
+            skipAgeBtn.addEventListener('click', () => {
+                ageModal.style.display = 'none';
+                usernameSetupModal.style.display = 'flex';
+            });
+
+            // حفظ المعرف
+            saveUsernameSetupBtn.addEventListener('click', () => {
+                const username = newUsernameSetup.value.trim();
+                if (!username) {
+                    showUsernameSetupError('الرجاء إدخال معرف');
+                    return;
+                }
+                
+                if (username.length < 4) {
+                    showUsernameSetupError('يجب أن يكون المعرف 4 أحرف على الأقل');
+                    return;
+                }
+                
+                if (username.length > 20) {
+                    showUsernameSetupError('يجب أن لا يتجاوز المعرف 20 حرفاً');
+                    return;
+                }
+                
+                if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+                    showUsernameSetupError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
+                    return;
+                }
+                
+                tempUserData.username = username;
+                saveUserData(currentUser, tempUserData);
+                usernameSetupModal.style.display = 'none';
+            });
+
+            skipUsernameSetupBtn.addEventListener('click', () => {
+                tempUserData.username = generateUsername(currentUser);
+                saveUserData(currentUser, tempUserData);
+                usernameSetupModal.style.display = 'none';
+                firstChangeNotice.style.display = 'block'; // إضافة هذا السطر
+            });
+
+            // تحقق إذا كان المستخدم جديداً
+            function checkIfNewUser(user) {
                 database.ref('users/' + user.uid).once('value')
                     .then((snapshot) => {
-                        const userData = snapshot.val();
-                        if (userData) {
-                            // تحقق إذا كان مسموحاً بتغيير المعرف
-                            const lastChange = userData.lastUsernameChange || userData.joinDate;
-                            const daysSinceLastChange = Math.floor((Date.now() - lastChange) / (1000 * 60 * 60 * 24));
-                            
-                            // إذا لم يسبق تغيير المعرف (أول مرة)
-                            if (!userData.usernameChanged) {
-                                usernameModal.style.display = 'flex';
-                                nextChangeDate.textContent = `هذه فرصتك الأولى لتغيير المعرف مجاناً!`;
-                                return;
-                            }
-                            
-                            if (daysSinceLastChange < 10) {
-                                const daysLeft = 10 - daysSinceLastChange;
-                                showError(`يمكنك تغيير المعرف بعد ${daysLeft} يوم${daysLeft > 1 ? 'ات' : ''}`);
-                            } else {
-                                // فتح النافذة
-                                usernameModal.style.display = 'flex';
-                                const nextChange = new Date(lastChange + 10 * 24 * 60 * 60 * 1000);
-                                nextChangeDate.textContent = `الموعد القادم للتغيير: ${formatDate(nextChange)}`;
-                            }
-                        }
-                    });
-            }
-        });
-
-        // إغلاق نافذة تغيير المعرف
-        closeUsernameModal.addEventListener('click', () => {
-            usernameModal.style.display = 'none';
-            usernameError.style.display = 'none';
-            newUsernameInput.value = '';
-        });
-
-        // تأكيد تغيير المعرف
-        confirmUsernameChange.addEventListener('click', () => {
-            const newUsername = newUsernameInput.value.trim();
-            if (!newUsername) {
-                showUsernameError('الرجاء إدخال معرف جديد');
-                return;
-            }
-            
-            if (newUsername.length < 4) {
-                showUsernameError('يجب أن يكون المعرف 4 أحرف على الأقل');
-                return;
-            }
-            
-            if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
-                showUsernameError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
-                return;
-            }
-            
-            const user = auth.currentUser;
-            if (user) {
-                // تحقق من توفر المعرف
-                database.ref('usernames').orderByChild('username').equalTo(newUsername).once('value')
-                    .then(snapshot => {
                         if (snapshot.exists()) {
-                            showUsernameError('هذا المعرف مستخدم من قبل');
-                        } else {
-                            // تحديث المعرف
-                            const updates = {};
-                            updates['users/' + user.uid + '/username'] = newUsername;
-                            updates['users/' + user.uid + '/lastUsernameChange'] = Date.now();
-                            updates['users/' + user.uid + '/usernameChanged'] = true;
-                            updates['usernames/' + newUsername] = { uid: user.uid };
+                            // المستخدم موجود، عرض معلوماته
+                            showUserInfo(snapshot.val());
+                            backBtn.style.display = 'flex';
                             
-                            // احذف المعرف القديم
-                            database.ref('users/' + user.uid).once('value')
-                                .then(userSnapshot => {
-                                    const oldUsername = userSnapshot.val().username;
-                                    if (oldUsername) {
-                                        updates['usernames/' + oldUsername] = null;
-                                    }
-                                    
-                                    database.ref().update(updates)
-                                        .then(() => {
-                                            usernameModal.style.display = 'none';
-                                            showSuccess('تم تغيير المعرف بنجاح!');
-                                            loadUserInfo(user);
-                                            firstChangeNotice.style.display = 'none';
-                                        })
-                                        .catch(error => {
-                                            showUsernameError('حدث خطأ أثناء تغيير المعرف: ' + error.message);
-                                        });
-                                });
+                            // إذا لم يغير المعرف من قبل، عرض الإشعار
+                            if (!snapshot.val().usernameChanged) {
+                                firstChangeNotice.style.display = 'block';
+                            }
+                        } else {
+                            // مستخدم جديد، بدء عملية التسجيل
+                            tempUserData = {
+                                uid: user.uid,
+                                displayName: user.displayName || '',
+                                email: user.email,
+                                photoURL: user.photoURL,
+                                age: null,
+                                username: generateUsername(user),
+                                joinDate: Date.now(),
+                                lastUsernameChange: Date.now(),
+                                usernameChanged: false
+                            };
+                            
+                            // عرض نافذة تحديد الاسم
+                            nameModal.style.display = 'flex';
+                            userNameInput.value = user.displayName || '';
                         }
                     });
             }
-        });
 
-        // حفظ الاسم
-        saveNameBtn.addEventListener('click', () => {
-            const name = userNameInput.value.trim();
-            if (!name) {
-                showNameError('الرجاء إدخال اسمك');
-                return;
+            // إنشاء معرف تلقائي
+            function generateUsername(user) {
+                const prefix = user.displayName ? 
+                    user.displayName.replace(/\s+/g, '').toLowerCase().substring(0, 3) : 
+                    'user';
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                return prefix + randomNum;
             }
-            
-            tempUserData.displayName = name;
-            nameModal.style.display = 'none';
-            ageModal.style.display = 'flex';
-        });
 
-        skipNameBtn.addEventListener('click', () => {
-            nameModal.style.display = 'none';
-            ageModal.style.display = 'flex';
-        });
-
-        // حفظ العمر
-        saveAgeBtn.addEventListener('click', () => {
-            const age = userAgeInput.value.trim();
-            if (!age || isNaN(age) || age < 10 || age > 100) {
-                showAgeError('الرجاء إدخال عمر صحيح (10-100)');
-                return;
-            }
-            
-            tempUserData.age = parseInt(age);
-            ageModal.style.display = 'none';
-            usernameSetupModal.style.display = 'flex';
-        });
-
-        skipAgeBtn.addEventListener('click', () => {
-            ageModal.style.display = 'none';
-            usernameSetupModal.style.display = 'flex';
-        });
-
-        // حفظ المعرف
-        saveUsernameSetupBtn.addEventListener('click', () => {
-            const username = newUsernameSetup.value.trim();
-            if (!username) {
-                showUsernameSetupError('الرجاء إدخال معرف');
-                return;
-            }
-            
-            if (username.length < 4) {
-                showUsernameSetupError('يجب أن يكون المعرف 4 أحرف على الأقل');
-                return;
-            }
-            
-            if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-                showUsernameSetupError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
-                return;
-            }
-            
-            tempUserData.username = username;
-            saveUserData(currentUser, tempUserData);
-            usernameSetupModal.style.display = 'none';
-        });
-
-        skipUsernameSetupBtn.addEventListener('click', () => {
-            tempUserData.username = generateUsername(currentUser);
-            saveUserData(currentUser, tempUserData);
-            usernameSetupModal.style.display = 'none';
-        });
-
-        // تحقق إذا كان المستخدم جديداً
-        function checkIfNewUser(user) {
-            database.ref('users/' + user.uid).once('value')
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        // المستخدم موجود، عرض معلوماته
-                        showUserInfo(snapshot.val());
+            // حفظ بيانات المستخدم في قاعدة البيانات
+            function saveUserData(user, userData) {
+                loadingDiv.style.display = 'block';
+                
+                // حفظ البيانات في Realtime Database
+                const updates = {};
+                updates['users/' + user.uid] = userData;
+                updates['usernames/' + userData.username] = { uid: user.uid };
+                
+                database.ref().update(updates)
+                    .then(() => {
+                        loadingDiv.style.display = 'none';
+                        showUserInfo(userData);
+                        firstChangeNotice.style.display = 'block';
                         backBtn.style.display = 'flex';
-                        
-                        // إذا لم يغير المعرف من قبل، عرض الإشعار
-                        if (!snapshot.val().usernameChanged) {
-                            firstChangeNotice.style.display = 'block';
+                        showSuccess('تم حفظ بياناتك بنجاح!');
+                    })
+                    .catch((error) => {
+                        loadingDiv.style.display = 'none';
+                        console.error('حدث خطأ في حفظ بيانات المستخدم:', error);
+                        showError('حدث خطأ في حفظ بياناتك. الرجاء المحاولة مرة أخرى.');
+                    });
+            }
+
+            // عرض معلومات المستخدم
+            function showUserInfo(userData) {
+                userPhoto.src = userData.photoURL || 'https://via.placeholder.com/100';
+                userName.textContent = userData.displayName || 'مستخدم';
+                userEmail.textContent = userData.email || 'غير محدد';
+                userAge.textContent = userData.age ? userData.age + ' سنة' : 'غير محدد';
+                username.textContent = userData.username || generateUsername(auth.currentUser);
+                
+                if (userData.joinDate) {
+                    joinDate.textContent = formatDate(new Date(userData.joinDate));
+                } else {
+                    joinDate.textContent = 'غير محدد';
+                }
+                
+                if (userData.lastUsernameChange) {
+                    lastUsernameChange.textContent = formatDate(new Date(userData.lastUsernameChange));
+                } else {
+                    lastUsernameChange.textContent = 'لم يغير بعد';
+                }
+                
+                // حساب الوقت المتبقي لتغيير المعرف
+                if (userData.lastUsernameChange) {
+                    const lastChange = new Date(userData.lastUsernameChange);
+                    const nextChangeDate = new Date(lastChange);
+                    nextChangeDate.setDate(nextChangeDate.getDate() + 10);
+                    
+                    if (Date.now() < nextChangeDate) {
+                        const daysLeft = Math.ceil((nextChangeDate - Date.now()) / (1000 * 60 * 60 * 24));
+                        if (daysLeft === 1) {
+                            nextChangeIn.textContent = 'غداً';
+                        } else if (daysLeft === 0) {
+                            nextChangeIn.textContent = 'متاح اليوم';
+                        } else {
+                            nextChangeIn.textContent = `بعد ${daysLeft} يوم${daysLeft > 2 ? 'ات' : 'ين'}`;
                         }
                     } else {
-                        // مستخدم جديد، بدء عملية التسجيل
-                        tempUserData = {
-                            uid: user.uid,
-                            displayName: user.displayName || '',
-                            email: user.email,
-                            photoURL: user.photoURL,
-                            age: null,
-                            username: generateUsername(user),
-                            joinDate: Date.now(),
-                            lastUsernameChange: Date.now(),
-                            usernameChanged: false
-                        };
-                        
-                        // عرض نافذة تحديد الاسم
-                        nameModal.style.display = 'flex';
-                        userNameInput.value = user.displayName || '';
+                        nextChangeIn.textContent = 'متاح الآن';
                     }
-                });
-        }
-
-        // إنشاء معرف تلقائي
-        function generateUsername(user) {
-            const prefix = user.displayName ? 
-                user.displayName.replace(/\s+/g, '').toLowerCase().substring(0, 3) : 
-                'user';
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            return prefix + randomNum;
-        }
-
-        // حفظ بيانات المستخدم في قاعدة البيانات
-        function saveUserData(user, userData) {
-            // حفظ البيانات في Realtime Database
-            const updates = {};
-            updates['users/' + user.uid] = userData;
-            updates['usernames/' + userData.username] = { uid: user.uid };
-            
-            database.ref().update(updates)
-                .then(() => {
-                    showUserInfo(userData);
-                    firstChangeNotice.style.display = 'block';
-                    backBtn.style.display = 'flex';
-                })
-                .catch((error) => {
-                    console.error('حدث خطأ في حفظ بيانات المستخدم:', error);
-                    showError('حدث خطأ في حفظ بياناتك. الرجاء المحاولة مرة أخرى.');
-                });
-        }
-
-        // عرض معلومات المستخدم
-        function showUserInfo(userData) {
-            userPhoto.src = userData.photoURL || 'https://via.placeholder.com/100';
-            userName.textContent = userData.displayName || 'مستخدم';
-            userEmail.textContent = userData.email || 'غير محدد';
-            userAge.textContent = userData.age ? userData.age + ' سنة' : 'غير محدد';
-            username.textContent = userData.username || generateUsername(auth.currentUser);
-            
-            if (userData.joinDate) {
-                joinDate.textContent = formatDate(new Date(userData.joinDate));
-            } else {
-                joinDate.textContent = 'غير محدد';
-            }
-            
-            if (userData.lastUsernameChange) {
-                lastUsernameChange.textContent = formatDate(new Date(userData.lastUsernameChange));
-            } else {
-                lastUsernameChange.textContent = 'لم يغير بعد';
-            }
-            
-            // حساب الوقت المتبقي لتغيير المعرف
-            if (userData.lastUsernameChange) {
-                const daysSinceLastChange = Math.floor((Date.now() - userData.lastUsernameChange) / (1000 * 60 * 60 * 24));
-                if (daysSinceLastChange < 10) {
-                    const daysLeft = 10 - daysSinceLastChange;
-                    nextChangeIn.textContent = `${daysLeft} يوم${daysLeft > 1 ? 'ات' : ''}`;
                 } else {
                     nextChangeIn.textContent = 'متاح الآن';
                 }
-            } else {
-                nextChangeIn.textContent = 'متاح الآن';
+                
+                userInfoDiv.style.display = 'block';
+                googleSignInBtn.style.display = 'none';
+            }
+
+            // تحميل معلومات المستخدم من قاعدة البيانات
+            function loadUserInfo(user) {
+                database.ref('users/' + user.uid).once('value')
+                    .then((snapshot) => {
+                        if (snapshot.exists()) {
+                            showUserInfo(snapshot.val());
+                            backBtn.style.display = 'flex';
+                            
+                            // إذا لم يغير المعرف من قبل، عرض الإشعار
+                            if (!snapshot.val().usernameChanged) {
+                                firstChangeNotice.style.display = 'block';
+                            }
+                        }
+                    });
+            }
+
+            // تنسيق التاريخ
+            function formatDate(date) {
+                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                return date.toLocaleDateString('ar-EG', options);
+            }
+
+            // عرض خطأ
+            function showError(message) {
+                errorText.textContent = message;
+                errorDiv.style.display = 'block';
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 5000);
             }
             
-            userInfoDiv.style.display = 'block';
-            googleSignInBtn.style.display = 'none';
-        }
-
-        // تحميل معلومات المستخدم من قاعدة البيانات
-        function loadUserInfo(user) {
-            database.ref('users/' + user.uid).once('value')
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        showUserInfo(snapshot.val());
-                        backBtn.style.display = 'flex';
-                        
-                        // إذا لم يغير المعرف من قبل، عرض الإشعار
-                        if (!snapshot.val().usernameChanged) {
-                            firstChangeNotice.style.display = 'block';
-                        }
-                    }
-                });
-        }
-
-        // تنسيق التاريخ
-        function formatDate(date) {
-            const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            return date.toLocaleDateString('ar-EG', options);
-        }
-
-        // عرض خطأ
-        function showError(message) {
-            errorText.textContent = message;
-            errorDiv.style.display = 'block';
-            setTimeout(() => {
-                errorDiv.style.display = 'none';
-            }, 5000);
-        }
-        
-        function showSuccess(message) {
-            successText.textContent = message;
-            successDiv.style.display = 'block';
-            setTimeout(() => {
-                successDiv.style.display = 'none';
-            }, 5000);
-        }
-        
-        function showUsernameError(message) {
-            usernameErrorText.textContent = message;
-            usernameError.style.display = 'block';
-        }
-        
-        function showAgeError(message) {
-            ageErrorText.textContent = message;
-            ageError.style.display = 'block';
-        }
-        
-        function showNameError(message) {
-            nameErrorText.textContent = message;
-            nameError.style.display = 'block';
-        }
-        
-        function showUsernameSetupError(message) {
-            usernameSetupErrorText.textContent = message;
-            usernameSetupError.style.display = 'block';
-        }
-
-        // مراقبة حالة المصادقة
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                // المستخدم مسجل الدخول
-                loadUserInfo(user);
-            } else {
-                // لا يوجد مستخدم مسجل الدخول
-                userInfoDiv.style.display = 'none';
-                firstChangeNotice.style.display = 'none';
-                googleSignInBtn.style.display = 'flex';
-                backBtn.style.display = 'none';
+            function showSuccess(message) {
+                successText.textContent = message;
+                successDiv.style.display = 'block';
+                setTimeout(() => {
+                    successDiv.style.display = 'none';
+                }, 5000);
             }
+            
+            function showUsernameError(message) {
+                usernameErrorText.textContent = message;
+                usernameError.style.display = 'block';
+            }
+            
+            function showAgeError(message) {
+                ageErrorText.textContent = message;
+                ageError.style.display = 'block';
+            }
+            
+            function showNameError(message) {
+                nameErrorText.textContent = message;
+                nameError.style.display = 'block';
+            }
+            
+            function showUsernameSetupError(message) {
+                usernameSetupErrorText.textContent = message;
+                usernameSetupError.style.display = 'block';
+            }
+
+            // مراقبة حالة المصادقة
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // المستخدم مسجل الدخول
+                    loadUserInfo(user);
+                } else {
+                    // لا يوجد مستخدم مسجل الدخول
+                    userInfoDiv.style.display = 'none';
+                    firstChangeNotice.style.display = 'none';
+                    googleSignInBtn.style.display = 'flex';
+                    backBtn.style.display = 'none';
+                }
+            });
         });
     </script>
 </body>
