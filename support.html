@@ -445,8 +445,9 @@
         
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 50%; /* التعديل هنا: من أعلى إلى منتصف */
+            left: 50%; /* التعديل هنا: من اليمين إلى الوسط */
+            transform: translate(-50%, -50%); /* مركز الإشعار */
             padding: 18px 28px;
             border-radius: 12px;
             color: white;
@@ -454,17 +455,17 @@
             box-shadow: var(--shadow);
             z-index: 2000;
             opacity: 0;
-            transform: translateY(-30px);
-            transition: opacity 0.3s, transform 0.3s;
             min-width: 300px;
             text-align: center;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.2);
+            transition: opacity 0.3s, transform 0.3s;
+            transform: translate(-50%, -30px); /* بداية الإشعار أعلى قليلاً */
         }
         
         .notification.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(-50%, -50%); /* مركز الإشعار عند الظهور */
         }
         
         .notification.success {
@@ -1118,41 +1119,52 @@
             box-shadow: 0 6px 15px rgba(26, 35, 126, 0.4);
         }
         
-        /* New style for resume chat card */
-        .resume-card {
-            background: linear-gradient(135deg, #4CAF50, #2E7D32);
-            color: white;
+        /* Blocked user section */
+        .blocked-section {
+            background: white;
             border-radius: var(--radius);
-            padding: 20px;
-            text-align: center;
+            padding: 30px;
+            margin: 20px;
+            box-shadow: var(--shadow);
             border: 1px solid #e0e0e0;
-            transition: var(--transition);
-            cursor: pointer;
-            grid-column: span 2;
-            margin-top: 15px;
+            max-width: 800px;
+            width: 100%;
+            margin: 20px auto;
+            text-align: center;
         }
         
-        .resume-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            background: linear-gradient(135deg, #43A047, #2E7D32);
+        .blocked-icon {
+            font-size: 4rem;
+            color: #e74c3c;
+            margin-bottom: 20px;
+            animation: shake 0.5s ease-in-out;
         }
         
-        .resume-card i {
-            font-size: 2.5rem;
-            color: white;
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .blocked-section h2 {
+            color: #e74c3c;
             margin-bottom: 15px;
+            font-size: 1.8rem;
         }
         
-        .resume-card h3 {
-            font-size: 1.3rem;
-            color: white;
-            margin-bottom: 10px;
+        .blocked-section p {
+            color: #5c6770;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+            line-height: 1.6;
         }
         
-        .resume-card p {
-            font-size: 1rem;
-            color: rgba(255,255,255,0.9);
+        /* اسم المستخدم في الرسالة */
+        .message-sender {
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #555;
         }
     </style>
 </head>
@@ -1196,12 +1208,6 @@
                 <h3>واتساب الدعم الفني</h3>
                 <p>تواصل معنا عبر واتساب لحل مشكلتك</p>
             </div>
-        </div>
-        <!-- Resume Chat Card (only shows if there's an active chat) -->
-        <div id="resumeChatCard" class="resume-card inactive-chat">
-            <i class="fas fa-history"></i>
-            <h3>استئناف المحادثة السابقة</h3>
-            <p>لديك محادثة قائمة مع الدعم الفني</p>
         </div>
     </div>
     
@@ -1298,6 +1304,27 @@
         </div>
     </div>
     
+    <!-- Blocked User Section -->
+    <div id="blockedSection" class="blocked-section inactive-chat">
+        <div class="blocked-icon">
+            <i class="fas fa-ban"></i>
+        </div>
+        <h2>تم حظر حسابك</h2>
+        <p>لقد تم حظرك من إرسال الرسائل في نظام الدعم الفني من قبل الإدارة.</p>
+        <p>إذا كنت تعتقد أن هذا خطأ أو ترغب في الاستفسار عن سبب الحظر، يرجى الاتصال بالدعم.</p>
+        
+        <div class="contact-buttons">
+            <a href="tel:+9647823053419" class="contact-button">
+                <i class="fas fa-phone-alt"></i>
+                الاتصال بالدعم
+            </a>
+            <a href="https://wa.me/9647823053419" target="_blank" class="contact-button whatsapp">
+                <i class="fab fa-whatsapp"></i>
+                تواصل عبر واتساب
+            </a>
+        </div>
+    </div>
+    
     <!-- Sound Notification -->
     <audio id="messageSound" class="sound-notification">
         <source src="https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3" type="audio/mpeg">
@@ -1340,11 +1367,12 @@
         let messagesListener = null;
         let chatMetadataListener = null;
         let lastMessageTime = 0;
-        let isSending = false; // لمنع الإرسال المتزامن
-        let userMessageCount = 0; // تتبع عدد رسائل المستخدم
-        let pendingDeleteMessageId = null; // لتخزين معرف الرسالة المراد حذفها
-        let currentChatId = sessionStorage.getItem('currentChatId') || null; // تخزين معرف المحادثة الحالية
-        let isBlocked = false; // حالة حظر المستخدم
+        let isSending = false;
+        let userMessageCount = 0;
+        let pendingDeleteMessageId = null;
+        let currentChatId = sessionStorage.getItem('currentChatId') || null;
+        let isUserBlocked = false;
+        let userName = "مستخدم جديد"; // اسم المستخدم الافتراضي
 
         // حفظ معرف المستخدم في التخزين المؤقت
         sessionStorage.setItem('supportUserId', userId);
@@ -1371,8 +1399,11 @@
                 }
             });
             
-            // التحقق من وجود محادثة حالية لإظهار زر الاستئناف
+            // محاولة تحميل المحادثة الحالية عند التحميل
             checkExistingChat();
+            
+            // محاولة الحصول على اسم المستخدم من Firebase إذا كان مسجلاً
+            checkUserAuthentication();
         });
         
         // توليد معرف فريد للمستخدم
@@ -1385,6 +1416,21 @@
             return 'chat_' + Math.random().toString(36).substr(2, 9);
         }
         
+        // التحقق من اسم المستخدم إذا كان مسجلاً
+        function checkUserAuthentication() {
+            // هنا يجب أن يكون لديك نظام تسجيل دخول خاص بك
+            // هذا مثال فقط للتوضيح
+            const authenticatedUser = localStorage.getItem('authenticatedUser');
+            
+            if (authenticatedUser) {
+                userName = authenticatedUser;
+            } else {
+                // إنشاء اسم عشوائي للمستخدم الجديد
+                const randomNum = Math.floor(Math.random() * 9000) + 1000;
+                userName = `مستخدم جديد${randomNum}`;
+            }
+        }
+        
         // التحقق من وجود محادثة حالية
         function checkExistingChat() {
             const existingUserId = sessionStorage.getItem('supportUserId');
@@ -1393,16 +1439,20 @@
             if (existingUserId && existingChatId) {
                 const chatRef = database.ref(`supportChats/${existingChatId}`);
                 chatRef.once('value').then(snapshot => {
-                    if (snapshot.exists() && !snapshot.child('closed').val() && 
-                        !snapshot.child('deleted').val() && !snapshot.child('blocked').val()) {
-                        // إظهار زر استئناف المحادثة في صفحة المساعدة
-                        document.getElementById('resumeChatCard').classList.remove('inactive-chat');
-                        document.getElementById('resumeChatCard').classList.add('active-chat');
-                        document.getElementById('resumeChatCard').onclick = () => {
-                            loadExistingChat(existingChatId);
-                        };
+                    if (snapshot.exists() && snapshot.child('isBlocked').val()) {
+                        handleBlockedUser();
+                    } else if (snapshot.exists() && snapshot.child('closed').val()) {
+                        handleClosedChat();
+                    } else if (snapshot.exists() && snapshot.child('deleted').val()) {
+                        startNewChat();
+                    } else {
+                        document.getElementById('helpSection').classList.remove('inactive-chat');
+                        document.getElementById('helpSection').classList.add('active-chat');
                     }
                 });
+            } else {
+                document.getElementById('helpSection').classList.remove('inactive-chat');
+                document.getElementById('helpSection').classList.add('active-chat');
             }
         }
         
@@ -1420,12 +1470,13 @@
             sessionStorage.setItem('currentChatId', chatId);
             isFirstMessage = true;
             sessionStorage.setItem('isFirstMessage', true);
-            userMessageCount = 0; // إعادة تعيين عداد الرسائل
+            userMessageCount = 0;
+            isUserBlocked = false;
             
             // إخفاء الأقسام الأخرى وإظهار قسم المحادثة
             document.getElementById('helpSection').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.add('inactive-chat');
-            document.getElementById('resumeChatCard').classList.add('inactive-chat');
+            document.getElementById('blockedSection').classList.add('inactive-chat');
             document.getElementById('chatContainer').classList.remove('inactive-chat');
             document.getElementById('chatContainer').classList.add('active-chat');
             
@@ -1445,9 +1496,9 @@
             chatRef.set({
                 createdAt: Date.now(),
                 userId: userId,
-                userName: 'مستخدم جديد',
+                userName: userName, // استخدام اسم المستخدم هنا
                 isOnline: true,
-                blocked: false,
+                isBlocked: false,
                 closed: false,
                 deleted: false
             }).then(() => {
@@ -1476,7 +1527,7 @@
                     const delayMessage = document.querySelector('.chat-delay-message');
                     if (delayMessage) delayMessage.remove();
                     
-                }, 4000); // تأخير 4 ثوانٍ
+                }, 4000);
                 
                 // إضافة مستمع للرسائل الجديدة
                 setupMessagesListener();
@@ -1498,7 +1549,7 @@
             // إخفاء الأقسام الأخرى وإظهار قسم المحادثة
             document.getElementById('helpSection').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.add('inactive-chat');
-            document.getElementById('resumeChatCard').classList.add('inactive-chat');
+            document.getElementById('blockedSection').classList.add('inactive-chat');
             document.getElementById('chatContainer').classList.remove('inactive-chat');
             document.getElementById('chatContainer').classList.add('active-chat');
             
@@ -1521,7 +1572,7 @@
                     return;
                 }
                 
-                if (chatData.blocked) {
+                if (chatData.isBlocked) {
                     handleBlockedUser();
                     return;
                 }
@@ -1547,11 +1598,14 @@
                         messageElement.className = `message ${messageClass}`;
                         messageElement.dataset.messageId = childSnapshot.key;
                         
-                        // إضافة زر الحذف للرسائل التي أرسلها المستخدم
-                        let deleteButton = '';
+                        // إضافة زر الحذف والنسخ للرسائل التي أرسلها المستخدم
+                        let actionButtons = '';
                         if (!isAdmin) {
-                            deleteButton = `
+                            actionButtons = `
                                 <div class="message-actions">
+                                    <button class="action-btn copy-btn" title="نسخ الرسالة" onclick="copyMessage('${childSnapshot.key}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
                                     <button class="action-btn delete-btn" title="حذف الرسالة" onclick="requestDeleteMessage('${childSnapshot.key}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
@@ -1559,10 +1613,14 @@
                             `;
                         }
                         
+                        // إضافة اسم المرسل للرسائل
+                        const senderName = isAdmin ? 'الدعم الفني' : msg.userName || userName;
+                        
                         messageElement.innerHTML = `
+                            <div class="message-sender">${senderName}</div>
                             <div class="message-content">${msg.text}</div>
                             <div class="message-time">${timeString}</div>
-                            ${deleteButton}
+                            ${actionButtons}
                         `;
                         
                         messagesContainer.appendChild(messageElement);
@@ -1625,11 +1683,14 @@
                 messageElement.className = `message ${messageClass} new-message`;
                 messageElement.dataset.messageId = snapshot.key;
                 
-                // إضافة زر الحذف للرسائل التي أرسلها المستخدم
-                let deleteButton = '';
+                // إضافة زر الحذف والنسخ للرسائل التي أرسلها المستخدم
+                let actionButtons = '';
                 if (!isAdmin) {
-                    deleteButton = `
+                    actionButtons = `
                         <div class="message-actions">
+                            <button class="action-btn copy-btn" title="نسخ الرسالة" onclick="copyMessage('${snapshot.key}')">
+                                <i class="fas fa-copy"></i>
+                            </button>
                             <button class="action-btn delete-btn" title="حذف الرسالة" onclick="requestDeleteMessage('${snapshot.key}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
@@ -1637,10 +1698,14 @@
                     `;
                 }
                 
+                // إضافة اسم المرسل للرسائل
+                const senderName = isAdmin ? 'الدعم الفني' : msg.userName || userName;
+                
                 messageElement.innerHTML = `
+                    <div class="message-sender">${senderName}</div>
                     <div class="message-content">${msg.text}</div>
                     <div class="message-time">${timeString}</div>
-                    ${deleteButton}
+                    ${actionButtons}
                 `;
                 
                 const messagesContainer = document.getElementById('messagesContainer');
@@ -1689,13 +1754,9 @@
                     return;
                 }
                 
-                // إذا تم حظر المستخدم
-                if (chatData.blocked) {
-                    isBlocked = true;
+                if (chatData.isBlocked) {
                     handleBlockedUser();
                     return;
-                } else {
-                    isBlocked = false;
                 }
                 
                 // إذا تم إغلاق المحادثة
@@ -1720,7 +1781,7 @@
         function showFAQ() {
             document.getElementById('helpSection').classList.add('inactive-chat');
             document.getElementById('chatContainer').classList.add('inactive-chat');
-            document.getElementById('resumeChatCard').classList.add('inactive-chat');
+            document.getElementById('blockedSection').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.remove('inactive-chat');
             document.getElementById('faqSection').classList.add('active-chat');
         }
@@ -1732,6 +1793,7 @@
             
             document.getElementById('chatContainer').classList.add('inactive-chat');
             document.getElementById('faqSection').classList.add('inactive-chat');
+            document.getElementById('blockedSection').classList.add('inactive-chat');
             
             // إزالة المستمعين عند الخروج من المحادثة
             if (messagesListener && chatRef) {
@@ -1742,8 +1804,8 @@
                 chatRef.off('value', chatMetadataListener);
             }
             
-            // التحقق من وجود محادثة حالية لإظهار زر الاستئناف
-            checkExistingChat();
+            // إعادة تعيين حالة الحظر
+            isUserBlocked = false;
         }
         
         // فتح واتساب
@@ -1753,18 +1815,19 @@
         
         // إرسال الرسالة
         function sendMessage() {
-            if (isSending || isBlocked) {
-                if (isBlocked) {
-                    showNotification('تم حظرك من إرسال الرسائل', 'error');
-                }
+            // التحقق من حالة الحظر قبل الإرسال
+            if (isUserBlocked) {
+                showNotification('تم حظرك من إرسال الرسائل', 'error');
                 return;
             }
+            
+            if (isSending) return;
             
             const messageInput = document.getElementById('customerMessageInput');
             const message = messageInput.value.trim();
             
             if (message) {
-                isSending = true; // تعيين حالة الإرسال
+                isSending = true;
                 
                 // إظهار حالة الإرسال
                 const sendButton = document.getElementById('customerSendButton');
@@ -1832,7 +1895,8 @@
                 text: message,
                 senderType: 'user',
                 timestamp: Date.now(),
-                deleted: false
+                deleted: false,
+                userName: userName // حفظ اسم المستخدم مع الرسالة
             }, () => {
                 if (callback) callback();
             });
@@ -1925,21 +1989,16 @@
         
         // معالجة حالة حظر المستخدم
         function handleBlockedUser() {
+            isUserBlocked = true;
             document.getElementById('customerMessageInput').disabled = true;
             document.getElementById('customerSendButton').disabled = true;
             
-            const messagesContainer = document.getElementById('messagesContainer');
-            messagesContainer.innerHTML = `
-                <div class="blocked-chat-message">
-                    <i class="fas fa-ban" style="font-size: 3rem; color: #c62828; margin-bottom: 15px;"></i>
-                    <h2 style="color: #c62828;">تم حظر حسابك</h2>
-                    <p>لقد تم حظرك من إرسال الرسائل في نظام الدعم الفني.</p>
-                    <p>للاستفسار، يرجى الاتصال بالدعم على الرقم +9647823053419</p>
-                    <button class="new-chat-button" onclick="startNewChat()">
-                        بدء محادثة جديدة
-                    </button>
-                </div>
-            `;
+            // إخفاء الأقسام الأخرى وإظهار قسم الحظر
+            document.getElementById('helpSection').classList.add('inactive-chat');
+            document.getElementById('faqSection').classList.add('inactive-chat');
+            document.getElementById('chatContainer').classList.add('inactive-chat');
+            document.getElementById('blockedSection').classList.remove('inactive-chat');
+            document.getElementById('blockedSection').classList.add('active-chat');
             
             showNotification('تم حظر حسابك من إرسال الرسائل', 'error');
         }
@@ -1999,6 +2058,34 @@
             pendingDeleteMessageId = null;
             const modal = document.getElementById('deleteConfirmationModal');
             modal.classList.remove('show');
+        }
+        
+        // نسخ نص الرسالة
+        function copyMessage(messageId) {
+            if (!chatRef) return;
+            
+            const messageRef = chatRef.child('messages').child(messageId);
+            messageRef.once('value').then(snapshot => {
+                const messageText = snapshot.val().text;
+                
+                // إنشاء عنصر نصي مؤقت
+                const tempTextArea = document.createElement('textarea');
+                tempTextArea.value = messageText;
+                document.body.appendChild(tempTextArea);
+                
+                // تحديد النص ونسخه
+                tempTextArea.select();
+                document.execCommand('copy');
+                
+                // إزالة العنصر المؤقت
+                document.body.removeChild(tempTextArea);
+                
+                // إظهار إشعار النجاح
+                showNotification('تم نسخ الرسالة بنجاح', 'success');
+            }).catch(error => {
+                console.error('Error copying message:', error);
+                showNotification('فشل في نسخ الرسالة', 'error');
+            });
         }
     </script>
 </body>
