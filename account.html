@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول - حسابي</title>
+    <title>نظام تسجيل الدخول وتغيير المعرف</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
     <style>
         :root {
             --color-primary: #1A237E;
@@ -437,19 +436,22 @@
         
         .username-availability {
             margin-top: 5px;
-            font-size: 0.8rem;
-            text-align: left;
-            direction: ltr;
+            font-size: 0.9rem;
+            text-align: center;
             padding: 5px;
             display: none;
+            border-radius: 4px;
+            font-weight: bold;
         }
         
         .available {
             color: var(--color-accent);
+            background: rgba(76, 175, 80, 0.1);
         }
         
         .not-available {
             color: var(--color-danger);
+            background: rgba(244, 67, 54, 0.1);
         }
         
         @media (max-width: 480px) {
@@ -589,24 +591,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // تهيئة Firebase
-            const firebaseConfig = {
-                apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-                authDomain: "zio3-8ffdd.firebaseapp.com",
-                databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-                projectId: "zio3-8ffdd",
-                storageBucket: "zio3-8ffdd.firebasestorage.app",
-                messagingSenderId: "560939348415",
-                appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-                measurementId: "G-CVN2B2D0RD"
-            };
-            
-            // تهيئة Firebase
-            firebase.initializeApp(firebaseConfig);
-            const auth = firebase.auth();
-            const db = firebase.firestore();
-            const analytics = firebase.analytics();
-            
             // تخزين حالة المستخدم في localStorage لمنع تسجيل الخروج عند الرجوع
             const storageKey = 'userLoggedIn';
             
@@ -649,9 +633,33 @@
                 freeChangeUsed: false
             };
             
+            // تهيئة Firebase (مع إضافة مشروعك الخاص)
+            const firebaseConfig = {
+                apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+                authDomain: "zio3-8ffdd.firebaseapp.com",
+                databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+                projectId: "zio3-8ffdd",
+                storageBucket: "zio3-8ffdd.firebasestorage.app",
+                messagingSenderId: "560939348415",
+                appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+                measurementId: "G-CVN2B2D0RD"
+            };
+            
+            // تهيئة Firebase
+            try {
+                firebase.initializeApp(firebaseConfig);
+            } catch (error) {
+                console.log("Firebase already initialized");
+            }
+            
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            
             // التحقق من توفر المعرف في قاعدة البيانات
             async function checkUsernameAvailability(username) {
                 try {
+                    if (!username || username.length < 4) return false;
+                    
                     const doc = await db.collection('usernames').doc(username).get();
                     return !doc.exists;
                 } catch (error) {
@@ -693,16 +701,9 @@
                             changeCount: data.changeCount || 0,
                             freeChangeUsed: data.freeChangeUsed || false
                         };
-                    } else {
-                        usernameChangeHistory = {
-                            lastChange: null,
-                            changeCount: 0,
-                            freeChangeUsed: false
-                        };
                     }
                 } catch (error) {
                     console.error("خطأ في تحميل تاريخ تغيير المعرف:", error);
-                    showError("حدث خطأ أثناء تحميل بيانات المستخدم");
                 }
             }
             
@@ -717,23 +718,22 @@
                     await db.collection('usernameHistory').doc(userId).set(dataToSave);
                 } catch (error) {
                     console.error("خطأ في حفظ تاريخ تغيير المعرف:", error);
-                    showError("حدث خطأ أثناء حفظ بيانات المستخدم");
                 }
             }
             
             // تسجيل معرف جديد في قاعدة البيانات
             async function registerNewUsername(userId, oldUsername, newUsername) {
                 try {
-                    // التحقق مرة أخرى من توفر المعرف (حالة السباق)
+                    // التحقق مرة أخرى من توفر المعرف
                     const isAvailable = await checkUsernameAvailability(newUsername);
                     if (!isAvailable) {
                         throw new Error('هذا المعرف مستخدم من قبل، الرجاء اختيار معرف آخر');
                     }
                     
-                    // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات أو لا شيء
+                    // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات
                     const batch = db.batch();
                     
-                    // تحديث معرف المستخدم في مستند المستخدم
+                    // تحديث معرف المستخدم
                     const userRef = db.collection('users').doc(userId);
                     batch.update(userRef, {
                         username: newUsername
@@ -756,7 +756,7 @@
                     return true;
                 } catch (error) {
                     console.error("خطأ في تسجيل المعرف الجديد:", error);
-                    throw new Error("حدث خطأ أثناء تسجيل المعرف الجديد: " + error.message);
+                    throw new Error("حدث خطأ أثناء تسجيل المعرف الجديد");
                 }
             }
             
@@ -808,18 +808,19 @@
             async function showUserInfo(user) {
                 try {
                     const userDoc = await db.collection('users').doc(user.uid).get();
+                    let userUsername = "";
                     
                     if (!userDoc.exists) {
-                        const finalUsername = await createNewUser(user);
-                        username.textContent = finalUsername;
+                        userUsername = await createNewUser(user);
                     } else {
                         const userData = userDoc.data();
-                        username.textContent = userData.username;
+                        userUsername = userData.username;
                     }
                     
                     userPhoto.src = user.photoURL || "https://ui-avatars.com/api/?name=User&background=random";
                     userName.textContent = user.displayName || "مستخدم جديد";
                     userEmail.textContent = user.email;
+                    username.textContent = userUsername;
                     
                     // تحميل تاريخ التسجيل
                     const joinDateValue = user.metadata.creationTime ? new Date(user.metadata.creationTime) : new Date();
@@ -906,11 +907,9 @@
                     currentUser = result.user;
                     await showUserInfo(currentUser);
                     showSuccess('تم تسجيل الدخول بنجاح!');
-                    analytics.logEvent('login_success');
                 } catch (error) {
                     console.error('خطأ في تسجيل الدخول:', error);
                     showError('حدث خطأ أثناء تسجيل الدخول: ' + error.message);
-                    analytics.logEvent('login_error', { error: error.message });
                 } finally {
                     loadingDiv.style.display = 'none';
                 }
@@ -924,7 +923,6 @@
                     backBtn.style.display = 'none';
                     localStorage.removeItem(storageKey);
                     showSuccess('تم تسجيل الخروج بنجاح');
-                    analytics.logEvent('logout');
                 }).catch((error) => {
                     console.error('خطأ في تسجيل الخروج:', error);
                     showError('حدث خطأ أثناء تسجيل الخروج');
@@ -979,13 +977,6 @@
                 // التحقق من أن المعرف الجديد مختلف عن القديم
                 if (newUsername === oldUsername) {
                     showUsernameError('هذا المعرف هو نفس المعرف الحالي');
-                    return;
-                }
-                
-                // التحقق من توفر المعرف
-                const isAvailable = await checkUsernameAvailability(newUsername);
-                if (!isAvailable) {
-                    showUsernameError('هذا المعرف مستخدم من قبل، الرجاء اختيار معرف آخر');
                     return;
                 }
                 
@@ -1048,7 +1039,7 @@
             
             // تنسيق التاريخ
             function formatDate(date) {
-                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
                 return date.toLocaleDateString('ar-EG', options);
             }
             
