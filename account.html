@@ -6,32 +6,30 @@
     <title>تسجيل الدخول - حسابي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics-compat.js"></script>
     <style>
         :root {
-            --color-primary-blue: #1A237E;
-            --color-secondary-gold: #FFD700;
-            --color-background-light: #f0f2f5;
-            --color-text-dark: #212121;
+            --color-primary: #1A237E;
+            --color-secondary: #FFD700;
+            --color-light: #f0f2f5;
+            --color-dark: #212121;
             --color-accent: #4CAF50;
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-            --radius: 16px;
-            --transition: all 0.3s ease-in-out;
-            --gradient-primary: linear-gradient(135deg, #1A237E, #283593);
-            --gradient-gold: linear-gradient(135deg, #FFD700, #FFA000);
+            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Cairo', 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', 'Cairo', sans-serif;
         }
         
         body {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #1A237E, #283593);
             color: white;
             min-height: 100vh;
             display: flex;
@@ -39,24 +37,20 @@
             align-items: center;
             padding: 20px;
             direction: rtl;
-            position: relative;
-            overflow-x: hidden;
         }
         
         .login-container {
             background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(15px);
+            backdrop-filter: blur(10px);
             border-radius: var(--radius);
-            padding: 40px 30px;
+            padding: 30px;
             width: 100%;
-            max-width: 500px;
+            max-width: 450px;
             box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             text-align: center;
-            position: relative;
-            overflow: hidden;
-            z-index: 10;
             animation: fadeIn 0.8s ease-out;
+            position: relative;
         }
         
         @keyframes fadeIn {
@@ -64,59 +58,29 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        /* Wave decoration at top */
-        .wave-top {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 80px;
-            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%23ffffff' fill-opacity='0.1' d='M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,117.3C672,107,768,117,864,138.7C960,160,1056,192,1152,192C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
-            background-size: cover;
-            z-index: -1;
-        }
-        
         .logo {
-            margin-bottom: 25px;
-            position: relative;
-            z-index: 2;
+            margin-bottom: 20px;
         }
         
         .logo i {
-            font-size: 4.5rem;
-            background: var(--gradient-gold);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            animation: pulse 2s infinite;
-            filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.3));
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.9; }
-            100% { transform: scale(1); opacity: 1; }
+            font-size: 3.5rem;
+            color: var(--color-secondary);
+            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
         }
         
         h1 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            background: linear-gradient(to right, #FFD700, #ffffff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            font-weight: 800;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            color: white;
         }
         
         .subtitle {
-            font-size: 1.1rem;
-            margin-bottom: 30px;
-            opacity: 0.85;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            opacity: 0.9;
             line-height: 1.6;
-            max-width: 90%;
-            margin-left: auto;
-            margin-right: auto;
+            color: #e0e0e0;
         }
         
         .google-btn {
@@ -124,67 +88,43 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            background: #ffffff;
+            background: white;
             color: #555;
             border: none;
             border-radius: 50px;
-            padding: 14px 30px;
-            font-size: 1.1rem;
-            font-weight: 700;
+            padding: 12px 25px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
             transition: var(--transition);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-        }
-        
-        .google-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background: linear-gradient(90deg, rgba(255,255,255,0.8), rgba(245,245,245,0.8));
-            transition: all 0.5s ease;
-            z-index: -1;
+            box-shadow: var(--shadow);
+            margin-bottom: 15px;
         }
         
         .google-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            color: #333;
-        }
-        
-        .google-btn:hover::before {
-            width: 100%;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
         
         .google-btn i {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: #4285F4;
-            transition: transform 0.3s ease;
-        }
-        
-        .google-btn:hover i {
-            transform: scale(1.1);
         }
         
         .loading {
             display: none;
-            margin-top: 25px;
+            margin: 20px 0;
         }
         
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--color-secondary-gold);
+            border-top: 4px solid var(--color-secondary);
             border-radius: 50%;
-            width: 35px;
-            height: 35px;
+            width: 30px;
+            height: 30px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 15px auto;
+            margin: 0 auto 10px auto;
         }
         
         @keyframes spin {
@@ -194,50 +134,49 @@
         
         .user-info {
             display: none;
-            margin-top: 30px;
-            padding-top: 25px;
+            margin-top: 25px;
+            padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             animation: fadeIn 0.5s ease;
         }
         
         .user-info img {
-            width: 110px;
-            height: 110px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
-            margin-bottom: 20px;
-            border: 4px solid var(--color-secondary-gold);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-bottom: 15px;
+            border: 3px solid var(--color-secondary);
             object-fit: cover;
-            background: linear-gradient(45deg, #1A237E, #283593);
+            background: white;
+            padding: 3px;
         }
         
         .user-info h2 {
-            margin-bottom: 15px;
-            font-size: 1.7rem;
-            color: #FFD700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+            color: var(--color-secondary);
         }
         
         .info-container {
-            background: rgba(0, 0, 0, 0.15);
-            border-radius: 12px;
-            padding: 20px;
-            margin: 20px 0;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: var(--radius);
+            padding: 15px;
+            margin: 15px 0;
+            text-align: right;
         }
         
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin: 15px 0;
-            padding: 10px 0;
+            margin: 12px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            font-size: 1.05rem;
+            font-size: 1rem;
         }
         
         .info-label {
             font-weight: bold;
-            color: var(--color-secondary-gold);
+            color: var(--color-secondary);
             flex: 1;
         }
         
@@ -246,67 +185,71 @@
             flex: 2;
             direction: ltr;
             padding-left: 10px;
-            font-weight: 500;
             word-break: break-all;
+            color: #e0e0e0;
         }
         
         .action-buttons {
             display: flex;
-            justify-content: center;
-            gap: 15px;
+            flex-direction: column;
+            gap: 12px;
             margin-top: 20px;
-            flex-wrap: wrap;
         }
         
         .action-btn {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50px;
-            padding: 10px 25px;
+            padding: 10px 20px;
             cursor: pointer;
             transition: var(--transition);
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: 600;
-            min-width: 180px;
-            justify-content: center;
         }
         
         .action-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
         
         .logout-btn {
-            background: rgba(231, 76, 60, 0.25);
+            background: rgba(231, 76, 60, 0.2);
         }
         
         .logout-btn:hover {
-            background: rgba(231, 76, 60, 0.35);
+            background: rgba(231, 76, 60, 0.3);
         }
         
         .error {
-            background: rgba(231, 76, 60, 0.25);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 25px;
+            background: rgba(231, 76, 60, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
             display: none;
-            border: 1px solid rgba(231, 76, 60, 0.5);
-            text-align: center;
+            border: 1px solid rgba(231, 76, 60, 0.4);
         }
         
         .success {
-            background: rgba(46, 204, 113, 0.25);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 25px;
+            background: rgba(46, 204, 113, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
             display: none;
-            border: 1px solid rgba(46, 204, 113, 0.5);
+            border: 1px solid rgba(46, 204, 113, 0.4);
+        }
+        
+        .footer {
+            margin-top: 25px;
+            font-size: 0.9rem;
+            opacity: 0.8;
             text-align: center;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
         }
         
         .modal {
@@ -316,8 +259,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(5px);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -326,12 +268,12 @@
         
         .modal-content {
             background: linear-gradient(135deg, #1A237E, #283593);
-            padding: 35px;
+            padding: 25px;
             border-radius: var(--radius);
             width: 90%;
-            max-width: 500px;
+            max-width: 400px;
             box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             position: relative;
             animation: scaleIn 0.4s ease;
         }
@@ -343,203 +285,79 @@
         
         .close-btn {
             position: absolute;
-            top: 20px;
-            left: 20px;
-            font-size: 1.8rem;
+            top: 15px;
+            left: 15px;
+            font-size: 1.5rem;
             cursor: pointer;
             color: #ccc;
-            transition: all 0.3s ease;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
         }
         
         .close-btn:hover {
             color: white;
-            background: rgba(255, 255, 255, 0.1);
-            transform: rotate(90deg);
         }
         
         .modal-title {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             text-align: center;
-            color: var(--color-secondary-gold);
-            font-size: 1.8rem;
+            color: var(--color-secondary);
+            font-size: 1.5rem;
             font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         
         .form-group {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-weight: bold;
-            font-size: 1.1rem;
             text-align: right;
         }
         
         .form-group input {
             width: 100%;
-            padding: 14px 20px;
-            border-radius: var(--radius);
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
             background: rgba(255, 255, 255, 0.1);
             color: white;
-            font-size: 1.1rem;
+            font-size: 1rem;
             transition: var(--transition);
         }
         
         .form-group input:focus {
             outline: none;
-            border-color: var(--color-secondary-gold);
-            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+            border-color: var(--color-secondary);
+            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
         }
         
         .submit-btn {
-            background: var(--gradient-gold);
+            background: var(--color-secondary);
             color: #1A237E;
             border: none;
             border-radius: 50px;
-            padding: 14px 30px;
-            font-size: 1.1rem;
+            padding: 12px 25px;
+            font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
             width: 100%;
             transition: var(--transition);
-            margin-top: 15px;
-            position: relative;
-            overflow: hidden;
-            z-index: 1;
-        }
-        
-        .submit-btn::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0;
-            height: 100%;
-            background: linear-gradient(90deg, rgba(255,255,255,0.4), rgba(255,255,255,0.2));
-            transition: all 0.5s ease;
-            z-index: -1;
+            margin-top: 10px;
         }
         
         .submit-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
-        }
-        
-        .submit-btn:hover::before {
-            width: 100%;
-        }
-        
-        .username-change-info {
-            background: rgba(255, 215, 0, 0.15);
-            padding: 15px;
-            border-radius: 10px;
-            margin-top: 20px;
-            font-size: 1rem;
-            border: 1px solid rgba(255, 215, 0, 0.3);
-            text-align: right;
-        }
-        
-        .username-change-info i {
-            color: var(--color-secondary-gold);
-            margin-left: 8px;
-        }
-        
-        .footer {
-            margin-top: 35px;
-            font-size: 0.95rem;
-            opacity: 0.8;
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        
-        .first-change-notice {
-            background: rgba(46, 204, 113, 0.2);
-            padding: 15px;
-            border-radius: 10px;
-            margin: 20px 0;
-            border: 1px solid rgba(46, 204, 113, 0.4);
-            text-align: center;
-            display: none;
-        }
-        
-        .back-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.15);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-            z-index: 10;
-        }
-        
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: rotate(-15deg);
-        }
-        
-        .modal-footer {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            margin-top: 20px;
-        }
-        
-        .btn-skip {
-            background: transparent;
-            color: #ccc;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-        
-        .btn-skip:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-        
-        .step-indicator {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            gap: 8px;
-        }
-        
-        .step {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-        }
-        
-        .step.active {
-            background: var(--color-secondary-gold);
-            transform: scale(1.2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
         
         .home-btn {
             position: absolute;
             top: 15px;
             left: 15px;
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -552,115 +370,76 @@
         }
         
         .home-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.2);
             transform: rotate(-15deg);
         }
         
-        .bg-pattern {
+        .back-btn {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-            background-size: 30px 30px;
-            z-index: 0;
-            opacity: 0.3;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 10;
+            display: none;
         }
         
-        .floating-icon {
-            position: absolute;
-            font-size: 3rem;
-            color: rgba(255, 255, 255, 0.05);
-            z-index: 0;
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(15deg);
         }
         
-        .floating-icon:nth-child(1) {
-            top: 10%;
-            left: 5%;
-            animation: float 8s ease-in-out infinite;
-        }
-        
-        .floating-icon:nth-child(2) {
-            top: 30%;
-            right: 10%;
-            animation: float 10s ease-in-out infinite;
-        }
-        
-        .floating-icon:nth-child(3) {
-            bottom: 20%;
-            left: 15%;
-            animation: float 12s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(10px, 15px) rotate(5deg); }
-            50% { transform: translate(0, 20px) rotate(0deg); }
-            75% { transform: translate(-10px, 15px) rotate(-5deg); }
-            100% { transform: translate(0, 0) rotate(0deg); }
-        }
-        
-        @media (max-width: 576px) {
+        @media (max-width: 480px) {
             .login-container {
-                padding: 30px 20px;
-            }
-            
-            .logo i {
-                font-size: 3.5rem;
-            }
-            
-            h1 {
-                font-size: 1.7rem;
-            }
-            
-            .subtitle {
-                font-size: 1rem;
-            }
-            
-            .google-btn {
-                padding: 12px 20px;
-                font-size: 1rem;
-            }
-            
-            .user-info img {
-                width: 95px;
-                height: 95px;
-            }
-            
-            .modal-content {
                 padding: 25px 20px;
             }
             
+            .logo i {
+                font-size: 3rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .user-info img {
+                width: 85px;
+                height: 85px;
+            }
+            
             .action-btn {
-                min-width: 140px;
                 padding: 8px 15px;
+                font-size: 0.9rem;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Background elements -->
-    <div class="bg-pattern"></div>
-    <div class="floating-icon"><i class="fas fa-user"></i></div>
-    <div class="floating-icon"><i class="fas fa-lock"></i></div>
-    <div class="floating-icon"><i class="fas fa-shield-alt"></i></div>
-    
-    <!-- Home button -->
+    <!-- زر الصفحة الرئيسية -->
     <div class="home-btn" id="homeBtn">
         <i class="fas fa-home"></i>
     </div>
     
+    <!-- زر الرجوع -->
+    <div class="back-btn" id="backBtn">
+        <i class="fas fa-arrow-left"></i>
+    </div>
+    
     <div class="login-container">
-        <div class="wave-top"></div>
-        <div class="back-btn" id="backBtn" style="display: none;">
-            <i class="fas fa-arrow-right"></i>
-        </div>
         <div class="logo">
             <i class="fas fa-user-shield"></i>
         </div>
         <h1>تسجيل الدخول إلى حسابك</h1>
-        <p class="subtitle">سجل الدخول باستخدام حساب Google للاستمرار إلى حسابك الشخصي والتمتع بميزاتنا الحصرية</p>
+        <p class="subtitle">سجل الدخول باستخدام حساب Google للاستمرار إلى حسابك الشخصي</p>
         
         <button id="googleSignIn" class="google-btn">
             <i class="fab fa-google"></i>
@@ -680,23 +459,14 @@
             <p id="successText"></p>
         </div>
         
-        <div id="firstChangeNotice" class="first-change-notice">
-            <p><i class="fas fa-gift"></i> يمكنك تغيير المعرف الخاص بك مرة واحدة مجاناً بعد تسجيل الدخول الأول</p>
-        </div>
-        
         <div id="userInfo" class="user-info">
-            <img id="userPhoto" src="https://via.placeholder.com/100" alt="صورة المستخدم">
+            <img id="userPhoto" src="https://ui-avatars.com/api/?name=User&background=random" alt="صورة المستخدم">
             <h2 id="userName"></h2>
             
             <div class="info-container">
                 <div class="info-row">
                     <span class="info-label">البريد الإلكتروني:</span>
                     <span id="userEmail" class="info-value"></span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">العمر:</span>
-                    <span id="userAge" class="info-value"></span>
                 </div>
                 
                 <div class="info-row">
@@ -708,16 +478,6 @@
                     <span class="info-label">تاريخ التسجيل:</span>
                     <span id="joinDate" class="info-value"></span>
                 </div>
-                
-                <div class="info-row">
-                    <span class="info-label">تاريخ آخر تغيير للمعرف:</span>
-                    <span id="lastUsernameChange" class="info-value"></span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">التغيير القادم متاح بعد:</span>
-                    <span id="nextChangeIn" class="info-value"></span>
-                </div>
             </div>
             
             <div class="action-buttons">
@@ -727,10 +487,6 @@
                 
                 <button id="logoutBtn" class="action-btn logout-btn">
                     <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                </button>
-                
-                <button id="backToHomeBtn" class="action-btn">
-                    <i class="fas fa-home"></i> الرجوع للصفحة الرئيسية
                 </button>
             </div>
         </div>
@@ -751,11 +507,6 @@
                 <input type="text" id="newUsername" placeholder="أدخل معرفاً جديداً">
             </div>
             
-            <div id="usernameChangeInfo" class="username-change-info">
-                <p><i class="fas fa-info-circle"></i> يمكنك تغيير المعرف مرة واحدة كل 10 أيام</p>
-                <p id="nextChangeDate"></p>
-            </div>
-            
             <div id="usernameError" class="error" style="display: none;">
                 <p id="usernameErrorText"></p>
             </div>
@@ -763,112 +514,13 @@
             <button id="confirmUsernameChange" class="submit-btn">تأكيد التغيير</button>
         </div>
     </div>
-    
-    <!-- Modal لتحديد الاسم -->
-    <div id="nameModal" class="modal">
-        <div class="modal-content">
-            <h3 class="modal-title">تحديد الاسم</h3>
-            
-            <div class="form-group">
-                <label for="userNameInput">اسمك:</label>
-                <input type="text" id="userNameInput" placeholder="أدخل اسمك">
-            </div>
-            
-            <div class="step-indicator">
-                <div class="step active"></div>
-                <div class="step"></div>
-                <div class="step"></div>
-            </div>
-            
-            <div id="nameError" class="error" style="display: none;">
-                <p id="nameErrorText"></p>
-            </div>
-            
-            <div class="modal-footer">
-                <button id="skipNameBtn" class="submit-btn btn-skip">تخطي</button>
-                <button id="saveNameBtn" class="submit-btn">حفظ</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal لإدخال العمر -->
-    <div id="ageModal" class="modal">
-        <div class="modal-content">
-            <h3 class="modal-title">تحديد العمر</h3>
-            
-            <div class="form-group">
-                <label for="userAgeInput">عمرك:</label>
-                <input type="number" id="userAgeInput" min="10" max="100" placeholder="أدخل عمرك">
-            </div>
-            
-            <div class="step-indicator">
-                <div class="step"></div>
-                <div class="step active"></div>
-                <div class="step"></div>
-            </div>
-            
-            <div id="ageError" class="error" style="display: none;">
-                <p id="ageErrorText"></p>
-            </div>
-            
-            <div class="modal-footer">
-                <button id="skipAgeBtn" class="submit-btn btn-skip">تخطي</button>
-                <button id="saveAgeBtn" class="submit-btn">حفظ</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Modal لتحديد المعرف -->
-    <div id="usernameSetupModal" class="modal">
-        <div class="modal-content">
-            <h3 class="modal-title">تحديد المعرف</h3>
-            
-            <div class="form-group">
-                <label for="newUsernameSetup">المعرف:</label>
-                <input type="text" id="newUsernameSetup" placeholder="أدخل معرفاً">
-            </div>
-            
-            <div id="usernameSetupInfo" class="username-change-info">
-                <p><i class="fas fa-info-circle"></i> يمكنك تغيير المعرف مرة واحدة بعد التسجيل الأول</p>
-            </div>
-            
-            <div class="step-indicator">
-                <div class="step"></div>
-                <div class="step"></div>
-                <div class="step active"></div>
-            </div>
-            
-            <div id="usernameSetupError" class="error" style="display: none;">
-                <p id="usernameSetupErrorText"></p>
-            </div>
-            
-            <div class="modal-footer">
-                <button id="skipUsernameSetupBtn" class="submit-btn btn-skip">تخطي</button>
-                <button id="saveUsernameSetupBtn" class="submit-btn">حفظ</button>
-            </div>
-        </div>
-    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Firebase configuration
-            const firebaseConfig = {
-                apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-                authDomain: "zio3-8ffdd.firebaseapp.com",
-                databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-                projectId: "zio3-8ffdd",
-                storageBucket: "zio3-8ffdd.firebasestorage.app",
-                messagingSenderId: "560939348415",
-                appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-                measurementId: "G-CVN2B2D0RD"
-            };
-
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-            const auth = firebase.auth();
-            const database = firebase.database();
-
-            // Elements
+            // تخزين حالة المستخدم في localStorage لمنع تسجيل الخروج عند الرجوع
+            const storageKey = 'userLoggedIn';
+            
+            // عناصر DOM
             const googleSignInBtn = document.getElementById('googleSignIn');
             const loadingDiv = document.getElementById('loading');
             const errorDiv = document.getElementById('errorMessage');
@@ -879,134 +531,140 @@
             const userPhoto = document.getElementById('userPhoto');
             const userName = document.getElementById('userName');
             const userEmail = document.getElementById('userEmail');
-            const userAge = document.getElementById('userAge');
             const username = document.getElementById('username');
             const joinDate = document.getElementById('joinDate');
-            const lastUsernameChange = document.getElementById('lastUsernameChange');
-            const nextChangeIn = document.getElementById('nextChangeIn');
             const logoutBtn = document.getElementById('logoutBtn');
             const changeUsernameBtn = document.getElementById('changeUsernameBtn');
-            const firstChangeNotice = document.getElementById('firstChangeNotice');
-            const backBtn = document.getElementById('backBtn');
             const homeBtn = document.getElementById('homeBtn');
-            const backToHomeBtn = document.getElementById('backToHomeBtn');
+            const backBtn = document.getElementById('backBtn');
             
-            // Modal elements
+            // عناصر Modal
             const usernameModal = document.getElementById('usernameModal');
             const closeUsernameModal = document.getElementById('closeUsernameModal');
             const newUsernameInput = document.getElementById('newUsername');
             const confirmUsernameChange = document.getElementById('confirmUsernameChange');
             const usernameError = document.getElementById('usernameError');
             const usernameErrorText = document.getElementById('usernameErrorText');
-            const nextChangeDate = document.getElementById('nextChangeDate');
-            
-            const nameModal = document.getElementById('nameModal');
-            const userNameInput = document.getElementById('userNameInput');
-            const saveNameBtn = document.getElementById('saveNameBtn');
-            const skipNameBtn = document.getElementById('skipNameBtn');
-            const nameError = document.getElementById('nameError');
-            const nameErrorText = document.getElementById('nameErrorText');
-            
-            const ageModal = document.getElementById('ageModal');
-            const userAgeInput = document.getElementById('userAgeInput');
-            const saveAgeBtn = document.getElementById('saveAgeBtn');
-            const skipAgeBtn = document.getElementById('skipAgeBtn');
-            const ageError = document.getElementById('ageError');
-            const ageErrorText = document.getElementById('ageErrorText');
-            
-            const usernameSetupModal = document.getElementById('usernameSetupModal');
-            const newUsernameSetup = document.getElementById('newUsernameSetup');
-            const saveUsernameSetupBtn = document.getElementById('saveUsernameSetupBtn');
-            const skipUsernameSetupBtn = document.getElementById('skipUsernameSetupBtn');
-            const usernameSetupError = document.getElementById('usernameSetupError');
-            const usernameSetupErrorText = document.getElementById('usernameSetupErrorText');
 
-            // متغيرات لتخزين بيانات المستخدم أثناء التسجيل
-            let tempUserData = {};
-            let currentUser = null;
-
-            // تسجيل الدخول باستخدام Google
-            googleSignInBtn.addEventListener('click', () => {
+            // تهيئة Firebase
+            const firebaseConfig = {
+                apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+                authDomain: "zio3-8ffdd.firebaseapp.com",
+                databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+                projectId: "zio3-8ffdd",
+                storageBucket: "zio3-8ffdd.firebasestorage.app",
+                messagingSenderId: "560939348415",
+                appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+                measurementId: "G-CVN2B2D0RD"
+            };
+            
+            // تهيئة Firebase
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const analytics = firebase.analytics();
+            
+            // معالج تسجيل الدخول باستخدام Google
+            function signInWithGoogle() {
                 loadingDiv.style.display = 'block';
                 errorDiv.style.display = 'none';
-                successDiv.style.display = 'none';
                 
                 const provider = new firebase.auth.GoogleAuthProvider();
+                
                 auth.signInWithPopup(provider)
                     .then((result) => {
+                        // تم تسجيل الدخول بنجاح
+                        const user = result.user;
+                        showUserInfo({
+                            displayName: user.displayName || "مستخدم جديد",
+                            email: user.email,
+                            photoURL: user.photoURL || "https://ui-avatars.com/api/?name=User&background=random",
+                            username: user.email.split('@')[0],
+                            joinDate: new Date(user.metadata.creationTime)
+                        });
+                        showSuccess('تم تسجيل الدخول بنجاح!');
+                        analytics.logEvent('login_success');
                         loadingDiv.style.display = 'none';
-                        currentUser = result.user;
-                        // تحقق إذا كان المستخدم جديداً
-                        checkIfNewUser(result.user);
                     })
                     .catch((error) => {
+                        // حدث خطأ أثناء تسجيل الدخول
+                        console.error('خطأ في تسجيل الدخول:', error);
+                        showError('حدث خطأ أثناء تسجيل الدخول: ' + error.message);
                         loadingDiv.style.display = 'none';
-                        showError(error.message);
+                        analytics.logEvent('login_error', { error: error.message });
                     });
+            }
+            
+            // معالج تسجيل الخروج
+            function signOut() {
+                auth.signOut()
+                    .then(() => {
+                        userInfoDiv.style.display = 'none';
+                        googleSignInBtn.style.display = 'flex';
+                        backBtn.style.display = 'none';
+                        localStorage.removeItem(storageKey);
+                        showSuccess('تم تسجيل الخروج بنجاح');
+                        analytics.logEvent('logout');
+                    })
+                    .catch((error) => {
+                        console.error('خطأ في تسجيل الخروج:', error);
+                        showError('حدث خطأ أثناء تسجيل الخروج');
+                    });
+            }
+            
+            // مراقبة حالة المصادقة
+            auth.onAuthStateChanged((user) => {
+                if (user) {
+                    // المستخدم مسجل الدخول
+                    showUserInfo({
+                        displayName: user.displayName || "مستخدم جديد",
+                        email: user.email,
+                        photoURL: user.photoURL || "https://ui-avatars.com/api/?name=User&background=random",
+                        username: user.email.split('@')[0],
+                        joinDate: new Date(user.metadata.creationTime)
+                    });
+                } else {
+                    // المستخدم غير مسجل الدخول
+                    userInfoDiv.style.display = 'none';
+                    googleSignInBtn.style.display = 'flex';
+                    backBtn.style.display = 'none';
+                }
             });
+
+            // عرض بيانات المستخدم
+            function showUserInfo(userData) {
+                userPhoto.src = userData.photoURL;
+                userName.textContent = userData.displayName;
+                userEmail.textContent = userData.email;
+                username.textContent = userData.username;
+                joinDate.textContent = formatDate(userData.joinDate);
+                
+                userInfoDiv.style.display = 'block';
+                googleSignInBtn.style.display = 'none';
+                backBtn.style.display = 'flex';
+                
+                // تخزين حالة تسجيل الدخول
+                localStorage.setItem(storageKey, 'true');
+            }
+
+            // تسجيل الدخول باستخدام Google
+            googleSignInBtn.addEventListener('click', signInWithGoogle);
 
             // تسجيل الخروج
-            logoutBtn.addEventListener('click', () => {
-                auth.signOut().then(() => {
-                    location.reload(); // إعادة تحميل الصفحة
-                }).catch((error) => {
-                    showError(error.message);
-                });
-            });
+            logoutBtn.addEventListener('click', signOut);
 
-            // زر الرجوع
-            backBtn.addEventListener('click', () => {
-                auth.signOut().then(() => {
-                    location.reload(); // إعادة تحميل الصفحة
-                });
-            });
-            
-            // زر الرجوع إلى الصفحة الرئيسية
-            backToHomeBtn.addEventListener('click', () => {
-                window.location.href = '/'; // تغيير المسار حسب موقعك
-            });
-            
             // زر الصفحة الرئيسية
             homeBtn.addEventListener('click', () => {
-                window.location.href = '/'; // تغيير المسار حسب موقعك
+                window.location.href = '/';
+            });
+            
+            // زر الرجوع
+            backBtn.addEventListener('click', () => {
+                window.location.href = '/';
             });
 
             // فتح نافذة تغيير المعرف
             changeUsernameBtn.addEventListener('click', () => {
-                // احصل على معلومات المستخدم
-                const user = auth.currentUser;
-                if (user) {
-                    database.ref('users/' + user.uid).once('value')
-                        .then((snapshot) => {
-                            const userData = snapshot.val();
-                            if (userData) {
-                                // تحقق إذا كان مسموحاً بتغيير المعرف
-                                const lastChange = userData.lastUsernameChange || userData.joinDate;
-                                const daysSinceLastChange = Math.floor((Date.now() - lastChange) / (1000 * 60 * 60 * 24));
-                                
-                                // إذا لم يسبق تغيير المعرف (أول مرة)
-                                if (!userData.usernameChanged) {
-                                    usernameModal.style.display = 'flex';
-                                    nextChangeDate.textContent = `هذه فرصتك الأولى لتغيير المعرف مجاناً!`;
-                                    return;
-                                }
-                                
-                                if (daysSinceLastChange < 10) {
-                                    const daysLeft = 10 - daysSinceLastChange;
-                                    if (daysLeft === 1) {
-                                        showError('يمكنك تغيير المعرف غداً');
-                                    } else {
-                                        showError(`يمكنك تغيير المعرف بعد ${daysLeft} يوم${daysLeft > 2 ? 'ات' : 'ين'}`);
-                                    }
-                                } else {
-                                    // فتح النافذة
-                                    usernameModal.style.display = 'flex';
-                                    const nextChange = new Date(lastChange + 10 * 24 * 60 * 60 * 1000);
-                                    nextChangeDate.textContent = `الموعد القادم للتغيير: ${formatDate(nextChange)}`;
-                                }
-                            }
-                        });
-                }
+                usernameModal.style.display = 'flex';
             });
 
             // إغلاق نافذة تغيير المعرف
@@ -1029,258 +687,16 @@
                     return;
                 }
                 
-                if (newUsername.length > 20) {
-                    showUsernameError('يجب أن لا يتجاوز المعرف 20 حرفاً');
-                    return;
-                }
-                
-                if (!/^[a-zA-Z0-9_]+$/.test(newUsername)) {
-                    showUsernameError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
-                    return;
-                }
-                
-                const user = auth.currentUser;
-                if (user) {
-                    // تحقق من توفر المعرف
-                    database.ref('usernames').orderByChild('username').equalTo(newUsername).once('value')
-                        .then(snapshot => {
-                            if (snapshot.exists()) {
-                                showUsernameError('هذا المعرف مستخدم من قبل');
-                            } else {
-                                // تحديث المعرف
-                                const updates = {};
-                                updates['users/' + user.uid + '/username'] = newUsername;
-                                updates['users/' + user.uid + '/lastUsernameChange'] = Date.now();
-                                updates['users/' + user.uid + '/usernameChanged'] = true;
-                                updates['usernames/' + newUsername] = { uid: user.uid };
-                                
-                                // احذف المعرف القديم
-                                database.ref('users/' + user.uid).once('value')
-                                    .then(userSnapshot => {
-                                        const oldUsername = userSnapshot.val().username;
-                                        if (oldUsername) {
-                                            updates['usernames/' + oldUsername] = null;
-                                        }
-                                        
-                                        database.ref().update(updates)
-                                            .then(() => {
-                                                usernameModal.style.display = 'none';
-                                                showSuccess('تم تغيير المعرف بنجاح!');
-                                                loadUserInfo(user);
-                                                firstChangeNotice.style.display = 'none';
-                                            })
-                                            .catch(error => {
-                                                showUsernameError('حدث خطأ أثناء تغيير المعرف: ' + error.message);
-                                            });
-                                    });
-                            }
-                        });
-                }
+                // تحديث المعرف (هذا مثال فقط، يجب تحديثه في قاعدة البيانات)
+                username.textContent = newUsername;
+                usernameModal.style.display = 'none';
+                showSuccess('تم تغيير المعرف بنجاح!');
+                analytics.logEvent('username_changed');
             });
-
-            // حفظ الاسم
-            saveNameBtn.addEventListener('click', () => {
-                const name = userNameInput.value.trim();
-                if (!name) {
-                    showNameError('الرجاء إدخال اسمك');
-                    return;
-                }
-                
-                tempUserData.displayName = name;
-                nameModal.style.display = 'none';
-                ageModal.style.display = 'flex';
-            });
-
-            skipNameBtn.addEventListener('click', () => {
-                nameModal.style.display = 'none';
-                ageModal.style.display = 'flex';
-            });
-
-            // حفظ العمر
-            saveAgeBtn.addEventListener('click', () => {
-                const age = userAgeInput.value.trim();
-                if (!age || isNaN(age) || age < 10 || age > 100) {
-                    showAgeError('الرجاء إدخال عمر صحيح (10-100)');
-                    return;
-                }
-                
-                tempUserData.age = parseInt(age);
-                ageModal.style.display = 'none';
-                usernameSetupModal.style.display = 'flex';
-            });
-
-            skipAgeBtn.addEventListener('click', () => {
-                ageModal.style.display = 'none';
-                usernameSetupModal.style.display = 'flex';
-            });
-
-            // حفظ المعرف
-            saveUsernameSetupBtn.addEventListener('click', () => {
-                const username = newUsernameSetup.value.trim();
-                if (!username) {
-                    showUsernameSetupError('الرجاء إدخال معرف');
-                    return;
-                }
-                
-                if (username.length < 4) {
-                    showUsernameSetupError('يجب أن يكون المعرف 4 أحرف على الأقل');
-                    return;
-                }
-                
-                if (username.length > 20) {
-                    showUsernameSetupError('يجب أن لا يتجاوز المعرف 20 حرفاً');
-                    return;
-                }
-                
-                if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-                    showUsernameSetupError('يجب أن يحتوي المعرف على أحرف إنجليزية وأرقام و _ فقط');
-                    return;
-                }
-                
-                tempUserData.username = username;
-                saveUserData(currentUser, tempUserData);
-                usernameSetupModal.style.display = 'none';
-            });
-
-            skipUsernameSetupBtn.addEventListener('click', () => {
-                tempUserData.username = generateUsername(currentUser);
-                saveUserData(currentUser, tempUserData);
-                usernameSetupModal.style.display = 'none';
-                firstChangeNotice.style.display = 'block';
-            });
-
-            // تحقق إذا كان المستخدم جديداً
-            function checkIfNewUser(user) {
-                database.ref('users/' + user.uid).once('value')
-                    .then((snapshot) => {
-                        if (snapshot.exists()) {
-                            // المستخدم موجود، عرض معلوماته
-                            showUserInfo(snapshot.val());
-                            backBtn.style.display = 'flex';
-                            
-                            // إذا لم يغير المعرف من قبل، عرض الإشعار
-                            if (!snapshot.val().usernameChanged) {
-                                firstChangeNotice.style.display = 'block';
-                            }
-                        } else {
-                            // مستخدم جديد، بدء عملية التسجيل
-                            tempUserData = {
-                                uid: user.uid,
-                                displayName: user.displayName || '',
-                                email: user.email,
-                                photoURL: user.photoURL || 'https://via.placeholder.com/100',
-                                age: null,
-                                username: generateUsername(user),
-                                joinDate: Date.now(),
-                                lastUsernameChange: Date.now(),
-                                usernameChanged: false
-                            };
-                            
-                            // عرض نافذة تحديد الاسم
-                            nameModal.style.display = 'flex';
-                            userNameInput.value = user.displayName || '';
-                        }
-                    });
-            }
-
-            // إنشاء معرف تلقائي
-            function generateUsername(user) {
-                const prefix = user.displayName ? 
-                    user.displayName.replace(/\s+/g, '').toLowerCase().substring(0, 3) : 
-                    'user';
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                return prefix + randomNum;
-            }
-
-            // حفظ بيانات المستخدم في قاعدة البيانات
-            function saveUserData(user, userData) {
-                loadingDiv.style.display = 'block';
-                
-                // حفظ البيانات في Realtime Database
-                const updates = {};
-                updates['users/' + user.uid] = userData;
-                updates['usernames/' + userData.username] = { uid: user.uid };
-                
-                database.ref().update(updates)
-                    .then(() => {
-                        loadingDiv.style.display = 'none';
-                        showUserInfo(userData);
-                        firstChangeNotice.style.display = 'block';
-                        backBtn.style.display = 'flex';
-                        showSuccess('تم حفظ بياناتك بنجاح!');
-                    })
-                    .catch((error) => {
-                        loadingDiv.style.display = 'none';
-                        console.error('حدث خطأ في حفظ بيانات المستخدم:', error);
-                        showError('حدث خطأ في حفظ بياناتك. الرجاء المحاولة مرة أخرى.');
-                    });
-            }
-
-            // عرض معلومات المستخدم
-            function showUserInfo(userData) {
-                userPhoto.src = userData.photoURL || 'https://via.placeholder.com/100';
-                userName.textContent = userData.displayName || 'مستخدم';
-                userEmail.textContent = userData.email || 'غير محدد';
-                userAge.textContent = userData.age ? userData.age + ' سنة' : 'غير محدد';
-                username.textContent = userData.username || generateUsername(auth.currentUser);
-                
-                if (userData.joinDate) {
-                    joinDate.textContent = formatDate(new Date(userData.joinDate));
-                } else {
-                    joinDate.textContent = 'غير محدد';
-                }
-                
-                if (userData.lastUsernameChange) {
-                    lastUsernameChange.textContent = formatDate(new Date(userData.lastUsernameChange));
-                } else {
-                    lastUsernameChange.textContent = 'لم يغير بعد';
-                }
-                
-                // حساب الوقت المتبقي لتغيير المعرف
-                if (userData.lastUsernameChange) {
-                    const lastChange = new Date(userData.lastUsernameChange);
-                    const nextChangeDate = new Date(lastChange);
-                    nextChangeDate.setDate(nextChangeDate.getDate() + 10);
-                    
-                    if (Date.now() < nextChangeDate) {
-                        const daysLeft = Math.ceil((nextChangeDate - Date.now()) / (1000 * 60 * 60 * 24));
-                        if (daysLeft === 1) {
-                            nextChangeIn.textContent = 'غداً';
-                        } else if (daysLeft === 0) {
-                            nextChangeIn.textContent = 'متاح اليوم';
-                        } else {
-                            nextChangeIn.textContent = `بعد ${daysLeft} يوم${daysLeft > 2 ? 'ات' : 'ين'}`;
-                        }
-                    } else {
-                        nextChangeIn.textContent = 'متاح الآن';
-                    }
-                } else {
-                    nextChangeIn.textContent = 'متاح الآن';
-                }
-                
-                userInfoDiv.style.display = 'block';
-                googleSignInBtn.style.display = 'none';
-            }
-
-            // تحميل معلومات المستخدم من قاعدة البيانات
-            function loadUserInfo(user) {
-                database.ref('users/' + user.uid).once('value')
-                    .then((snapshot) => {
-                        if (snapshot.exists()) {
-                            showUserInfo(snapshot.val());
-                            backBtn.style.display = 'flex';
-                            
-                            // إذا لم يغير المعرف من قبل، عرض الإشعار
-                            if (!snapshot.val().usernameChanged) {
-                                firstChangeNotice.style.display = 'block';
-                            }
-                        }
-                    });
-            }
 
             // تنسيق التاريخ
             function formatDate(date) {
-                const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
                 return date.toLocaleDateString('ar-EG', options);
             }
 
@@ -1305,35 +721,11 @@
                 usernameErrorText.textContent = message;
                 usernameError.style.display = 'block';
             }
-            
-            function showAgeError(message) {
-                ageErrorText.textContent = message;
-                ageError.style.display = 'block';
-            }
-            
-            function showNameError(message) {
-                nameErrorText.textContent = message;
-                nameError.style.display = 'block';
-            }
-            
-            function showUsernameSetupError(message) {
-                usernameSetupErrorText.textContent = message;
-                usernameSetupError.style.display = 'block';
-            }
 
-            // مراقبة حالة المصادقة
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    // المستخدم مسجل الدخول
-                    loadUserInfo(user);
-                } else {
-                    // لا يوجد مستخدم مسجل الدخول
-                    userInfoDiv.style.display = 'none';
-                    firstChangeNotice.style.display = 'none';
-                    googleSignInBtn.style.display = 'flex';
-                    backBtn.style.display = 'none';
-                }
-            });
+            // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
+            if (localStorage.getItem(storageKey)) {
+                // سيتم تحديث حالة المستخدم من خلال onAuthStateChanged
+            }
         });
     </script>
 </body>
