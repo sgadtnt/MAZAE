@@ -27,7 +27,7 @@
             --border: var(--color-border-medium-blue);
             --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
             --radius: 12px;
-            --transition: all 0.3s ease-in-out; /* زيادة مدة الانتقال */
+            --transition: all 0.3s ease-in-out;
             font-size: 14px;
         }
         
@@ -51,7 +51,6 @@
             overflow: hidden;
         }
 
-        /* App Header */
         .app-header {
             background: linear-gradient(135deg, var(--color-primary-dark-blue), #283593);
             color: white;
@@ -105,7 +104,6 @@
             font-size: 0.8rem;
         }
         
-        /* Admin Container */
         .admin-container {
             display: flex;
             min-height: calc(100vh - 65px);
@@ -113,7 +111,6 @@
             flex: 1;
         }
 
-        /* Sidebar Styles */
         .sidebar {
             width: 320px;
             background: linear-gradient(to bottom, #ffffff, #f8f9fa);
@@ -346,7 +343,6 @@
             color: #5c6770;
         }
 
-        /* Main Content Styles */
         .main-content {
             flex-grow: 1;
             display: flex;
@@ -357,7 +353,6 @@
             width: calc(100% - 320px);
         }
 
-        /* تثبيت شريط الإجراءات في الأعلى عند التمرير */
         .conversation-header-bar {
             padding: 15px 25px;
             background-color: white;
@@ -367,8 +362,8 @@
             justify-content: space-between;
             box-shadow: 0 3px 10px rgba(0,0,0,0.07);
             position: sticky;
-            top: 65px; /* نفس ارتفاع الهيدر */
-            z-index: 500; /* فوق المحتوى */
+            top: 65px;
+            z-index: 500;
         }
 
         .conversation-user-info {
@@ -429,7 +424,6 @@
             box-shadow: 0 0 6px var(--error);
         }
 
-
         .conversation-actions {
             display: flex;
             gap: 12px;
@@ -477,7 +471,6 @@
             color: #9b59b6;
         }
 
-        /* Messages Area */
         .messages-area {
             flex-grow: 1; 
             min-height: 0; 
@@ -556,7 +549,7 @@
             padding: 14px 18px;
             border-radius: 20px;
             position: relative;
-            animation: fadeIn 0.4s ease-out; /* زيادة مدة التحريك */
+            animation: fadeIn 0.4s ease-out;
             box-shadow: 0 3px 8px rgba(0,0,0,0.07);
             transition: var(--transition);
             transform-origin: bottom;
@@ -612,7 +605,6 @@
             text-align: right;
         }
         
-        /* Delete message button - التعديلات الجديدة */
         .message {
             position: relative;
         }
@@ -657,14 +649,13 @@
             display: none;
         }
 
-        /* الرسائل الجديدة */
         @keyframes slideIn {
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
         .new-message {
-            animation: slideIn 0.4s ease-out; /* زيادة مدة التحريك */
+            animation: slideIn 0.4s ease-out;
         }
         
         .message.pending {
@@ -679,7 +670,7 @@
             text-align: center;
             font-style: italic;
             transition: opacity 0.3s;
-            animation: pulse-opacity 1.5s infinite; /* تحريك النبض للمؤشر فقط */
+            animation: pulse-opacity 1.5s infinite;
         }
 
         @keyframes pulse-opacity {
@@ -688,7 +679,6 @@
             100% { opacity: 0.5; }
         }
 
-        /* Confirmation Modal */
         #confirmationModal {
             display: none;
             position: fixed;
@@ -728,7 +718,6 @@
             line-height: 1.5;
         }
         
-        /* إضافة معاينة الرسالة المحذوفة */
         .confirmation-content .message-preview {
             background: #f5f7fa;
             border-radius: 12px;
@@ -781,7 +770,6 @@
             box-shadow: 0 5px 15px rgba(127, 140, 141, 0.3);
         }
 
-        /* Message Input Area */
         .message-input-area {
             display: flex;
             padding: 18px;
@@ -842,7 +830,27 @@
             box-shadow: none;
         }
 
-        /* Responsive Design */
+        /* Blocked user styles */
+        .blocked-indicator {
+            background: #ffebee;
+            color: #c62828;
+            border-radius: 20px;
+            padding: 8px 15px;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 10px;
+            border: 1px solid #ffcdd2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(198, 40, 40, 0.1);
+        }
+        
+        .blocked-indicator i {
+            font-size: 1.2rem;
+        }
+
         @media (max-width: 992px) {
             .sidebar {
                 width: 280px;
@@ -956,7 +964,6 @@
                 width: auto;
             }
             
-            /* إخفاء زر المحادثات في الشاشات الكبيرة */
             .mobile-toggle {
                 display: none !important;
             }
@@ -1006,7 +1013,6 @@
             }
         }
         
-        /* New styles for action buttons */
         .action-buttons-container {
             display: flex;
             gap: 10px;
@@ -1049,7 +1055,6 @@
             background: linear-gradient(135deg, #8e44ad, #7d3c98);
         }
         
-        /* Loading indicator */
         .loading-indicator {
             display: flex;
             justify-content: center;
@@ -1115,7 +1120,6 @@
             color: var(--dark);
         }
         
-        /* خيارات البحث المتقدمة */
         .search-options {
             padding: 15px;
             background-color: #f8fafc;
@@ -1141,7 +1145,6 @@
             margin: 0;
         }
         
-        /* رسائل البحث */
         .search-results-info {
             padding: 12px 15px;
             background: #e3f2fd;
@@ -1152,7 +1155,6 @@
             font-weight: 600;
         }
         
-        /* سجل الرسائل المحذوفة */
         .deleted-messages-toggle {
             text-align: center;
             margin: 15px 0;
@@ -1206,7 +1208,6 @@
             border-top: 1px dashed #ffdddd;
         }
         
-        /* زر مسح السجل */
         .clear-log-button {
             background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
             border: 1px solid #dde2e8;
@@ -1229,7 +1230,6 @@
             box-shadow: 0 4px 8px rgba(231, 76, 60, 0.15);
         }
         
-        /* تحسينات إضافية */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
@@ -1252,7 +1252,6 @@
     </style>
 </head>
 <body>
-    <!-- App Header -->
     <div class="app-header">
         <button id="toggleSidebar">
             <i class="fas fa-bars"></i>
@@ -1267,9 +1266,7 @@
         </div>
     </div>
     
-    <!-- Admin Dashboard -->
     <div class="admin-container">
-        <!-- Sidebar with conversations list -->
         <div class="sidebar" id="conversationsSidebar">
             <div class="sidebar-header">
                 <h2>مركز الدعم الفني</h2>
@@ -1281,7 +1278,6 @@
                 <input type="text" id="searchInput" class="search-input" placeholder="ابحث في المحادثات...">
             </div>
             
-            <!-- خيارات البحث المتقدمة -->
             <div class="search-options">
                 <div class="search-option">
                     <input type="checkbox" id="searchByName" checked>
@@ -1305,9 +1301,7 @@
             </div>
         </div>
         
-        <!-- Main Content Area -->
         <div class="main-content">
-            <!-- Conversation Header -->
             <div class="conversation-header-bar">
                 <div class="conversation-user-info">
                     <div id="conversationUserAvatar" class="conversation-user-avatar">?</div>
@@ -1335,7 +1329,6 @@
                 </div>
             </div>
             
-            <!-- Messages Area -->
             <div class="messages-area">
                 <div id="messagesContainer" class="messages-container">
                     <div class="no-messages">
@@ -1345,7 +1338,6 @@
                     </div>
                 </div>
                 
-                <!-- زر عرض الرسائل المحذوفة -->
                 <div class="deleted-messages-toggle">
                     <button id="toggleDeletedMessages">عرض الرسائل المحذوفة (<span id="deletedCount">0</span>)</button>
                     <button id="clearDeletedMessages" class="clear-log-button">
@@ -1353,13 +1345,10 @@
                     </button>
                 </div>
                 
-                <!-- قسم الرسائل المحذوفة -->
                 <div id="deletedMessagesContainer" class="deleted-messages-container">
-                    <!-- سيتم عرض الرسائل المحذوفة هنا -->
                 </div>
             </div>
             
-            <!-- Message Input Area -->
             <div class="message-input-area">
                 <textarea id="adminMessageInput" class="admin-message-input" placeholder="اختر محادثة للبدء..." rows="1" disabled></textarea>
                 <button id="adminSendButton" class="admin-send-button" disabled>
@@ -1369,7 +1358,6 @@
         </div>
     </div>
     
-    <!-- Confirmation Modal HTML -->
     <div id="confirmationModal" class="modal">
         <div class="confirmation-content">
             <h3 id="confirmMessage">هل أنت متأكد من هذا الإجراء؟</h3>
@@ -1381,7 +1369,6 @@
         </div>
     </div>
 
-    <!-- Import Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     
@@ -1579,6 +1566,7 @@
                         </div>
                         <div class="last-message">${truncateText(lastMessage.text, 30)}</div>
                         ${closedIndicator}
+                        ${conversation.isBlocked ? '<div class="blocked-indicator"><i class="fas fa-ban"></i> محظور</div>' : ''}
                     `;
                     
                     conversationEl.addEventListener('click', () => {
@@ -1737,22 +1725,18 @@
                 const messagesRef = database.ref(`supportChats/${userId}/messages`);
                 
                 messagesRef.on('value', (snapshot) => {
-                    // إنشاء مصفوفة جديدة للرسائل تشمل الرسائل المؤقتة والرسائل من قاعدة البيانات
                     const newMessages = [];
                     
-                    // إضافة الرسائل المؤقتة أولاً
                     Object.values(adminData.tempMessages).forEach(tempMsg => {
                         if (tempMsg.userId === userId) {
                             newMessages.push(tempMsg);
                         }
                     });
                     
-                    // إضافة الرسائل من قاعدة البيانات
                     if (snapshot.exists()) {
                         snapshot.forEach((childSnapshot) => {
                             const message = childSnapshot.val();
                             
-                            // تجاهل الرسائل المؤقتة التي تم استبدالها
                             if (!adminData.tempMessages[childSnapshot.key]) {
                                 newMessages.push({
                                     id: childSnapshot.key,
@@ -1768,12 +1752,8 @@
                         });
                     }
                     
-                    // ترتيب الرسائل حسب الوقت
                     newMessages.sort((a, b) => a.timestamp - b.timestamp);
-                    
-                    // تحديث مصفوفة الرسائل
                     adminData.messages = newMessages;
-                    
                     renderMessages();
                     updateDeletedMessagesCount();
                 });
@@ -1885,11 +1865,9 @@
                 sendBtn.disabled = true;
                 messageInput.disabled = true;
 
-                // إنشاء معرّف فريد للرسالة المؤقتة
                 const tempMessageId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
                 try {
-                    // إنشاء رسالة مؤقتة للعرض الفوري
                     const tempMessage = {
                         id: tempMessageId,
                         text: messageText,
@@ -1899,16 +1877,10 @@
                         userId: userId
                     };
                     
-                    // حفظ الرسالة المؤقتة في الذاكرة المحلية
                     adminData.tempMessages[tempMessageId] = tempMessage;
-                    
-                    // إضافة الرسالة إلى القائمة المحلية
                     adminData.messages.push(tempMessage);
-                    
-                    // إعادة تصيير الرسائل مرة واحدة فقط
                     renderMessages();
                     
-                    // إنشاء الرسالة في قاعدة البيانات
                     const newMessage = {
                         text: messageText,
                         senderType: 'admin',
@@ -1920,25 +1892,20 @@
                     const newMessageRef = messagesRef.push();
                     await newMessageRef.set(newMessage);
                     
-                    // تحديث الرسالة المؤقتة بالمعرف الدائم وإزالة حالة الإرسال
                     const permanentMessageId = newMessageRef.key;
                     tempMessage.id = permanentMessageId;
                     tempMessage.pending = false;
                     
-                    // تحديث الرسالة في الذاكرة المحلية
                     adminData.tempMessages[permanentMessageId] = tempMessage;
                     delete adminData.tempMessages[tempMessageId];
                     
-                    // تحديث الرسالة في القائمة المحلية
                     const messageIndex = adminData.messages.findIndex(m => m.id === tempMessageId);
                     if (messageIndex !== -1) {
                         adminData.messages[messageIndex] = tempMessage;
                     }
                     
-                    // تحديث واجهة المستخدم مع الرسالة المحدثة
                     renderMessages();
                     
-                    // تحديث محادثة lastMessage
                     const conversationRef = database.ref(`supportChats/${userId}`);
                     await conversationRef.update({
                         lastMessage: {
@@ -1954,14 +1921,12 @@
                 } catch (error) {
                     console.error("Error sending message:", error);
                     
-                    // إزالة الرسالة المؤقتة في حالة الخطأ
                     const index = adminData.messages.findIndex(m => m.id === tempMessageId);
                     if (index !== -1) {
                         adminData.messages.splice(index, 1);
                         renderMessages();
                     }
                     
-                    // إزالة الرسالة من الذاكرة المؤقتة
                     delete adminData.tempMessages[tempMessageId];
                     
                     showNotification('حدث خطأ أثناء إرسال الرد. يرجى المحاولة مرة أخرى.', 'error');
@@ -2216,14 +2181,48 @@
                 });
             }
 
+            // الحل الجديد لمشكلة الحظر
             async function toggleBlockUser(userId, isCurrentlyBlocked) {
                 const action = isCurrentlyBlocked ? 'إلغاء حظر' : 'حظر';
                 showConfirmationModal(`هل أنت متأكد أنك تريد ${action} هذا العميل؟`, async (confirmed) => {
                     if (confirmed) {
                         try {
                             const conversationRef = database.ref(`supportChats/${userId}`);
-                            await conversationRef.update({ isBlocked: !isCurrentlyBlocked });
+                            
+                            // تحديث حالة الحظر في قاعدة البيانات
+                            await conversationRef.update({ 
+                                isBlocked: !isCurrentlyBlocked 
+                            });
+                            
+                            // تحديث الحالة في البيانات المحلية
+                            const conversation = adminData.conversations.find(c => c.userId === userId);
+                            if (conversation) {
+                                conversation.isBlocked = !isCurrentlyBlocked;
+                            }
+                            
+                            // إذا كانت المحادثة المختارة هي نفسها، قم بتحديث الواجهة
+                            if (adminData.selectedConversation && adminData.selectedConversation.userId === userId) {
+                                adminData.selectedConversation.isBlocked = !isCurrentlyBlocked;
+                                selectConversation(userId);
+                            }
+                            
                             showNotification(`تم ${action} العميل بنجاح.`, 'success');
+                            
+                            // إرسال رسالة إعلامية للمستخدم
+                            const notificationMessage = {
+                                text: isCurrentlyBlocked ? 
+                                    "تم إلغاء حظرك من قبل فريق الدعم. يمكنك الآن التواصل معنا مرة أخرى." :
+                                    "تم حظرك من قبل فريق الدعم. لم يعد بإمكانك التواصل معنا.",
+                                senderType: 'admin',
+                                timestamp: Date.now(),
+                                isNotification: true
+                            };
+                            
+                            const messagesRef = database.ref(`supportChats/${userId}/messages`);
+                            await messagesRef.push(notificationMessage);
+                            
+                            // إعادة تحميل المحادثات لتحديث القائمة
+                            loadConversations();
                         } catch (error) {
                             console.error("Error toggling block status:", error);
                             showNotification(`حدث خطأ أثناء ${action} العميل. يرجى المحاولة مرة أخرى.`, 'error');
