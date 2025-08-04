@@ -649,14 +649,11 @@
                 freeChangeUsed: false
             };
             
-            // التحقق من توفر المعرف في قاعدة البيانات
+            // الحل الجديد: استخدام المعرف كمفتاح رئيسي لمنع التكرار
             async function checkUsernameAvailability(username) {
                 try {
-                    const querySnapshot = await db.collection('usernames')
-                        .where('username', '==', username)
-                        .get();
-                    
-                    return querySnapshot.empty;
+                    const doc = await db.collection('usernames').doc(username).get();
+                    return !doc.exists;
                 } catch (error) {
                     console.error("خطأ في التحقق من توفر المعرف:", error);
                     return false;
@@ -725,27 +722,41 @@
             }
             
             // تسجيل معرف جديد في قاعدة البيانات
-            async function registerNewUsername(userId, newUsername) {
+            async function registerNewUsername(userId, oldUsername, newUsername) {
                 try {
+                    // التحقق مرة أخرى من توفر المعرف (حالة السباق)
+                    const isAvailable = await checkUsernameAvailability(newUsername);
+                    if (!isAvailable) {
+                        throw new Error('هذا المعرف مستخدم من قبل، الرجاء اختيار معرف آخر');
+                    }
+                    
+                    // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات أو لا شيء
+                    const batch = db.batch();
+                    
+                    // تحديث معرف المستخدم في مستند المستخدم
+                    const userRef = db.collection('users').doc(userId);
+                    batch.update(userRef, {
+                        username: newUsername
+                    });
+                    
+                    // حذف المعرف القديم
+                    const oldUsernameRef = db.collection('usernames').doc(oldUsername);
+                    batch.delete(oldUsernameRef);
+                    
                     // إضافة المعرف الجديد
-                    await db.collection('usernames').doc(newUsername).set({
+                    const newUsernameRef = db.collection('usernames').doc(newUsername);
+                    batch.set(newUsernameRef, {
                         userId: userId,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
-                    // حذف المعرف القديم
-                    const oldUsername = username.textContent;
-                    await db.collection('usernames').doc(oldUsername).delete();
-                    
-                    // تحديث معرف المستخدم في مستند المستخدم
-                    await db.collection('users').doc(userId).update({
-                        username: newUsername
-                    });
+                    // تنفيذ الدفعة
+                    await batch.commit();
                     
                     return true;
                 } catch (error) {
                     console.error("خطأ في تسجيل المعرف الجديد:", error);
-                    throw new Error("حدث خطأ أثناء تسجيل المعرف الجديد");
+                    throw new Error("حدث خطأ أثناء تسجيل المعرف الجديد: " + error.message);
                 }
             }
             
@@ -754,22 +765,39 @@
                 try {
                     const defaultUsername = user.email.split('@')[0];
                     
+                    // التحقق من توفر المعرف الافتراضي
+                    let finalUsername = defaultUsername;
+                    let counter = 1;
+                    
+                    while (!(await checkUsernameAvailability(finalUsername))) {
+                        finalUsername = `${defaultUsername}${counter}`;
+                        counter++;
+                    }
+                    
+                    // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات
+                    const batch = db.batch();
+                    
                     // إنشاء مستخدم جديد
-                    await db.collection('users').doc(user.uid).set({
+                    const userRef = db.collection('users').doc(user.uid);
+                    batch.set(userRef, {
                         displayName: user.displayName || "مستخدم جديد",
                         email: user.email,
                         photoURL: user.photoURL || "https://ui-avatars.com/api/?name=User&background=random",
-                        username: defaultUsername,
+                        username: finalUsername,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
                     // تسجيل المعرف الافتراضي
-                    await db.collection('usernames').doc(defaultUsername).set({
+                    const usernameRef = db.collection('usernames').doc(finalUsername);
+                    batch.set(usernameRef, {
                         userId: user.uid,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
-                    return defaultUsername;
+                    // تنفيذ الدفعة
+                    await batch.commit();
+                    
+                    return finalUsername;
                 } catch (error) {
                     console.error("خطأ في إنشاء مستخدم جديد:", error);
                     throw new Error("حدث خطأ أثناء إنشاء الحساب");
@@ -782,8 +810,8 @@
                     const userDoc = await db.collection('users').doc(user.uid).get();
                     
                     if (!userDoc.exists) {
-                        const defaultUsername = await createNewUser(user);
-                        username.textContent = defaultUsername;
+                        const finalUsername = await createNewUser(user);
+                        username.textContent = finalUsername;
                     } else {
                         const userData = userDoc.data();
                         username.textContent = userData.username;
@@ -934,6 +962,7 @@
             // تأكيد تغيير المعرف
             confirmUsernameChange.addEventListener('click', async () => {
                 const newUsername = newUsernameInput.value.trim();
+                const oldUsername = username.textContent;
                 
                 // التحقق من وجود قيمة
                 if (!newUsername) {
@@ -947,10 +976,9 @@
                     return;
                 }
                 
-                // التحقق من توفر المعرف
-                const isAvailable = await checkUsernameAvailability(newUsername);
-                if (!isAvailable) {
-                    showUsernameError('هذا المعرف مستخدم من قبل، الرجاء اختيار معرف آخر');
+                // التحقق من أن المعرف الجديد مختلف عن القديم
+                if (newUsername === oldUsername) {
+                    showUsernameError('هذا المعرف هو نفس المعرف الحالي');
                     return;
                 }
                 
@@ -965,7 +993,7 @@
                     
                     // تحديث المعرف في قاعدة البيانات
                     try {
-                        await registerNewUsername(currentUser.uid, newUsername);
+                        await registerNewUsername(currentUser.uid, oldUsername, newUsername);
                         
                         // حفظ بيانات التغيير
                         await saveUsernameChangeHistory(currentUser.uid);
@@ -995,7 +1023,7 @@
                     
                     // تحديث المعرف في قاعدة البيانات
                     try {
-                        await registerNewUsername(currentUser.uid, newUsername);
+                        await registerNewUsername(currentUser.uid, oldUsername, newUsername);
                         
                         // حفظ بيانات التغيير
                         await saveUsernameChangeHistory(currentUser.uid);
