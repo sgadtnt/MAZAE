@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حسابي - التصميم النهائي</title>
+    <title>حسابي - الحل النهائي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -35,7 +35,7 @@
             align-items: center;
             color: #333;
             line-height: 1.5;
-            padding: 10px;
+            padding: 15px;
         }
         
         .container {
@@ -44,7 +44,7 @@
             min-height: auto;
             background: white;
             overflow: hidden;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
             border-radius: 15px;
             position: relative;
         }
@@ -53,21 +53,21 @@
             position: absolute;
             top: 15px;
             left: 15px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             border: none;
-            width: 45px;
-            height: 45px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--primary);
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             cursor: pointer;
             transition: all 0.3s;
             z-index: 10;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.6);
         }
         
         .back-button:hover {
@@ -79,7 +79,7 @@
         header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 20px 15px 15px;
+            padding: 25px 15px 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -88,9 +88,9 @@
         }
         
         .page-title {
-            font-size: 1.7rem;
+            font-size: 1.8rem;
             font-weight: 700;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: center;
             letter-spacing: -0.5px;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -100,7 +100,7 @@
             display: flex;
             background: rgba(255, 255, 255, 0.2);
             border-radius: 50px;
-            padding: 6px;
+            padding: 7px;
             border: 1px solid rgba(255, 255, 255, 0.3);
             width: 100%;
             max-width: 500px;
@@ -109,14 +109,14 @@
         
         .tab {
             flex: 1;
-            padding: 10px 15px;
+            padding: 12px 16px;
             text-align: center;
             border-radius: 50px;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 500;
             border: 1px solid transparent;
-            font-size: 1rem;
+            font-size: 1.05rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -132,7 +132,7 @@
         }
         
         .content {
-            padding: 20px;
+            padding: 25px;
             overflow-y: auto;
         }
         
@@ -151,7 +151,7 @@
         }
         
         .section-title {
-            font-size: 1.4rem;
+            font-size: 1.45rem;
             color: var(--primary);
             margin: 15px 0 25px;
             position: relative;
@@ -173,10 +173,10 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            padding: 14px;
+            padding: 15px;
             border-radius: 12px;
             border: none;
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
@@ -187,6 +187,7 @@
         .btn-primary {
             background: var(--primary);
             color: white;
+            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.2);
         }
         
         .btn-google {
@@ -203,7 +204,7 @@
         
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
         
         .btn-outline:hover {
@@ -236,14 +237,14 @@
         
         .divider-text {
             color: var(--gray);
-            font-size: 0.95rem;
+            font-size: 1rem;
             font-weight: 500;
         }
         
         .form-group {
-            margin-bottom: 18px;
+            margin-bottom: 20px;
             position: relative;
-            padding: 12px;
+            padding: 15px;
             border-radius: 12px;
             background: #f8f9fa;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
@@ -254,15 +255,15 @@
             margin-bottom: 10px;
             font-weight: 500;
             color: var(--dark);
-            font-size: 1.05rem;
+            font-size: 1.1rem;
         }
         
         .form-control {
             width: 100%;
-            padding: 14px 50px 14px 15px;
+            padding: 15px 55px 15px 15px;
             border: 2px solid #e0e0e0;
             border-radius: 12px;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             transition: all 0.3s;
             background: white;
         }
@@ -276,7 +277,7 @@
         .user-info-section {
             text-align: center;
             border-radius: 15px;
-            padding: 20px;
+            padding: 25px 20px;
             margin: 15px 0;
             background: #f8f9fa;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
@@ -285,20 +286,20 @@
         .user-avatar {
             display: flex;
             justify-content: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .avatar {
-            width: 100px;
-            height: 100px;
+            width: 110px;
+            height: 110px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--primary), var(--accent));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
+            font-size: 2.8rem;
             color: white;
-            border: 3px solid white;
+            border: 4px solid white;
             background-size: cover;
             background-position: center;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -307,14 +308,14 @@
         .info-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 18px;
+            gap: 20px;
             margin-top: 25px;
         }
         
         .info-item {
             background: white;
             border-radius: 12px;
-            padding: 18px;
+            padding: 20px;
             text-align: right;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
             border: 1px solid #eee;
@@ -327,15 +328,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-            padding-bottom: 10px;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
             border-bottom: 1px solid #f0f0f0;
         }
         
         .info-title {
             font-weight: 600;
             color: var(--dark);
-            font-size: 1.15rem;
+            font-size: 1.2rem;
         }
         
         .info-actions {
@@ -344,14 +345,15 @@
         }
         
         .action-btn {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 1.1rem;
         }
         
         .copy-btn {
@@ -374,9 +376,9 @@
         
         .info-value {
             color: var(--gray);
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             font-weight: 500;
-            padding-top: 10px;
+            padding-top: 12px;
             word-break: break-word;
             text-align: right;
         }
@@ -388,7 +390,7 @@
         
         .action-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
             gap: 15px;
             margin-top: 25px;
         }
@@ -411,13 +413,13 @@
         
         .notification {
             position: fixed;
-            top: 25px;
-            right: 25px;
-            padding: 18px 28px;
-            border-radius: 12px;
+            top: 30px;
+            right: 30px;
+            padding: 20px 30px;
+            border-radius: 15px;
             color: white;
             font-weight: 500;
-            font-size: 1.05rem;
+            font-size: 1.1rem;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             z-index: 1000;
             transform: translateX(120%);
@@ -494,14 +496,14 @@
         .modal-header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 18px;
+            padding: 20px;
             text-align: center;
             position: relative;
             border-bottom: 2px solid var(--accent);
         }
         
         .modal-header h2 {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 600;
         }
         
@@ -512,7 +514,7 @@
             background: none;
             border: none;
             color: white;
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             cursor: pointer;
             transition: all 0.3s;
             width: 45px;
@@ -533,7 +535,7 @@
         }
         
         .modal-footer {
-            padding: 18px 25px;
+            padding: 20px 25px;
             background: #f8f9fa;
             display: flex;
             justify-content: flex-end;
@@ -599,7 +601,7 @@
         .confirmation-modal h3 {
             margin-bottom: 25px;
             color: var(--dark);
-            font-size: 1.4rem;
+            font-size: 1.5rem;
         }
         
         .confirmation-modal .actions {
@@ -614,7 +616,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.85);
             display: none;
             justify-content: center;
             align-items: center;
@@ -622,11 +624,11 @@
         }
         
         .loading-spinner {
-            border: 6px solid rgba(67, 97, 238, 0.2);
-            border-top: 6px solid var(--primary);
+            border: 7px solid rgba(67, 97, 238, 0.2);
+            border-top: 7px solid var(--primary);
             border-radius: 50%;
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             animation: spin 1s linear infinite;
         }
         
@@ -642,13 +644,14 @@
             }
             
             .tab {
-                padding: 8px 12px;
-                font-size: 0.95rem;
+                padding: 10px 12px;
+                font-size: 1rem;
             }
             
             .avatar {
-                width: 85px;
-                height: 85px;
+                width: 95px;
+                height: 95px;
+                font-size: 2.2rem;
             }
             
             .action-buttons {
@@ -658,13 +661,22 @@
             .back-button {
                 top: 12px;
                 left: 12px;
-                width: 42px;
-                height: 42px;
+                width: 45px;
+                height: 45px;
                 font-size: 1.3rem;
             }
             
             .content {
-                padding: 15px;
+                padding: 20px;
+            }
+            
+            .section-title {
+                font-size: 1.3rem;
+            }
+            
+            .btn {
+                padding: 14px;
+                font-size: 1.05rem;
             }
         }
         
@@ -689,6 +701,7 @@
             text-decoration: none;
             font-weight: 500;
             transition: all 0.2s;
+            font-size: 1.05rem;
         }
         
         .forgot-password:hover {
@@ -717,7 +730,7 @@
         }
         
         .strength-text {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--gray);
             margin-top: 8px;
             text-align: right;
@@ -725,7 +738,7 @@
         
         .username-check {
             margin-top: 8px;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             text-align: right;
         }
         
@@ -735,6 +748,12 @@
         
         .username-check.unavailable {
             color: var(--danger);
+        }
+        
+        /* تحسينات الشريط */
+        .tab-bar-fix {
+            position: relative;
+            z-index: 5;
         }
     </style>
 </head>
@@ -839,7 +858,7 @@
     <div class="container">
         <header>
             <div class="page-title">حسابي</div>
-            <div class="tabs">
+            <div class="tabs tab-bar-fix">
                 <div class="tab active" data-tab="account">حسابي</div>
                 <div class="tab" data-tab="login">تسجيل الدخول</div>
                 <div class="tab" data-tab="signup">إنشاء حساب</div>
@@ -1026,8 +1045,30 @@
             </div>
         </div>
     </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
     
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.appspot.com",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
         // عناصر DOM
         const tabs = document.querySelectorAll('.tab');
         const loginForm = document.getElementById('loginForm');
@@ -1441,35 +1482,72 @@
         // تسجيل الدخول باستخدام Google
         function googleSignIn() {
             loadingOverlay.style.display = 'flex';
+            const provider = new firebase.auth.GoogleAuthProvider();
             
-            // محاكاة تسجيل الدخول بنجاح
-            setTimeout(() => {
-                showNotification('تم تسجيل الدخول بنجاح باستخدام Google', 'success');
-                
-                // إنشاء بيانات مستخدم افتراضية
-                const firstName = "مستخدم";
-                const lastName = "جديد";
-                const fullName = "مستخدم جديد";
-                const email = "user@example.com";
-                const username = "@user123";
-                
-                // تحديث واجهة المستخدم
-                userAvatar.style.backgroundImage = '';
-                userAvatar.innerHTML = '<i class="fas fa-user"></i>';
-                userFullName.textContent = fullName;
-                userUsername.textContent = username;
-                userEmail.textContent = email;
-                
-                // الانتقال إلى تبويب الحساب
-                tabs.forEach(t => t.classList.remove('active'));
-                document.querySelector('[data-tab="account"]').classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
+            // إضافة نطاق الملف الشخصي للوصول إلى معلومات المستخدم
+            provider.addScope('profile');
+            provider.addScope('email');
+            
+            auth.signInWithPopup(provider)
+                .then(async (result) => {
+                    const user = result.user;
+                    
+                    const names = user.displayName.split(' ');
+                    const firstName = names[0] || 'مستخدم';
+                    const lastName = names.length > 1 ? names[names.length - 1] : 'جديد';
+                    const fullName = user.displayName || `${firstName} ${lastName}`;
+                    
+                    const username = await generateUniqueUsername(firstName, lastName);
+                    
+                    if (user.photoURL) {
+                        userAvatar.style.backgroundImage = `url('${user.photoURL}')`;
+                        userAvatar.innerHTML = '';
+                    }
+                    
+                    database.ref('users/' + user.uid).once('value').then(async (snapshot) => {
+                        if (!snapshot.exists()) {
+                            await database.ref('users/' + user.uid).set({
+                                firstName: firstName,
+                                lastName: lastName,
+                                fullName: fullName,
+                                username: username,
+                                email: user.email || '',
+                                phone: user.phoneNumber || '',
+                                photoURL: user.photoURL || '',
+                                createdAt: new Date().toISOString(),
+                                lastUsernameChange: 0
+                            });
+                            
+                            database.ref('usernames').child(username).set(user.uid);
+                        }
+                    });
+                    
+                    showNotification(`مرحباً ${fullName || 'مستخدم جديد'}!`, 'success');
+                    updateUserInfo(user, {
+                        firstName, 
+                        lastName, 
+                        fullName, 
+                        username, 
+                        email: user.email
+                    });
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="account"]').classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById('accountContent').classList.add('active');
+                })
+                .catch((error) => {
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        showNotification('تم إغلاق نافذة التسجيل. الرجاء المحاولة مرة أخرى.', 'warning');
+                    } else {
+                        showNotification(`خطأ في تسجيل الدخول: ${error.message}`, 'error');
+                    }
+                })
+                .finally(() => {
+                    loadingOverlay.style.display = 'none';
                 });
-                document.getElementById('accountContent').classList.add('active');
-                
-                loadingOverlay.style.display = 'none';
-            }, 1500);
         }
         
         googleLogin.addEventListener('click', googleSignIn);
@@ -1496,37 +1574,53 @@
             });
             
             document.getElementById('confirmLogout').addEventListener('click', () => {
-                // محاكاة تسجيل الخروج
-                showNotification('تم تسجيل الخروج بنجاح', 'success');
-                
-                userAvatar.style.backgroundImage = '';
-                userAvatar.innerHTML = '<i class="fas fa-user"></i>';
-                
-                tabs.forEach(t => t.classList.remove('active'));
-                document.querySelector('[data-tab="login"]').classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
+                auth.signOut().then(() => {
+                    showNotification('تم تسجيل الخروج بنجاح', 'success');
+                    
+                    userAvatar.style.backgroundImage = '';
+                    userAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="login"]').classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById('loginContent').classList.add('active');
+                    
+                    document.body.removeChild(confirmation);
+                }).catch((error) => {
+                    showNotification(`خطأ في تسجيل الخروج: ${error.message}`, 'error');
+                    document.body.removeChild(confirmation);
                 });
-                document.getElementById('loginContent').classList.add('active');
-                
-                document.body.removeChild(confirmation);
             });
         });
 
         // تحديث معلومات المستخدم المعروضة
         function updateUserInfo(user, additionalInfo = {}) {
-            // بيانات افتراضية للمستخدم
-            const firstName = "محمد";
-            const lastName = "علي";
-            const fullName = "محمد علي";
-            const email = "mohamed@example.com";
-            const username = "@mohamed_ali";
-            
-            userAvatar.style.backgroundImage = '';
-            userAvatar.innerHTML = '<i class="fas fa-user"></i>';
-            userFullName.textContent = fullName;
-            userUsername.textContent = username;
-            userEmail.textContent = email;
+            database.ref('users/' + user.uid).once('value').then((snapshot) => {
+                const userData = snapshot.val() || {};
+                
+                const mergedData = {...userData, ...additionalInfo};
+                
+                if (mergedData.photoURL) {
+                    userAvatar.style.backgroundImage = `url('${mergedData.photoURL}')`;
+                    userAvatar.innerHTML = '';
+                } else if (user.photoURL) {
+                    userAvatar.style.backgroundImage = `url('${user.photoURL}')`;
+                    userAvatar.innerHTML = '';
+                } else {
+                    userAvatar.style.backgroundImage = '';
+                    userAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                }
+                
+                userFullName.textContent = mergedData.fullName || 
+                    `${mergedData.firstName || ''} ${mergedData.lastName || ''}` || 
+                    user.displayName || 
+                    'غير معروف';
+                
+                userUsername.textContent = mergedData.username || 'غير معروف';
+                userEmail.textContent = mergedData.email || user.email || 'غير معروف';
+            });
         }
 
         // إظهار/إخفاء كلمة المرور
@@ -1559,12 +1653,15 @@
                 return;
             }
             
-            // محاكاة إرسال رابط إعادة التعيين
-            setTimeout(() => {
-                showNotification('تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني', 'success');
-                resetPasswordModal.classList.remove('active');
-                resetEmail.value = '';
-            }, 1000);
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    showNotification('تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني', 'success');
+                    resetPasswordModal.classList.remove('active');
+                    resetEmail.value = '';
+                })
+                .catch((error) => {
+                    showNotification(`خطأ: ${error.message}`, 'error');
+                });
         });
 
         // إلغاء إعادة تعيين كلمة المرور
@@ -1576,7 +1673,7 @@
         editEmailBtn.addEventListener('click', () => {
             const user = auth.currentUser;
             if (user) {
-                currentEmail.value = "mohamed@example.com";
+                currentEmail.value = user.email;
                 newEmailInput.value = '';
                 emailPassword.value = '';
                 emailModal.classList.add('active');
@@ -1585,6 +1682,9 @@
 
         // تأكيد تغيير البريد الإلكتروني
         confirmEmailBtn.addEventListener('click', () => {
+            const user = auth.currentUser;
+            if (!user) return;
+            
             const newEmail = newEmailInput.value.trim();
             const password = emailPassword.value;
             
@@ -1598,12 +1698,27 @@
                 return;
             }
             
-            // محاكاة تغيير البريد الإلكتروني
-            setTimeout(() => {
-                showNotification('تم تحديث البريد الإلكتروني بنجاح', 'success');
-                userEmail.textContent = newEmail;
-                emailModal.classList.remove('active');
-            }, 1000);
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+            
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    user.updateEmail(newEmail)
+                        .then(() => {
+                            database.ref('users/' + user.uid).update({
+                                email: newEmail
+                            });
+                            
+                            showNotification('تم تحديث البريد الإلكتروني بنجاح', 'success');
+                            userEmail.textContent = newEmail;
+                            emailModal.classList.remove('active');
+                        })
+                        .catch((error) => {
+                            showNotification(`خطأ في تحديث البريد: ${error.message}`, 'error');
+                        });
+                })
+                .catch((error) => {
+                    showNotification(`خطأ في المصادقة: ${error.message}`, 'error');
+                });
         });
 
         // إلغاء تغيير البريد الإلكتروني
@@ -1671,12 +1786,22 @@
             }
             
             const fullName = `${firstName} ${lastName}`;
+            const user = auth.currentUser;
             
-            // محاكاة حفظ الاسم
-            setTimeout(() => {
-                userFullName.innerHTML = fullName;
-                showNotification('تم تحديث الاسم بنجاح', 'success');
-            }, 500);
+            if (user) {
+                database.ref('users/' + user.uid).update({
+                    firstName: firstName,
+                    lastName: lastName,
+                    fullName: fullName
+                })
+                .then(() => {
+                    userFullName.innerHTML = fullName;
+                    showNotification('تم تحديث الاسم بنجاح', 'success');
+                })
+                .catch((error) => {
+                    showNotification(`خطأ في تحديث الاسم: ${error.message}`, 'error');
+                });
+            }
         }
 
         function cancelNameEdit() {
@@ -1721,44 +1846,11 @@
         });
 
         // مراقبة حالة تسجيل الدخول
-        auth = {
-            currentUser: null,
-            onAuthStateChanged: function(callback) {
-                // محاكاة حالة تسجيل الدخول
-                setTimeout(() => {
-                    callback({ uid: "user123" });
-                }, 1000);
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                updateUserInfo(user);
             }
-        };
-        
-        // تهيئة قاعدة البيانات الافتراضية
-        database = {
-            ref: function(path) {
-                return {
-                    once: function() {
-                        return Promise.resolve({
-                            val: function() {
-                                return null;
-                            }
-                        });
-                    },
-                    update: function() {
-                        return Promise.resolve();
-                    },
-                    set: function() {
-                        return Promise.resolve();
-                    },
-                    child: function() {
-                        return this;
-                    }
-                };
-            }
-        };
-        
-        // تحديث معلومات المستخدم عند التحميل
-        setTimeout(() => {
-            updateUserInfo();
-        }, 1500);
+        });
     </script>
 </body>
 </html>
