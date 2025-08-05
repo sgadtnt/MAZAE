@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حسابي - متجر زيون</title>
+    <title>حسابي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
@@ -169,6 +169,21 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+        
         .divider {
             display: flex;
             align-items: center;
@@ -189,6 +204,7 @@
         
         .form-group {
             margin-bottom: 25px;
+            position: relative;
         }
         
         .form-group label {
@@ -237,6 +253,8 @@
             color: white;
             border: 4px solid white;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            background-size: cover;
+            background-position: center;
         }
         
         .info-grid {
@@ -305,15 +323,6 @@
         .btn-success {
             background: var(--success);
             color: white;
-        }
-        
-        footer {
-            text-align: center;
-            padding: 20px;
-            color: var(--gray);
-            font-size: 1rem;
-            background: #f8f9fa;
-            border-top: 1px solid #eee;
         }
         
         .hidden {
@@ -432,6 +441,26 @@
             margin-left: 5px;
         }
         
+        .password-toggle {
+            position: absolute;
+            left: 15px;
+            top: 50px;
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+        }
+        
+        .days-left {
+            display: inline-block;
+            background: var(--warning);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
         @media (max-width: 600px) {
             .container {
                 border-radius: 15px;
@@ -500,8 +529,8 @@
     <div class="container">
         <header>
             <div class="logo">
-                <i class="fas fa-store"></i>
-                <span>متجر زيون</span>
+                <i class="fas fa-user-circle"></i>
+                <span>حسابي</span>
             </div>
             <h1 class="page-title">صفحة حساب المستخدم</h1>
             
@@ -538,6 +567,9 @@
                     <div class="form-group">
                         <label for="password"><i class="fas fa-lock"></i> كلمة المرور</label>
                         <input type="password" id="password" class="form-control" placeholder="ادخل كلمة المرور" required>
+                        <button type="button" class="password-toggle" id="loginPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                     
                     <div class="form-group">
@@ -554,33 +586,34 @@
                 
                 <form id="signupForm">
                     <div class="form-group">
-                        <label for="name"><i class="fas fa-user"></i> الاسم الكامل</label>
-                        <input type="text" id="name" class="form-control" placeholder="ادخل اسمك الكامل" required>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="signupEmail"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
-                        <input type="email" id="signupEmail" class="form-control" placeholder="ادخل بريدك الإلكتروني" required>
-                    </div>
-                    
-                    <div class="form-group">
                         <label for="username"><i class="fas fa-user-circle"></i> اسم المستخدم</label>
                         <input type="text" id="username" class="form-control" placeholder="اختر اسم مستخدم فريد" required>
                     </div>
                     
                     <div class="form-group">
-                        <label for="phone"><i class="fas fa-phone"></i> رقم الهاتف</label>
-                        <input type="tel" id="phone" class="form-control" placeholder="ادخل رقم هاتفك" required>
+                        <label for="signupEmail"><i class="fas fa-envelope"></i> البريد الإلكتروني (اختياري)</label>
+                        <input type="email" id="signupEmail" class="form-control" placeholder="ادخل بريدك الإلكتروني">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone"><i class="fas fa-phone"></i> رقم الهاتف (اختياري)</label>
+                        <input type="tel" id="phone" class="form-control" placeholder="ادخل رقم هاتفك">
                     </div>
                     
                     <div class="form-group">
                         <label for="signupPassword"><i class="fas fa-lock"></i> كلمة المرور</label>
                         <input type="password" id="signupPassword" class="form-control" placeholder="اختر كلمة مرور قوية" required>
+                        <button type="button" class="password-toggle" id="signupPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                     
                     <div class="form-group">
                         <label for="confirmPassword"><i class="fas fa-lock"></i> تأكيد كلمة المرور</label>
                         <input type="password" id="confirmPassword" class="form-control" placeholder="أعد كتابة كلمة المرور" required>
+                        <button type="button" class="password-toggle" id="confirmPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
                     </div>
                     
                     <div class="form-group">
@@ -595,7 +628,7 @@
             <div class="tab-content" id="accountContent">
                 <div class="user-info-section">
                     <div class="user-avatar">
-                        <div class="avatar">
+                        <div class="avatar" id="userAvatar">
                             <i class="fas fa-user"></i>
                         </div>
                     </div>
@@ -605,10 +638,10 @@
                     <div class="info-grid">
                         <div class="info-card">
                             <div class="info-icon">
-                                <i class="fas fa-user"></i>
+                                <i class="fas fa-user-circle"></i>
                             </div>
-                            <div class="info-title">الاسم الكامل</div>
-                            <div class="info-value" id="userName">غير معروف</div>
+                            <div class="info-title">اسم المستخدم</div>
+                            <div class="info-value" id="userUsername">غير معروف</div>
                         </div>
                         
                         <div class="info-card">
@@ -617,14 +650,6 @@
                             </div>
                             <div class="info-title">البريد الإلكتروني</div>
                             <div class="info-value" id="userEmail">غير معروف</div>
-                        </div>
-                        
-                        <div class="info-card">
-                            <div class="info-icon">
-                                <i class="fas fa-user-circle"></i>
-                            </div>
-                            <div class="info-title">اسم المستخدم</div>
-                            <div class="info-value" id="userUsername">غير معروف</div>
                         </div>
                         
                         <div class="info-card">
@@ -650,11 +675,6 @@
                 </div>
             </div>
         </div>
-        
-        <footer>
-            <p>جميع الحقوق محفوظة © 2023 متجر زيون</p>
-            <p>تواصل معنا: <a href="tel:+9647823053419">+9647823053419</a> | <a href="https://wa.me/96472305349">واتساب</a></p>
-        </footer>
     </div>
     
     <!-- Firebase SDK -->
@@ -694,12 +714,17 @@
         const confirmChangeBtn = document.getElementById('confirmChangeBtn');
         const newUsernameInput = document.getElementById('newUsername');
         const changeStatus = document.getElementById('changeStatus');
+        const userAvatar = document.getElementById('userAvatar');
         
         // عناصر معلومات المستخدم
-        const userName = document.getElementById('userName');
         const userEmail = document.getElementById('userEmail');
         const userUsername = document.getElementById('userUsername');
         const userPhone = document.getElementById('userPhone');
+        
+        // عناصر إظهار كلمة المرور
+        const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+        const signupPasswordToggle = document.getElementById('signupPasswordToggle');
+        const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
 
         // تغيير التبويبات
         tabs.forEach(tab => {
@@ -736,11 +761,11 @@
                     const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000;
                     
                     if (!lastChange) {
-                        changeStatus.innerHTML = 'يمكنك تغيير اسم المستخدم مجاناً هذه المرة';
+                        changeStatus.innerHTML = 'التغير متاح حاليا';
                         changeStatus.style.color = 'var(--success)';
                         confirmChangeBtn.disabled = false;
                     } else if (currentTime - lastChange >= fiveDaysInMs) {
-                        changeStatus.innerHTML = 'يمكنك تغيير اسم المستخدم الآن';
+                        changeStatus.innerHTML = 'التغير متاح حاليا';
                         changeStatus.style.color = 'var(--success)';
                         confirmChangeBtn.disabled = false;
                     } else {
@@ -815,9 +840,8 @@
         // إنشاء حساب جديد
         signupForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('signupEmail').value;
             const username = document.getElementById('username').value;
+            const email = document.getElementById('signupEmail').value;
             const phone = document.getElementById('phone').value;
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -832,23 +856,25 @@
                 return;
             }
             
-            auth.createUserWithEmailAndPassword(email, password)
+            // إذا لم يتم إدخال بريد إلكتروني، استخدم اسم المستخدم مع نطاق افتراضي
+            const userEmail = email || `${username}@example.com`;
+            
+            auth.createUserWithEmailAndPassword(userEmail, password)
                 .then((userCredential) => {
                     // تم إنشاء الحساب بنجاح
                     const user = userCredential.user;
                     
                     // حفظ معلومات المستخدم الإضافية في قاعدة البيانات
                     database.ref('users/' + user.uid).set({
-                        name: name,
-                        email: email,
                         username: username,
-                        phone: phone,
+                        email: email || '',
+                        phone: phone || '',
                         createdAt: new Date().toISOString(),
                         lastUsernameChange: 0
                     });
                     
-                    showNotification(`تم إنشاء حسابك بنجاح، ${name}!`, 'success');
-                    updateUserInfo(user, {name, phone, username});
+                    showNotification(`تم إنشاء حسابك بنجاح، ${username}!`, 'success');
+                    updateUserInfo(user, {username, email, phone});
                     
                     // الانتقال إلى تبويب الحساب
                     tabs.forEach(t => t.classList.remove('active'));
@@ -871,17 +897,23 @@
                     // تم تسجيل الدخول بنجاح
                     const user = result.user;
                     
+                    // عرض صورة المستخدم من Google
+                    if (user.photoURL) {
+                        userAvatar.style.backgroundImage = `url('${user.photoURL}')`;
+                        userAvatar.innerHTML = '';
+                    }
+                    
+                    // إنشاء اسم مستخدم عشوائي
+                    const randomUsername = 'user' + Math.floor(Math.random() * 10000);
+                    
                     // حفظ معلومات المستخدم إذا كانت المرة الأولى
                     database.ref('users/' + user.uid).once('value').then((snapshot) => {
                         if (!snapshot.exists()) {
-                            // إنشاء اسم مستخدم عشوائي
-                            const randomUsername = 'user' + Math.floor(Math.random() * 10000);
-                            
                             database.ref('users/' + user.uid).set({
-                                name: user.displayName || 'مستخدم جديد',
-                                email: user.email,
                                 username: randomUsername,
+                                email: user.email || '',
                                 phone: user.phoneNumber || '',
+                                photoURL: user.photoURL || '',
                                 createdAt: new Date().toISOString(),
                                 lastUsernameChange: 0
                             });
@@ -909,6 +941,10 @@
             auth.signOut().then(() => {
                 showNotification('تم تسجيل الخروج بنجاح', 'success');
                 
+                // إعادة ضبط الصورة الرمزية
+                userAvatar.style.backgroundImage = '';
+                userAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                
                 // الانتقال إلى تبويب تسجيل الدخول
                 tabs.forEach(t => t.classList.remove('active'));
                 document.querySelector('[data-tab="login"]').classList.add('active');
@@ -927,12 +963,37 @@
             database.ref('users/' + user.uid).once('value').then((snapshot) => {
                 const userData = snapshot.val() || {};
                 
-                userName.textContent = userData.name || additionalInfo.name || 'غير معروف';
-                userEmail.textContent = user.email || 'غير معروف';
+                // عرض صورة المستخدم إذا كانت متاحة
+                if (userData.photoURL) {
+                    userAvatar.style.backgroundImage = `url('${userData.photoURL}')`;
+                    userAvatar.innerHTML = '';
+                } else {
+                    userAvatar.style.backgroundImage = '';
+                    userAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                }
+                
                 userUsername.textContent = userData.username || additionalInfo.username || 'غير معروف';
+                userEmail.textContent = userData.email || additionalInfo.email || user.email || 'غير معروف';
                 userPhone.textContent = userData.phone || additionalInfo.phone || 'غير معروف';
             });
         }
+
+        // إظهار/إخفاء كلمة المرور
+        function setupPasswordToggle(toggleId, passwordId) {
+            const toggle = document.getElementById(toggleId);
+            const password = document.getElementById(passwordId);
+            
+            toggle.addEventListener('click', () => {
+                const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
+                password.setAttribute('type', type);
+                toggle.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+            });
+        }
+        
+        // إعداد مفاتيح إظهار كلمة المرور
+        setupPasswordToggle('loginPasswordToggle', 'password');
+        setupPasswordToggle('signupPasswordToggle', 'signupPassword');
+        setupPasswordToggle('confirmPasswordToggle', 'confirmPassword');
 
         // مراقبة حالة تسجيل الدخول
         auth.onAuthStateChanged((user) => {
