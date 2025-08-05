@@ -35,17 +35,18 @@
             align-items: center;
             color: #333;
             line-height: 1.5;
-            padding: 15px;
+            padding: 10px; /* تم تقليل الحشو */
         }
         
         .container {
             width: 100%;
             max-width: 100%;
-            min-height: 75vh;
+            min-height: auto; /* تم التعديل من 75vh */
             background: white;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
             border-radius: 12px;
+            padding-bottom: 20px; /* إضافة حشوة أسفلية */
         }
         
         header {
@@ -91,9 +92,8 @@
         }
         
         .content {
-            padding: 18px;
+            padding: 12px; /* تم تقليل الحشو */
             overflow-y: auto;
-            max-height: calc(75vh - 90px);
         }
         
         .tab-content {
@@ -113,7 +113,7 @@
         .section-title {
             font-size: 1.2rem;
             color: var(--primary);
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* تم تقليل المسافة */
             position: relative;
             padding-bottom: 8px;
             border-bottom: 2px solid #f0f0f0;
@@ -123,7 +123,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin: 15px 0 10px;
+            margin: 10px 0 8px; /* تم تقليل المسافات */
         }
         
         .btn {
@@ -183,7 +183,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            margin: 15px 0;
+            margin: 10px 0; /* تم تقليل المسافة */
         }
         
         .divider-line {
@@ -198,9 +198,9 @@
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 10px; /* تم تقليل المسافة */
             position: relative;
-            padding: 12px;
+            padding: 8px; /* تم تقليل الحشو */
             border-radius: 10px;
             background: #f8f9fa;
         }
@@ -231,17 +231,16 @@
         
         .user-info-section {
             text-align: center;
-            padding: 15px 0;
             border-radius: 12px;
-            padding: 15px;
-            margin: 10px 0;
+            padding: 10px; /* تم تقليل الحشو */
+            margin: 5px 0; /* تم تقليل المسافة */
             background: #f8f9fa;
         }
         
         .user-avatar {
             display: flex;
             justify-content: center;
-            margin-bottom: 12px;
+            margin-bottom: 10px; /* تم تقليل المسافة */
         }
         
         .avatar {
@@ -262,14 +261,14 @@
         .info-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 12px;
-            margin-top: 15px;
+            gap: 10px; /* تم تقليل المسافة */
+            margin-top: 12px; /* تم تقليل المسافة */
         }
         
         .info-item {
             background: white;
             border-radius: 10px;
-            padding: 15px;
+            padding: 10px; /* تم تقليل الحشو */
             text-align: right;
             box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
             border: 1px solid #eee;
@@ -282,8 +281,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
+            margin-bottom: 6px; /* تم تقليل المسافة */
+            padding-bottom: 6px; /* تم تقليل المسافة */
             border-bottom: 1px solid #f0f0f0;
         }
         
@@ -331,7 +330,7 @@
             color: var(--gray);
             font-size: 0.95rem;
             font-weight: 500;
-            padding-top: 8px;
+            padding-top: 6px; /* تم تقليل المسافة */
             word-break: break-word;
         }
         
@@ -339,7 +338,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
             gap: 10px;
-            margin-top: 18px;
+            margin-top: 10px; /* تم تقليل المسافة */
         }
         
         .btn-outline {
@@ -360,8 +359,8 @@
         
         .notification {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 10px; /* تم تعديل الموقع */
+            right: 10px; /* تم تعديل الموقع */
             padding: 14px 24px;
             border-radius: 10px;
             color: white;
@@ -375,6 +374,10 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            max-width: 90%; /* إضافة لتجنب الخروج من الشاشة */
+            white-space: normal; /* إصلاح مشكلة النصوص الطويلة */
+            word-wrap: break-word; /* إصلاح مشكلة النصوص الطويلة */
+            text-align: right; /* تنسيق النص للغة العربية */
         }
         
         .notification.show {
