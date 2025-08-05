@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حسابي</title>
+    <title>حسابي - الإصدار المحسن</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -33,12 +34,17 @@
             align-items: center;
             color: #333;
             line-height: 1.6;
+            padding: 15px;
         }
         
         .container {
             width: 100%;
+            max-width: 100%;
+            min-height: 90vh;
             background: white;
             overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
         }
         
         header {
@@ -46,6 +52,8 @@
             color: white;
             padding: 25px;
             text-align: center;
+            position: relative;
+            border-radius: 15px 15px 0 0;
         }
         
         .page-title {
@@ -84,6 +92,8 @@
         
         .content {
             padding: 25px;
+            overflow-y: auto;
+            max-height: calc(90vh - 150px);
         }
         
         .tab-content {
@@ -138,6 +148,37 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
+        }
+        
+        .btn:focus:not(:active)::after {
+            animation: ripple 0.7s ease-out;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(20, 20);
+                opacity: 0;
+            }
         }
         
         .btn-primary {
@@ -146,8 +187,15 @@
         }
         
         .btn-google {
-            background: #4285F4;
+            background: linear-gradient(135deg, #4285F4, #34A853);
             color: white;
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-google:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4);
         }
         
         .btn:hover {
@@ -270,6 +318,7 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             transition: transform 0.3s;
             border: 2px solid #e0e0e0;
+            position: relative;
         }
         
         .info-card:hover {
@@ -297,6 +346,9 @@
             color: var(--dark);
             margin-bottom: 6px;
             font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         
         .info-value {
@@ -306,6 +358,47 @@
             border-top: 1px solid #eee;
             padding-top: 8px;
             margin-top: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .copy-btn {
+            background: transparent;
+            border: none;
+            color: var(--primary);
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 5px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(67, 97, 238, 0.1);
+        }
+        
+        .edit-btn {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            cursor: pointer;
+            transition: all 0.3s;
+            padding: 5px;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .edit-btn:hover {
+            background: rgba(72, 149, 239, 0.1);
         }
         
         .action-buttons {
@@ -349,10 +442,19 @@
             transform: translateX(120%);
             transition: transform 0.3s ease;
             border: 2px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .notification.show {
             transform: translateX(0);
+            animation: slideIn 0.5s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(120%); }
+            to { transform: translateX(0); }
         }
         
         .notification.success {
@@ -425,6 +527,11 @@
             color: white;
             font-size: 1.5rem;
             cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            transform: scale(1.1);
         }
         
         .modal-body {
@@ -512,12 +619,6 @@
             color: var(--primary);
         }
         
-        /* تحسينات جديدة */
-        .container {
-            max-width: 100%;
-            min-height: 100vh;
-        }
-        
         .username-input {
             display: flex;
             gap: 10px;
@@ -588,9 +689,140 @@
             animation: spin 1s ease-in-out infinite;
         }
         
+        .login-alert {
+            position: fixed;
+            top: 0;
+            right: 0;
+            background: var(--warning);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 0 0 0 10px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .login-alert .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+        
+        .editable-field {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .editable-field .value {
+            flex: 1;
+        }
+        
+        .editable-field input {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-width: 100px;
+        }
+        
+        .save-btn {
+            background: var(--success);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        
+        .cancel-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        
+        .confirmation-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 2500;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
+        }
+        
+        .confirmation-modal h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .confirmation-modal .actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .password-strength {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 8px;
+            background: #ddd;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .password-strength::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0%;
+            background: var(--danger);
+            transition: width 0.3s ease;
+        }
+        
+        .password-strength.weak::before {
+            width: 33%;
+            background: var(--danger);
+        }
+        
+        .password-strength.medium::before {
+            width: 66%;
+            background: var(--warning);
+        }
+        
+        .password-strength.strong::before {
+            width: 100%;
+            background: var(--success);
+        }
+        
+        .strength-text {
+            font-size: 0.8rem;
+            margin-top: 5px;
+            color: var(--gray);
+        }
+        
         @media (max-width: 600px) {
             .container {
                 border-radius: 0;
+                min-height: 100vh;
             }
             
             header {
@@ -616,9 +848,22 @@
             .form-group {
                 padding: 10px;
             }
+            
+            .confirmation-modal {
+                width: 90%;
+            }
+            
+            .tabs {
+                flex-direction: column;
+                border-radius: 10px;
+                max-width: 100%;
+            }
+            
+            .tab {
+                padding: 8px;
+            }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- إشعارات -->
@@ -674,6 +919,39 @@
             <div class="modal-footer">
                 <button class="btn btn-outline cancel-reset">إلغاء</button>
                 <button id="sendResetBtn" class="btn btn-primary">إرسال</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- نافذة تغيير البريد الإلكتروني -->
+    <div id="emailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close">&times;</button>
+                <h2>تغيير البريد الإلكتروني</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="currentEmail">البريد الإلكتروني الحالي</label>
+                    <input type="email" id="currentEmail" class="form-control" disabled>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newEmail"><i class="fas fa-envelope"></i> البريد الإلكتروني الجديد</label>
+                    <input type="email" id="newEmail" class="form-control" placeholder="ادخل بريدك الإلكتروني الجديد" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="emailPassword"><i class="fas fa-lock"></i> كلمة المرور الحالية</label>
+                    <input type="password" id="emailPassword" class="form-control" placeholder="ادخل كلمة المرور الحالية" required>
+                    <button type="button" class="password-toggle" id="emailPasswordToggle">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline cancel-email">إلغاء</button>
+                <button id="confirmEmailBtn" class="btn btn-primary">تغيير البريد</button>
             </div>
         </div>
     </div>
@@ -774,6 +1052,8 @@
                         <button type="button" class="password-toggle" id="signupPasswordToggle">
                             <i class="fas fa-eye"></i>
                         </button>
+                        <div class="password-strength" id="passwordStrength"></div>
+                        <div class="strength-text" id="strengthText">قوة كلمة المرور</div>
                     </div>
                     
                     <div class="form-group">
@@ -817,8 +1097,16 @@
                             <div class="info-icon">
                                 <i class="fas fa-user"></i>
                             </div>
-                            <div class="info-title">الاسم الكامل</div>
-                            <div class="info-value" id="userFullName">غير معروف</div>
+                            <div class="info-title">الاسم الكامل
+                                <button class="edit-btn" id="editNameBtn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <div class="info-value" id="userFullName">غير معروف
+                                <button class="copy-btn" data-copy="fullName">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="info-card">
@@ -826,15 +1114,27 @@
                                 <i class="fas fa-at"></i>
                             </div>
                             <div class="info-title">المعرف</div>
-                            <div class="info-value" id="userUsername">غير معروف</div>
+                            <div class="info-value" id="userUsername">غير معروف
+                                <button class="copy-btn" data-copy="username">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                         
                         <div class="info-card">
                             <div class="info-icon">
                                 <i class="fas fa-envelope"></i>
                             </div>
-                            <div class="info-title">البريد الإلكتروني</div>
-                            <div class="info-value" id="userEmail">غير معروف</div>
+                            <div class="info-title">البريد الإلكتروني
+                                <button class="edit-btn" id="editEmailBtn">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                            <div class="info-value" id="userEmail">غير معروف
+                                <button class="copy-btn" data-copy="email">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
@@ -863,7 +1163,7 @@
             authDomain: "zio3-8ffdd.firebaseapp.com",
             databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
             projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            storageBucket: "zio3-8ffdd.appspot.com",
             messagingSenderId: "560939348415",
             appId: "1:560939348415:web:c854e9e214e498ad2d310a",
             measurementId: "G-CVN2B2D0RD"
@@ -885,6 +1185,7 @@
         const changeUsernameBtn = document.getElementById('changeUsernameBtn');
         const usernameModal = document.getElementById('usernameModal');
         const resetPasswordModal = document.getElementById('resetPasswordModal');
+        const emailModal = document.getElementById('emailModal');
         const modalClose = document.querySelectorAll('.modal-close');
         const cancelChangeBtn = document.getElementById('cancelChangeBtn');
         const confirmChangeBtn = document.getElementById('confirmChangeBtn');
@@ -900,6 +1201,15 @@
         const resetEmail = document.getElementById('resetEmail');
         const signupButton = document.getElementById('signupButton');
         const loadingOverlay = document.getElementById('loadingOverlay');
+        const editNameBtn = document.getElementById('editNameBtn');
+        const editEmailBtn = document.getElementById('editEmailBtn');
+        const confirmEmailBtn = document.getElementById('confirmEmailBtn');
+        const newEmailInput = document.getElementById('newEmail');
+        const emailPassword = document.getElementById('emailPassword');
+        const currentEmail = document.getElementById('currentEmail');
+        const copyButtons = document.querySelectorAll('.copy-btn');
+        const passwordStrength = document.getElementById('passwordStrength');
+        const strengthText = document.getElementById('strengthText');
         
         // عناصر معلومات المستخدم
         const userEmail = document.getElementById('userEmail');
@@ -910,6 +1220,15 @@
         const loginPasswordToggle = document.getElementById('loginPasswordToggle');
         const signupPasswordToggle = document.getElementById('signupPasswordToggle');
         const confirmPasswordToggle = document.getElementById('confirmPasswordToggle');
+        const emailPasswordToggle = document.getElementById('emailPasswordToggle');
+
+        // إظهار شاشة التحميل لمدة 500 مللي ثانية عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            loadingOverlay.style.display = 'flex';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 500);
+        });
 
         // تغيير التبويبات
         tabs.forEach(tab => {
@@ -938,12 +1257,13 @@
         // دالة لتنقية اسم المستخدم من الأحرف غير المسموحة
         function sanitizeUsername(username) {
             // استبدال الأحرف غير المسموحة بشرطة سفلية
-            return username.replace(/[.#$\[\]]/g, '_');
+            return '@' + username.replace(/[.#$\[\]]/g, '_');
         }
 
         // توليد معرف عشوائي فريد
         async function generateUniqueUsername(firstName, lastName) {
-            const baseUsername = sanitizeUsername(`${firstName.toLowerCase()}.${lastName.toLowerCase()}`);
+            // توليد معرف باستخدام الأحرف الإنجليزية فقط
+            const baseUsername = sanitizeUsername(`${firstName.toLowerCase().replace(/[^a-z]/g, '')}.${lastName.toLowerCase().replace(/[^a-z]/g, '')}`);
             let username = baseUsername;
             let counter = 1;
             let isUnique = false;
@@ -961,7 +1281,7 @@
             
             if (!isUnique) {
                 // إذا لم نتمكن من إنشاء معرف فريد، ننشئ معرفاً عشوائياً
-                username = `user${Math.floor(10000 + Math.random() * 90000)}`;
+                username = `@user${Math.floor(10000 + Math.random() * 90000)}`;
             }
             
             return username;
@@ -985,16 +1305,16 @@
                     const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000;
                     
                     if (!lastChange) {
-                        changeStatus.innerHTML = 'التغير متاح حاليا';
+                        changeStatus.innerHTML = 'التغيير متاح حالياً';
                         changeStatus.style.color = 'var(--success)';
                         confirmChangeBtn.disabled = false;
                     } else if (currentTime - lastChange >= fiveDaysInMs) {
-                        changeStatus.innerHTML = 'التغير متاح حاليا';
+                        changeStatus.innerHTML = 'التغيير متاح حالياً';
                         changeStatus.style.color = 'var(--success)';
                         confirmChangeBtn.disabled = false;
                     } else {
                         const daysLeft = Math.ceil((fiveDaysInMs - (currentTime - lastChange)) / (24 * 60 * 60 * 1000));
-                        changeStatus.innerHTML = `يمكنك تغيير المعرف بعد ${daysLeft} أيام`;
+                        changeStatus.innerHTML = `يمكنك تغيير المعرف بعد ${daysLeft} يوم/أيام`;
                         changeStatus.style.color = 'var(--danger)';
                         confirmChangeBtn.disabled = true;
                     }
@@ -1009,6 +1329,7 @@
             close.addEventListener('click', () => {
                 usernameModal.classList.remove('active');
                 resetPasswordModal.classList.remove('active');
+                emailModal.classList.remove('active');
             });
         });
 
@@ -1075,7 +1396,7 @@
                     checkUsernameAvailability(username);
                 } catch (error) {
                     console.error(error);
-                    usernameInput.value = `user${Math.floor(10000 + Math.random() * 90000)}`;
+                    usernameInput.value = `@user${Math.floor(10000 + Math.random() * 90000)}`;
                 }
             }
         }
@@ -1138,6 +1459,13 @@
         // إنشاء حساب جديد
         signupForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // التحقق إذا كان المستخدم مسجل دخول بالفعل
+            if (auth.currentUser) {
+                showNotification('أنت مسجل دخول بالفعل، الرجاء تسجيل الخروج أولاً', 'warning');
+                return;
+            }
+            
             const firstName = firstNameInput.value.trim();
             const lastName = lastNameInput.value.trim();
             const email = document.getElementById('signupEmail').value.trim();
@@ -1157,6 +1485,12 @@
             
             if (!username || username.length < 3) {
                 showNotification('المعرف يجب أن يكون على الأقل 3 أحرف', 'error');
+                return;
+            }
+            
+            // التحقق من قوة كلمة المرور
+            if (password.length < 8) {
+                showNotification('كلمة المرور يجب أن تكون على الأقل 8 أحرف', 'error');
                 return;
             }
             
@@ -1295,24 +1629,47 @@
         googleLogin.addEventListener('click', googleSignIn);
         googleSignup.addEventListener('click', googleSignIn);
 
-        // تسجيل الخروج
+        // تأكيد تسجيل الخروج
         logoutBtn.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                showNotification('تم تسجيل الخروج بنجاح', 'success');
-                
-                // إعادة ضبط الصورة الرمزية
-                userAvatar.style.backgroundImage = '';
-                userAvatar.innerHTML = '<i class="fas fa-user"></i>';
-                
-                // الانتقال إلى تبويب تسجيل الدخول
-                tabs.forEach(t => t.classList.remove('active'));
-                document.querySelector('[data-tab="login"]').classList.add('active');
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
+            // إنشاء نافذة تأكيد
+            const confirmation = document.createElement('div');
+            confirmation.className = 'confirmation-modal';
+            confirmation.innerHTML = `
+                <h3>هل أنت متأكد من رغبتك في تسجيل الخروج؟</h3>
+                <div class="actions">
+                    <button class="btn btn-outline" id="cancelLogout">إلغاء</button>
+                    <button class="btn btn-danger" id="confirmLogout">تسجيل الخروج</button>
+                </div>
+            `;
+            
+            document.body.appendChild(confirmation);
+            
+            // إضافة المستمعين للأزرار
+            document.getElementById('cancelLogout').addEventListener('click', () => {
+                document.body.removeChild(confirmation);
+            });
+            
+            document.getElementById('confirmLogout').addEventListener('click', () => {
+                auth.signOut().then(() => {
+                    showNotification('تم تسجيل الخروج بنجاح', 'success');
+                    
+                    // إعادة ضبط الصورة الرمزية
+                    userAvatar.style.backgroundImage = '';
+                    userAvatar.innerHTML = '<i class="fas fa-user"></i>';
+                    
+                    // الانتقال إلى تبويب تسجيل الدخول
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="login"]').classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById('loginContent').classList.add('active');
+                    
+                    document.body.removeChild(confirmation);
+                }).catch((error) => {
+                    showNotification(`خطأ في تسجيل الخروج: ${error.message}`, 'error');
+                    document.body.removeChild(confirmation);
                 });
-                document.getElementById('loginContent').classList.add('active');
-            }).catch((error) => {
-                showNotification(`خطأ في تسجيل الخروج: ${error.message}`, 'error');
             });
         });
 
@@ -1364,6 +1721,7 @@
         setupPasswordToggle('loginPasswordToggle', 'password');
         setupPasswordToggle('signupPasswordToggle', 'signupPassword');
         setupPasswordToggle('confirmPasswordToggle', 'confirmPassword');
+        setupPasswordToggle('emailPasswordToggle', 'emailPassword');
 
         // فتح نافذة إعادة تعيين كلمة المرور
         forgotPassword.addEventListener('click', () => {
@@ -1382,6 +1740,7 @@
                 .then(() => {
                     showNotification('تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني', 'success');
                     resetPasswordModal.classList.remove('active');
+                    resetEmail.value = ''; // إفراغ حقل البريد
                 })
                 .catch((error) => {
                     showNotification(`خطأ: ${error.message}`, 'error');
@@ -1391,6 +1750,191 @@
         // إلغاء إعادة تعيين كلمة المرور
         document.querySelector('.cancel-reset').addEventListener('click', () => {
             resetPasswordModal.classList.remove('active');
+        });
+
+        // فتح نافذة تغيير البريد الإلكتروني
+        editEmailBtn.addEventListener('click', () => {
+            const user = auth.currentUser;
+            if (user) {
+                currentEmail.value = user.email;
+                newEmailInput.value = '';
+                emailPassword.value = '';
+                emailModal.classList.add('active');
+            }
+        });
+
+        // تأكيد تغيير البريد الإلكتروني
+        confirmEmailBtn.addEventListener('click', () => {
+            const user = auth.currentUser;
+            if (!user) return;
+            
+            const newEmail = newEmailInput.value.trim();
+            const password = emailPassword.value;
+            
+            if (!newEmail) {
+                showNotification('الرجاء إدخال بريد إلكتروني جديد', 'error');
+                return;
+            }
+            
+            if (!password) {
+                showNotification('الرجاء إدخال كلمة المرور', 'error');
+                return;
+            }
+            
+            // إعادة المصادقة للمستخدم
+            const credential = firebase.auth.EmailAuthProvider.credential(user.email, password);
+            
+            user.reauthenticateWithCredential(credential)
+                .then(() => {
+                    // تحديث البريد الإلكتروني
+                    user.updateEmail(newEmail)
+                        .then(() => {
+                            // تحديث البريد في قاعدة البيانات
+                            database.ref('users/' + user.uid).update({
+                                email: newEmail
+                            });
+                            
+                            showNotification('تم تحديث البريد الإلكتروني بنجاح', 'success');
+                            userEmail.textContent = newEmail;
+                            emailModal.classList.remove('active');
+                        })
+                        .catch((error) => {
+                            showNotification(`خطأ في تحديث البريد: ${error.message}`, 'error');
+                        });
+                })
+                .catch((error) => {
+                    showNotification(`خطأ في المصادقة: ${error.message}`, 'error');
+                });
+        });
+
+        // إلغاء تغيير البريد الإلكتروني
+        document.querySelector('.cancel-email').addEventListener('click', () => {
+            emailModal.classList.remove('active');
+        });
+
+        // نسخ المعلومات إلى الحافظة
+        copyButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const type = button.getAttribute('data-copy');
+                let textToCopy = '';
+                
+                switch(type) {
+                    case 'fullName':
+                        textToCopy = userFullName.textContent;
+                        break;
+                    case 'username':
+                        textToCopy = userUsername.textContent;
+                        break;
+                    case 'email':
+                        textToCopy = userEmail.textContent;
+                        break;
+                }
+                
+                navigator.clipboard.writeText(textToCopy)
+                    .then(() => {
+                        showNotification('تم نسخ المعلومات إلى الحافظة', 'success');
+                    })
+                    .catch(() => {
+                        showNotification('حدث خطأ أثناء النسخ', 'error');
+                    });
+            });
+        });
+
+        // تحرير الاسم الكامل
+        editNameBtn.addEventListener('click', () => {
+            const fullName = userFullName.textContent;
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+            
+            // حفظ القيمة الأصلية في خاصية dataset
+            userFullName.dataset.original = fullName;
+            
+            userFullName.innerHTML = `
+                <div class="editable-field">
+                    <input type="text" id="editFirstName" value="${firstName}" placeholder="الاسم الأول">
+                    <input type="text" id="editLastName" value="${lastName}" placeholder="اسم العائلة">
+                    <button class="save-btn" id="saveNameBtn">حفظ</button>
+                    <button class="cancel-btn" id="cancelNameBtn">إلغاء</button>
+                </div>
+            `;
+            
+            document.getElementById('saveNameBtn').addEventListener('click', saveName);
+            document.getElementById('cancelNameBtn').addEventListener('click', cancelNameEdit);
+        });
+
+        function saveName() {
+            const firstName = document.getElementById('editFirstName').value.trim();
+            const lastName = document.getElementById('editLastName').value.trim();
+            
+            if (!firstName || !lastName) {
+                showNotification('الرجاء إدخال الاسم الأول واسم العائلة', 'error');
+                return;
+            }
+            
+            const fullName = `${firstName} ${lastName}`;
+            const user = auth.currentUser;
+            
+            if (user) {
+                database.ref('users/' + user.uid).update({
+                    firstName: firstName,
+                    lastName: lastName,
+                    fullName: fullName
+                })
+                .then(() => {
+                    userFullName.innerHTML = `${fullName}<button class="copy-btn" data-copy="fullName"><i class="fas fa-copy"></i></button>`;
+                    showNotification('تم تحديث الاسم بنجاح', 'success');
+                })
+                .catch((error) => {
+                    showNotification(`خطأ في تحديث الاسم: ${error.message}`, 'error');
+                });
+            }
+        }
+
+        function cancelNameEdit() {
+            // استعادة القيمة الأصلية
+            userFullName.innerHTML = `${userFullName.dataset.original}<button class="copy-btn" data-copy="fullName"><i class="fas fa-copy"></i></button>`;
+        }
+
+        // تحقق من قوة كلمة المرور
+        document.getElementById('signupPassword').addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            let text = '';
+            let className = '';
+            
+            if (password.length === 0) {
+                passwordStrength.className = 'password-strength';
+                strengthText.textContent = 'قوة كلمة المرور';
+                return;
+            }
+            
+            // طول كلمة المرور
+            if (password.length > 7) strength += 1;
+            if (password.length > 10) strength += 1;
+            
+            // يحتوي على أرقام
+            if (/\d/.test(password)) strength += 1;
+            
+            // يحتوي على أحرف خاصة
+            if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 1;
+            
+            // يحتوي على أحرف كبيرة وصغيرة
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 1;
+            
+            if (strength <= 2) {
+                text = 'ضعيفة';
+                className = 'weak';
+            } else if (strength <= 4) {
+                text = 'متوسطة';
+                className = 'medium';
+            } else {
+                text = 'قوية';
+                className = 'strong';
+            }
+            
+            passwordStrength.className = `password-strength ${className}`;
+            strengthText.textContent = `قوة كلمة المرور: ${text}`;
         });
 
         // مراقبة حالة تسجيل الدخول
