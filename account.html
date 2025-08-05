@@ -31,19 +31,14 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
             color: #333;
             line-height: 1.6;
         }
         
         .container {
-            max-width: 100%;
             width: 100%;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            border: 3px solid var(--primary);
         }
         
         header {
@@ -51,7 +46,6 @@
             color: white;
             padding: 25px;
             text-align: center;
-            border-bottom: 3px solid var(--accent);
         }
         
         .page-title {
@@ -197,10 +191,10 @@
         .form-group {
             margin-bottom: 20px;
             position: relative;
-            border: 2px solid #eaeaea;
             padding: 15px;
             border-radius: 10px;
             transition: border-color 0.3s;
+            background: #f8f9fa;
         }
         
         .form-group:focus-within {
@@ -233,7 +227,6 @@
         .user-info-section {
             text-align: center;
             padding: 15px 0;
-            border: 3px solid var(--primary);
             border-radius: 15px;
             padding: 20px;
             margin: 15px 0;
@@ -257,7 +250,6 @@
             font-size: 2.5rem;
             color: white;
             border: 3px solid white;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
             background-size: cover;
             background-position: center;
             transition: opacity 0.5s ease;
@@ -507,7 +499,6 @@
             justify-content: center;
             gap: 10px;
             margin-bottom: 15px;
-            border: 2px solid var(--accent);
             padding: 10px;
             border-radius: 10px;
             background: #e8f4ff;
@@ -519,12 +510,87 @@
             border-radius: 50px;
             font-weight: 600;
             color: var(--primary);
-            border: 2px solid var(--accent);
+        }
+        
+        /* تحسينات جديدة */
+        .container {
+            max-width: 100%;
+            min-height: 100vh;
+        }
+        
+        .username-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .username-input input {
+            flex: 1;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        
+        .btn:disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .username-check {
+            margin-top: 5px;
+            font-size: 0.85rem;
+        }
+        
+        .username-check.available {
+            color: var(--success);
+        }
+        
+        .username-check.unavailable {
+            color: var(--danger);
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            display: none;
+        }
+        
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
         }
         
         @media (max-width: 600px) {
             .container {
-                border-radius: 15px;
+                border-radius: 0;
             }
             
             header {
@@ -612,6 +678,11 @@
         </div>
     </div>
     
+    <!-- شاشة التحميل -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
     <div class="container">
         <header>
             <h1 class="page-title">حسابي</h1>
@@ -668,6 +739,19 @@
             <div class="tab-content" id="signupContent">
                 <h2 class="section-title">إنشاء حساب جديد</h2>
                 
+                <!-- زر تسجيل الدخول بقوقل -->
+                <div class="social-login">
+                    <button id="googleSignup" class="btn btn-google">
+                        <i class="fab fa-google"></i> التسجيل باستخدام Google
+                    </button>
+                </div>
+                
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <div class="divider-text">أو</div>
+                    <div class="divider-line"></div>
+                </div>
+                
                 <form id="signupForm">
                     <div class="form-group">
                         <label for="firstName"><i class="fas fa-user"></i> الاسم الأول</label>
@@ -700,13 +784,17 @@
                         </button>
                     </div>
                     
-                    <div class="username-display">
-                        <i class="fas fa-at"></i>
-                        <span id="generatedUsername">سيتم توليد معرف فريد لك</span>
+                    <div class="form-group">
+                        <label for="usernameInput"><i class="fas fa-at"></i> المعرف</label>
+                        <div class="username-input">
+                            <input type="text" id="usernameInput" class="form-control" placeholder="سيتم توليد معرف فريد لك" required>
+                        </div>
+                        <div id="usernameCheck" class="username-check"></div>
+                        <small class="text-muted">يمكنك تعديل المعرف قبل إنشاء الحساب</small>
                     </div>
                     
                     <div class="form-group">
-                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;" id="signupButton">
                             <i class="fas fa-user-plus"></i> إنشاء حساب جديد
                         </button>
                     </div>
@@ -791,6 +879,7 @@
         const loginForm = document.getElementById('loginForm');
         const signupForm = document.getElementById('signupForm');
         const googleLogin = document.getElementById('googleLogin');
+        const googleSignup = document.getElementById('googleSignup');
         const logoutBtn = document.getElementById('logoutBtn');
         const notification = document.getElementById('notification');
         const changeUsernameBtn = document.getElementById('changeUsernameBtn');
@@ -803,11 +892,14 @@
         const changeStatus = document.getElementById('changeStatus');
         const userAvatar = document.getElementById('userAvatar');
         const forgotPassword = document.getElementById('forgotPassword');
-        const generatedUsername = document.getElementById('generatedUsername');
+        const usernameInput = document.getElementById('usernameInput');
+        const usernameCheck = document.getElementById('usernameCheck');
         const firstNameInput = document.getElementById('firstName');
         const lastNameInput = document.getElementById('lastName');
         const sendResetBtn = document.getElementById('sendResetBtn');
         const resetEmail = document.getElementById('resetEmail');
+        const signupButton = document.getElementById('signupButton');
+        const loadingOverlay = document.getElementById('loadingOverlay');
         
         // عناصر معلومات المستخدم
         const userEmail = document.getElementById('userEmail');
@@ -843,9 +935,15 @@
             }, 3000);
         }
 
+        // دالة لتنقية اسم المستخدم من الأحرف غير المسموحة
+        function sanitizeUsername(username) {
+            // استبدال الأحرف غير المسموحة بشرطة سفلية
+            return username.replace(/[.#$\[\]]/g, '_');
+        }
+
         // توليد معرف عشوائي فريد
         async function generateUniqueUsername(firstName, lastName) {
-            const baseUsername = `${firstName.toLowerCase()}.${lastName.toLowerCase()}`;
+            const baseUsername = sanitizeUsername(`${firstName.toLowerCase()}.${lastName.toLowerCase()}`);
             let username = baseUsername;
             let counter = 1;
             let isUnique = false;
@@ -871,7 +969,8 @@
 
         // التحقق من توفر المعرف
         async function isUsernameAvailable(username) {
-            const snapshot = await database.ref('usernames').child(username).once('value');
+            const sanitized = sanitizeUsername(username);
+            const snapshot = await database.ref('usernames').child(sanitized).once('value');
             return !snapshot.exists();
         }
 
@@ -926,8 +1025,10 @@
                 return;
             }
             
+            const sanitizedUsername = sanitizeUsername(newUsername);
+            
             // التحقق من توفر المعرف
-            const isAvailable = await isUsernameAvailable(newUsername);
+            const isAvailable = await isUsernameAvailable(sanitizedUsername);
             if (!isAvailable) {
                 showNotification('المعرف غير متاح، الرجاء اختيار معرف آخر', 'error');
                 return;
@@ -943,15 +1044,15 @@
                 
                 // تحديث المعرف في قاعدة البيانات
                 userDataRef.update({
-                    username: newUsername,
+                    username: sanitizedUsername,
                     lastUsernameChange: new Date().getTime()
                 }).then(() => {
                     // تحديث معرفات المستخدمين
                     database.ref('usernames').child(oldUsername).remove();
-                    database.ref('usernames').child(newUsername).set(user.uid);
+                    database.ref('usernames').child(sanitizedUsername).set(user.uid);
                     
                     showNotification('تم تغيير المعرف بنجاح!', 'success');
-                    userUsername.textContent = newUsername;
+                    userUsername.textContent = sanitizedUsername;
                     usernameModal.classList.remove('active');
                 }).catch(error => {
                     showNotification(`خطأ: ${error.message}`, 'error');
@@ -970,13 +1071,43 @@
             if (firstName && lastName) {
                 try {
                     const username = await generateUniqueUsername(firstName, lastName);
-                    generatedUsername.textContent = `@${username}`;
+                    usernameInput.value = username;
+                    checkUsernameAvailability(username);
                 } catch (error) {
                     console.error(error);
-                    generatedUsername.textContent = `@user${Math.floor(10000 + Math.random() * 90000)}`;
+                    usernameInput.value = `user${Math.floor(10000 + Math.random() * 90000)}`;
                 }
             }
         }
+
+        // التحقق من توفر اسم المستخدم
+        async function checkUsernameAvailability(username) {
+            if (username.length < 3) {
+                usernameCheck.textContent = '';
+                return;
+            }
+            
+            const sanitized = sanitizeUsername(username);
+            const isAvailable = await isUsernameAvailable(sanitized);
+            
+            if (isAvailable) {
+                usernameCheck.textContent = '✓ هذا المعرف متاح';
+                usernameCheck.className = 'username-check available';
+            } else {
+                usernameCheck.textContent = '✗ هذا المعرف غير متاح';
+                usernameCheck.className = 'username-check unavailable';
+            }
+        }
+        
+        // استماع لتغيير اسم المستخدم يدوياً
+        usernameInput.addEventListener('input', () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                checkUsernameAvailability(username);
+            } else {
+                usernameCheck.textContent = '';
+            }
+        });
 
         // تسجيل الدخول باستخدام البريد وكلمة المرور
         loginForm.addEventListener('submit', (e) => {
@@ -1012,6 +1143,7 @@
             const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+            const username = usernameInput.value.trim();
             
             if (!firstName || !lastName) {
                 showNotification('الرجاء إدخال الاسم الأول واسم العائلة', 'error');
@@ -1023,16 +1155,24 @@
                 return;
             }
             
-            // توليد معرف فريد
-            let username;
-            try {
-                username = await generateUniqueUsername(firstName, lastName);
-                generatedUsername.textContent = `@${username}`;
-            } catch (error) {
-                console.error(error);
-                username = `user${Math.floor(10000 + Math.random() * 90000)}`;
-                generatedUsername.textContent = `@${username}`;
+            if (!username || username.length < 3) {
+                showNotification('المعرف يجب أن يكون على الأقل 3 أحرف', 'error');
+                return;
             }
+            
+            const sanitizedUsername = sanitizeUsername(username);
+            
+            // التحقق من توفر المعرف
+            const isAvailable = await isUsernameAvailable(sanitizedUsername);
+            if (!isAvailable) {
+                showNotification('المعرف غير متاح، الرجاء اختيار معرف آخر', 'error');
+                return;
+            }
+            
+            // إظهار شاشة التحميل وتعطيل الزر
+            loadingOverlay.style.display = 'flex';
+            signupButton.disabled = true;
+            signupButton.innerHTML = '<div class="loader"></div> جاري إنشاء الحساب...';
             
             // إنشاء حساب
             auth.createUserWithEmailAndPassword(email, password)
@@ -1045,21 +1185,21 @@
                         firstName: firstName,
                         lastName: lastName,
                         fullName: `${firstName} ${lastName}`,
-                        username: username,
+                        username: sanitizedUsername,
                         email: email,
                         createdAt: new Date().toISOString(),
                         lastUsernameChange: 0
                     });
                     
                     // حفظ المعرف في جدول المستخدمين
-                    database.ref('usernames').child(username).set(user.uid);
+                    database.ref('usernames').child(sanitizedUsername).set(user.uid);
                     
                     showNotification(`تم إنشاء حسابك بنجاح، ${firstName}!`, 'success');
                     updateUserInfo(user, {
                         firstName, 
                         lastName, 
                         fullName: `${firstName} ${lastName}`, 
-                        username, 
+                        username: sanitizedUsername, 
                         email
                     });
                     
@@ -1077,11 +1217,17 @@
                     } else {
                         showNotification(`خطأ في إنشاء الحساب: ${error.message}`, 'error');
                     }
+                })
+                .finally(() => {
+                    // إخفاء شاشة التحميل وتمكين الزر
+                    loadingOverlay.style.display = 'none';
+                    signupButton.disabled = false;
+                    signupButton.innerHTML = '<i class="fas fa-user-plus"></i> إنشاء حساب جديد';
                 });
         });
 
         // تسجيل الدخول باستخدام Google
-        googleLogin.addEventListener('click', async () => {
+        function googleSignIn() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
                 .then(async (result) => {
@@ -1143,7 +1289,11 @@
                 .catch((error) => {
                     showNotification(`خطأ في تسجيل الدخول: ${error.message}`, 'error');
                 });
-        });
+        }
+        
+        // ربط زر تسجيل الدخول بقوقل في صفحتي التسجيل والدخول
+        googleLogin.addEventListener('click', googleSignIn);
+        googleSignup.addEventListener('click', googleSignIn);
 
         // تسجيل الخروج
         logoutBtn.addEventListener('click', () => {
