@@ -523,31 +523,36 @@
         
         .password-toggle {
             position: absolute;
-            left: 15px; /* تم التعديل من right إلى left */
+            left: 15px;
             top: 50%;
             transform: translateY(-50%);
             background: none;
             border: none;
             color: var(--gray);
             cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+            height: 36px;
+            width: 36px;
         }
         
-        .forgot-password {
-            display: block;
-            text-align: left;
-            color: var(--primary);
-            margin-top: 4px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            transition: color 0.3s;
+        .password-toggle:hover {
+            background: rgba(0, 0, 0, 0.05);
         }
         
-        .forgot-password:hover {
-            text-decoration: underline;
-            color: var(--secondary);
+        .password-container {
+            position: relative;
         }
         
-        .loading-overlay {
+        .form-control.password-field {
+            padding-left: 45px;
+        }
+        
+        .confirmation-modal {
             position: fixed;
             top: 0;
             left: 0;
@@ -557,98 +562,27 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 3000;
-            display: none;
+            z-index: 4000;
         }
         
-        .loading-spinner {
-            width: 45px;
-            height: 45px;
-            border: 4px solid rgba(255,255,255,.3);
-            border-radius: 50%;
-            border-top-color: var(--primary);
-            animation: spin 1s ease-in-out infinite;
+        .confirmation-modal .content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 90%;
+            width: 400px;
+            text-align: center;
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .confirmation-modal h3 {
+            margin-bottom: 15px;
+            color: var(--dark);
         }
         
-        .password-strength {
-            height: 3px;
-            border-radius: 3px;
-            margin-top: 5px;
-            background: #ddd;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .password-strength::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 0%;
-            background: var(--danger);
-            transition: width 0.3s ease;
-        }
-        
-        .password-strength.weak::before {
-            width: 33%;
-            background: var(--danger);
-        }
-        
-        .password-strength.medium::before {
-            width: 66%;
-            background: var(--warning);
-        }
-        
-        .password-strength.strong::before {
-            width: 100%;
-            background: var(--success);
-        }
-        
-        .strength-text {
-            font-size: 0.7rem;
-            margin-top: 3px;
-            color: var(--gray);
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                min-height: 100vh;
-                border-radius: 0;
-            }
-            
-            header {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .tabs {
-                width: 100%;
-            }
-            
-            .content {
-                padding: 10px;
-            }
-            
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
-            
-            .modal-content {
-                width: 95%;
-            }
-            
-            .back-button {
-                top: 8px;
-                left: 8px;
-                width: 32px;
-                height: 32px;
-                font-size: 1rem;
-            }
+        .confirmation-modal .actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
         }
     </style>
 </head>
@@ -730,10 +664,12 @@
                 
                 <div class="form-group">
                     <label for="emailPassword"><i class="fas fa-lock"></i> كلمة المرور الحالية</label>
-                    <input type="password" id="emailPassword" class="form-control" placeholder="ادخل كلمة المرور الحالية" required>
-                    <button type="button" class="password-toggle" id="emailPasswordToggle">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                    <div class="password-container">
+                        <input type="password" id="emailPassword" class="form-control password-field" placeholder="ادخل كلمة المرور الحالية" required>
+                        <button type="button" class="password-toggle" id="emailPasswordToggle">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -752,7 +688,7 @@
         <header>
             <div class="page-title">حسابي</div>
             <div class="tabs">
-                <div class="tab" data-tab="account">حسابي</div>
+                <div class="tab active" data-tab="account">حسابي</div>
                 <div class="tab" data-tab="login">تسجيل الدخول</div>
                 <div class="tab" data-tab="signup">إنشاء حساب</div>
             </div>
@@ -783,10 +719,12 @@
                     
                     <div class="form-group">
                         <label for="password"><i class="fas fa-lock"></i> كلمة المرور</label>
-                        <input type="password" id="password" class="form-control" placeholder="ادخل كلمة المرور" required>
-                        <button type="button" class="password-toggle" id="loginPasswordToggle">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        <div class="password-container">
+                            <input type="password" id="password" class="form-control password-field" placeholder="ادخل كلمة المرور" required>
+                            <button type="button" class="password-toggle" id="loginPasswordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -834,20 +772,24 @@
                     
                     <div class="form-group">
                         <label for="signupPassword"><i class="fas fa-lock"></i> كلمة المرور</label>
-                        <input type="password" id="signupPassword" class="form-control" placeholder="اختر كلمة مرور قوية" required>
-                        <button type="button" class="password-toggle" id="signupPasswordToggle">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        <div class="password-container">
+                            <input type="password" id="signupPassword" class="form-control password-field" placeholder="اختر كلمة مرور قوية" required>
+                            <button type="button" class="password-toggle" id="signupPasswordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                         <div class="password-strength" id="passwordStrength"></div>
                         <div class="strength-text" id="strengthText">قوة كلمة المرور</div>
                     </div>
                     
                     <div class="form-group">
                         <label for="confirmPassword"><i class="fas fa-lock"></i> تأكيد كلمة المرور</label>
-                        <input type="password" id="confirmPassword" class="form-control" placeholder="أعد كتابة كلمة المرور" required>
-                        <button type="button" class="password-toggle" id="confirmPasswordToggle">
-                            <i class="fas fa-eye"></i>
-                        </button>
+                        <div class="password-container">
+                            <input type="password" id="confirmPassword" class="form-control password-field" placeholder="أعد كتابة كلمة المرور" required>
+                            <button type="button" class="password-toggle" id="confirmPasswordToggle">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     
                     <div class="form-group">
@@ -1012,11 +954,11 @@
             }, 500);
         });
 
-        // زر الرجوع إلى الصفحة الرئيسية - تم التعديل هنا
+        // زر الرجوع إلى الصفحة الرئيسية
         backButton.addEventListener('click', () => {
             showNotification('جارٍ الرجوع إلى الصفحة الرئيسية...', 'success');
             setTimeout(() => {
-                window.location.href = 'index.html'; // تم التعديل هنا
+                window.location.href = 'index.html';
             }, 1000);
         });
 
@@ -1368,7 +1310,13 @@
 
         // تسجيل الدخول باستخدام Google
         function googleSignIn() {
+            loadingOverlay.style.display = 'flex';
             const provider = new firebase.auth.GoogleAuthProvider();
+            
+            // إضافة نطاق الملف الشخصي للوصول إلى معلومات المستخدم
+            provider.addScope('profile');
+            provider.addScope('email');
+            
             auth.signInWithPopup(provider)
                 .then(async (result) => {
                     const user = result.user;
@@ -1420,7 +1368,14 @@
                     document.getElementById('accountContent').classList.add('active');
                 })
                 .catch((error) => {
-                    showNotification(`خطأ في تسجيل الدخول: ${error.message}`, 'error');
+                    if (error.code === 'auth/popup-closed-by-user') {
+                        showNotification('تم إغلاق نافذة التسجيل. الرجاء المحاولة مرة أخرى.', 'warning');
+                    } else {
+                        showNotification(`خطأ في تسجيل الدخول: ${error.message}`, 'error');
+                    }
+                })
+                .finally(() => {
+                    loadingOverlay.style.display = 'none';
                 });
         }
         
@@ -1432,10 +1387,12 @@
             const confirmation = document.createElement('div');
             confirmation.className = 'confirmation-modal';
             confirmation.innerHTML = `
-                <h3>هل أنت متأكد من رغبتك في تسجيل الخروج؟</h3>
-                <div class="actions">
-                    <button class="btn btn-outline" id="cancelLogout">إلغاء</button>
-                    <button class="btn btn-danger" id="confirmLogout">تسجيل الخروج</button>
+                <div class="content">
+                    <h3>هل أنت متأكد من رغبتك في تسجيل الخروج؟</h3>
+                    <div class="actions">
+                        <button class="btn btn-outline" id="cancelLogout">إلغاء</button>
+                        <button class="btn btn-danger" id="confirmLogout">تسجيل الخروج</button>
+                    </div>
                 </div>
             `;
             
