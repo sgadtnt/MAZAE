@@ -523,7 +523,7 @@
         
         .password-toggle {
             position: absolute;
-            left: 15px;
+            left: 15px; /* تم التعديل من right إلى left */
             top: 50%;
             transform: translateY(-50%);
             background: none;
@@ -753,14 +753,14 @@
             <div class="page-title">حسابي</div>
             <div class="tabs">
                 <div class="tab" data-tab="account">حسابي</div>
-                <div class="tab active" data-tab="login">تسجيل الدخول</div>
+                <div class="tab" data-tab="login">تسجيل الدخول</div>
                 <div class="tab" data-tab="signup">إنشاء حساب</div>
             </div>
         </header>
         
         <div class="content">
             <!-- قسم تسجيل الدخول -->
-            <div class="tab-content active" id="loginContent">
+            <div class="tab-content" id="loginContent">
                 <h2 class="section-title">سجل دخول إلى حسابك</h2>
                 
                 <div class="social-login">
@@ -866,7 +866,7 @@
             </div>
             
             <!-- قسم حسابي (يظهر بعد تسجيل الدخول) -->
-            <div class="tab-content" id="accountContent">
+            <div class="tab-content active" id="accountContent">
                 <div class="user-info-section">
                     <div class="user-avatar">
                         <div class="avatar" id="userAvatar">
@@ -1012,11 +1012,11 @@
             }, 500);
         });
 
-        // زر الرجوع إلى الصفحة الرئيسية
+        // زر الرجوع إلى الصفحة الرئيسية - تم التعديل هنا
         backButton.addEventListener('click', () => {
             showNotification('جارٍ الرجوع إلى الصفحة الرئيسية...', 'success');
             setTimeout(() => {
-                window.location.href = 'https://example.com'; // استبدل بالرابط الفعلي
+                window.location.href = 'index.html'; // تم التعديل هنا
             }, 1000);
         });
 
