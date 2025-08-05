@@ -3,1079 +3,943 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تسجيل الدخول وتغيير المعرف</title>
+    <title>حسابي - متجر زيون</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
-        :root {
-            --color-primary: #1A237E;
-            --color-secondary: #FFD700;
-            --color-light: #f0f2f5;
-            --color-dark: #212121;
-            --color-accent: #4CAF50;
-            --color-warning: #FF9800;
-            --color-danger: #F44336;
-            --shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
-            --transition: all 0.3s ease;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', 'Cairo', sans-serif;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1d3557;
+            --light: #f8f9fa;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --gray: #6c757d;
         }
         
         body {
-            background: linear-gradient(135deg, #1A237E, #283593);
-            color: white;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 20px;
-            direction: rtl;
+            color: #333;
+            line-height: 1.6;
         }
         
-        .login-container {
-            background: rgba(255, 255, 255, 0.12);
-            backdrop-filter: blur(10px);
-            border-radius: var(--radius);
-            padding: 30px;
+        .container {
+            max-width: 800px;
             width: 100%;
-            max-width: 450px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
-            position: relative;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 30px;
+            text-align: center;
         }
         
         .logo {
-            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
         }
         
         .logo i {
-            font-size: 3.5rem;
-            color: var(--color-secondary);
-            text-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+            color: #ffd700;
         }
         
-        h1 {
+        .page-title {
             font-size: 1.8rem;
-            margin-bottom: 15px;
-            font-weight: 700;
-            color: white;
+            margin: 15px 0;
         }
         
-        .subtitle {
-            font-size: 1rem;
-            margin-bottom: 25px;
-            opacity: 0.9;
-            line-height: 1.6;
-            color: #e0e0e0;
-        }
-        
-        .google-btn {
+        .tabs {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            background: white;
-            color: #555;
-            border: none;
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 50px;
-            padding: 12px 25px;
-            font-size: 1rem;
-            font-weight: 600;
+            padding: 5px;
+            margin: 20px auto;
+            max-width: 500px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 50px;
             cursor: pointer;
-            width: 100%;
-            transition: var(--transition);
-            box-shadow: var(--shadow);
-            margin-bottom: 15px;
+            transition: all 0.3s;
+            font-weight: 500;
         }
         
-        .google-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         }
         
-        .google-btn i {
-            font-size: 1.5rem;
-            color: #4285F4;
+        .content {
+            padding: 30px;
         }
         
-        .loading {
+        .tab-content {
             display: none;
-            margin: 20px 0;
-            flex-direction: column;
-            align-items: center;
         }
         
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid var(--color-secondary);
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .user-info {
-            display: none;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        .tab-content.active {
+            display: block;
             animation: fadeIn 0.5s ease;
         }
         
-        .user-info img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin-bottom: 15px;
-            border: 3px solid var(--color-secondary);
-            object-fit: cover;
-            background: white;
-            padding: 3px;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
-        .user-info h2 {
-            margin-bottom: 10px;
+        .section-title {
             font-size: 1.5rem;
-            color: var(--color-secondary);
+            color: var(--primary);
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
         }
         
-        .info-container {
-            background: rgba(0, 0, 0, 0.1);
-            border-radius: var(--radius);
-            padding: 15px;
-            margin: 15px 0;
-            text-align: right;
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 3px;
         }
         
-        .info-row {
+        .social-login {
             display: flex;
-            justify-content: space-between;
-            margin: 12px 0;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            flex-direction: column;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 20px;
+            border-radius: 50px;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-google {
+            background: #4285F4;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+        
+        .divider-text {
+            color: var(--gray);
             font-size: 1rem;
         }
         
-        .info-label {
-            font-weight: bold;
-            color: var(--color-secondary);
-            flex: 1;
-        }
-        
-        .info-value {
-            text-align: left;
-            flex: 2;
-            direction: ltr;
-            padding-left: 10px;
-            word-break: break-all;
-            color: #e0e0e0;
-        }
-        
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-        
-        .action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
-            padding: 10px 20px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-size: 0.95rem;
-            font-weight: 600;
-        }
-        
-        .action-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-        
-        .logout-btn {
-            background: rgba(231, 76, 60, 0.2);
-        }
-        
-        .logout-btn:hover {
-            background: rgba(231, 76, 60, 0.3);
-        }
-        
-        .error {
-            background: rgba(231, 76, 60, 0.2);
-            padding: 12px;
-            border-radius: 8px;
-            margin: 15px 0;
-            display: none;
-            border: 1px solid rgba(231, 76, 60, 0.4);
-        }
-        
-        .success {
-            background: rgba(46, 204, 113, 0.2);
-            padding: 12px;
-            border-radius: 8px;
-            margin: 15px 0;
-            display: none;
-            border: 1px solid rgba(46, 204, 113, 0.4);
-        }
-        
-        .footer {
-            margin-top: 25px;
-            font-size: 0.9rem;
-            opacity: 0.8;
-            text-align: center;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .modal-content {
-            background: linear-gradient(135deg, #1A237E, #283593);
-            padding: 25px;
-            border-radius: var(--radius);
-            width: 90%;
-            max-width: 400px;
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            animation: scaleIn 0.4s ease;
-        }
-        
-        @keyframes scaleIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-        
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #ccc;
-        }
-        
-        .close-btn:hover {
-            color: white;
-        }
-        
-        .modal-title {
-            margin-bottom: 20px;
-            text-align: center;
-            color: var(--color-secondary);
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-        
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         
         .form-group label {
             display: block;
             margin-bottom: 10px;
-            font-weight: bold;
-            text-align: right;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 1.1rem;
         }
         
-        .form-group input {
+        .form-control {
             width: 100%;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            font-size: 1rem;
-            transition: var(--transition);
+            padding: 15px 20px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
         }
         
-        .form-group input:focus {
+        .form-control:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
             outline: none;
-            border-color: var(--color-secondary);
-            box-shadow: 0 0 0 2px rgba(255, 215, 0, 0.2);
         }
         
-        .submit-btn {
-            background: var(--color-secondary);
-            color: #1A237E;
-            border: none;
-            border-radius: 50px;
-            padding: 12px 25px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            transition: var(--transition);
-            margin-top: 10px;
-        }
-        
-        .submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        
-        .home-btn {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-            z-index: 10;
-        }
-        
-        .home-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(-15deg);
-        }
-        
-        .back-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition);
-            z-index: 10;
-            display: none;
-        }
-        
-        .back-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(15deg);
-        }
-        
-        .username-status {
-            margin-top: 10px;
-            font-size: 0.85rem;
-            color: var(--color-secondary);
+        .user-info-section {
             text-align: center;
+            padding: 20px 0;
         }
         
-        .countdown {
-            color: var(--color-warning);
-            font-weight: bold;
-        }
-        
-        .username-info {
+        .user-avatar {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
+            justify-content: center;
+            margin-bottom: 20px;
         }
         
-        .change-count {
-            font-size: 0.85rem;
-            color: #FFD700;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 3px 8px;
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            border: 4px solid white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .info-card {
+            background: #f8f9fa;
             border-radius: 15px;
+            padding: 20px;
+            text-align: right;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s;
         }
         
-        .change-history {
-            margin-top: 10px;
-            font-size: 0.8rem;
-            color: #bbb;
+        .info-card:hover {
+            transform: translateY(-5px);
         }
         
-        .username-availability {
-            margin-top: 5px;
-            font-size: 0.9rem;
+        .info-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin: 0 auto 15px;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            color: var(--dark);
+            margin-bottom: 8px;
+            font-size: 1.2rem;
+        }
+        
+        .info-value {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        footer {
             text-align: center;
-            padding: 5px;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 1rem;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        
+        .hidden {
             display: none;
-            border-radius: 4px;
-            font-weight: bold;
         }
         
-        .available {
-            color: var(--color-accent);
-            background: rgba(76, 175, 80, 0.1);
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 18px 30px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
         }
         
-        .not-available {
-            color: var(--color-danger);
-            background: rgba(244, 67, 54, 0.1);
+        .notification.show {
+            transform: translateX(0);
         }
         
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 25px 20px;
+        .notification.success {
+            background: var(--success);
+        }
+        
+        .notification.error {
+            background: var(--danger);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            transform: translateY(50px);
+            transition: transform 0.3s ease;
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .modal-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 25px;
+        }
+        
+        .modal-footer {
+            padding: 15px 25px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .username-change-info {
+            background: #e8f4ff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .username-change-info i {
+            color: var(--primary);
+            margin-left: 5px;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                border-radius: 15px;
             }
             
-            .logo i {
-                font-size: 3rem;
+            header {
+                padding: 20px;
             }
             
-            h1 {
+            .logo {
+                font-size: 1.8rem;
+            }
+            
+            .page-title {
                 font-size: 1.5rem;
             }
             
-            .user-info img {
-                width: 85px;
-                height: 85px;
+            .content {
+                padding: 20px;
             }
             
-            .action-btn {
-                padding: 8px 15px;
-                font-size: 0.9rem;
+            .action-buttons {
+                grid-template-columns: 1fr;
             }
         }
     </style>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- زر الصفحة الرئيسية -->
-    <div class="home-btn" id="homeBtn">
-        <i class="fas fa-home"></i>
-    </div>
+    <!-- إشعارات -->
+    <div id="notification" class="notification"></div>
     
-    <!-- زر الرجوع -->
-    <div class="back-btn" id="backBtn">
-        <i class="fas fa-arrow-left"></i>
-    </div>
-    
-    <div class="login-container">
-        <div class="logo">
-            <i class="fas fa-user-shield"></i>
-        </div>
-        <h1>تسجيل الدخول إلى حسابك</h1>
-        <p class="subtitle">سجل الدخول باستخدام حساب Google للاستمرار إلى حسابك الشخصي</p>
-        
-        <button id="googleSignIn" class="google-btn">
-            <i class="fab fa-google"></i>
-            <span>تسجيل الدخول باستخدام Google</span>
-        </button>
-        
-        <div id="loading" class="loading">
-            <div class="spinner"></div>
-            <p>جاري تسجيل الدخول...</p>
-        </div>
-        
-        <div id="errorMessage" class="error">
-            <p id="errorText"></p>
-        </div>
-        
-        <div id="successMessage" class="success">
-            <p id="successText"></p>
-        </div>
-        
-        <div id="userInfo" class="user-info">
-            <img id="userPhoto" src="https://ui-avatars.com/api/?name=User&background=random" alt="صورة المستخدم">
-            <h2 id="userName"></h2>
-            
-            <div class="info-container">
-                <div class="username-info">
-                    <span class="info-label">المعرف:</span>
-                    <span class="change-count" id="changeCount">مجاني</span>
-                </div>
-                <div class="info-row">
-                    <span id="username" class="info-value"></span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">البريد الإلكتروني:</span>
-                    <span id="userEmail" class="info-value"></span>
-                </div>
-                
-                <div class="info-row">
-                    <span class="info-label">تاريخ التسجيل:</span>
-                    <span id="joinDate" class="info-value"></span>
-                </div>
-                
-                <div class="change-history">
-                    <span class="info-label">آخر تغيير:</span>
-                    <span id="lastChange" class="info-value">لم يتم التغيير بعد</span>
-                </div>
-            </div>
-            
-            <div class="action-buttons">
-                <button id="changeUsernameBtn" class="action-btn">
-                    <i class="fas fa-edit"></i> تغيير المعرف
-                </button>
-                
-                <button id="logoutBtn" class="action-btn logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-                </button>
-            </div>
-            
-            <div class="username-status" id="usernameStatus">
-                يمكنك تغيير المعرف مرة واحدة مجانًا
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>جميع الحقوق محفوظة &copy; 2025 - نظام حسابي الشخصي</p>
-        </div>
-    </div>
-    
-    <!-- Modal لتغيير المعرف -->
+    <!-- نافذة تغيير اسم المستخدم -->
     <div id="usernameModal" class="modal">
         <div class="modal-content">
-            <span class="close-btn" id="closeUsernameModal">&times;</span>
-            <h3 class="modal-title">تغيير المعرف</h3>
-            
-            <div class="form-group">
-                <label for="newUsername">المعرف الجديد:</label>
-                <input type="text" id="newUsername" placeholder="أدخل معرفاً جديداً">
-                <div id="usernameAvailability" class="username-availability"></div>
+            <div class="modal-header">
+                <button class="modal-close">&times;</button>
+                <h2>تغيير اسم المستخدم</h2>
             </div>
-            
-            <div id="usernameInfo" class="username-status" style="text-align: center; margin: 15px 0;">
-                <p>يمكنك تغيير المعرف مرة واحدة مجانًا</p>
-                <p>التغيير التالي بعد <span class="countdown" id="countdownDays">5</span> أيام</p>
+            <div class="modal-body">
+                <div class="username-change-info">
+                    <i class="fas fa-info-circle"></i>
+                    <span>يمكنك تغيير اسم المستخدم مجاناً أول مرة، ثم بعد ذلك كل 5 أيام</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="newUsername"><i class="fas fa-user"></i> اسم المستخدم الجديد</label>
+                    <input type="text" id="newUsername" class="form-control" placeholder="ادخل اسم المستخدم الجديد" required>
+                    <small class="text-muted">يجب أن يكون اسم المستخدم فريداً ومكون من 3-20 حرف</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="changeStatus">حالة التغيير</label>
+                    <div id="changeStatus" class="form-control" style="background: #f8f9fa; color: var(--dark);">
+                        جاهز للتغيير
+                    </div>
+                </div>
             </div>
-            
-            <div id="usernameError" class="error" style="display: none;">
-                <p id="usernameErrorText"></p>
+            <div class="modal-footer">
+                <button id="cancelChangeBtn" class="btn btn-outline">إلغاء</button>
+                <button id="confirmChangeBtn" class="btn btn-primary">تغيير اسم المستخدم</button>
             </div>
-            
-            <button id="confirmUsernameChange" class="submit-btn">تأكيد التغيير</button>
         </div>
     </div>
-
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-store"></i>
+                <span>متجر زيون</span>
+            </div>
+            <h1 class="page-title">صفحة حساب المستخدم</h1>
+            
+            <div class="tabs">
+                <div class="tab active" data-tab="login">تسجيل الدخول</div>
+                <div class="tab" data-tab="signup">إنشاء حساب</div>
+                <div class="tab" data-tab="account">حسابي</div>
+            </div>
+        </header>
+        
+        <div class="content">
+            <!-- قسم تسجيل الدخول -->
+            <div class="tab-content active" id="loginContent">
+                <h2 class="section-title">سجل دخول إلى حسابك</h2>
+                
+                <div class="social-login">
+                    <button id="googleLogin" class="btn btn-google">
+                        <i class="fab fa-google"></i> تسجيل الدخول باستخدام Google
+                    </button>
+                </div>
+                
+                <div class="divider">
+                    <div class="divider-line"></div>
+                    <div class="divider-text">أو</div>
+                    <div class="divider-line"></div>
+                </div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                        <input type="email" id="email" class="form-control" placeholder="ادخل بريدك الإلكتروني" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password"><i class="fas fa-lock"></i> كلمة المرور</label>
+                        <input type="password" id="password" class="form-control" placeholder="ادخل كلمة المرور" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- قسم إنشاء حساب -->
+            <div class="tab-content" id="signupContent">
+                <h2 class="section-title">إنشاء حساب جديد</h2>
+                
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="name"><i class="fas fa-user"></i> الاسم الكامل</label>
+                        <input type="text" id="name" class="form-control" placeholder="ادخل اسمك الكامل" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signupEmail"><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+                        <input type="email" id="signupEmail" class="form-control" placeholder="ادخل بريدك الإلكتروني" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="username"><i class="fas fa-user-circle"></i> اسم المستخدم</label>
+                        <input type="text" id="username" class="form-control" placeholder="اختر اسم مستخدم فريد" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone"><i class="fas fa-phone"></i> رقم الهاتف</label>
+                        <input type="tel" id="phone" class="form-control" placeholder="ادخل رقم هاتفك" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="signupPassword"><i class="fas fa-lock"></i> كلمة المرور</label>
+                        <input type="password" id="signupPassword" class="form-control" placeholder="اختر كلمة مرور قوية" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword"><i class="fas fa-lock"></i> تأكيد كلمة المرور</label>
+                        <input type="password" id="confirmPassword" class="form-control" placeholder="أعد كتابة كلمة المرور" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary" style="width: 100%;">
+                            <i class="fas fa-user-plus"></i> إنشاء حساب جديد
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- قسم حسابي (يظهر بعد تسجيل الدخول) -->
+            <div class="tab-content" id="accountContent">
+                <div class="user-info-section">
+                    <div class="user-avatar">
+                        <div class="avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                    
+                    <h2 class="section-title">معلومات حسابك</h2>
+                    
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="info-title">الاسم الكامل</div>
+                            <div class="info-value" id="userName">غير معروف</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <div class="info-title">البريد الإلكتروني</div>
+                            <div class="info-value" id="userEmail">غير معروف</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div class="info-title">اسم المستخدم</div>
+                            <div class="info-value" id="userUsername">غير معروف</div>
+                        </div>
+                        
+                        <div class="info-card">
+                            <div class="info-icon">
+                                <i class="fas fa-phone"></i>
+                            </div>
+                            <div class="info-title">رقم الهاتف</div>
+                            <div class="info-value" id="userPhone">غير معروف</div>
+                        </div>
+                    </div>
+                    
+                    <div class="action-buttons">
+                        <button id="logoutBtn" class="btn btn-outline">
+                            <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                        </button>
+                        <button id="changeUsernameBtn" class="btn btn-success">
+                            <i class="fas fa-user-edit"></i> تغيير اسم المستخدم
+                        </button>
+                        <button class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> حذف الحساب
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>جميع الحقوق محفوظة © 2023 متجر زيون</p>
+            <p>تواصل معنا: <a href="tel:+9647823053419">+9647823053419</a> | <a href="https://wa.me/96472305349">واتساب</a></p>
+        </footer>
+    </div>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // تخزين حالة المستخدم في localStorage لمنع تسجيل الخروج عند الرجوع
-            const storageKey = 'userLoggedIn';
-            
-            // عناصر DOM
-            const googleSignInBtn = document.getElementById('googleSignIn');
-            const loadingDiv = document.getElementById('loading');
-            const errorDiv = document.getElementById('errorMessage');
-            const errorText = document.getElementById('errorText');
-            const successDiv = document.getElementById('successMessage');
-            const successText = document.getElementById('successText');
-            const userInfoDiv = document.getElementById('userInfo');
-            const userPhoto = document.getElementById('userPhoto');
-            const userName = document.getElementById('userName');
-            const userEmail = document.getElementById('userEmail');
-            const username = document.getElementById('username');
-            const joinDate = document.getElementById('joinDate');
-            const logoutBtn = document.getElementById('logoutBtn');
-            const changeUsernameBtn = document.getElementById('changeUsernameBtn');
-            const homeBtn = document.getElementById('homeBtn');
-            const backBtn = document.getElementById('backBtn');
-            const usernameStatus = document.getElementById('usernameStatus');
-            const changeCount = document.getElementById('changeCount');
-            const lastChange = document.getElementById('lastChange');
-            const usernameAvailability = document.getElementById('usernameAvailability');
-            
-            // عناصر Modal
-            const usernameModal = document.getElementById('usernameModal');
-            const closeUsernameModal = document.getElementById('closeUsernameModal');
-            const newUsernameInput = document.getElementById('newUsername');
-            const confirmUsernameChange = document.getElementById('confirmUsernameChange');
-            const usernameError = document.getElementById('usernameError');
-            const usernameErrorText = document.getElementById('usernameErrorText');
-            const countdownDays = document.getElementById('countdownDays');
-            
-            // بيانات المستخدم
-            let currentUser = null;
-            let usernameChangeHistory = {
-                lastChange: null,
-                changeCount: 0,
-                freeChangeUsed: false
-            };
-            
-            // تهيئة Firebase (مع إضافة مشروعك الخاص)
-            const firebaseConfig = {
-                apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
-                authDomain: "zio3-8ffdd.firebaseapp.com",
-                databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
-                projectId: "zio3-8ffdd",
-                storageBucket: "zio3-8ffdd.firebasestorage.app",
-                messagingSenderId: "560939348415",
-                appId: "1:560939348415:web:c854e9e214e498ad2d310a",
-                measurementId: "G-CVN2B2D0RD"
-            };
-            
-            // تهيئة Firebase
-            try {
-                firebase.initializeApp(firebaseConfig);
-            } catch (error) {
-                console.log("Firebase already initialized");
-            }
-            
-            const auth = firebase.auth();
-            const db = firebase.firestore();
-            
-            // التحقق من توفر المعرف في قاعدة البيانات
-            async function checkUsernameAvailability(username) {
-                try {
-                    if (!username || username.length < 4) return false;
-                    
-                    const doc = await db.collection('usernames').doc(username).get();
-                    return !doc.exists;
-                } catch (error) {
-                    console.error("خطأ في التحقق من توفر المعرف:", error);
-                    return false;
-                }
-            }
-            
-            // تحديث حالة توفر المعرف أثناء الكتابة
-            newUsernameInput.addEventListener('input', async function() {
-                const username = this.value.trim();
-                if (username.length < 4) {
-                    usernameAvailability.style.display = 'none';
-                    return;
-                }
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // عناصر DOM
+        const tabs = document.querySelectorAll('.tab');
+        const loginForm = document.getElementById('loginForm');
+        const signupForm = document.getElementById('signupForm');
+        const googleLogin = document.getElementById('googleLogin');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const notification = document.getElementById('notification');
+        const changeUsernameBtn = document.getElementById('changeUsernameBtn');
+        const usernameModal = document.getElementById('usernameModal');
+        const modalClose = document.querySelector('.modal-close');
+        const cancelChangeBtn = document.getElementById('cancelChangeBtn');
+        const confirmChangeBtn = document.getElementById('confirmChangeBtn');
+        const newUsernameInput = document.getElementById('newUsername');
+        const changeStatus = document.getElementById('changeStatus');
+        
+        // عناصر معلومات المستخدم
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const userUsername = document.getElementById('userUsername');
+        const userPhone = document.getElementById('userPhone');
+
+        // تغيير التبويبات
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
                 
-                const isAvailable = await checkUsernameAvailability(username);
-                usernameAvailability.style.display = 'block';
-                
-                if (isAvailable) {
-                    usernameAvailability.textContent = "✓ المعرف متاح";
-                    usernameAvailability.className = "username-availability available";
-                } else {
-                    usernameAvailability.textContent = "✗ المعرف غير متاح";
-                    usernameAvailability.className = "username-availability not-available";
-                }
-            });
-            
-            // تحميل بيانات تغيير المعرف من Firestore
-            async function loadUsernameChangeHistory(userId) {
-                try {
-                    const docRef = db.collection('usernameHistory').doc(userId);
-                    const doc = await docRef.get();
-                    
-                    if (doc.exists) {
-                        const data = doc.data();
-                        usernameChangeHistory = {
-                            lastChange: data.lastChange ? data.lastChange.toDate() : null,
-                            changeCount: data.changeCount || 0,
-                            freeChangeUsed: data.freeChangeUsed || false
-                        };
-                    }
-                } catch (error) {
-                    console.error("خطأ في تحميل تاريخ تغيير المعرف:", error);
-                }
-            }
-            
-            // حفظ بيانات تغيير المعرف إلى Firestore
-            async function saveUsernameChangeHistory(userId) {
-                try {
-                    const dataToSave = {
-                        ...usernameChangeHistory,
-                        lastChange: usernameChangeHistory.lastChange ? firebase.firestore.Timestamp.fromDate(usernameChangeHistory.lastChange) : null
-                    };
-                    
-                    await db.collection('usernameHistory').doc(userId).set(dataToSave);
-                } catch (error) {
-                    console.error("خطأ في حفظ تاريخ تغيير المعرف:", error);
-                }
-            }
-            
-            // تسجيل معرف جديد في قاعدة البيانات
-            async function registerNewUsername(userId, oldUsername, newUsername) {
-                try {
-                    // التحقق مرة أخرى من توفر المعرف
-                    const isAvailable = await checkUsernameAvailability(newUsername);
-                    if (!isAvailable) {
-                        throw new Error('هذا المعرف مستخدم من قبل، الرجاء اختيار معرف آخر');
-                    }
-                    
-                    // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات
-                    const batch = db.batch();
-                    
-                    // تحديث معرف المستخدم
-                    const userRef = db.collection('users').doc(userId);
-                    batch.update(userRef, {
-                        username: newUsername
-                    });
-                    
-                    // حذف المعرف القديم
-                    const oldUsernameRef = db.collection('usernames').doc(oldUsername);
-                    batch.delete(oldUsernameRef);
-                    
-                    // إضافة المعرف الجديد
-                    const newUsernameRef = db.collection('usernames').doc(newUsername);
-                    batch.set(newUsernameRef, {
-                        userId: userId,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    // تنفيذ الدفعة
-                    await batch.commit();
-                    
-                    return true;
-                } catch (error) {
-                    console.error("خطأ في تسجيل المعرف الجديد:", error);
-                    throw new Error("حدث خطأ أثناء تسجيل المعرف الجديد");
-                }
-            }
-            
-            // إنشاء مستخدم جديد في Firestore
-            async function createNewUser(user) {
-                try {
-                    const defaultUsername = user.email.split('@')[0];
-                    
-                    // التحقق من توفر المعرف الافتراضي
-                    let finalUsername = defaultUsername;
-                    let counter = 1;
-                    
-                    while (!(await checkUsernameAvailability(finalUsername))) {
-                        finalUsername = `${defaultUsername}${counter}`;
-                        counter++;
-                    }
-                    
-                    // استخدام دفعة (batch) لضمان تنفيذ جميع العمليات
-                    const batch = db.batch();
-                    
-                    // إنشاء مستخدم جديد
-                    const userRef = db.collection('users').doc(user.uid);
-                    batch.set(userRef, {
-                        displayName: user.displayName || "مستخدم جديد",
-                        email: user.email,
-                        photoURL: user.photoURL || "https://ui-avatars.com/api/?name=User&background=random",
-                        username: finalUsername,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    // تسجيل المعرف الافتراضي
-                    const usernameRef = db.collection('usernames').doc(finalUsername);
-                    batch.set(usernameRef, {
-                        userId: user.uid,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    // تنفيذ الدفعة
-                    await batch.commit();
-                    
-                    return finalUsername;
-                } catch (error) {
-                    console.error("خطأ في إنشاء مستخدم جديد:", error);
-                    throw new Error("حدث خطأ أثناء إنشاء الحساب");
-                }
-            }
-            
-            // عرض بيانات المستخدم
-            async function showUserInfo(user) {
-                try {
-                    const userDoc = await db.collection('users').doc(user.uid).get();
-                    let userUsername = "";
-                    
-                    if (!userDoc.exists) {
-                        userUsername = await createNewUser(user);
-                    } else {
-                        const userData = userDoc.data();
-                        userUsername = userData.username;
-                    }
-                    
-                    userPhoto.src = user.photoURL || "https://ui-avatars.com/api/?name=User&background=random";
-                    userName.textContent = user.displayName || "مستخدم جديد";
-                    userEmail.textContent = user.email;
-                    username.textContent = userUsername;
-                    
-                    // تحميل تاريخ التسجيل
-                    const joinDateValue = user.metadata.creationTime ? new Date(user.metadata.creationTime) : new Date();
-                    joinDate.textContent = formatDate(joinDateValue);
-                    
-                    // تحميل بيانات تغيير المعرف
-                    await loadUsernameChangeHistory(user.uid);
-                    
-                    // تحديث حالة تغيير المعرف
-                    updateUsernameChangeStatus();
-                    
-                    userInfoDiv.style.display = 'block';
-                    googleSignInBtn.style.display = 'none';
-                    backBtn.style.display = 'flex';
-                    
-                    // تخزين حالة تسجيل الدخول
-                    localStorage.setItem(storageKey, 'true');
-                } catch (error) {
-                    console.error("خطأ في عرض بيانات المستخدم:", error);
-                    showError("حدث خطأ أثناء تحميل بيانات المستخدم");
-                }
-            }
-            
-            // تحديث حالة تغيير المعرف
-            function updateUsernameChangeStatus() {
-                changeCount.textContent = usernameChangeHistory.freeChangeUsed ? "مدفوع" : "مجاني";
-                
-                // تحديث تاريخ آخر تغيير
-                if (usernameChangeHistory.lastChange) {
-                    lastChange.textContent = formatDate(usernameChangeHistory.lastChange);
-                } else {
-                    lastChange.textContent = "لم يتم التغيير بعد";
-                }
-                
-                if (usernameChangeHistory.changeCount === 0) {
-                    usernameStatus.textContent = "يمكنك تغيير المعرف مرة واحدة مجانًا";
-                    usernameStatus.style.color = "#FFD700";
-                } else {
-                    const now = new Date();
-                    const lastChangeDate = usernameChangeHistory.lastChange;
-                    const diffTime = Math.abs(now - lastChangeDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays < 5) {
-                        usernameStatus.innerHTML = `يمكنك تغيير المعرف بعد <span class="countdown">${5 - diffDays}</span> أيام`;
-                        usernameStatus.style.color = "#FF9800";
-                    } else {
-                        usernameStatus.textContent = "يمكنك تغيير المعرف الآن";
-                        usernameStatus.style.color = "#4CAF50";
-                    }
-                }
-                
-                // تحديث العداد في المودال
-                updateModalCountdown();
-            }
-            
-            // تحديث العداد في نافذة تغيير المعرف
-            function updateModalCountdown() {
-                if (usernameChangeHistory.changeCount === 0) {
-                    countdownDays.textContent = "5";
-                } else {
-                    const now = new Date();
-                    const lastChangeDate = usernameChangeHistory.lastChange;
-                    const diffTime = Math.abs(now - lastChangeDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays < 5) {
-                        countdownDays.textContent = (5 - diffDays);
-                    } else {
-                        countdownDays.textContent = "0";
-                    }
-                }
-            }
-            
-            // تسجيل الدخول باستخدام Google
-            googleSignInBtn.addEventListener('click', async () => {
-                loadingDiv.style.display = 'flex';
-                errorDiv.style.display = 'none';
-                
-                const provider = new firebase.auth.GoogleAuthProvider();
-                
-                try {
-                    const result = await auth.signInWithPopup(provider);
-                    currentUser = result.user;
-                    await showUserInfo(currentUser);
-                    showSuccess('تم تسجيل الدخول بنجاح!');
-                } catch (error) {
-                    console.error('خطأ في تسجيل الدخول:', error);
-                    showError('حدث خطأ أثناء تسجيل الدخول: ' + error.message);
-                } finally {
-                    loadingDiv.style.display = 'none';
-                }
-            });
-            
-            // تسجيل الخروج
-            logoutBtn.addEventListener('click', () => {
-                auth.signOut().then(() => {
-                    userInfoDiv.style.display = 'none';
-                    googleSignInBtn.style.display = 'flex';
-                    backBtn.style.display = 'none';
-                    localStorage.removeItem(storageKey);
-                    showSuccess('تم تسجيل الخروج بنجاح');
-                }).catch((error) => {
-                    console.error('خطأ في تسجيل الخروج:', error);
-                    showError('حدث خطأ أثناء تسجيل الخروج');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
                 });
-            });
-            
-            // زر الصفحة الرئيسية
-            homeBtn.addEventListener('click', () => {
-                window.location.href = '/';
-            });
-            
-            // زر الرجوع
-            backBtn.addEventListener('click', () => {
-                window.location.href = '/';
-            });
-            
-            // فتح نافذة تغيير المعرف
-            changeUsernameBtn.addEventListener('click', () => {
-                // تحديث حالة العداد قبل فتح المودال
-                updateModalCountdown();
-                usernameModal.style.display = 'flex';
-                newUsernameInput.value = '';
-                usernameError.style.display = 'none';
-                usernameAvailability.style.display = 'none';
-            });
-            
-            // إغلاق نافذة تغيير المعرف
-            closeUsernameModal.addEventListener('click', () => {
-                usernameModal.style.display = 'none';
-                usernameError.style.display = 'none';
-                newUsernameInput.value = '';
-                usernameAvailability.style.display = 'none';
-            });
-            
-            // تأكيد تغيير المعرف
-            confirmUsernameChange.addEventListener('click', async () => {
-                const newUsername = newUsernameInput.value.trim();
-                const oldUsername = username.textContent;
                 
-                // التحقق من وجود قيمة
-                if (!newUsername) {
-                    showUsernameError('الرجاء إدخال معرف جديد');
-                    return;
-                }
-                
-                // التحقق من الطول
-                if (newUsername.length < 4) {
-                    showUsernameError('يجب أن يكون المعرف 4 أحرف على الأقل');
-                    return;
-                }
-                
-                // التحقق من أن المعرف الجديد مختلف عن القديم
-                if (newUsername === oldUsername) {
-                    showUsernameError('هذا المعرف هو نفس المعرف الحالي');
-                    return;
-                }
-                
-                // التحقق من القيود الزمنية
-                const now = new Date();
-                
-                if (usernameChangeHistory.changeCount === 0) {
-                    // التغيير الأول مجانًا
-                    usernameChangeHistory.freeChangeUsed = true;
-                    usernameChangeHistory.changeCount = 1;
-                    usernameChangeHistory.lastChange = now;
+                document.getElementById(`${tab.dataset.tab}Content`).classList.add('active');
+            });
+        });
+
+        // عرض الإشعارات
+        function showNotification(message, type = 'success') {
+            notification.textContent = message;
+            notification.className = `notification ${type} show`;
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // فتح وإغلاق نافذة تغيير اسم المستخدم
+        changeUsernameBtn.addEventListener('click', () => {
+            const user = auth.currentUser;
+            if (user) {
+                database.ref('users/' + user.uid).once('value').then(snapshot => {
+                    const userData = snapshot.val() || {};
+                    const lastChange = userData.lastUsernameChange || 0;
+                    const currentTime = new Date().getTime();
+                    const fiveDaysInMs = 5 * 24 * 60 * 60 * 1000;
                     
-                    // تحديث المعرف في قاعدة البيانات
-                    try {
-                        await registerNewUsername(currentUser.uid, oldUsername, newUsername);
-                        
-                        // حفظ بيانات التغيير
-                        await saveUsernameChangeHistory(currentUser.uid);
-                        
-                        // تحديث العرض
-                        username.textContent = newUsername;
-                        usernameModal.style.display = 'none';
-                        showSuccess('تم تغيير المعرف بنجاح!');
-                        updateUsernameChangeStatus();
-                    } catch (error) {
-                        showUsernameError(error.message);
-                    }
-                } 
-                else if (usernameChangeHistory.changeCount > 0) {
-                    const lastChangeDate = usernameChangeHistory.lastChange;
-                    const diffTime = Math.abs(now - lastChangeDate);
-                    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                    
-                    if (diffDays < 5) {
-                        showUsernameError(`يجب الانتظار ${5 - diffDays} أيام قبل التغيير مرة أخرى`);
-                        return;
+                    if (!lastChange) {
+                        changeStatus.innerHTML = 'يمكنك تغيير اسم المستخدم مجاناً هذه المرة';
+                        changeStatus.style.color = 'var(--success)';
+                        confirmChangeBtn.disabled = false;
+                    } else if (currentTime - lastChange >= fiveDaysInMs) {
+                        changeStatus.innerHTML = 'يمكنك تغيير اسم المستخدم الآن';
+                        changeStatus.style.color = 'var(--success)';
+                        confirmChangeBtn.disabled = false;
+                    } else {
+                        const daysLeft = Math.ceil((fiveDaysInMs - (currentTime - lastChange)) / (24 * 60 * 60 * 1000));
+                        changeStatus.innerHTML = `يمكنك تغيير اسم المستخدم بعد ${daysLeft} أيام`;
+                        changeStatus.style.color = 'var(--danger)';
+                        confirmChangeBtn.disabled = true;
                     }
                     
-                    // السماح بالتغيير بعد 5 أيام
-                    usernameChangeHistory.changeCount++;
-                    usernameChangeHistory.lastChange = now;
+                    usernameModal.classList.add('active');
+                });
+            }
+        });
+
+        modalClose.addEventListener('click', () => {
+            usernameModal.classList.remove('active');
+        });
+
+        cancelChangeBtn.addEventListener('click', () => {
+            usernameModal.classList.remove('active');
+        });
+
+        // تأكيد تغيير اسم المستخدم
+        confirmChangeBtn.addEventListener('click', () => {
+            const newUsername = newUsernameInput.value.trim();
+            if (!newUsername || newUsername.length < 3 || newUsername.length > 20) {
+                showNotification('اسم المستخدم يجب أن يكون بين 3 و 20 حرفاً', 'error');
+                return;
+            }
+            
+            const user = auth.currentUser;
+            if (user) {
+                database.ref('users/' + user.uid).update({
+                    username: newUsername,
+                    lastUsernameChange: new Date().getTime()
+                }).then(() => {
+                    showNotification('تم تغيير اسم المستخدم بنجاح!', 'success');
+                    userUsername.textContent = newUsername;
+                    usernameModal.classList.remove('active');
+                }).catch(error => {
+                    showNotification(`خطأ: ${error.message}`, 'error');
+                });
+            }
+        });
+
+        // تسجيل الدخول باستخدام البريد وكلمة المرور
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // تم تسجيل الدخول بنجاح
+                    const user = userCredential.user;
+                    showNotification(`مرحباً مرة أخرى، ${user.email}`, 'success');
+                    updateUserInfo(user);
                     
-                    // تحديث المعرف في قاعدة البيانات
-                    try {
-                        await registerNewUsername(currentUser.uid, oldUsername, newUsername);
-                        
-                        // حفظ بيانات التغيير
-                        await saveUsernameChangeHistory(currentUser.uid);
-                        
-                        // تحديث العرض
-                        username.textContent = newUsername;
-                        usernameModal.style.display = 'none';
-                        showSuccess('تم تغيير المعرف بنجاح!');
-                        updateUsernameChangeStatus();
-                    } catch (error) {
-                        showUsernameError(error.message);
-                    }
-                }
+                    // الانتقال إلى تبويب الحساب
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="account"]').classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById('accountContent').classList.add('active');
+                })
+                .catch((error) => {
+                    showNotification(`خطأ في تسجيل الدخول: ${error.message}`, 'error');
+                });
+        });
+
+        // إنشاء حساب جديد
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('signupEmail').value;
+            const username = document.getElementById('username').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                showNotification('كلمة المرور غير متطابقة!', 'error');
+                return;
+            }
+            
+            if (!username || username.length < 3 || username.length > 20) {
+                showNotification('اسم المستخدم يجب أن يكون بين 3 و 20 حرفاً', 'error');
+                return;
+            }
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // تم إنشاء الحساب بنجاح
+                    const user = userCredential.user;
+                    
+                    // حفظ معلومات المستخدم الإضافية في قاعدة البيانات
+                    database.ref('users/' + user.uid).set({
+                        name: name,
+                        email: email,
+                        username: username,
+                        phone: phone,
+                        createdAt: new Date().toISOString(),
+                        lastUsernameChange: 0
+                    });
+                    
+                    showNotification(`تم إنشاء حسابك بنجاح، ${name}!`, 'success');
+                    updateUserInfo(user, {name, phone, username});
+                    
+                    // الانتقال إلى تبويب الحساب
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="account"]').classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById('accountContent').classList.add('active');
+                })
+                .catch((error) => {
+                    showNotification(`خطأ في إنشاء الحساب: ${error.message}`, 'error');
+                });
+        });
+
+        // تسجيل الدخول باستخدام Google
+        googleLogin.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // تم تسجيل الدخول بنجاح
+                    const user = result.user;
+                    
+                    // حفظ معلومات المستخدم إذا كانت المرة الأولى
+                    database.ref('users/' + user.uid).once('value').then((snapshot) => {
+                        if (!snapshot.exists()) {
+                            // إنشاء اسم مستخدم عشوائي
+                            const randomUsername = 'user' + Math.floor(Math.random() * 10000);
+                            
+                            database.ref('users/' + user.uid).set({
+                                name: user.displayName || 'مستخدم جديد',
+                                email: user.email,
+                                username: randomUsername,
+                                phone: user.phoneNumber || '',
+                                createdAt: new Date().toISOString(),
+                                lastUsernameChange: 0
+                            });
+                        }
+                    });
+                    
+                    showNotification(`مرحباً ${user.displayName || 'مستخدم جديد'}!`, 'success');
+                    updateUserInfo(user);
+                    
+                    // الانتقال إلى تبويب الحساب
+                    tabs.forEach(t => t.classList.remove('active'));
+                    document.querySelector('[data-tab="account"]').classList.add('active');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById('accountContent').classList.add('active');
+                })
+                .catch((error) => {
+                    showNotification(`خطأ في تسجيل الدخول: ${error.message}`, 'error');
+                });
+        });
+
+        // تسجيل الخروج
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                showNotification('تم تسجيل الخروج بنجاح', 'success');
+                
+                // الانتقال إلى تبويب تسجيل الدخول
+                tabs.forEach(t => t.classList.remove('active'));
+                document.querySelector('[data-tab="login"]').classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('loginContent').classList.add('active');
+            }).catch((error) => {
+                showNotification(`خطأ في تسجيل الخروج: ${error.message}`, 'error');
             });
-            
-            // تنسيق التاريخ
-            function formatDate(date) {
-                const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                return date.toLocaleDateString('ar-EG', options);
-            }
-            
-            // عرض خطأ
-            function showError(message) {
-                errorText.textContent = message;
-                errorDiv.style.display = 'block';
-                setTimeout(() => {
-                    errorDiv.style.display = 'none';
-                }, 5000);
-            }
-            
-            function showSuccess(message) {
-                successText.textContent = message;
-                successDiv.style.display = 'block';
-                setTimeout(() => {
-                    successDiv.style.display = 'none';
-                }, 5000);
-            }
-            
-            function showUsernameError(message) {
-                usernameErrorText.textContent = message;
-                usernameError.style.display = 'block';
-            }
-            
-            // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    currentUser = user;
-                    await showUserInfo(user);
-                } else {
-                    userInfoDiv.style.display = 'none';
-                    googleSignInBtn.style.display = 'flex';
-                    backBtn.style.display = 'none';
-                }
+        });
+
+        // تحديث معلومات المستخدم المعروضة
+        function updateUserInfo(user, additionalInfo = {}) {
+            // الحصول على معلومات إضافية من قاعدة البيانات
+            database.ref('users/' + user.uid).once('value').then((snapshot) => {
+                const userData = snapshot.val() || {};
+                
+                userName.textContent = userData.name || additionalInfo.name || 'غير معروف';
+                userEmail.textContent = user.email || 'غير معروف';
+                userUsername.textContent = userData.username || additionalInfo.username || 'غير معروف';
+                userPhone.textContent = userData.phone || additionalInfo.phone || 'غير معروف';
             });
+        }
+
+        // مراقبة حالة تسجيل الدخول
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                // المستخدم مسجل الدخول
+                updateUserInfo(user);
+            }
         });
     </script>
 </body>
