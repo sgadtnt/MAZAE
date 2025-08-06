@@ -6,6 +6,10 @@
     <title>الدعم الفني - الحل النهائي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- إضافة مكتبات Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         /* أنماط CSS المعدلة */
         :root {
@@ -1992,7 +1996,7 @@
             authDomain: "zio3-8ffdd.firebaseapp.com",
             databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
             projectId: "zio3-8ffdd",
-            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            storageBucket: "zio3-8ffdd.appspot.com",
             messagingSenderId: "560939348415",
             appId: "1:560939348415:web:c854e9e214e498ad2d310a",
             measurementId: "G-CVN2B2D0RD"
@@ -2071,14 +2075,17 @@
         
         // التحقق عند تحميل الصفحة
         document.addEventListener('DOMContentLoaded', () => {
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    verifyUser();
-                } else {
-                    // إذا لم يكن مسجلاً، توجيه إلى صفحة الحساب
-                    window.location.href = 'account.html';
-                }
-            });
+            // إخفاء شاشة التحميل الرئيسية بعد تحميل الصفحة
+            setTimeout(() => {
+                // محاكاة تسجيل دخول المستخدم لأغراض العرض
+                auth.signInAnonymously()
+                    .then(() => {
+                        verifyUser();
+                    })
+                    .catch(error => {
+                        showVerificationError('خطأ في تسجيل الدخول', error.message);
+                    });
+            }, 1000);
         });
         
         // باقي كود JavaScript للصفحة
@@ -2313,7 +2320,6 @@
                 const messageElement = document.createElement('div');
                 messageElement.className = `message user-message`;
                 messageElement.innerHTML = `
-                    <div class="message-sender">${userName}</div>
                     <div class="message-content">${message}</div>
                     <div class="message-time">${timeString}</div>
                 `;
@@ -2355,7 +2361,6 @@
                         const replyElement = document.createElement('div');
                         replyElement.className = `message admin-message`;
                         replyElement.innerHTML = `
-                            <div class="message-sender">الدعم الفني</div>
                             <div class="message-content">${reply}</div>
                             <div class="message-time">${getCurrentTime()}</div>
                         `;
