@@ -527,6 +527,43 @@
                 font-size: 0.9rem;
             }
         }
+        
+        /* تأكيد تسجيل الدخول */
+        .login-confirmation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .confirmation-box {
+            background: white;
+            border-radius: var(--radius);
+            padding: 30px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: var(--shadow);
+        }
+        
+        .confirmation-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .confirmation-message {
+            font-size: 1.3rem;
+            margin-bottom: 25px;
+            color: var(--dark);
+        }
     </style>
 </head>
 <body>
@@ -633,6 +670,26 @@
         </div>
     </div>
     
+    <!-- تأكيد تسجيل الدخول -->
+    <div class="login-confirmation" id="loginConfirmation">
+        <div class="confirmation-box">
+            <div class="confirmation-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="confirmation-message">
+                يجب تسجيل الدخول أولاً للاستمرار في استخدام الخدمة
+            </div>
+            <div class="action-buttons">
+                <button id="confirmLoginBtn" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
+                </button>
+                <button id="cancelLoginBtn" class="btn btn-outline">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Firebase SDK -->
     <script type="module">
         // Import the functions you need from the SDKs you need
@@ -691,10 +748,16 @@
         const messageInput = document.getElementById('messageInput');
         const sendBtn = document.getElementById('sendBtn');
         
+        // تأكيد تسجيل الدخول
+        const loginConfirmation = document.getElementById('loginConfirmation');
+        const confirmLoginBtn = document.getElementById('confirmLoginBtn');
+        const cancelLoginBtn = document.getElementById('cancelLoginBtn');
+        
         // متغيرات المستخدم
         let currentUser = null;
         let userDisplayName = "مستخدم";
-        
+        let isFirstMessage = true; // لتتبع أول رسالة
+
         // التحقق من حالة تسجيل الدخول والبيانات
         async function verifyUser() {
             try {
@@ -732,12 +795,12 @@
                 // عرض معلومات المستخدم
                 const userData = snapshot.val();
                 
-                // حل مشكلة الاسم: إذا لم يكن هناك اسم، نستخدم جزء البريد الإلكتروني
+                // حل مشكلة الاسم: استخدام اسم المستخدم من قاعدة البيانات
                 if (userData && userData.name) {
                     userName.textContent = userData.name;
                     userDisplayName = userData.name;
                 } else {
-                    // نستخدم البريد الإلكتروني ونأخذ الجزء قبل @
+                    // إذا لم يكن هناك اسم، نستخدم الجزء الأول من البريد الإلكتروني
                     if (user.email) {
                         const usernamePart = user.email.split('@')[0];
                         userName.textContent = usernamePart;
@@ -829,13 +892,16 @@
             // مسح حقل الإدخال
             messageInput.value = '';
             
-            // إرسال رد تلقائي بعد تأخير
-            setTimeout(() => {
-                sendAutoReply();
-            }, 2000);
+            // إرسال رد تلقائي فقط عند أول رسالة
+            if (isFirstMessage) {
+                setTimeout(() => {
+                    sendAutoReply();
+                }, 2000);
+                isFirstMessage = false; // تأكيد أن هذا هو أول رسالة
+            }
         }
         
-        // إرسال رد تلقائي من الدعم
+        // إرسال رد تلقائي من الدعم (مرة واحدة فقط)
         function sendAutoReply() {
             const replies = [
                 "شكراً لتواصلك معنا. كيف يمكننا مساعدتك؟",
@@ -911,12 +977,26 @@
                         addMessageToUI(msg.text, msg.type, date);
                     }
                 });
+                
+                // تحديث حالة أول رسالة إذا كان هناك رسائل سابقة
+                if (messages.length > 0) {
+                    const userMessages = messages.filter(msg => msg.userId === currentUser.uid);
+                    if (userMessages.length > 0) {
+                        isFirstMessage = false;
+                    }
+                }
             });
         }
         
         // إعداد مستمعي الأحداث للتحقق
         retryButton.addEventListener('click', verifyUser);
         redirectButton.addEventListener('click', () => {
+            // عرض رسالة تأكيد قبل التوجيه
+            loginConfirmation.style.display = 'flex';
+        });
+        
+        // تأكيد الانتقال لتسجيل الدخول
+        confirmLoginBtn.addEventListener('click', () => {
             if (auth.currentUser) {
                 signOut(auth).then(() => {
                     window.location.href = 'account.html';
@@ -924,6 +1004,11 @@
             } else {
                 window.location.href = 'account.html';
             }
+        });
+        
+        // إلغاء الانتقال لتسجيل الدخول
+        cancelLoginBtn.addEventListener('click', () => {
+            loginConfirmation.style.display = 'none';
         });
         
         // مستمعي الأحداث للدردشة
