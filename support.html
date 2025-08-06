@@ -12,6 +12,1631 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
         /* جميع أنماط CSS السابقة هنا */
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1d3557;
+            --light: #f8f9fa;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --gray: #6c757d;
+            --google-red: #DB4437;
+            --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --radius: 12px;
+            --transition: all 0.3s ease;
+            --base-font: 0.9rem;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+            font-size: var(--base-font);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            line-height: 1.5;
+            padding: 12px;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 900px;
+            min-height: auto;
+            background: white;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            border-radius: var(--radius);
+            position: relative;
+        }
+        
+        .back-button {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 10;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        
+        .back-button:hover {
+            background: white;
+            transform: translateX(-3px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 12px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: var(--radius) var(--radius) 0 0;
+            position: relative;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-align: center;
+            letter-spacing: -0.5px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50px;
+            padding: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px 14px;
+            text-align: center;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            border: 1px solid transparent;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: -0.5px;
+        }
+        
+        .tab.active {
+            background: white;
+            color: var(--primary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(67, 97, 238, 0.2);
+            font-weight: 600;
+        }
+        
+        .content {
+            padding: 20px;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            color: var(--primary);
+            margin: 12px 0 20px;
+            position: relative;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 16px 0 12px;
+        }
+        
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn-google {
+            background: linear-gradient(135deg, var(--google-red), #C53929);
+            color: white;
+            box-shadow: 0 2px 8px rgba(219, 68, 55, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .btn-google:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(219, 68, 55, 0.25);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c0392b;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+        }
+        
+        .btn-success:hover {
+            background: #27ae60;
+            box-shadow: 0 2px 8px rgba(46, 204, 113, 0.2);
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+        }
+        
+        .divider-line {
+            flex: 1;
+            height: 1px;
+            background: #e0e0e0;
+        }
+        
+        .divider-text {
+            color: var(--gray);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+            position: relative;
+            padding: 12px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 1rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 48px 12px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+        }
+        
+        .form-control:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.1);
+            outline: none;
+        }
+        
+        .user-info-section {
+            text-align: center;
+            border-radius: var(--radius);
+            padding: 20px 16px;
+            margin: 12px 0;
+            background: #f8f9fa;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+        
+        .user-avatar {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .avatar {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            color: white;
+            border: 3px solid white;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .info-item {
+            background: white;
+            border-radius: 10px;
+            padding: 16px;
+            text-align: right;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #eee;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .info-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .info-title {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 1.1rem;
+        }
+        
+        .info-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1rem;
+        }
+        
+        .copy-btn {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+        }
+        
+        .copy-btn:hover {
+            background: rgba(67, 97, 238, 0.2);
+        }
+        
+        .edit-btn {
+            background: rgba(72, 149, 239, 0.1);
+            color: var(--accent);
+        }
+        
+        .edit-btn:hover {
+            background: rgba(72, 149, 239, 0.2);
+        }
+        
+        .info-value {
+            color: var(--gray);
+            font-size: 1rem;
+            font-weight: 500;
+            padding-top: 10px;
+            word-break: break-word;
+            text-align: right;
+        }
+        
+        .username-value {
+            direction: ltr;
+            text-align: left;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            color: white;
+            font-weight: 500;
+            font-size: 1rem;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+            z-index: 1000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 90%;
+            white-space: normal;
+            word-wrap: break-word;
+            text-align: right;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+            animation: slideIn 0.4s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(120%); }
+            to { transform: translateX(0); }
+        }
+        
+        .notification.success {
+            background: var(--success);
+        }
+        
+        .notification.error {
+            background: var(--danger);
+        }
+        
+        .notification.warning {
+            background: var(--warning);
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 450px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            transform: translateY(40px);
+            transition: transform 0.3s ease;
+            border: 2px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+        
+        .modal.active .modal-content {
+            transform: translateY(0);
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 18px;
+            text-align: center;
+            position: relative;
+            border-bottom: 1px solid var(--accent);
+        }
+        
+        .modal-header h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            left: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+        
+        .modal-close:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 18px 20px;
+            background: #f8f9fa;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s;
+            height: 40px;
+            width: 40px;
+            font-size: 1.2rem;
+        }
+        
+        .password-toggle:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .form-control.password-field {
+            padding-left: 48px;
+        }
+        
+        .confirmation-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 4000;
+        }
+        
+        .confirmation-modal .content {
+            background: white;
+            padding: 25px;
+            border-radius: var(--radius);
+            max-width: 90%;
+            width: 450px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .confirmation-modal h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            font-size: 1.3rem;
+        }
+        
+        .confirmation-modal .actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+        
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+        }
+        
+        .loading-spinner {
+            border: 6px solid rgba(67, 97, 238, 0.2);
+            border-top: 6px solid var(--primary);
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* تحسينات للأجهزة المحمولة */
+        @media (max-width: 768px) {
+            .tabs {
+                max-width: 100%;
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                padding: 8px 10px;
+                font-size: 0.9rem;
+                flex: 1 0 45%;
+                margin: 2px;
+            }
+            
+            .avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 1.8rem;
+            }
+            
+            .action-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .back-button {
+                top: 10px;
+                left: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 1.1rem;
+            }
+            
+            .content {
+                padding: 16px;
+            }
+            
+            .section-title {
+                font-size: 1.15rem;
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 0.95rem;
+            }
+            
+            .container {
+                max-width: 100%;
+            }
+        }
+        
+        /* إصلاحات خاصة بالتصميم */
+        .signup-section {
+            margin-top: 8px;
+        }
+        
+        .login-section {
+            margin-top: 12px;
+        }
+        
+        .account-section {
+            margin-top: 4px;
+        }
+        
+        .forgot-password {
+            display: block;
+            text-align: center;
+            margin-top: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 0.95rem;
+        }
+        
+        .forgot-password:hover {
+            text-decoration: underline;
+            color: var(--secondary);
+        }
+        
+        .password-strength {
+            height: 6px;
+            margin-top: 8px;
+            border-radius: 3px;
+            background: #e0e0e0;
+            overflow: hidden;
+        }
+        
+        .password-strength.weak {
+            background: linear-gradient(90deg, #e74c3c 30%, #e0e0e0 30%);
+        }
+        
+        .password-strength.medium {
+            background: linear-gradient(90deg, #f39c12 60%, #e0e0e0 60%);
+        }
+        
+        .password-strength.strong {
+            background: #2ecc71;
+        }
+        
+        .strength-text {
+            font-size: 0.85rem;
+            color: var(--gray);
+            margin-top: 6px;
+            text-align: right;
+        }
+        
+        .username-status {
+            margin-top: 6px;
+            font-size: 0.85rem;
+            text-align: right;
+            padding: 4px 8px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .username-status.available {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            border: 1px solid #2ecc71;
+        }
+        
+        .username-status.unavailable {
+            background: rgba(231, 76, 60, 0.15);
+            color: #c0392b;
+            border: 1px solid #e74c3c;
+        }
+        
+        .username-status.warning {
+            background: rgba(243, 156, 18, 0.15);
+            color: #d35400;
+            border: 1px solid #f39c12;
+        }
+        
+        .generate-btn {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 6px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .generate-btn:hover {
+            background: rgba(67, 97, 238, 0.2);
+        }
+        
+        .tab-bar-fix {
+            position: relative;
+            z-index: 5;
+        }
+        
+        /* أنماط خاصة بصفحة الدعم */
+        .conversation-header-bar {
+            padding: 12px;
+            background-color: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-radius: var(--radius);
+            margin-bottom: 16px;
+        }
+        
+        .conversation-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .conversation-user-avatar {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+        }
+        
+        .conversation-user-details {
+            line-height: 1.4;
+        }
+        
+        .conversation-user-name {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--dark);
+        }
+        
+        .status {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status.online::before {
+            background-color: var(--success);
+            box-shadow: 0 0 5px var(--success);
+        }
+        
+        .status.offline::before {
+            background-color: #bbb;
+        }
+        
+        .status.blocked::before {
+            background-color: var(--danger);
+            box-shadow: 0 0 5px var(--danger);
+        }
+        
+        .messages-area {
+            flex-grow: 1; 
+            min-height: 0; 
+            padding: 12px;
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border-radius: var(--radius);
+            border: 1px solid #e0e0e0;
+            max-height: 350px;
+        }
+        
+        .messages-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            min-height: 100%; 
+            padding: 8px;
+        }
+        
+        .no-messages {
+            text-align: center;
+            padding: 30px 16px;
+            color: #777;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.7;
+        }
+        
+        .no-messages i {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            opacity: 0.2;
+            color: #7f8c8d;
+        }
+        
+        .no-messages p {
+            margin: 6px 0;
+            font-size: 1rem;
+            color: #5c6770;
+        }
+        
+        .date-divider {
+            text-align: center;
+            margin: 16px 0;
+            position: relative;
+        }
+        
+        .date-divider span {
+            background: linear-gradient(to right, #e0e0e0, #f0f0f0);
+            padding: 6px 16px;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            color: #5c6770;
+            position: relative;
+            z-index: 1;
+            font-weight: 600;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+        
+        .date-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.05));
+            z-index: 0;
+        }
+        
+        .message {
+            max-width: 78%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            position: relative;
+            animation: fadeIn 0.4s ease-out;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+            transition: var(--transition);
+            transform-origin: bottom;
+        }
+        
+        .message:hover {
+            transform: translateY(-2px);
+        }
+        
+        .user-message {
+            background: linear-gradient(to bottom, #ffffff, #f5f7fa);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .admin-message {
+            background: linear-gradient(to bottom, #e3f2fd, #d0e5ff);
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #c5daf8;
+        }
+        
+        .notification-message {
+            text-align: center;
+            padding: 12px;
+            background: #fff8e1;
+            border-radius: 18px;
+            margin: 8px 0;
+            font-size: 0.85rem;
+            border: 1px solid #ffd54f;
+        }
+        
+        .message-content {
+            word-wrap: break-word;
+            line-height: 1.5;
+            position: relative;
+            font-size: 0.95rem;
+            color: #333;
+        }
+        
+        .message-time {
+            font-size: 0.7rem;
+            color: #7f8c8d;
+            margin-top: 6px;
+            text-align: left;
+            font-weight: 500;
+            transition: opacity 0.3s;
+        }
+        
+        .admin-message .message-time {
+            text-align: right;
+        }
+        
+        .user-message .message-time {
+            text-align: left;
+        }
+        
+        .message-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 6px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            background: rgba(0,0,0,0.05);
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            margin-right: 4px;
+            transition: background 0.2s;
+        }
+        
+        .action-btn:hover {
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .typing-indicator {
+            background: var(--light);
+            padding: 8px 12px;
+            border-radius: 18px;
+            align-self: flex-start;
+            display: inline-flex;
+            gap: 4px;
+            margin-bottom: 8px;
+            animation: fadeIn 0.3s;
+        }
+        
+        .typing-indicator span {
+            width: 7px;
+            height: 7px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: inline-block;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-4px); }
+        }
+        
+        .loading-indicator {
+            display: flex;
+            justify-content: center;
+            padding: 25px 16px;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .spinner {
+            width: 45px;
+            height: 45px;
+            border: 4px solid rgba(26, 35, 126, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1.2s linear infinite;
+        }
+        
+        .message-input-area {
+            display: flex;
+            padding: 15px 0;
+            background-color: transparent;
+            align-items: center;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        
+        .customer-message-input {
+            flex-grow: 1;
+            padding: 12px 16px;
+            border: 1px solid #dde2e8;
+            border-radius: 25px;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            background: #f8fafc;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
+        }
+        
+        .customer-message-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(72, 149, 239, 0.2), inset 0 2px 4px rgba(0,0,0,0.04);
+            background: white;
+        }
+        
+        .customer-send-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: var(--transition);
+            box-shadow: 0 3px 8px rgba(26, 35, 126, 0.25);
+            position: relative;
+            z-index: 101;
+        }
+        
+        .customer-send-button:hover {
+            background: linear-gradient(135deg, #283593, #1A237E);
+            transform: scale(1.05);
+            box-shadow: 0 5px 12px rgba(26, 35, 126, 0.35);
+        }
+        
+        .customer-send-button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .help-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 0;
+            box-shadow: none;
+            border: none;
+        }
+        
+        .help-header {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+            justify-content: center;
+        }
+        
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+        
+        .help-card {
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
+            border-radius: var(--radius);
+            padding: 18px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .help-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: linear-gradient(to bottom, #e3f2fd, #d0e5ff);
+        }
+        
+        .help-card i {
+            font-size: 2.2rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        
+        .help-card h3 {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        
+        .help-card p {
+            font-size: 0.9rem;
+            color: #5c6770;
+        }
+        
+        .whatsapp-card {
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
+            border-radius: var(--radius);
+            padding: 18px;
+            text-align: center;
+            border: 1px solid #e0e0e0;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        
+        .whatsapp-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            background: linear-gradient(to bottom, #e3f2fd, #d0e5ff);
+        }
+        
+        .whatsapp-card i {
+            font-size: 2.2rem;
+            color: #25D366;
+            margin-bottom: 12px;
+        }
+        
+        .whatsapp-card h3 {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        
+        .whatsapp-card p {
+            font-size: 0.9rem;
+            color: #5c6770;
+        }
+        
+        .faq-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 0;
+            border: none;
+        }
+        
+        .faq-header {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+            justify-content: center;
+        }
+        
+        .faq-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .faq-item {
+            border: 1px solid #e0e0e0;
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .faq-question {
+            padding: 12px 16px;
+            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        
+        .faq-question i {
+            transition: transform 0.3s ease;
+        }
+        
+        .faq-item.open .faq-question i {
+            transform: rotate(180deg);
+        }
+        
+        .faq-answer {
+            padding: 0 16px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .faq-item.open .faq-answer {
+            padding: 12px 16px;
+            max-height: 500px;
+        }
+        
+        .faq-answer p {
+            color: #5c6770;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+        
+        .contact-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 16px;
+            justify-content: center;
+        }
+        
+        .contact-button {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border-radius: 50px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            font-weight: 600;
+            box-shadow: 0 3px 8px rgba(67, 97, 238, 0.25);
+            min-width: 180px;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+        
+        .contact-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(67, 97, 238, 0.35);
+        }
+        
+        .contact-button.whatsapp {
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            min-width: 250px;
+            font-size: 1rem;
+        }
+        
+        .blocked-section {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            margin: 0;
+            text-align: center;
+        }
+        
+        .blocked-icon {
+            font-size: 3.5rem;
+            color: var(--danger);
+            margin-bottom: 16px;
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        .blocked-section h2 {
+            color: var(--danger);
+            margin-bottom: 12px;
+            font-size: 1.6rem;
+        }
+        
+        .blocked-section p {
+            color: #5c6770;
+            margin-bottom: 16px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .new-chat-button {
+            display: block;
+            margin: 16px auto;
+            padding: 10px 25px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 3px 8px rgba(67, 97, 238, 0.25);
+        }
+        
+        .new-chat-button:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 12px rgba(67, 97, 238, 0.35);
+        }
+        
+        .closed-chat-message {
+            text-align: center;
+            padding: 20px;
+            background: #fff8e1;
+            border-radius: var(--radius);
+            border: 1px solid #ffecb3;
+            font-size: 0.95rem;
+        }
+        
+        .chat-delay-message {
+            text-align: center;
+            padding: 12px;
+            background: #fff8e1;
+            border-radius: 18px;
+            margin: 8px 0;
+            font-size: 0.85rem;
+        }
+        
+        .auth-container {
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 25px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        
+        .auth-header {
+            margin-bottom: 20px;
+        }
+        
+        .auth-header i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+        
+        .auth-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        
+        .auth-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .auth-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .auth-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        
+        .auth-btn.email {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+        }
+        
+        .auth-btn.google {
+            background: white;
+            color: #5F6368;
+            border: 2px solid #E0E0E0;
+        }
+        
+        .auth-btn.google:hover {
+            background: #F8F9FA;
+        }
+        
+        .auth-divider {
+            position: relative;
+            margin: 20px 0;
+            text-align: center;
+            color: #757575;
+        }
+        
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 0;
+            left: 0;
+            height: 1px;
+            background: #E0E0E0;
+            z-index: 1;
+        }
+        
+        .auth-divider span {
+            position: relative;
+            padding: 0 12px;
+            background: white;
+            z-index: 2;
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: right;
+        }
+        
+        .auth-form-group {
+            margin-bottom: 12px;
+        }
+        
+        .auth-form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+        
+        .auth-form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+        
+        .auth-form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+        
+        .auth-submit-btn {
+            padding: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 8px;
+        }
+        
+        .auth-submit-btn:hover {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            transform: translateY(-3px);
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.25);
+        }
+        
+        .auth-switch {
+            margin-top: 16px;
+            color: #757575;
+            font-size: 0.9rem;
+        }
+        
+        .auth-switch a {
+            color: var(--primary);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+        
+        .active-chat {
+            display: block;
+        }
+        
+        .inactive-chat {
+            display: none;
+        }
+        
+        /* شاشة تسجيل الدخول للشات */
+        .chat-login-screen {
+            background: white;
+            border-radius: var(--radius);
+            padding: 25px;
+            margin: 0;
+            text-align: center;
+        }
+        
+        .chat-login-icon {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .chat-login-title {
+            font-size: 1.4rem;
+            color: var(--dark);
+            margin-bottom: 15px;
+        }
+        
+        .chat-login-description {
+            color: #5c6770;
+            margin-bottom: 25px;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+        
+        .login-required {
+            display: none;
+        }
+        
+        /* أنماط التحقق من المستخدم */
         .verification-overlay {
             position: fixed;
             top: 0;
@@ -75,7 +1700,7 @@
     </style>
 </head>
 <body>
-    <!-- شاشة التحقق -->
+    <!-- شاشة التحقق من المستخدم -->
     <div id="verificationOverlay" class="verification-overlay">
         <div class="verification-icon">
             <i class="fas fa-spinner fa-spin"></i>
@@ -91,8 +1716,8 @@
                 <button id="retryButton" class="btn btn-primary">
                     <i class="fas fa-redo"></i> المحاولة مرة أخرى
                 </button>
-                <button id="logoutButton" class="btn btn-outline">
-                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                <button id="redirectButton" class="btn btn-outline">
+                    <i class="fas fa-sign-out-alt"></i> الانتقال إلى تسجيل الدخول
                 </button>
             </div>
         </div>
@@ -107,9 +1732,279 @@
         </div>
     </div>
     
-    <!-- باقي محتوى الصفحة هنا (نفس الصفحة الثانية) -->
-    <!-- ... -->
+    <!-- محتوى الصفحة الرئيسي (سيتم إظهاره بعد التحقق) -->
+    <div id="mainContent" style="display: none;">
+        <!-- زر الرجوع إلى الصفحة الرئيسية -->
+        <button class="back-button" id="backButton">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        
+        <!-- إشعارات -->
+        <div id="notification" class="notification"></div>
+        
+        <!-- شاشة التحميل -->
+        <div class="loading-overlay" id="loadingOverlay">
+            <div class="loading-spinner"></div>
+        </div>
+        
+        <div class="container">
+            <header>
+                <div class="page-title">الدعم الفني</div>
+                <div class="tabs tab-bar-fix">
+                    <div class="tab active" data-tab="help">مركز المساعدة</div>
+                    <div class="tab" data-tab="chat">المحادثات</div>
+                    <div class="tab" data-tab="faq">الأسئلة الشائعة</div>
+                    <div class="tab" data-tab="support">الدعم المباشر</div>
+                </div>
+            </header>
+            
+            <div class="content">
+                <!-- قسم مركز المساعدة -->
+                <div class="tab-content active help-section" id="helpContent">
+                    <div class="help-header">
+                        <i class="fas fa-question-circle"></i>
+                        <h2>كيف يمكننا مساعدتك اليوم؟</h2>
+                    </div>
+                    <div class="help-grid">
+                        <div class="help-card" onclick="startNewChat()">
+                            <i class="fas fa-comments"></i>
+                            <h3>بدء محادثة جديدة</h3>
+                            <p>تواصل مع ممثل الدعم لحل مشكلتك</p>
+                        </div>
+                        <div class="help-card" onclick="showFAQ()">
+                            <i class="fas fa-book"></i>
+                            <h3>الأسئلة الشائعة</h3>
+                            <p>ابحث عن حلول للمشكلات الشائعة</p>
+                        </div>
+                        <div class="help-card" onclick="callSupport()">
+                            <i class="fas fa-phone-alt"></i>
+                            <h3>الاتصال بالدعم</h3>
+                            <p>اتصل بنا مباشرة على الرقم +9647823053419</p>
+                        </div>
+                        <div class="whatsapp-card" onclick="openWhatsApp()">
+                            <i class="fab fa-whatsapp"></i>
+                            <h3>واتساب الدعم الفني</h3>
+                            <p>تواصل معنا عبر واتساب لحل مشكلتك</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- قسم المحادثات -->
+                <div class="tab-content" id="chatContent">
+                    <!-- شاشة تسجيل الدخول المطلوبة -->
+                    <div id="chatLoginRequired" class="login-required">
+                        <div class="chat-login-screen">
+                            <div class="chat-login-icon">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div class="chat-login-title">
+                                تسجيل الدخول مطلوب
+                            </div>
+                            <div class="chat-login-description">
+                                يرجى تسجيل الدخول أو إنشاء حساب جديد للبدء في المحادثة مع فريق الدعم.
+                            </div>
+                            <div class="auth-methods">
+                                <button id="googleSignInBtn" class="auth-btn google">
+                                    <i class="fab fa-google"></i>
+                                    تسجيل الدخول باستخدام Google
+                                </button>
+                                
+                                <div class="auth-divider">
+                                    <span>أو</span>
+                                </div>
+                                
+                                <button id="emailSignInBtn" class="auth-btn email">
+                                    <i class="fas fa-envelope"></i>
+                                    التسجيل باستخدام البريد الإلكتروني
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- واجهة الشات -->
+                    <div id="chatInterface">
+                        <div class="conversation-header-bar">
+                            <div class="conversation-user-info">
+                                <div class="conversation-user-avatar">
+                                    <i class="fas fa-headset"></i>
+                                </div>
+                                <div class="conversation-user-details">
+                                    <div class="conversation-user-name">محادثة الدعم الفني</div>
+                                    <div id="conversationUserStatus" class="status online">متصل الآن</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="messages-area">
+                            <div id="messagesContainer" class="messages-container">
+                                <div class="no-messages">
+                                    <i class="fas fa-comment-alt"></i>
+                                    <p>مرحباً بك في خدمة الدعم الفني</p>
+                                    <p>اكتب رسالتك للتواصل مع ممثل الدعم</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="message-input-area">
+                            <textarea id="customerMessageInput" class="customer-message-input" placeholder="اكتب رسالتك هنا..." rows="1" autofocus></textarea>
+                            <button id="customerSendButton" class="customer-send-button">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- قسم الأسئلة الشائعة -->
+                <div class="tab-content faq-section" id="faqContent">
+                    <div class="faq-header">
+                        <i class="fas fa-question-circle"></i>
+                        <h2>الأسئلة الشائعة</h2>
+                    </div>
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFAQ(this)">
+                                <span>كيف يمكنني إعادة تعيين كلمة المرور؟</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>يمكنك إعادة تعيين كلمة المرور بالذهاب إلى صفحة تسجيل الدخول والنقر على "نسيت كلمة المرور". اتبع التعليمات لإعادة التعيين.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFAQ(this)">
+                                <span>كيف يمكنني تحديث معلومات حسابي؟</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>تحديث معلومات الحساب متاح من خلال صفحة الملف الشخصي. بعد تسجيل الدخول، انقر على اسمك في الزاوية العلوية واختر "الملف الشخصي" لتعديل معلوماتك.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFAQ(this)">
+                                <span>ما هي طرق الدفع المتاحة؟</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>نحن نقبل الدفع عند الاستلام فقط.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <div class="faq-question" onclick="toggleFAQ(this)">
+                                <span>كيف يمكنني تتبع طلبي؟</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                            <div class="faq-answer">
+                                <p>بعد تأكيد الطلب، ستصلك رسالة برابط التتبع. يمكنك أيضًا تسجيل الدخول إلى حسابك وزيارة قسم "طلباتي" لمشاهدة حالة الطلب وتفاصيل الشحن.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- قسم الدعم المباشر -->
+                <div class="tab-content" id="supportContent">
+                    <div class="auth-container">
+                        <div class="auth-header">
+                            <i class="fas fa-user-circle"></i>
+                            <h2>تسجيل الدخول إلى نظام الدعم</h2>
+                            <p>سجل دخولك للاستفادة من خدمات الدعم الفني</p>
+                        </div>
+                        
+                        <div class="auth-methods">
+                            <button id="googleSignInBtn" class="auth-btn google">
+                                <i class="fab fa-google"></i>
+                                تسجيل الدخول باستخدام Google
+                            </button>
+                            
+                            <div class="auth-divider">
+                                <span>أو</span>
+                            </div>
+                            
+                            <button id="emailSignInBtn" class="auth-btn email">
+                                <i class="fas fa-envelope"></i>
+                                التسجيل باستخدام البريد الإلكتروني
+                            </button>
+                        </div>
+                        
+                        <div id="emailSignInForm" class="auth-form" style="display: none;">
+                            <div class="auth-form-group">
+                                <label for="email">البريد الإلكتروني</label>
+                                <input type="email" id="email" placeholder="ادخل بريدك الإلكتروني" required>
+                            </div>
+                            
+                            <div class="auth-form-group">
+                                <label for="password">كلمة المرور</label>
+                                <input type="password" id="password" placeholder="ادخل كلمة المرور" required>
+                            </div>
+                            
+                            <button id="emailSignInSubmit" class="auth-submit-btn">تسجيل الدخول</button>
+                            
+                            <div class="auth-switch">
+                                ليس لديك حساب؟ <a href="#" id="showRegister">إنشاء حساب جديد</a>
+                            </div>
+                        </div>
+                        
+                        <div id="registerForm" class="auth-form" style="display: none;">
+                            <div class="auth-form-group">
+                                <label for="regName">الاسم الكامل</label>
+                                <input type="text" id="regName" placeholder="ادخل اسمك الكامل" required>
+                            </div>
+                            
+                            <div class="auth-form-group">
+                                <label for="regEmail">البريد الإلكتروني</label>
+                                <input type="email" id="regEmail" placeholder="ادخل بريدك الإلكتروني" required>
+                            </div>
+                            
+                            <div class="auth-form-group">
+                                <label for="regPassword">كلمة المرور</label>
+                                <input type="password" id="regPassword" placeholder="اختر كلمة مرور قوية" required>
+                            </div>
+                            
+                            <div class="auth-form-group">
+                                <label for="regConfirmPassword">تأكيد كلمة المرور</label>
+                                <input type="password" id="regConfirmPassword" placeholder="أعد إدخال كلمة المرور" required>
+                            </div>
+                            
+                            <button id="registerSubmit" class="auth-submit-btn">إنشاء حساب</button>
+                            
+                            <div class="auth-switch">
+                                لديك حساب بالفعل؟ <a href="#" id="showLogin">تسجيل الدخول</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- قسم المستخدم المحظور -->
+                <div class="tab-content blocked-section" id="blockedContent">
+                    <div class="blocked-icon">
+                        <i class="fas fa-ban"></i>
+                    </div>
+                    <h2>تم حظر حسابك</h2>
+                    <p>لقد تم حظرك من إرسال الرسائل في نظام الدعم الفني من قبل الإدارة.</p>
+                    <p>إذا كنت تعتقد أن هذا خطأ أو ترغب في الاستفسار عن سبب الحظر، يرجى الاتصال بالدعم.</p>
+                    
+                    <div class="contact-buttons">
+                        <a href="tel:+9647823053419" class="contact-button">
+                            <i class="fas fa-phone-alt"></i>
+                            الاتصال بالدعم
+                        </a>
+                        <a href="https://wa.me/9647823053419" target="_blank" class="contact-button whatsapp">
+                            <i class="fab fa-whatsapp"></i>
+                            تواصل عبر واتساب
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
+    <!-- Sound Notification -->
+    <audio id="messageSound" class="sound-notification">
+        <source src="https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3" type="audio/mpeg">
+    </audio>
+
     <script>
         // إعدادات Firebase
         const firebaseConfig = {
@@ -134,8 +2029,9 @@
         const verificationError = document.getElementById('verificationError');
         const errorMessage = document.getElementById('errorMessage');
         const retryButton = document.getElementById('retryButton');
-        const logoutButton = document.getElementById('logoutButton');
+        const redirectButton = document.getElementById('redirectButton');
         const verificationSuccess = document.getElementById('verificationSuccess');
+        const mainContent = document.getElementById('mainContent');
         
         // التحقق من حالة تسجيل الدخول والبيانات
         function verifyUser() {
@@ -162,6 +2058,8 @@
                                 verificationOverlay.style.opacity = '0';
                                 setTimeout(() => {
                                     verificationOverlay.style.display = 'none';
+                                    mainContent.style.display = 'block';
+                                    initApp(); // تهيئة التطبيق بعد التحقق
                                 }, 500);
                             }, 1500);
                         } else {
@@ -185,25 +2083,404 @@
             verificationMessage.innerHTML = 'فشل عملية التحقق';
         }
         
-        // إعداد مستمعي الأحداث
+        // إعداد مستمعي الأحداث للتحقق
         retryButton.addEventListener('click', verifyUser);
-        logoutButton.addEventListener('click', () => {
-            auth.signOut().then(() => {
-                window.location.reload();
-            });
+        redirectButton.addEventListener('click', () => {
+            window.location.href = 'account.html';
         });
         
         // التحقق عند تحميل الصفحة
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                verifyUser();
-            } else {
-                showVerificationError('لم تقم بتسجيل الدخول', 'يرجى تسجيل الدخول للوصول إلى خدمات الدعم الفني.');
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    verifyUser();
+                } else {
+                    // إذا لم يكن مسجلاً، توجيه إلى صفحة الحساب
+                    window.location.href = 'account.html';
+                }
+            });
         });
         
-        // باقي كود JavaScript للصفحة هنا
-        // ...
+        // باقي كود JavaScript للصفحة
+        function initApp() {
+            // متغيرات التطبيق
+            let userId = null;
+            let isFirstMessage = true;
+            let isSending = false;
+            let userMessageCount = 0;
+            let userName = "مستخدم جديد";
+            
+            // عناصر الصفحة
+            const tabs = document.querySelectorAll('.tab');
+            const backButton = document.getElementById('backButton');
+            const notification = document.getElementById('notification');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const googleSignInBtn = document.getElementById('googleSignInBtn');
+            const emailSignInBtn = document.getElementById('emailSignInBtn');
+            const emailSignInForm = document.getElementById('emailSignInForm');
+            const registerForm = document.getElementById('registerForm');
+            const showRegister = document.getElementById('showRegister');
+            const showLogin = document.getElementById('showLogin');
+            const emailSignInSubmit = document.getElementById('emailSignInSubmit');
+            const registerSubmit = document.getElementById('registerSubmit');
+            const customerMessageInput = document.getElementById('customerMessageInput');
+            const customerSendButton = document.getElementById('customerSendButton');
+            const messagesContainer = document.getElementById('messagesContainer');
+            const conversationUserStatus = document.getElementById('conversationUserStatus');
+            const chatLoginRequired = document.getElementById('chatLoginRequired');
+            const chatInterface = document.getElementById('chatInterface');
+            
+            // تغيير التبويبات
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    document.getElementById(`${tabName}Content`).classList.add('active');
+                    
+                    // التحقق من تسجيل الدخول عند النقر على تبويب المحادثة
+                    if (tabName === 'chat') {
+                        checkLoginForChat();
+                    }
+                });
+            });
+            
+            // زر الرجوع إلى الصفحة الرئيسية
+            backButton.addEventListener('click', () => {
+                showNotification('جارٍ الرجوع إلى الصفحة الرئيسية...', 'success');
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 1000);
+            });
+            
+            // عرض الإشعارات
+            function showNotification(message, type = 'success') {
+                notification.textContent = message;
+                notification.className = `notification ${type} show`;
+                
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // إظهار شاشة التحميل
+            function showLoading() {
+                loadingOverlay.style.display = 'flex';
+            }
+            
+            // إخفاء شاشة التحميل
+            function hideLoading() {
+                loadingOverlay.style.display = 'none';
+            }
+            
+            // تسجيل الدخول باستخدام Google
+            function signInWithGoogle() {
+                showLoading();
+                
+                // محاكاة عملية تسجيل الدخول
+                setTimeout(() => {
+                    // تسجيل دخول ناجح
+                    userName = "محمد أحمد";
+                    userId = "user12345";
+                    
+                    showNotification(`مرحباً ${userName}، تم تسجيل الدخول بنجاح!`, 'success');
+                    
+                    // تمكين حقل الإدخال وزر الإرسال
+                    customerMessageInput.disabled = false;
+                    customerSendButton.disabled = false;
+                    customerMessageInput.focus();
+                    
+                    // إخفاء شاشة تسجيل الدخول وإظهار واجهة الشات
+                    chatLoginRequired.style.display = 'none';
+                    chatInterface.style.display = 'block';
+                    
+                    hideLoading();
+                }, 1500);
+            }
+            
+            // تسجيل الدخول باستخدام البريد الإلكتروني
+            function signInWithEmail() {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                
+                if (!email || !password) {
+                    showNotification('الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'error');
+                    return;
+                }
+                
+                showLoading();
+                
+                // محاكاة عملية تسجيل الدخول
+                setTimeout(() => {
+                    // تسجيل دخول ناجح
+                    userName = email.split('@')[0] || "مستخدم جديد";
+                    userId = "user67890";
+                    
+                    showNotification(`مرحباً ${userName}، تم تسجيل الدخول بنجاح!`, 'success');
+                    
+                    // تمكين حقل الإدخال وزر الإرسال
+                    customerMessageInput.disabled = false;
+                    customerSendButton.disabled = false;
+                    customerMessageInput.focus();
+                    
+                    // إخفاء شاشة تسجيل الدخول وإظهار واجهة الشات
+                    chatLoginRequired.style.display = 'none';
+                    chatInterface.style.display = 'block';
+                    
+                    hideLoading();
+                }, 1500);
+            }
+            
+            // إنشاء حساب جديد
+            function registerWithEmail() {
+                const name = document.getElementById('regName').value;
+                const email = document.getElementById('regEmail').value;
+                const password = document.getElementById('regPassword').value;
+                const confirmPassword = document.getElementById('regConfirmPassword').value;
+                
+                if (!name || !email || !password || !confirmPassword) {
+                    showNotification('الرجاء تعبئة جميع الحقول', 'error');
+                    return;
+                }
+                
+                if (password !== confirmPassword) {
+                    showNotification('كلمتا المرور غير متطابقتين', 'error');
+                    return;
+                }
+                
+                showLoading();
+                
+                // محاكاة عملية التسجيل
+                setTimeout(() => {
+                    // تسجيل ناجح
+                    userName = name;
+                    userId = "user" + Math.floor(Math.random() * 10000);
+                    
+                    showNotification(`تم إنشاء حساب ${userName} بنجاح!`, 'success');
+                    
+                    // تمكين حقل الإدخال وزر الإرسال
+                    customerMessageInput.disabled = false;
+                    customerSendButton.disabled = false;
+                    customerMessageInput.focus();
+                    
+                    // إخفاء شاشة تسجيل الدخول وإظهار واجهة الشات
+                    chatLoginRequired.style.display = 'none';
+                    chatInterface.style.display = 'block';
+                    
+                    hideLoading();
+                }, 1500);
+            }
+            
+            // التحقق من حالة تسجيل الدخول للشات
+            function checkLoginForChat() {
+                if (!userId) {
+                    // المستخدم غير مسجل دخول
+                    chatLoginRequired.style.display = 'block';
+                    chatInterface.style.display = 'none';
+                } else {
+                    // المستخدم مسجل دخول
+                    chatLoginRequired.style.display = 'none';
+                    chatInterface.style.display = 'block';
+                }
+            }
+            
+            // إرسال الرسالة
+            function sendMessage() {
+                const message = customerMessageInput.value.trim();
+                
+                if (!message) {
+                    showNotification('الرجاء إدخال رسالة قبل الإرسال', 'warning');
+                    return;
+                }
+                
+                if (!userId) {
+                    showNotification('الرجاء تسجيل الدخول أولاً', 'warning');
+                    document.querySelector('[data-tab="support"]').click();
+                    return;
+                }
+                
+                isSending = true;
+                customerSendButton.disabled = true;
+                customerSendButton.classList.add('sending');
+                
+                // إضافة رسالة المستخدم إلى الواجهة
+                const timeString = getCurrentTime();
+                const messageElement = document.createElement('div');
+                messageElement.className = `message user-message`;
+                messageElement.innerHTML = `
+                    <div class="message-sender">${userName}</div>
+                    <div class="message-content">${message}</div>
+                    <div class="message-time">${timeString}</div>
+                `;
+                
+                if (messagesContainer.querySelector('.no-messages')) {
+                    messagesContainer.innerHTML = '';
+                }
+                
+                messagesContainer.appendChild(messageElement);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                // محاكاة استجابة الدعم بعد تأخير
+                setTimeout(() => {
+                    // إظهار مؤشر الكتابة من الدعم
+                    const typingElement = document.createElement('div');
+                    typingElement.className = 'typing-indicator';
+                    typingElement.innerHTML = `
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        <span>ممثل الدعم يكتب...</span>
+                    `;
+                    messagesContainer.appendChild(typingElement);
+                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                    
+                    // إرسال رد الدعم بعد تأخير
+                    setTimeout(() => {
+                        typingElement.remove();
+                        
+                        let reply = "شكراً لتواصلك معنا. كيف يمكنني مساعدتك اليوم؟";
+                        
+                        if (isFirstMessage) {
+                            reply = "مرحباً بك في خدمة الدعم الفني. شكراً لتواصلك معنا. كيف يمكنني مساعدتك اليوم؟";
+                            isFirstMessage = false;
+                        } else if (userMessageCount === 1) {
+                            reply = "هل يمكنك إخباري بالمزيد من التفاصيل حول مشكلتك؟";
+                        }
+                        
+                        const replyElement = document.createElement('div');
+                        replyElement.className = `message admin-message`;
+                        replyElement.innerHTML = `
+                            <div class="message-sender">الدعم الفني</div>
+                            <div class="message-content">${reply}</div>
+                            <div class="message-time">${getCurrentTime()}</div>
+                        `;
+                        
+                        messagesContainer.appendChild(replyElement);
+                        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                        
+                        // تشغيل صوت الإشعار
+                        playNotificationSound();
+                        
+                        // زيادة عداد رسائل المستخدم
+                        userMessageCount++;
+                        
+                        // إعادة تمكين زر الإرسال
+                        customerSendButton.disabled = false;
+                        customerSendButton.classList.remove('sending');
+                        isSending = false;
+                        customerMessageInput.value = '';
+                        customerMessageInput.focus();
+                    }, 2000);
+                }, 1000);
+            }
+            
+            // تشغيل صوت الإشعار
+            function playNotificationSound() {
+                const sound = document.getElementById('messageSound');
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log('Sound play failed:', e));
+            }
+            
+            // الحصول على الوقت الحالي
+            function getCurrentTime() {
+                const now = new Date();
+                return now.toLocaleTimeString('ar-AR', { hour: 'numeric', minute: 'numeric' });
+            }
+            
+            // فتح واتساب
+            function openWhatsApp() {
+                window.open('https://wa.me/9647823053419', '_blank');
+            }
+            
+            // الاتصال بالدعم
+            function callSupport() {
+                window.location.href = "tel:+9647823053419";
+            }
+            
+            // عرض الأسئلة الشائعة
+            function showFAQ() {
+                document.querySelector('[data-tab="faq"]').click();
+            }
+            
+            // بدء محادثة جديدة
+            function startNewChat() {
+                document.querySelector('[data-tab="chat"]').click();
+                checkLoginForChat();
+            }
+            
+            // تبديل فتح/إغلاق إجابة السؤال في الأسئلة الشائعة
+            function toggleFAQ(element) {
+                const faqItem = element.parentElement;
+                faqItem.classList.toggle('open');
+            }
+            
+            // إعداد مستمعي الأحداث
+            function setupEventListeners() {
+                // تسجيل الدخول باستخدام Google
+                document.querySelectorAll('#googleSignInBtn').forEach(btn => {
+                    btn.addEventListener('click', signInWithGoogle);
+                });
+                
+                // عرض نموذج تسجيل الدخول بالبريد الإلكتروني
+                document.querySelectorAll('#emailSignInBtn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        emailSignInForm.style.display = 'block';
+                        registerForm.style.display = 'none';
+                    });
+                });
+                
+                // عرض نموذج التسجيل
+                showRegister.addEventListener('click', () => {
+                    registerForm.style.display = 'block';
+                    emailSignInForm.style.display = 'none';
+                });
+                
+                // عرض نموذج تسجيل الدخول
+                showLogin.addEventListener('click', () => {
+                    emailSignInForm.style.display = 'block';
+                    registerForm.style.display = 'none';
+                });
+                
+                // تسجيل الدخول بالبريد الإلكتروني
+                emailSignInSubmit.addEventListener('click', signInWithEmail);
+                
+                // إنشاء حساب جديد
+                registerSubmit.addEventListener('click', registerWithEmail);
+                
+                // إرسال الرسالة
+                customerSendButton.addEventListener('click', sendMessage);
+                
+                // إرسال الرسالة عند الضغط على Enter
+                customerMessageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendMessage();
+                    }
+                });
+            }
+            
+            // تهيئة التطبيق بعد التحقق
+            function initAppAfterVerification() {
+                // إخفاء شاشة التحميل بعد تأخير قصير
+                setTimeout(() => {
+                    hideLoading();
+                }, 500);
+                
+                // إعداد مستمعي الأحداث
+                setupEventListeners();
+                
+                // إخفاء واجهة الشات في البداية
+                chatInterface.style.display = 'none';
+            }
+            
+            initAppAfterVerification();
+        }
     </script>
 </body>
 </html>
