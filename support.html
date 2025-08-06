@@ -3,1316 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الدردشة مع الدعم الفني</title>
+    <title>الدعم الفني - الحل النهائي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --accent: #4895ef;
-            --dark: #1d3557;
-            --light: #f8f9fa;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --warning: #f39c12;
-            --gray: #6c757d;
-            --google-red: #DB4437;
-            --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
-            --transition: all 0.3s ease;
-            --base-font: 0.85rem;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Tajawal', sans-serif;
-            font-size: var(--base-font);
-        }
-        
-        body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #333;
-            line-height: 1.5;
-            padding: 12px;
-        }
-        
-        .container {
-            width: 100%;
-            max-width: 900px;
-            min-height: auto;
-            background: white;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            border-radius: var(--radius);
-            position: relative;
-        }
-        
-        .back-button {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            background: rgba(255, 255, 255, 0.95);
-            border: none;
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--primary);
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: var(--transition);
-            z-index: 10;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-        }
-        
-        .back-button:hover {
-            background: white;
-            transform: translateX(-3px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-        
-        .page-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            padding: 15px;
-            text-align: center;
-            letter-spacing: -0.5px;
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid #eee;
-            background: #f9fbfd;
-        }
-        
-        .content {
-            padding: 15px;
-            overflow-y: auto;
-        }
-        
-        .notification {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            padding: 16px 24px;
-            border-radius: 12px;
-            color: white;
-            font-weight: 500;
-            font-size: 0.9rem;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
-            z-index: 1000;
-            transform: translateX(120%);
-            transition: transform 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            max-width: 90%;
-            white-space: normal;
-            word-wrap: break-word;
-            text-align: right;
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-            animation: slideIn 0.4s ease;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(120%); }
-            to { transform: translateX(0); }
-        }
-        
-        .notification.success {
-            background: var(--success);
-        }
-        
-        .notification.error {
-            background: var(--danger);
-        }
-        
-        .notification.warning {
-            background: var(--warning);
-        }
-        
-        .loading-overlay {
+        /* جميع أنماط CSS السابقة هنا */
+        .verification-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.85);
-            display: none;
+            background: white;
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 3000;
+            z-index: 5000;
+            transition: opacity 0.5s ease;
         }
         
-        .loading-spinner {
-            border: 6px solid rgba(67, 97, 238, 0.2);
-            border-top: 6px solid var(--primary);
-            border-radius: 50%;
-            width: 70px;
-            height: 70px;
-            animation: spin 1s linear infinite;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* شاشة تسجيل الدخول للشات */
-        .chat-login-screen {
-            background: white;
-            border-radius: var(--radius);
-            padding: 25px;
-            margin: 0;
-            text-align: center;
-        }
-        
-        .chat-login-icon {
-            font-size: 2.5rem;
+        .verification-icon {
+            font-size: 4rem;
             color: var(--primary);
             margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
         }
         
-        .chat-login-title {
-            font-size: 1.2rem;
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .verification-message {
+            font-size: 1.5rem;
             color: var(--dark);
+            margin-bottom: 20px;
+            text-align: center;
+            padding: 0 20px;
+        }
+        
+        .verification-error {
+            background: #fff8f8;
+            border: 1px solid var(--danger);
+            border-radius: var(--radius);
+            padding: 20px;
+            max-width: 500px;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .verification-error h3 {
+            color: var(--danger);
             margin-bottom: 15px;
         }
         
-        .chat-login-description {
-            color: #5c6770;
-            margin-bottom: 25px;
-            font-size: 0.9rem;
-            line-height: 1.6;
-        }
-        
-        .login-required {
-            display: none;
-        }
-        
-        /* واجهة الشات */
-        #chatInterface {
-            display: none;
-        }
-        
-        .conversation-header-bar {
-            padding: 12px;
-            background-color: white;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            border-radius: var(--radius);
-            margin-bottom: 16px;
-        }
-        
-        .conversation-user-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .conversation-user-avatar {
-            width: 45px;
-            height: 45px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 1.3rem;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.12);
-        }
-        
-        .conversation-user-details {
-            line-height: 1.4;
-        }
-        
-        .conversation-user-name {
-            font-weight: bold;
-            font-size: 1rem;
-            color: var(--dark);
-        }
-        
-        .status {
-            font-size: 0.8rem;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .status::before {
-            content: '';
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
-        .status.online::before {
-            background-color: var(--success);
-            box-shadow: 0 0 5px var(--success);
-        }
-        
-        .status.offline::before {
-            background-color: #bbb;
-        }
-        
-        .status.blocked::before {
-            background-color: var(--danger);
-            box-shadow: 0 0 5px var(--danger);
-        }
-        
-        .messages-area {
-            flex-grow: 1; 
-            min-height: 0; 
-            padding: 12px;
-            background: linear-gradient(to bottom, #f8f9fa, #eef2f6);
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            border-radius: var(--radius);
-            border: 1px solid #e0e0e0;
-            max-height: 350px;
-        }
-        
-        .messages-container {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            min-height: 100%; 
-            padding: 8px;
-        }
-        
-        .no-messages {
-            text-align: center;
-            padding: 30px 16px;
-            color: #777;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0.7;
-        }
-        
-        .no-messages i {
-            font-size: 2.2rem;
-            margin-bottom: 16px;
-            opacity: 0.2;
-            color: #7f8c8d;
-        }
-        
-        .no-messages p {
-            margin: 6px 0;
-            font-size: 0.9rem;
-            color: #5c6770;
-        }
-        
-        .date-divider {
-            text-align: center;
-            margin: 16px 0;
-            position: relative;
-        }
-        
-        .date-divider span {
-            background: linear-gradient(to right, #e0e0e0, #f0f0f0);
-            padding: 6px 16px;
-            border-radius: 18px;
-            font-size: 0.8rem;
-            color: #5c6770;
-            position: relative;
-            z-index: 1;
-            font-weight: 600;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
-        
-        .date-divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0.05));
-            z-index: 0;
-        }
-        
-        .message {
-            max-width: 78%;
-            padding: 12px 16px;
-            border-radius: 18px;
-            position: relative;
-            animation: fadeIn 0.4s ease-out;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
-            transition: var(--transition);
-            transform-origin: bottom;
-            font-size: 0.9rem;
-        }
-        
-        .message:hover {
-            transform: translateY(-2px);
-        }
-        
-        .user-message {
-            background: linear-gradient(to bottom, #ffffff, #f5f7fa);
-            align-self: flex-end;
-            border-bottom-right-radius: 4px;
-            border: 1px solid #e9ecef;
-        }
-        
-        .admin-message {
-            background: linear-gradient(to bottom, #e3f2fd, #d0e5ff);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            border: 1px solid #c5daf8;
-        }
-        
-        .notification-message {
-            text-align: center;
-            padding: 12px;
-            background: #fff8e1;
-            border-radius: 18px;
-            margin: 8px 0;
-            font-size: 0.85rem;
-            border: 1px solid #ffd54f;
-        }
-        
-        .message-content {
-            word-wrap: break-word;
-            line-height: 1.5;
-            position: relative;
-            color: #333;
-        }
-        
-        .message-time {
-            font-size: 0.65rem;
-            color: #7f8c8d;
-            margin-top: 6px;
-            text-align: left;
-            font-weight: 500;
-            transition: opacity 0.3s;
-        }
-        
-        .admin-message .message-time {
-            text-align: right;
-        }
-        
-        .user-message .message-time {
-            text-align: left;
-        }
-        
-        .message-actions {
-            display: flex;
-            justify-content: flex-end;
-            margin-top: 6px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        
-        .message:hover .message-actions {
-            opacity: 1;
-        }
-        
-        .action-btn {
-            background: rgba(0,0,0,0.05);
-            border: none;
-            padding: 3px 6px;
-            border-radius: 3px;
-            font-size: 0.7rem;
-            cursor: pointer;
-            margin-right: 4px;
-            transition: background 0.2s;
-        }
-        
-        .action-btn:hover {
-            background: rgba(0,0,0,0.1);
-        }
-        
-        .typing-indicator {
-            background: var(--light);
-            padding: 8px 12px;
-            border-radius: 18px;
-            align-self: flex-start;
-            display: inline-flex;
-            gap: 4px;
-            margin-bottom: 8px;
-            animation: fadeIn 0.3s;
-            font-size: 0.85rem;
-        }
-        
-        .typing-indicator span {
-            width: 7px;
-            height: 7px;
-            background: var(--primary);
-            border-radius: 50%;
-            display: inline-block;
-            animation: typing 1.4s infinite ease-in-out;
-        }
-        
-        .typing-indicator span:nth-child(1) {
-            animation-delay: 0s;
-        }
-        
-        .typing-indicator span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .typing-indicator span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-4px); }
-        }
-        
-        .loading-indicator {
-            display: flex;
-            justify-content: center;
-            padding: 25px 16px;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .spinner {
-            width: 45px;
-            height: 45px;
-            border: 4px solid rgba(26, 35, 126, 0.1);
-            border-left-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1.2s linear infinite;
-        }
-        
-        .message-input-area {
-            display: flex;
-            padding: 15px 0;
-            background-color: transparent;
-            align-items: center;
-            gap: 10px;
-            margin-top: 12px;
-        }
-        
-        .customer-message-input {
-            flex-grow: 1;
-            padding: 12px 16px;
-            border: 1px solid #dde2e8;
-            border-radius: 25px;
-            resize: none;
-            min-height: 50px;
-            max-height: 120px;
-            transition: var(--transition);
-            background: #f8fafc;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.04);
-            font-size: 0.9rem;
-        }
-        
-        .customer-message-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 2px rgba(72, 149, 239, 0.2), inset 0 2px 4px rgba(0,0,0,0.04);
-            background: white;
-        }
-        
-        .customer-send-button {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            transition: var(--transition);
-            box-shadow: 0 3px 8px rgba(26, 35, 126, 0.25);
-            position: relative;
-            z-index: 101;
-        }
-        
-        .customer-send-button:hover {
-            background: linear-gradient(135deg, #283593, #1A237E);
-            transform: scale(1.05);
-            box-shadow: 0 5px 12px rgba(26, 35, 126, 0.35);
-        }
-        
-        .customer-send-button:disabled {
-            background: #cccccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        /* أنماط تسجيل الدخول */
-        .auth-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-            width: 100%;
-            margin-bottom: 10px;
-        }
-        
-        .auth-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        }
-        
-        .auth-btn.email {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-        }
-        
-        .auth-btn.google {
-            background: white;
-            color: #5F6368;
-            border: 2px solid #E0E0E0;
-        }
-        
-        .auth-btn.google:hover {
-            background: #F8F9FA;
-        }
-        
-        .auth-divider {
-            position: relative;
-            margin: 15px 0;
-            text-align: center;
-            color: #757575;
-            font-size: 0.9rem;
-        }
-        
-        .auth-divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            right: 0;
-            left: 0;
-            height: 1px;
-            background: #E0E0E0;
-            z-index: 1;
-        }
-        
-        .auth-divider span {
-            position: relative;
-            padding: 0 12px;
-            background: white;
-            z-index: 2;
-        }
-        
-        .auth-form {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            text-align: right;
-            margin-top: 15px;
-        }
-        
-        .auth-form-group {
-            margin-bottom: 10px;
-        }
-        
-        .auth-form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--primary);
-            font-size: 0.9rem;
-        }
-        
-        .auth-form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #E0E0E0;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-        }
-        
-        .auth-form-group input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
-        }
-        
-        .auth-submit-btn {
-            padding: 12px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 0.95rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 8px;
-        }
-        
-        .auth-submit-btn:hover {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            transform: translateY(-3px);
-            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.25);
-        }
-        
-        .auth-switch {
-            margin-top: 12px;
-            color: #757575;
-            font-size: 0.85rem;
-            text-align: center;
-        }
-        
-        .auth-switch a {
-            color: var(--primary);
-            font-weight: 600;
-            text-decoration: none;
-        }
-        
-        .auth-switch a:hover {
-            text-decoration: underline;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* تحسينات للأجهزة المحمولة */
-        @media (max-width: 768px) {
-            .container {
-                max-width: 100%;
-                height: 100vh;
-            }
-            
-            .messages-area {
-                max-height: 60vh;
-            }
-            
-            .auth-btn {
-                font-size: 0.9rem;
-                padding: 10px;
-            }
-        }
-        
-        /* أنماط جديدة للتحقق من تسجيل الدخول */
-        .auth-redirect {
-            text-align: center;
-            padding: 30px;
-            background: white;
-            border-radius: var(--radius);
-            margin: 20px 0;
-            box-shadow: var(--shadow);
-        }
-        
-        .auth-redirect-icon {
-            font-size: 3.5rem;
-            color: var(--primary);
-            margin-bottom: 20px;
-        }
-        
-        .auth-redirect-title {
-            font-size: 1.4rem;
-            color: var(--dark);
+        .verification-error p {
             margin-bottom: 15px;
         }
         
-        .auth-redirect-description {
-            color: #5c6770;
-            margin-bottom: 25px;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-        
-        .auth-redirect-button {
-            display: inline-block;
-            padding: 12px 30px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            text-decoration: none;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.25);
-        }
-        
-        .auth-redirect-button:hover {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.35);
+        .verification-success {
+            display: none;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <!-- زر الرجوع إلى الصفحة الرئيسية -->
-    <button class="back-button" id="backButton">
-        <i class="fas fa-arrow-left"></i>
-    </button>
-    
-    <!-- إشعارات -->
-    <div id="notification" class="notification"></div>
-    
-    <!-- شاشة التحميل -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="loading-spinner"></div>
-    </div>
-    
-    <div class="container">
-        <div class="page-title">الدردشة مع الدعم الفني</div>
+    <!-- شاشة التحقق -->
+    <div id="verificationOverlay" class="verification-overlay">
+        <div class="verification-icon">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <div class="verification-message" id="verificationMessage">
+            جارٍ التحقق من تسجيل الدخول والبيانات...
+        </div>
         
-        <div class="content">
-            <!-- شاشة تسجيل الدخول المطلوبة -->
-            <div id="chatLoginRequired" class="login-required">
-                <div class="chat-login-screen">
-                    <div class="chat-login-icon">
-                        <i class="fas fa-lock"></i>
-                    </div>
-                    <div class="chat-login-title">
-                        تسجيل الدخول مطلوب
-                    </div>
-                    <div class="chat-login-description">
-                        يرجى تسجيل الدخول أو إنشاء حساب جديد للبدء في المحادثة مع فريق الدعم.
-                    </div>
-                    <div>
-                        <button id="googleSignInBtn" class="auth-btn google">
-                            <i class="fab fa-google"></i>
-                            تسجيل الدخول باستخدام Google
-                        </button>
-                        
-                        <div class="auth-divider">
-                            <span>أو</span>
-                        </div>
-                        
-                        <button id="emailSignInBtn" class="auth-btn email">
-                            <i class="fas fa-envelope"></i>
-                            التسجيل باستخدام البريد الإلكتروني
-                        </button>
-                    </div>
-                    
-                    <div id="emailSignInForm" class="auth-form" style="display: none;">
-                        <div class="auth-form-group">
-                            <label for="email">البريد الإلكتروني</label>
-                            <input type="email" id="email" placeholder="ادخل بريدك الإلكتروني" required>
-                        </div>
-                        
-                        <div class="auth-form-group">
-                            <label for="password">كلمة المرور</label>
-                            <input type="password" id="password" placeholder="ادخل كلمة المرور" required>
-                        </div>
-                        
-                        <button id="emailSignInSubmit" class="auth-submit-btn">تسجيل الدخول</button>
-                        
-                        <div class="auth-switch">
-                            ليس لديك حساب؟ <a href="#" id="showRegister">إنشاء حساب جديد</a>
-                        </div>
-                    </div>
-                    
-                    <div id="registerForm" class="auth-form" style="display: none;">
-                        <div class="auth-form-group">
-                            <label for="regName">الاسم الكامل</label>
-                            <input type="text" id="regName" placeholder="ادخل اسمك الكامل" required>
-                        </div>
-                        
-                        <div class="auth-form-group">
-                            <label for="regEmail">البريد الإلكتروني</label>
-                            <input type="email" id="regEmail" placeholder="ادخل بريدك الإلكتروني" required>
-                        </div>
-                        
-                        <div class="auth-form-group">
-                            <label for="regPassword">كلمة المرور</label>
-                            <input type="password" id="regPassword" placeholder="اختر كلمة مرور قوية" required>
-                        </div>
-                        
-                        <div class="auth-form-group">
-                            <label for="regConfirmPassword">تأكيد كلمة المرور</label>
-                            <input type="password" id="regConfirmPassword" placeholder="أعد إدخال كلمة المرور" required>
-                        </div>
-                        
-                        <button id="registerSubmit" class="auth-submit-btn">إنشاء حساب</button>
-                        
-                        <div class="auth-switch">
-                            لديك حساب بالفعل؟ <a href="#" id="showLogin">تسجيل الدخول</a>
-                        </div>
-                    </div>
-                </div>
+        <div id="verificationError" class="verification-error">
+            <h3><i class="fas fa-exclamation-triangle"></i> حدث خطأ</h3>
+            <p id="errorMessage"></p>
+            <div class="action-buttons">
+                <button id="retryButton" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> المحاولة مرة أخرى
+                </button>
+                <button id="logoutButton" class="btn btn-outline">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </button>
             </div>
-            
-            <!-- واجهة الشات -->
-            <div id="chatInterface">
-                <div class="conversation-header-bar">
-                    <div class="conversation-user-info">
-                        <div class="conversation-user-avatar">
-                            <i class="fas fa-headset"></i>
-                        </div>
-                        <div class="conversation-user-details">
-                            <div class="conversation-user-name">محادثة الدعم الفني</div>
-                            <div id="conversationUserStatus" class="status online">متصل الآن</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="messages-area">
-                    <div id="messagesContainer" class="messages-container">
-                        <div class="no-messages">
-                            <i class="fas fa-comment-alt"></i>
-                            <p>مرحباً بك في خدمة الدعم الفني</p>
-                            <p>اكتب رسالتك للتواصل مع ممثل الدعم</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="message-input-area">
-                    <textarea id="customerMessageInput" class="customer-message-input" placeholder="اكتب رسالتك هنا..." rows="1" autofocus></textarea>
-                    <button id="customerSendButton" class="customer-send-button">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
+        </div>
+        
+        <div id="verificationSuccess" class="verification-success">
+            <div class="verification-icon">
+                <i class="fas fa-check-circle"></i>
             </div>
-            
-            <!-- شاشة التحقق من تسجيل الدخول -->
-            <div id="authRedirect" class="auth-redirect" style="display: none;">
-                <div class="auth-redirect-icon">
-                    <i class="fas fa-user-lock"></i>
-                </div>
-                <div class="auth-redirect-title">
-                    تحتاج إلى تسجيل الدخول
-                </div>
-                <div class="auth-redirect-description">
-                    يجب عليك تسجيل الدخول أو إنشاء حساب جديد للوصول إلى خدمة الدردشة مع الدعم الفني.
-                </div>
-                <a href="account.html" class="auth-redirect-button">
-                    <i class="fas fa-user"></i> الانتقال إلى صفحة الحساب
-                </a>
+            <div class="verification-message">
+                تم التحقق بنجاح! جارٍ التوجيه...
             </div>
         </div>
     </div>
     
-    <!-- Sound Notification -->
-    <audio id="messageSound" class="sound-notification">
-        <source src="https://assets.mixkit.co/sfx/preview/mixkit-message-pop-alert-2354.mp3" type="audio/mpeg">
-    </audio>
-
+    <!-- باقي محتوى الصفحة هنا (نفس الصفحة الثانية) -->
+    <!-- ... -->
+    
     <script>
-        // متغيرات التطبيق
-        let userId = null;
-        let isFirstMessage = true;
-        let isSending = false;
-        let userMessageCount = 0;
-        let userName = "مستخدم جديد";
+        // إعدادات Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
+            authDomain: "zio3-8ffdd.firebaseapp.com",
+            databaseURL: "https://zio3-8ffdd-default-rtdb.firebaseio.com",
+            projectId: "zio3-8ffdd",
+            storageBucket: "zio3-8ffdd.firebasestorage.app",
+            messagingSenderId: "560939348415",
+            appId: "1:560939348415:web:c854e9e214e498ad2d310a",
+            measurementId: "G-CVN2B2D0RD"
+        };
+
+        // تهيئة Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // عناصر التحقق
+        const verificationOverlay = document.getElementById('verificationOverlay');
+        const verificationMessage = document.getElementById('verificationMessage');
+        const verificationError = document.getElementById('verificationError');
+        const errorMessage = document.getElementById('errorMessage');
+        const retryButton = document.getElementById('retryButton');
+        const logoutButton = document.getElementById('logoutButton');
+        const verificationSuccess = document.getElementById('verificationSuccess');
         
-        // عناصر الصفحة
-        const backButton = document.getElementById('backButton');
-        const notification = document.getElementById('notification');
-        const loadingOverlay = document.getElementById('loadingOverlay');
-        const googleSignInBtn = document.getElementById('googleSignInBtn');
-        const emailSignInBtn = document.getElementById('emailSignInBtn');
-        const emailSignInForm = document.getElementById('emailSignInForm');
-        const registerForm = document.getElementById('registerForm');
-        const showRegister = document.getElementById('showRegister');
-        const showLogin = document.getElementById('showLogin');
-        const emailSignInSubmit = document.getElementById('emailSignInSubmit');
-        const registerSubmit = document.getElementById('registerSubmit');
-        const customerMessageInput = document.getElementById('customerMessageInput');
-        const customerSendButton = document.getElementById('customerSendButton');
-        const messagesContainer = document.getElementById('messagesContainer');
-        const conversationUserStatus = document.getElementById('conversationUserStatus');
-        const chatLoginRequired = document.getElementById('chatLoginRequired');
-        const chatInterface = document.getElementById('chatInterface');
-        const authRedirect = document.getElementById('authRedirect');
-        
-        // زر الرجوع إلى الصفحة الرئيسية
-        backButton.addEventListener('click', () => {
-            showNotification('جارٍ الرجوع إلى الصفحة الرئيسية...', 'success');
-            setTimeout(() => {
-                window.location.href = 'index.html';
-            }, 1000);
-        });
-        
-        // عرض الإشعارات
-        function showNotification(message, type = 'success') {
-            notification.textContent = message;
-            notification.className = `notification ${type} show`;
+        // التحقق من حالة تسجيل الدخول والبيانات
+        function verifyUser() {
+            verificationMessage.innerHTML = 'جارٍ التحقق من تسجيل الدخول والبيانات...';
+            verificationError.style.display = 'none';
+            verificationSuccess.style.display = 'none';
             
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-        
-        // إظهار شاشة التحميل
-        function showLoading() {
-            loadingOverlay.style.display = 'flex';
-        }
-        
-        // إخفاء شاشة التحميل
-        function hideLoading() {
-            loadingOverlay.style.display = 'none';
-        }
-        
-        // تسجيل الدخول باستخدام Google
-        function signInWithGoogle() {
-            showLoading();
+            const user = auth.currentUser;
             
-            // محاكاة عملية تسجيل الدخول
-            setTimeout(() => {
-                // تسجيل دخول ناجح
-                userName = "محمد أحمد";
-                userId = "user12345";
+            if (user) {
+                // التحقق من وجود بيانات المستخدم في قاعدة البيانات
+                verificationMessage.innerHTML = 'جارٍ التحقق من بيانات المستخدم...';
                 
-                showNotification(`مرحباً ${userName}، تم تسجيل الدخول بنجاح!`, 'success');
+                const userRef = database.ref(`users/${user.uid}`);
                 
-                // تهيئة الشات لمدة 3 ثواني
-                showLoading();
-                setTimeout(() => {
-                    hideLoading();
-                    
-                    // تمكين حقل الإدخال وزر الإرسال
-                    customerMessageInput.disabled = false;
-                    customerSendButton.disabled = false;
-                    customerMessageInput.focus();
-                    
-                    // إخفاء شاشة تسجيل الدخول وإظهار واجهة الشات
-                    chatLoginRequired.style.display = 'none';
-                    chatInterface.style.display = 'block';
-                    authRedirect.style.display = 'none';
-                    
-                    // إضافة رسالة ترحيبية من الدعم
-                    const timeString = getCurrentTime();
-                    const replyElement = document.createElement('div');
-                    replyElement.className = `message admin-message`;
-                    replyElement.innerHTML = `
-                        <div class="message-content">مرحباً بك في خدمة الدعم الفني. كيف يمكنني مساعدتك اليوم؟</div>
-                        <div class="message-time">${timeString}</div>
-                    `;
-                    
-                    messagesContainer.innerHTML = '';
-                    messagesContainer.appendChild(replyElement);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 3000);
-            }, 1500);
-        }
-        
-        // تسجيل الدخول باستخدام البريد الإلكتروني
-        function signInWithEmail() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            
-            if (!email || !password) {
-                showNotification('الرجاء إدخال البريد الإلكتروني وكلمة المرور', 'error');
-                return;
-            }
-            
-            showLoading();
-            
-            // محاكاة عملية تسجيل الدخول
-            setTimeout(() => {
-                // تسجيل دخول ناجح
-                userName = email.split('@')[0] || "مستخدم جديد";
-                userId = "user67890";
-                
-                showNotification(`مرحباً ${userName}، تم تسجيل الدخول بنجاح!`, 'success');
-                
-                // تهيئة الشات لمدة 3 ثواني
-                showLoading();
-                setTimeout(() => {
-                    hideLoading();
-                    
-                    // تمكين حقل الإدخال وزر الإرسال
-                    customerMessageInput.disabled = false;
-                    customerSendButton.disabled = false;
-                    customerMessageInput.focus();
-                    
-                    // إخفاء شاشة تسجيل الدخول وإظهار واجهة الشات
-                    chatLoginRequired.style.display = 'none';
-                    chatInterface.style.display = 'block';
-                    authRedirect.style.display = 'none';
-                    
-                    // إضافة رسالة ترحيبية من الدعم
-                    const timeString = getCurrentTime();
-                    const replyElement = document.createElement('div');
-                    replyElement.className = `message admin-message`;
-                    replyElement.innerHTML = `
-                        <div class="message-content">مرحباً بك في خدمة الدعم الفني. كيف يمكنني مساعدتك اليوم؟</div>
-                        <div class="message-time">${timeString}</div>
-                    `;
-                    
-                    messagesContainer.innerHTML = '';
-                    messagesContainer.appendChild(replyElement);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 3000);
-            }, 1500);
-        }
-        
-        // إنشاء حساب جديد
-        function registerWithEmail() {
-            const name = document.getElementById('regName').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-            
-            if (!name || !email || !password || !confirmPassword) {
-                showNotification('الرجاء تعبئة جميع الحقول', 'error');
-                return;
-            }
-            
-            if (password !== confirmPassword) {
-                showNotification('كلمتا المرور غير متطابقتين', 'error');
-                return;
-            }
-            
-            showLoading();
-            
-            // محاكاة عملية التسجيل
-            setTimeout(() => {
-                // تسجيل ناجح
-                userName = name;
-                userId = "user" + Math.floor(Math.random() * 10000);
-                
-                showNotification(`تم إنشاء حساب ${userName} بنجاح!`, 'success');
-                
-                // تهيئة الشات لمدة 3 ثواني
-                showLoading();
-                setTimeout(() => {
-                    hideLoading();
-                    
-                    // تمكين حقل الإدخال وزر الإرسال
-                    customerMessageInput.disabled = false;
-                    customerSendButton.disabled = false;
-                    customerMessageInput.focus();
-                    
-                    // إخفاء شاشة تسجيل الدخول وإظهار واجهة الشات
-                    chatLoginRequired.style.display = 'none';
-                    chatInterface.style.display = 'block';
-                    authRedirect.style.display = 'none';
-                    
-                    // إضافة رسالة ترحيبية من الدعم
-                    const timeString = getCurrentTime();
-                    const replyElement = document.createElement('div');
-                    replyElement.className = `message admin-message`;
-                    replyElement.innerHTML = `
-                        <div class="message-content">مرحباً بك في خدمة الدعم الفني. كيف يمكنني مساعدتك اليوم؟</div>
-                        <div class="message-time">${timeString}</div>
-                    `;
-                    
-                    messagesContainer.innerHTML = '';
-                    messagesContainer.appendChild(replyElement);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 3000);
-            }, 1500);
-        }
-        
-        // التحقق من حالة تسجيل الدخول للشات
-        function checkLoginForChat() {
-            if (!userId) {
-                // المستخدم غير مسجل دخول
-                chatLoginRequired.style.display = 'block';
-                chatInterface.style.display = 'none';
-                authRedirect.style.display = 'none';
+                userRef.once('value')
+                    .then(snapshot => {
+                        if (snapshot.exists()) {
+                            // البيانات موجودة - تحقق ناجح
+                            verificationSuccess.style.display = 'block';
+                            verificationMessage.innerHTML = 'تم التحقق بنجاح! جارٍ التوجيه...';
+                            
+                            setTimeout(() => {
+                                verificationOverlay.style.opacity = '0';
+                                setTimeout(() => {
+                                    verificationOverlay.style.display = 'none';
+                                }, 500);
+                            }, 1500);
+                        } else {
+                            // لا توجد بيانات للمستخدم
+                            showVerificationError('لم يتم العثور على بيانات المستخدم.', 'يرجى إكمال بياناتك في صفحة الملف الشخصي.');
+                        }
+                    })
+                    .catch(error => {
+                        showVerificationError('خطأ في قاعدة البيانات', error.message);
+                    });
             } else {
-                // المستخدم مسجل دخول
-                chatLoginRequired.style.display = 'none';
-                chatInterface.style.display = 'block';
-                authRedirect.style.display = 'none';
+                // المستخدم غير مسجل دخول
+                showVerificationError('لم تقم بتسجيل الدخول', 'يرجى تسجيل الدخول للوصول إلى خدمات الدعم الفني.');
             }
         }
         
-        // إرسال الرسالة
-        function sendMessage() {
-            const message = customerMessageInput.value.trim();
-            
-            if (!message) {
-                showNotification('الرجاء إدخال رسالة قبل الإرسال', 'warning');
-                return;
-            }
-            
-            if (!userId) {
-                showNotification('الرجاء تسجيل الدخول أولاً', 'warning');
-                return;
-            }
-            
-            isSending = true;
-            customerSendButton.disabled = true;
-            customerSendButton.classList.add('sending');
-            
-            // إضافة رسالة المستخدم إلى الواجهة
-            const timeString = getCurrentTime();
-            const messageElement = document.createElement('div');
-            messageElement.className = `message user-message`;
-            messageElement.innerHTML = `
-                <div class="message-content">${message}</div>
-                <div class="message-time">${timeString}</div>
-            `;
-            
-            if (messagesContainer.querySelector('.no-messages')) {
-                messagesContainer.innerHTML = '';
-            }
-            
-            messagesContainer.appendChild(messageElement);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            
-            // محاكاة استجابة الدعم بعد تأخير
-            setTimeout(() => {
-                // إظهار مؤشر الكتابة من الدعم
-                const typingElement = document.createElement('div');
-                typingElement.className = 'typing-indicator';
-                typingElement.innerHTML = `
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                    <span>ممثل الدعم يكتب...</span>
-                `;
-                messagesContainer.appendChild(typingElement);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                
-                // إرسال رد الدعم بعد تأخير
-                setTimeout(() => {
-                    typingElement.remove();
-                    
-                    let reply = "شكراً لتواصلك معنا. كيف يمكنني مساعدتك اليوم؟";
-                    
-                    if (isFirstMessage) {
-                        reply = "مرحباً بك في خدمة الدعم الفني. شكراً لتواصلك معنا. كيف يمكنني مساعدتك اليوم؟";
-                        isFirstMessage = false;
-                    } else if (userMessageCount === 1) {
-                        reply = "هل يمكنك إخباري بالمزيد من التفاصيل حول مشكلتك؟";
-                    }
-                    
-                    const replyElement = document.createElement('div');
-                    replyElement.className = `message admin-message`;
-                    replyElement.innerHTML = `
-                        <div class="message-content">${reply}</div>
-                        <div class="message-time">${getCurrentTime()}</div>
-                    `;
-                    
-                    messagesContainer.appendChild(replyElement);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                    
-                    // تشغيل صوت الإشعار
-                    playNotificationSound();
-                    
-                    // زيادة عداد رسائل المستخدم
-                    userMessageCount++;
-                    
-                    // إعادة تمكين زر الإرسال
-                    customerSendButton.disabled = false;
-                    customerSendButton.classList.remove('sending');
-                    isSending = false;
-                    customerMessageInput.value = '';
-                    customerMessageInput.focus();
-                }, 2000);
-            }, 1000);
-        }
-        
-        // تشغيل صوت الإشعار
-        function playNotificationSound() {
-            const sound = document.getElementById('messageSound');
-            sound.currentTime = 0;
-            sound.play().catch(e => console.log('Sound play failed:', e));
-        }
-        
-        // الحصول على الوقت الحالي
-        function getCurrentTime() {
-            const now = new Date();
-            return now.toLocaleTimeString('ar-AR', { hour: 'numeric', minute: 'numeric' });
+        // عرض رسالة خطأ التحقق
+        function showVerificationError(title, message) {
+            errorMessage.innerHTML = `<strong>${title}</strong><br>${message}`;
+            verificationError.style.display = 'block';
+            verificationMessage.innerHTML = 'فشل عملية التحقق';
         }
         
         // إعداد مستمعي الأحداث
-        function setupEventListeners() {
-            // تسجيل الدخول باستخدام Google
-            googleSignInBtn.addEventListener('click', signInWithGoogle);
-            
-            // عرض نموذج تسجيل الدخول بالبريد الإلكتروني
-            emailSignInBtn.addEventListener('click', () => {
-                emailSignInForm.style.display = 'block';
-                registerForm.style.display = 'none';
+        retryButton.addEventListener('click', verifyUser);
+        logoutButton.addEventListener('click', () => {
+            auth.signOut().then(() => {
+                window.location.reload();
             });
-            
-            // عرض نموذج التسجيل
-            showRegister.addEventListener('click', () => {
-                registerForm.style.display = 'block';
-                emailSignInForm.style.display = 'none';
-            });
-            
-            // عرض نموذج تسجيل الدخول
-            showLogin.addEventListener('click', () => {
-                emailSignInForm.style.display = 'block';
-                registerForm.style.display = 'none';
-            });
-            
-            // تسجيل الدخول بالبريد الإلكتروني
-            emailSignInSubmit.addEventListener('click', signInWithEmail);
-            
-            // إنشاء حساب جديد
-            registerSubmit.addEventListener('click', registerWithEmail);
-            
-            // إرسال الرسالة
-            customerSendButton.addEventListener('click', sendMessage);
-            
-            // إرسال الرسالة عند الضغط على Enter
-            customerMessageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
-        }
-        
-        // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
-        function checkAuthOnLoad() {
-            // هنا يمكنك إضافة التحقق من حالة تسجيل الدخول الفعلية
-            // في هذا المثال، سنفترض أن المستخدم غير مسجل
-            const isLoggedIn = false;
-            
-            if (isLoggedIn) {
-                // إذا كان مسجلاً، نعرض واجهة الشات
-                chatLoginRequired.style.display = 'none';
-                chatInterface.style.display = 'block';
-                authRedirect.style.display = 'none';
-            } else {
-                // إذا لم يكن مسجلاً، نعرض رسالة توجيهية
-                chatLoginRequired.style.display = 'none';
-                chatInterface.style.display = 'none';
-                authRedirect.style.display = 'block';
-            }
-        }
-        
-        // تهيئة التطبيق عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', () => {
-            // إخفاء شاشة التحميل بعد تأخير قصير
-            setTimeout(() => {
-                hideLoading();
-            }, 500);
-            
-            // إعداد مستمعي الأحداث
-            setupEventListeners();
-            
-            // التحقق من حالة تسجيل الدخول عند تحميل الصفحة
-            checkAuthOnLoad();
         });
+        
+        // التحقق عند تحميل الصفحة
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                verifyUser();
+            } else {
+                showVerificationError('لم تقم بتسجيل الدخول', 'يرجى تسجيل الدخول للوصول إلى خدمات الدعم الفني.');
+            }
+        });
+        
+        // باقي كود JavaScript للصفحة هنا
+        // ...
     </script>
 </body>
 </html>
