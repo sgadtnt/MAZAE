@@ -214,7 +214,6 @@
             width: 100px;
             height: 100px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
             margin: 0 auto 20px;
             display: flex;
             align-items: center;
@@ -223,6 +222,8 @@
             font-size: 2.5rem;
             font-weight: bold;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            background-size: cover;
+            background-position: center;
         }
         
         .user-name {
@@ -302,6 +303,8 @@
             justify-content: center;
             color: white;
             font-weight: bold;
+            background-size: cover;
+            background-position: center;
         }
         
         .user-name-chat {
@@ -677,7 +680,7 @@
                         تم التحقق بنجاح! جارٍ توجيهك...
                     </div>
                     <div class="user-info">
-                        <div class="user-avatar">
+                        <div class="user-avatar" id="userAvatarPreview">
                             <i class="fas fa-user"></i>
                         </div>
                         <div class="user-name" id="userName">محمد أحمد</div>
@@ -809,6 +812,7 @@
         const loadingSpinner = document.getElementById('loadingSpinner');
         const userName = document.getElementById('userName');
         const userEmail = document.getElementById('userEmail');
+        const userAvatarPreview = document.getElementById('userAvatarPreview');
         
         // عناصر الدردشة
         const chatScreen = document.getElementById('chatScreen');
@@ -828,6 +832,7 @@
         // متغيرات المستخدم
         let currentUser = null;
         let userDisplayName = "مستخدم";
+        let userPhotoURL = null;
         let isFirstMessage = true; // لتتبع أول رسالة
         let replyingTo = null; // لتتبع الرسالة التي يتم الرد عليها
         let editingMessage = null; // لتتبع الرسالة التي يتم تعديلها
@@ -856,9 +861,9 @@
                 const userRef = ref(database, `users/${user.uid}`);
                 const snapshot = await get(userRef);
                 
-                if (!snapshot.exists()) {
-                    // لا توجد بيانات للمستخدم
-                    throw new Error('لم يتم العثور على بيانات المستخدم');
+                let userData = null;
+                if (snapshot.exists()) {
+                    userData = snapshot.val();
                 }
                 
                 // التحقق ناجح - إظهار البيانات وتوجيه المستخدم
@@ -867,24 +872,35 @@
                 loadingSpinner.style.display = 'none';
                 
                 // عرض معلومات المستخدم
-                const userData = snapshot.val();
-                
-                // حل مشكلة الاسم: استخدام اسم المستخدم من قاعدة البيانات
-                if (userData && userData.name) {
-                    userName.textContent = userData.name;
+                // تحديد الاسم حسب أولوية المصادر
+                if (userData && userData.fullName) {
+                    userDisplayName = userData.fullName;
+                } else if (user.displayName) {
+                    userDisplayName = user.displayName;
+                } else if (userData && userData.name) {
                     userDisplayName = userData.name;
+                } else if (user.email) {
+                    userDisplayName = user.email.split('@')[0];
                 } else {
-                    // إذا لم يكن هناك اسم، نستخدم الجزء الأول من البريد الإلكتروني
-                    if (user.email) {
-                        const usernamePart = user.email.split('@')[0];
-                        userName.textContent = usernamePart;
-                        userDisplayName = usernamePart;
-                    } else {
-                        userName.textContent = 'ضيف';
-                        userDisplayName = 'ضيف';
-                    }
+                    userDisplayName = "مستخدم";
                 }
-                userEmail.textContent = user.email;
+                
+                // تحديد صورة المستخدم
+                if (user.photoURL) {
+                    userPhotoURL = user.photoURL;
+                    userAvatarPreview.style.backgroundImage = `url('${user.photoURL}')`;
+                    userAvatarPreview.innerHTML = '';
+                } else if (userData && userData.photoURL) {
+                    userPhotoURL = userData.photoURL;
+                    userAvatarPreview.style.backgroundImage = `url('${userData.photoURL}')`;
+                    userAvatarPreview.innerHTML = '';
+                } else {
+                    userAvatarPreview.style.backgroundImage = '';
+                    userAvatarPreview.innerHTML = '<i class="fas fa-user"></i>';
+                }
+                
+                userName.textContent = userDisplayName;
+                userEmail.textContent = user.email || 'غير معروف';
                 
                 // توجيه المستخدم بعد تأخير إلى شاشة الدردشة
                 setTimeout(() => {
@@ -923,7 +939,15 @@
             
             // عرض معلومات المستخدم في شريط الدردشة
             userNameChat.textContent = userDisplayName;
-            userAvatar.textContent = userDisplayName.charAt(0);
+            
+            // تحديث صورة المستخدم
+            if (userPhotoURL) {
+                userAvatar.style.backgroundImage = `url('${userPhotoURL}')`;
+                userAvatar.innerHTML = '';
+            } else {
+                userAvatar.style.backgroundImage = '';
+                userAvatar.textContent = userDisplayName.charAt(0);
+            }
             
             // تهيئة الدردشة
             initChat();
