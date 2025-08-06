@@ -6,12 +6,8 @@
     <title>الدعم الفني - الحل النهائي</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
-        /* جميع أنماط CSS السابقة هنا */
+        /* أنماط CSS المعدلة */
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
@@ -104,41 +100,6 @@
             text-align: center;
             letter-spacing: -0.5px;
             text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-        }
-        
-        .tabs {
-            display: flex;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50px;
-            padding: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            width: 100%;
-            max-width: 600px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 10px 14px;
-            text-align: center;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: var(--transition);
-            font-weight: 500;
-            border: 1px solid transparent;
-            font-size: 0.95rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            letter-spacing: -0.5px;
-        }
-        
-        .tab.active {
-            background: white;
-            color: var(--primary);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-            border: 1px solid rgba(67, 97, 238, 0.2);
-            font-weight: 600;
         }
         
         .content {
@@ -650,18 +611,6 @@
         
         /* تحسينات للأجهزة المحمولة */
         @media (max-width: 768px) {
-            .tabs {
-                max-width: 100%;
-                flex-wrap: wrap;
-            }
-            
-            .tab {
-                padding: 8px 10px;
-                font-size: 0.9rem;
-                flex: 1 0 45%;
-                margin: 2px;
-            }
-            
             .avatar {
                 width: 80px;
                 height: 80px;
@@ -800,11 +749,6 @@
         
         .generate-btn:hover {
             background: rgba(67, 97, 238, 0.2);
-        }
-        
-        .tab-bar-fix {
-            position: relative;
-            z-index: 5;
         }
         
         /* أنماط خاصة بصفحة الدعم */
@@ -1697,6 +1641,38 @@
             display: none;
             text-align: center;
         }
+        
+        /* جديد: أزرار التنقل بين الأقسام */
+        .section-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .section-btn {
+            padding: 10px 20px;
+            background: #f0f2f5;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-btn:hover {
+            background: #e4e7ec;
+        }
+        
+        .section-btn.active {
+            background: var(--primary);
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -1750,12 +1726,6 @@
         <div class="container">
             <header>
                 <div class="page-title">الدعم الفني</div>
-                <div class="tabs tab-bar-fix">
-                    <div class="tab active" data-tab="help">مركز المساعدة</div>
-                    <div class="tab" data-tab="chat">المحادثات</div>
-                    <div class="tab" data-tab="faq">الأسئلة الشائعة</div>
-                    <div class="tab" data-tab="support">الدعم المباشر</div>
-                </div>
             </header>
             
             <div class="content">
@@ -1766,26 +1736,42 @@
                         <h2>كيف يمكننا مساعدتك اليوم؟</h2>
                     </div>
                     <div class="help-grid">
-                        <div class="help-card" onclick="startNewChat()">
+                        <div class="help-card" id="startChatBtn">
                             <i class="fas fa-comments"></i>
                             <h3>بدء محادثة جديدة</h3>
                             <p>تواصل مع ممثل الدعم لحل مشكلتك</p>
                         </div>
-                        <div class="help-card" onclick="showFAQ()">
+                        <div class="help-card" id="showFaqBtn">
                             <i class="fas fa-book"></i>
                             <h3>الأسئلة الشائعة</h3>
                             <p>ابحث عن حلول للمشكلات الشائعة</p>
                         </div>
-                        <div class="help-card" onclick="callSupport()">
+                        <div class="help-card" id="callSupportBtn">
                             <i class="fas fa-phone-alt"></i>
                             <h3>الاتصال بالدعم</h3>
                             <p>اتصل بنا مباشرة على الرقم +9647823053419</p>
                         </div>
-                        <div class="whatsapp-card" onclick="openWhatsApp()">
+                        <div class="whatsapp-card" id="whatsappBtn">
                             <i class="fab fa-whatsapp"></i>
                             <h3>واتساب الدعم الفني</h3>
                             <p>تواصل معنا عبر واتساب لحل مشكلتك</p>
                         </div>
+                    </div>
+                    
+                    <!-- أزرار التنقل بين الأقسام -->
+                    <div class="section-nav">
+                        <button class="section-btn active" data-section="helpContent">
+                            <i class="fas fa-question-circle"></i> مركز المساعدة
+                        </button>
+                        <button class="section-btn" data-section="chatContent">
+                            <i class="fas fa-comments"></i> المحادثات
+                        </button>
+                        <button class="section-btn" data-section="faqContent">
+                            <i class="fas fa-book"></i> الأسئلة الشائعة
+                        </button>
+                        <button class="section-btn" data-section="supportContent">
+                            <i class="fas fa-headset"></i> الدعم المباشر
+                        </button>
                     </div>
                 </div>
                 
@@ -1852,6 +1838,11 @@
                             </button>
                         </div>
                     </div>
+                    
+                    <!-- زر العودة إلى المساعدة -->
+                    <button id="backToHelpBtn" class="btn btn-outline" style="margin-top: 20px; width: 100%;">
+                        <i class="fas fa-arrow-left"></i> العودة إلى مركز المساعدة
+                    </button>
                 </div>
                 
                 <!-- قسم الأسئلة الشائعة -->
@@ -1862,7 +1853,7 @@
                     </div>
                     <div class="faq-list">
                         <div class="faq-item">
-                            <div class="faq-question" onclick="toggleFAQ(this)">
+                            <div class="faq-question">
                                 <span>كيف يمكنني إعادة تعيين كلمة المرور؟</span>
                                 <i class="fas fa-chevron-down"></i>
                             </div>
@@ -1872,7 +1863,7 @@
                         </div>
                         
                         <div class="faq-item">
-                            <div class="faq-question" onclick="toggleFAQ(this)">
+                            <div class="faq-question">
                                 <span>كيف يمكنني تحديث معلومات حسابي؟</span>
                                 <i class="fas fa-chevron-down"></i>
                             </div>
@@ -1882,7 +1873,7 @@
                         </div>
                         
                         <div class="faq-item">
-                            <div class="faq-question" onclick="toggleFAQ(this)">
+                            <div class="faq-question">
                                 <span>ما هي طرق الدفع المتاحة؟</span>
                                 <i class="fas fa-chevron-down"></i>
                             </div>
@@ -1892,7 +1883,7 @@
                         </div>
                         
                         <div class="faq-item">
-                            <div class="faq-question" onclick="toggleFAQ(this)">
+                            <div class="faq-question">
                                 <span>كيف يمكنني تتبع طلبي؟</span>
                                 <i class="fas fa-chevron-down"></i>
                             </div>
@@ -1901,6 +1892,11 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- زر العودة إلى المساعدة -->
+                    <button id="backToHelpBtn2" class="btn btn-outline" style="margin-top: 20px; width: 100%;">
+                        <i class="fas fa-arrow-left"></i> العودة إلى مركز المساعدة
+                    </button>
                 </div>
                 
                 <!-- قسم الدعم المباشر -->
@@ -1913,7 +1909,7 @@
                         </div>
                         
                         <div class="auth-methods">
-                            <button id="googleSignInBtn" class="auth-btn google">
+                            <button id="googleSignInBtn2" class="auth-btn google">
                                 <i class="fab fa-google"></i>
                                 تسجيل الدخول باستخدام Google
                             </button>
@@ -1922,7 +1918,7 @@
                                 <span>أو</span>
                             </div>
                             
-                            <button id="emailSignInBtn" class="auth-btn email">
+                            <button id="emailSignInBtn2" class="auth-btn email">
                                 <i class="fas fa-envelope"></i>
                                 التسجيل باستخدام البريد الإلكتروني
                             </button>
@@ -1974,27 +1970,11 @@
                             </div>
                         </div>
                     </div>
-                </div>
-                
-                <!-- قسم المستخدم المحظور -->
-                <div class="tab-content blocked-section" id="blockedContent">
-                    <div class="blocked-icon">
-                        <i class="fas fa-ban"></i>
-                    </div>
-                    <h2>تم حظر حسابك</h2>
-                    <p>لقد تم حظرك من إرسال الرسائل في نظام الدعم الفني من قبل الإدارة.</p>
-                    <p>إذا كنت تعتقد أن هذا خطأ أو ترغب في الاستفسار عن سبب الحظر، يرجى الاتصال بالدعم.</p>
                     
-                    <div class="contact-buttons">
-                        <a href="tel:+9647823053419" class="contact-button">
-                            <i class="fas fa-phone-alt"></i>
-                            الاتصال بالدعم
-                        </a>
-                        <a href="https://wa.me/9647823053419" target="_blank" class="contact-button whatsapp">
-                            <i class="fab fa-whatsapp"></i>
-                            تواصل عبر واتساب
-                        </a>
-                    </div>
+                    <!-- زر العودة إلى المساعدة -->
+                    <button id="backToHelpBtn3" class="btn btn-outline" style="margin-top: 20px; width: 100%;">
+                        <i class="fas fa-arrow-left"></i> العودة إلى مركز المساعدة
+                    </button>
                 </div>
             </div>
         </div>
@@ -2105,24 +2085,15 @@
         function initApp() {
             // متغيرات التطبيق
             let userId = null;
+            let userName = "مستخدم جديد";
             let isFirstMessage = true;
             let isSending = false;
             let userMessageCount = 0;
-            let userName = "مستخدم جديد";
             
             // عناصر الصفحة
-            const tabs = document.querySelectorAll('.tab');
             const backButton = document.getElementById('backButton');
             const notification = document.getElementById('notification');
             const loadingOverlay = document.getElementById('loadingOverlay');
-            const googleSignInBtn = document.getElementById('googleSignInBtn');
-            const emailSignInBtn = document.getElementById('emailSignInBtn');
-            const emailSignInForm = document.getElementById('emailSignInForm');
-            const registerForm = document.getElementById('registerForm');
-            const showRegister = document.getElementById('showRegister');
-            const showLogin = document.getElementById('showLogin');
-            const emailSignInSubmit = document.getElementById('emailSignInSubmit');
-            const registerSubmit = document.getElementById('registerSubmit');
             const customerMessageInput = document.getElementById('customerMessageInput');
             const customerSendButton = document.getElementById('customerSendButton');
             const messagesContainer = document.getElementById('messagesContainer');
@@ -2130,34 +2101,33 @@
             const chatLoginRequired = document.getElementById('chatLoginRequired');
             const chatInterface = document.getElementById('chatInterface');
             
-            // تغيير التبويبات
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const tabName = tab.dataset.tab;
-                    
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    
-                    document.getElementById(`${tabName}Content`).classList.add('active');
-                    
-                    // التحقق من تسجيل الدخول عند النقر على تبويب المحادثة
-                    if (tabName === 'chat') {
-                        checkLoginForChat();
-                    }
-                });
-            });
+            // عناصر الأقسام
+            const helpContent = document.getElementById('helpContent');
+            const chatContent = document.getElementById('chatContent');
+            const faqContent = document.getElementById('faqContent');
+            const supportContent = document.getElementById('supportContent');
             
-            // زر الرجوع إلى الصفحة الرئيسية
-            backButton.addEventListener('click', () => {
-                showNotification('جارٍ الرجوع إلى الصفحة الرئيسية...', 'success');
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-            });
+            // أزرار التنقل
+            const sectionBtns = document.querySelectorAll('.section-btn');
+            const backToHelpBtns = document.querySelectorAll('[id^="backToHelpBtn"]');
+            
+            // الأزرار في قسم المساعدة
+            const startChatBtn = document.getElementById('startChatBtn');
+            const showFaqBtn = document.getElementById('showFaqBtn');
+            const callSupportBtn = document.getElementById('callSupportBtn');
+            const whatsappBtn = document.getElementById('whatsappBtn');
+            
+            // أزرار تسجيل الدخول
+            const googleSignInBtn = document.getElementById('googleSignInBtn');
+            const emailSignInBtn = document.getElementById('emailSignInBtn');
+            const googleSignInBtn2 = document.getElementById('googleSignInBtn2');
+            const emailSignInBtn2 = document.getElementById('emailSignInBtn2');
+            const emailSignInForm = document.getElementById('emailSignInForm');
+            const registerForm = document.getElementById('registerForm');
+            const showRegister = document.getElementById('showRegister');
+            const showLogin = document.getElementById('showLogin');
+            const emailSignInSubmit = document.getElementById('emailSignInSubmit');
+            const registerSubmit = document.getElementById('registerSubmit');
             
             // عرض الإشعارات
             function showNotification(message, type = 'success') {
@@ -2179,6 +2149,26 @@
                 loadingOverlay.style.display = 'none';
             }
             
+            // تبديل الأقسام
+            function showSection(sectionId) {
+                // إخفاء جميع الأقسام
+                document.querySelectorAll('.tab-content').forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // إظهار القسم المطلوب
+                document.getElementById(sectionId).classList.add('active');
+                
+                // تحديث أزرار التنقل
+                sectionBtns.forEach(btn => {
+                    if (btn.dataset.section === sectionId) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+            
             // تسجيل الدخول باستخدام Google
             function signInWithGoogle() {
                 showLoading();
@@ -2186,7 +2176,7 @@
                 // محاكاة عملية تسجيل الدخول
                 setTimeout(() => {
                     // تسجيل دخول ناجح
-                    userName = "محمد أحمد";
+                    userName = "محمد أحمد (تسجيل قوقل)";
                     userId = "user12345";
                     
                     showNotification(`مرحباً ${userName}، تم تسجيل الدخول بنجاح!`, 'success');
@@ -2201,6 +2191,9 @@
                     chatInterface.style.display = 'block';
                     
                     hideLoading();
+                    
+                    // الانتقال إلى قسم المحادثات بعد تسجيل الدخول
+                    showSection('chatContent');
                 }, 1500);
             }
             
@@ -2234,6 +2227,9 @@
                     chatInterface.style.display = 'block';
                     
                     hideLoading();
+                    
+                    // الانتقال إلى قسم المحادثات بعد تسجيل الدخول
+                    showSection('chatContent');
                 }, 1500);
             }
             
@@ -2274,6 +2270,9 @@
                     chatInterface.style.display = 'block';
                     
                     hideLoading();
+                    
+                    // الانتقال إلى قسم المحادثات بعد التسجيل
+                    showSection('chatContent');
                 }, 1500);
             }
             
@@ -2301,7 +2300,7 @@
                 
                 if (!userId) {
                     showNotification('الرجاء تسجيل الدخول أولاً', 'warning');
-                    document.querySelector('[data-tab="support"]').click();
+                    showSection('supportContent');
                     return;
                 }
                 
@@ -2347,7 +2346,7 @@
                         let reply = "شكراً لتواصلك معنا. كيف يمكنني مساعدتك اليوم؟";
                         
                         if (isFirstMessage) {
-                            reply = "مرحباً بك في خدمة الدعم الفني. شكراً لتواصلك معنا. كيف يمكنني مساعدتك اليوم؟";
+                            reply = `مرحباً ${userName} في خدمة الدعم الفني. شكراً لتواصلك معنا. كيف يمكنني مساعدتك اليوم؟`;
                             isFirstMessage = false;
                         } else if (userMessageCount === 1) {
                             reply = "هل يمكنك إخباري بالمزيد من التفاصيل حول مشكلتك؟";
@@ -2363,9 +2362,6 @@
                         
                         messagesContainer.appendChild(replyElement);
                         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                        
-                        // تشغيل صوت الإشعار
-                        playNotificationSound();
                         
                         // زيادة عداد رسائل المستخدم
                         userMessageCount++;
@@ -2405,13 +2401,17 @@
             
             // عرض الأسئلة الشائعة
             function showFAQ() {
-                document.querySelector('[data-tab="faq"]').click();
+                showSection('faqContent');
             }
             
             // بدء محادثة جديدة
             function startNewChat() {
-                document.querySelector('[data-tab="chat"]').click();
-                checkLoginForChat();
+                if (userId) {
+                    showSection('chatContent');
+                    checkLoginForChat();
+                } else {
+                    showSection('supportContent');
+                }
             }
             
             // تبديل فتح/إغلاق إجابة السؤال في الأسئلة الشائعة
@@ -2422,61 +2422,98 @@
             
             // إعداد مستمعي الأحداث
             function setupEventListeners() {
-                // تسجيل الدخول باستخدام Google
-                document.querySelectorAll('#googleSignInBtn').forEach(btn => {
-                    btn.addEventListener('click', signInWithGoogle);
+                // زر الرجوع إلى الصفحة الرئيسية
+                backButton.addEventListener('click', () => {
+                    showNotification('جارٍ الرجوع إلى الصفحة الرئيسية...', 'success');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1000);
                 });
                 
-                // عرض نموذج تسجيل الدخول بالبريد الإلكتروني
-                document.querySelectorAll('#emailSignInBtn').forEach(btn => {
+                // التنقل بين الأقسام
+                sectionBtns.forEach(btn => {
                     btn.addEventListener('click', () => {
-                        emailSignInForm.style.display = 'block';
-                        registerForm.style.display = 'none';
+                        showSection(btn.dataset.section);
                     });
                 });
                 
+                // العودة إلى قسم المساعدة
+                backToHelpBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        showSection('helpContent');
+                    });
+                });
+                
+                // الأزرار في قسم المساعدة
+                startChatBtn.addEventListener('click', startNewChat);
+                showFaqBtn.addEventListener('click', showFAQ);
+                callSupportBtn.addEventListener('click', callSupport);
+                whatsappBtn.addEventListener('click', openWhatsApp);
+                
+                // تسجيل الدخول باستخدام Google
+                if (googleSignInBtn) googleSignInBtn.addEventListener('click', signInWithGoogle);
+                if (googleSignInBtn2) googleSignInBtn2.addEventListener('click', signInWithGoogle);
+                
+                // عرض نموذج تسجيل الدخول بالبريد الإلكتروني
+                if (emailSignInBtn) emailSignInBtn.addEventListener('click', () => {
+                    emailSignInForm.style.display = 'block';
+                    registerForm.style.display = 'none';
+                });
+                
+                if (emailSignInBtn2) emailSignInBtn2.addEventListener('click', () => {
+                    emailSignInForm.style.display = 'block';
+                    registerForm.style.display = 'none';
+                });
+                
                 // عرض نموذج التسجيل
-                showRegister.addEventListener('click', () => {
+                if (showRegister) showRegister.addEventListener('click', () => {
                     registerForm.style.display = 'block';
                     emailSignInForm.style.display = 'none';
                 });
                 
                 // عرض نموذج تسجيل الدخول
-                showLogin.addEventListener('click', () => {
+                if (showLogin) showLogin.addEventListener('click', () => {
                     emailSignInForm.style.display = 'block';
                     registerForm.style.display = 'none';
                 });
                 
                 // تسجيل الدخول بالبريد الإلكتروني
-                emailSignInSubmit.addEventListener('click', signInWithEmail);
+                if (emailSignInSubmit) emailSignInSubmit.addEventListener('click', signInWithEmail);
                 
                 // إنشاء حساب جديد
-                registerSubmit.addEventListener('click', registerWithEmail);
+                if (registerSubmit) registerSubmit.addEventListener('click', registerWithEmail);
                 
                 // إرسال الرسالة
-                customerSendButton.addEventListener('click', sendMessage);
+                if (customerSendButton) customerSendButton.addEventListener('click', sendMessage);
                 
                 // إرسال الرسالة عند الضغط على Enter
-                customerMessageInput.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendMessage();
-                    }
+                if (customerMessageInput) {
+                    customerMessageInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                        }
+                    });
+                }
+                
+                // الأسئلة الشائعة
+                document.querySelectorAll('.faq-question').forEach(question => {
+                    question.addEventListener('click', () => {
+                        toggleFAQ(question);
+                    });
                 });
             }
             
             // تهيئة التطبيق بعد التحقق
             function initAppAfterVerification() {
-                // إخفاء شاشة التحميل بعد تأخير قصير
-                setTimeout(() => {
-                    hideLoading();
-                }, 500);
-                
                 // إعداد مستمعي الأحداث
                 setupEventListeners();
                 
                 // إخفاء واجهة الشات في البداية
                 chatInterface.style.display = 'none';
+                
+                // إظهار قسم المساعدة فقط
+                showSection('helpContent');
             }
             
             initAppAfterVerification();
