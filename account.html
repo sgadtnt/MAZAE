@@ -1159,9 +1159,6 @@
         // إظهار شاشة التحميل عند تحميل الصفحة
         window.addEventListener('load', () => {
             loadingOverlay.style.display = 'flex';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-            }, 500);
         });
 
         // زر الرجوع إلى الصفحة الرئيسية
@@ -1184,6 +1181,57 @@
                 
                 document.getElementById(`${tab.dataset.tab}Content`).classList.add('active');
             });
+        });
+
+        // حفظ حالة تسجيل الدخول
+        function saveAuthState(user) {
+            if (user) {
+                localStorage.setItem('userLoggedIn', 'true');
+            } else {
+                localStorage.removeItem('userLoggedIn');
+            }
+        }
+
+        // استعادة حالة تسجيل الدخول عند التحميل
+        window.addEventListener('DOMContentLoaded', () => {
+            const isLoggedIn = localStorage.getItem('userLoggedIn') === 'true';
+            
+            if (isLoggedIn) {
+                // الانتقال إلى تبويب الحساب
+                tabs.forEach(t => t.classList.remove('active'));
+                document.querySelector('[data-tab="account"]').classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('accountContent').classList.add('active');
+            }
+        });
+
+        // مراقبة حالة تسجيل الدخول
+        auth.onAuthStateChanged((user) => {
+            saveAuthState(user);
+            
+            if (user) {
+                updateUserInfo(user);
+                
+                // الانتقال إلى تبويب الحساب
+                tabs.forEach(t => t.classList.remove('active'));
+                document.querySelector('[data-tab="account"]').classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('accountContent').classList.add('active');
+            } else {
+                // الانتقال إلى تبويب تسجيل الدخول
+                tabs.forEach(t => t.classList.remove('active'));
+                document.querySelector('[data-tab="login"]').classList.add('active');
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById('loginContent').classList.add('active');
+            }
+            
+            loadingOverlay.style.display = 'none';
         });
 
         // عرض الإشعارات
@@ -1476,14 +1524,6 @@
                     const user = userCredential.user;
                     showNotification(`مرحباً مرة أخرى، ${user.email}`, 'success');
                     updateUserInfo(user);
-                    
-                    // الانتقال إلى تبويب الحساب
-                    tabs.forEach(t => t.classList.remove('active'));
-                    document.querySelector('[data-tab="account"]').classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    document.getElementById('accountContent').classList.add('active');
                 })
                 .catch((error) => {
                     showNotification(`خطأ في تسجيل الدخول: ${error.message}`, 'error');
@@ -1567,13 +1607,6 @@
                         username: sanitizedUsername, 
                         email
                     });
-                    
-                    tabs.forEach(t => t.classList.remove('active'));
-                    document.querySelector('[data-tab="account"]').classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    document.getElementById('accountContent').classList.add('active');
                 })
                 .catch((error) => {
                     if (error.code === 'auth/email-already-in-use') {
@@ -1642,13 +1675,6 @@
                         username, 
                         email: user.email
                     });
-                    
-                    tabs.forEach(t => t.classList.remove('active'));
-                    document.querySelector('[data-tab="account"]').classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    document.getElementById('accountContent').classList.add('active');
                 })
                 .catch((error) => {
                     if (error.code === 'auth/popup-closed-by-user') {
@@ -1691,13 +1717,6 @@
                     
                     userAvatar.style.backgroundImage = '';
                     userAvatar.innerHTML = '<i class="fas fa-user"></i>';
-                    
-                    tabs.forEach(t => t.classList.remove('active'));
-                    document.querySelector('[data-tab="login"]').classList.add('active');
-                    document.querySelectorAll('.tab-content').forEach(content => {
-                        content.classList.remove('active');
-                    });
-                    document.getElementById('loginContent').classList.add('active');
                     
                     document.body.removeChild(confirmation);
                 }).catch((error) => {
@@ -1955,13 +1974,6 @@
             
             passwordStrength.className = `password-strength ${className}`;
             strengthText.textContent = `قوة كلمة المرور: ${text}`;
-        });
-
-        // مراقبة حالة تسجيل الدخول
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                updateUserInfo(user);
-            }
         });
     </script>
 </body>
