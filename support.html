@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام الدردشة والدعم الفني</title>
+    <title>نظام الدردشة المتكامل</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -414,6 +414,41 @@
             border-bottom-left-radius: 5px;
         }
         
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .message-sender {
+            font-weight: bold;
+        }
+        
+        .message-user .message-sender {
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .message-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .message-action-btn {
+            background: none;
+            border: none;
+            color: inherit;
+            cursor: pointer;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            transition: var(--transition);
+        }
+        
+        .message-action-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
         .message-time {
             font-size: 0.7rem;
             opacity: 0.7;
@@ -427,6 +462,19 @@
         
         .message-user .message-time {
             color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .message-content {
+            word-wrap: break-word;
+        }
+        
+        .reply-indicator {
+            background: rgba(0, 0, 0, 0.05);
+            border-left: 3px solid var(--primary);
+            padding: 8px;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
         }
         
         .input-container {
@@ -563,6 +611,28 @@
             font-size: 1.3rem;
             margin-bottom: 25px;
             color: var(--dark);
+        }
+        
+        /* تعديل الرسالة */
+        .edit-message-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .edit-message-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: var(--radius);
+            font-size: 1rem;
+        }
+        
+        .edit-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
         }
     </style>
 </head>
@@ -705,7 +775,9 @@
             get,
             set,
             push,
-            onValue
+            onValue,
+            update,
+            remove
         } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         // Firebase configuration
@@ -757,6 +829,8 @@
         let currentUser = null;
         let userDisplayName = "مستخدم";
         let isFirstMessage = true; // لتتبع أول رسالة
+        let replyingTo = null; // لتتبع الرسالة التي يتم الرد عليها
+        let editingMessage = null; // لتتبع الرسالة التي يتم تعديلها
 
         // التحقق من حالة تسجيل الدخول والبيانات
         async function verifyUser() {
@@ -875,22 +949,36 @@
             }
             
             // إضافة الرسالة إلى الشاشة
-            addMessageToUI(message, 'user', new Date());
+            addMessageToUI({
+                text: message,
+                type: 'user',
+                timestamp: Date.now(),
+                userName: userDisplayName,
+                replyTo: replyingTo
+            }, true);
             
             // إرسال الرسالة إلى Firebase
             const messagesRef = ref(database, 'messages');
             const newMessageRef = push(messagesRef);
             
-            set(newMessageRef, {
+            const messageData = {
                 userId: currentUser.uid,
                 userName: userDisplayName,
                 text: message,
                 timestamp: Date.now(),
                 type: 'user'
-            });
+            };
             
-            // مسح حقل الإدخال
+            // إضافة معلومات الرد إذا كان هناك رد
+            if (replyingTo) {
+                messageData.replyTo = replyingTo;
+            }
+            
+            set(newMessageRef, messageData);
+            
+            // مسح حقل الإدخال وإعادة تعيين حالة الرد
             messageInput.value = '';
+            replyingTo = null;
             
             // إرسال رد تلقائي فقط عند أول رسالة
             if (isFirstMessage) {
@@ -913,7 +1001,12 @@
             const randomReply = replies[Math.floor(Math.random() * replies.length)];
             
             // إضافة الرسالة إلى الشاشة
-            addMessageToUI(randomReply, 'support', new Date());
+            addMessageToUI({
+                text: randomReply,
+                type: 'support',
+                timestamp: Date.now(),
+                userName: 'فريق الدعم'
+            }, true);
             
             // إرسال الرسالة إلى Firebase
             const messagesRef = ref(database, 'messages');
@@ -929,20 +1022,154 @@
         }
         
         // إضافة رسالة إلى واجهة المستخدم
-        function addMessageToUI(text, sender, date) {
+        function addMessageToUI(msg, isNew = false) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
-            messageDiv.classList.add(`message-${sender}`);
+            messageDiv.classList.add(`message-${msg.type}`);
+            messageDiv.dataset.id = msg.id || '';
             
+            const date = new Date(msg.timestamp);
             const timeString = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
             
+            let replySection = '';
+            if (msg.replyTo) {
+                replySection = `
+                    <div class="reply-indicator">
+                        <i class="fas fa-reply"></i> ${msg.replyTo.text.substring(0, 50)}${msg.replyTo.text.length > 50 ? '...' : ''}
+                    </div>
+                `;
+            }
+            
+            let actionsSection = '';
+            if (msg.type === 'user') {
+                actionsSection = `
+                    <div class="message-actions">
+                        <button class="message-action-btn edit-btn" title="تعديل">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="message-action-btn delete-btn" title="حذف">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="message-action-btn reply-btn" title="رد">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            
             messageDiv.innerHTML = `
-                <div class="message-text">${text}</div>
+                <div class="message-header">
+                    <div class="message-sender">${msg.userName}</div>
+                    ${actionsSection}
+                </div>
+                ${replySection}
+                <div class="message-content">${msg.text}</div>
                 <div class="message-time">${timeString}</div>
             `;
             
-            messagesContainer.appendChild(messageDiv);
+            if (isNew) {
+                messagesContainer.appendChild(messageDiv);
+            } else {
+                const existingMessage = document.querySelector(`.message[data-id="${msg.id}"]`);
+                if (existingMessage) {
+                    existingMessage.replaceWith(messageDiv);
+                } else {
+                    messagesContainer.appendChild(messageDiv);
+                }
+            }
+            
+            // إضافة مستمعي الأحداث للأزرار
+            if (msg.type === 'user') {
+                const editBtn = messageDiv.querySelector('.edit-btn');
+                const deleteBtn = messageDiv.querySelector('.delete-btn');
+                const replyBtn = messageDiv.querySelector('.reply-btn');
+                
+                editBtn?.addEventListener('click', () => editMessage(msg));
+                deleteBtn?.addEventListener('click', () => deleteMessage(msg));
+                replyBtn?.addEventListener('click', () => replyToMessage(msg));
+            }
+            
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // تعديل رسالة
+        function editMessage(msg) {
+            // إخفاء أي رسالة أخرى قيد التعديل
+            document.querySelectorAll('.edit-message-container').forEach(el => el.remove());
+            
+            // إنشاء واجهة التعديل
+            const editContainer = document.createElement('div');
+            editContainer.classList.add('edit-message-container');
+            
+            const editInput = document.createElement('textarea');
+            editInput.classList.add('edit-message-input');
+            editInput.value = msg.text;
+            
+            const editActions = document.createElement('div');
+            editActions.classList.add('edit-actions');
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.classList.add('btn', 'btn-primary');
+            saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ';
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.classList.add('btn', 'btn-outline');
+            cancelBtn.innerHTML = '<i class="fas fa-times"></i> إلغاء';
+            
+            editActions.appendChild(saveBtn);
+            editActions.appendChild(cancelBtn);
+            
+            editContainer.appendChild(editInput);
+            editContainer.appendChild(editActions);
+            
+            // إضافة واجهة التعديل أسفل الرسالة
+            const messageElement = document.querySelector(`.message[data-id="${msg.id}"]`);
+            messageElement.appendChild(editContainer);
+            
+            // التركيز على حقل التعديل
+            editInput.focus();
+            
+            // مستمعي الأحداث
+            saveBtn.addEventListener('click', () => {
+                const newText = editInput.value.trim();
+                if (newText && newText !== msg.text) {
+                    updateMessage(msg.id, newText);
+                }
+                editContainer.remove();
+            });
+            
+            cancelBtn.addEventListener('click', () => {
+                editContainer.remove();
+            });
+        }
+        
+        // تحديث الرسالة في قاعدة البيانات
+        function updateMessage(messageId, newText) {
+            const messageRef = ref(database, `messages/${messageId}`);
+            update(messageRef, {
+                text: newText,
+                edited: true
+            });
+        }
+        
+        // حذف رسالة
+        function deleteMessage(msg) {
+            if (confirm('هل أنت متأكد من رغبتك في حذف هذه الرسالة؟')) {
+                const messageRef = ref(database, `messages/${msg.id}`);
+                remove(messageRef);
+            }
+        }
+        
+        // الرد على رسالة
+        function replyToMessage(msg) {
+            replyingTo = {
+                id: msg.id,
+                text: msg.text,
+                sender: msg.userName
+            };
+            
+            messageInput.value = `@${msg.userName} `;
+            messageInput.focus();
         }
         
         // تهيئة الدردشة
@@ -973,8 +1200,7 @@
                 // عرض الرسائل
                 messages.forEach(msg => {
                     if (msg.userId === currentUser.uid || msg.userId === 'support') {
-                        const date = new Date(msg.timestamp);
-                        addMessageToUI(msg.text, msg.type, date);
+                        addMessageToUI(msg);
                     }
                 });
                 
