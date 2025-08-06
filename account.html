@@ -736,21 +736,54 @@
             text-align: right;
         }
         
-        .username-check {
+        .username-status {
             margin-top: 8px;
             font-size: 0.95rem;
             text-align: right;
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
-        .username-check.available {
-            color: var(--success);
+        .username-status.available {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            border: 1px solid #2ecc71;
         }
         
-        .username-check.unavailable {
-            color: var(--danger);
+        .username-status.unavailable {
+            background: rgba(231, 76, 60, 0.15);
+            color: #c0392b;
+            border: 1px solid #e74c3c;
         }
         
-        /* تحسينات الشريط */
+        .username-status.warning {
+            background: rgba(243, 156, 18, 0.15);
+            color: #d35400;
+            border: 1px solid #f39c12;
+        }
+        
+        .generate-btn {
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .generate-btn:hover {
+            background: rgba(67, 97, 238, 0.2);
+        }
+        
         .tab-bar-fix {
             position: relative;
             z-index: 5;
@@ -965,8 +998,13 @@
                     
                     <div class="form-group">
                         <label for="usernameInput"><i class="fas fa-at"></i> المعرف</label>
-                        <input type="text" id="usernameInput" class="form-control" placeholder="سيتم توليد معرف فريد لك" required>
-                        <div id="usernameCheck" class="username-check"></div>
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="usernameInput" class="form-control" placeholder="سيتم توليد معرف فريد لك" required style="flex: 1;">
+                            <button type="button" class="generate-btn" id="generateUsernameBtn">
+                                <i class="fas fa-sync-alt"></i>
+                            </button>
+                        </div>
+                        <div id="usernameCheck"></div>
                         <small class="text-muted">يمكنك تعديل المعرف قبل إنشاء الحساب</small>
                     </div>
                     
@@ -1105,6 +1143,7 @@
         const passwordStrength = document.getElementById('passwordStrength');
         const strengthText = document.getElementById('strengthText');
         const backButton = document.getElementById('backButton');
+        const generateUsernameBtn = document.getElementById('generateUsernameBtn');
         
         // عناصر معلومات المستخدم
         const userEmail = document.getElementById('userEmail');
@@ -1159,13 +1198,32 @@
 
         // دالة لتنقية اسم المستخدم من الأحرف غير المسموحة
         function sanitizeUsername(username) {
-            return '@' + username.replace(/[.#$\[\]]/g, '_');
+            // إزالة أي رموز غير مرغوب فيها
+            let sanitized = username.replace(/[^a-zA-Z0-9_]/g, '');
+            
+            // إزالة أي شرطات سفلية متتالية
+            sanitized = sanitized.replace(/_{2,}/g, '_');
+            
+            // إزالة الشرطات السفلية من البداية والنهاية
+            sanitized = sanitized.replace(/^_+|_+$/g, '');
+            
+            // إضافة @ في البداية إذا لم تكن موجودة
+            if (!sanitized.startsWith('@')) {
+                sanitized = '@' + sanitized;
+            }
+            
+            // تقليل الطول إذا تجاوز الحد الأقصى
+            if (sanitized.length > 20) {
+                sanitized = sanitized.substring(0, 20);
+            }
+            
+            return sanitized;
         }
 
         // دالة لتوليد سلسلة عشوائية من الحروف والأرقام
         function generateRandomAlphaNum(length, isNumber = false) {
             let result = '';
-            let characters = isNumber ? '0123456789' : 'abcdefghijklmnopqrstuvwxyz';
+            let characters = isNumber ? '0123456789' : 'abcdefghijklmnopqrstuvwxyz0123456789';
             for (let i = 0; i < length; i++) {
                 result += characters.charAt(Math.floor(Math.random() * characters.length));
             }
@@ -1194,17 +1252,19 @@
             // إضافة 3 أرقام عشوائية
             baseUsername += generateRandomAlphaNum(3, true);
             
-            let username = '@' + baseUsername;
+            let username = baseUsername;
             let counter = 1;
             let isUnique = false;
             
             while (!isUnique && counter < 100) {
-                const snapshot = await database.ref('usernames').child(username).once('value');
+                const sanitized = sanitizeUsername(username);
+                const snapshot = await database.ref('usernames').child(sanitized).once('value');
                 
                 if (!snapshot.exists()) {
                     isUnique = true;
+                    username = sanitized;
                 } else {
-                    username = '@' + baseUsername + generateRandomAlphaNum(2, true);
+                    username = baseUsername + generateRandomAlphaNum(2, true);
                     counter++;
                 }
             }
@@ -1217,11 +1277,105 @@
         }
 
         // التحقق من توفر المعرف
-        async function isUsernameAvailable(username) {
-            const sanitized = sanitizeUsername(username);
-            const snapshot = await database.ref('usernames').child(sanitized).once('value');
-            return !snapshot.exists();
+        async function checkUsernameAvailability(rawUsername) {
+            const username = sanitizeUsername(rawUsername);
+            
+            // التحقق من الطول الصحيح
+            if (username.length < 4) {
+                usernameCheck.innerHTML = `
+                    <div class="username-status warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        المعرف يجب أن يكون على الأقل 4 أحرف
+                    </div>
+                `;
+                return false;
+            }
+            
+            if (username.length > 20) {
+                usernameCheck.innerHTML = `
+                    <div class="username-status warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        المعرف يجب أن لا يتجاوز 20 حرفاً
+                    </div>
+                `;
+                return false;
+            }
+            
+            // التحقق من توفر المعرف
+            const snapshot = await database.ref('usernames').child(username).once('value');
+            const isAvailable = !snapshot.exists();
+            
+            if (isAvailable) {
+                usernameCheck.innerHTML = `
+                    <div class="username-status available">
+                        <i class="fas fa-check-circle"></i>
+                        هذا المعرف متاح: ${username}
+                    </div>
+                `;
+            } else {
+                usernameCheck.innerHTML = `
+                    <div class="username-status unavailable">
+                        <i class="fas fa-times-circle"></i>
+                        هذا المعرف غير متاح: ${username}
+                    </div>
+                `;
+            }
+            
+            return isAvailable;
         }
+        
+        // توليد معرف جديد عند الطلب
+        async function generateNewUsername() {
+            const firstName = firstNameInput.value.trim() || 'مستخدم';
+            const lastName = lastNameInput.value.trim() || 'جديد';
+            
+            try {
+                const username = await generateUniqueUsername(firstName, lastName);
+                usernameInput.value = username;
+                checkUsernameAvailability(username);
+            } catch (error) {
+                console.error(error);
+                usernameInput.value = '@user' + Math.floor(1000 + Math.random() * 9000);
+                checkUsernameAvailability(usernameInput.value);
+            }
+        }
+
+        // توليد معرف عند إدخال الاسم
+        firstNameInput.addEventListener('input', generateUsernameFromName);
+        lastNameInput.addEventListener('input', generateUsernameFromName);
+        
+        async function generateUsernameFromName() {
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            
+            if (firstName || lastName) {
+                try {
+                    const username = await generateUniqueUsername(
+                        firstName || 'مستخدم', 
+                        lastName || 'جديد'
+                    );
+                    usernameInput.value = username;
+                    checkUsernameAvailability(username);
+                } catch (error) {
+                    console.error(error);
+                    usernameInput.value = '@user' + Math.floor(1000 + Math.random() * 9000);
+                    checkUsernameAvailability(usernameInput.value);
+                }
+            }
+        }
+
+        // استماع لتغيير اسم المستخدم يدوياً
+        usernameInput.addEventListener('input', () => {
+            const username = usernameInput.value.trim();
+            if (username) {
+                checkUsernameAvailability(username);
+            } else {
+                usernameCheck.innerHTML = '';
+            }
+        });
+        
+        // توليد معرف جديد عند الضغط على الزر
+        generateUsernameBtn.addEventListener('click', generateNewUsername);
 
         // فتح وإغلاق نافذة تغيير اسم المستخدم
         document.getElementById('changeUsernameBtn').addEventListener('click', () => {
@@ -1278,7 +1432,7 @@
             const sanitizedUsername = sanitizeUsername(newUsername);
             
             // التحقق من توفر المعرف
-            const isAvailable = await isUsernameAvailable(sanitizedUsername);
+            const isAvailable = await checkUsernameAvailability(sanitizedUsername);
             if (!isAvailable) {
                 showNotification('المعرف غير متاح، الرجاء اختيار معرف آخر', 'error');
                 return;
@@ -1307,55 +1461,6 @@
                 }).catch(error => {
                     showNotification(`خطأ: ${error.message}`, 'error');
                 });
-            }
-        });
-
-        // توليد معرف عند إدخال الاسم
-        firstNameInput.addEventListener('input', generateUsernameFromName);
-        lastNameInput.addEventListener('input', generateUsernameFromName);
-        
-        async function generateUsernameFromName() {
-            const firstName = firstNameInput.value.trim();
-            const lastName = lastNameInput.value.trim();
-            
-            if (firstName && lastName) {
-                try {
-                    const username = await generateUniqueUsername(firstName, lastName);
-                    usernameInput.value = username;
-                    checkUsernameAvailability(username);
-                } catch (error) {
-                    console.error(error);
-                    usernameInput.value = '@user' + Math.floor(1000 + Math.random() * 9000);
-                }
-            }
-        }
-
-        // التحقق من توفر اسم المستخدم
-        async function checkUsernameAvailability(username) {
-            if (username.length < 3) {
-                usernameCheck.textContent = '';
-                return;
-            }
-            
-            const sanitized = sanitizeUsername(username);
-            const isAvailable = await isUsernameAvailable(sanitized);
-            
-            if (isAvailable) {
-                usernameCheck.textContent = '✓ هذا المعرف متاح';
-                usernameCheck.className = 'username-check available';
-            } else {
-                usernameCheck.textContent = '✗ هذا المعرف غير متاح';
-                usernameCheck.className = 'username-check unavailable';
-            }
-        }
-        
-        // استماع لتغيير اسم المستخدم يدوياً
-        usernameInput.addEventListener('input', () => {
-            const username = usernameInput.value.trim();
-            if (username) {
-                checkUsernameAvailability(username);
-            } else {
-                usernameCheck.textContent = '';
             }
         });
 
@@ -1399,7 +1504,7 @@
             const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            const username = usernameInput.value.trim();
+            const rawUsername = usernameInput.value.trim();
             
             if (!firstName || !lastName) {
                 showNotification('الرجاء إدخال الاسم الأول واسم العائلة', 'error');
@@ -1411,21 +1516,17 @@
                 return;
             }
             
-            if (!username || username.length < 3) {
-                showNotification('المعرف يجب أن يكون على الأقل 3 أحرف', 'error');
+            // التحقق من توفر المعرف قبل المتابعة
+            const sanitizedUsername = sanitizeUsername(rawUsername);
+            const isAvailable = await checkUsernameAvailability(sanitizedUsername);
+            
+            if (!isAvailable) {
+                showNotification('المعرف غير متاح، الرجاء اختيار معرف آخر', 'error');
                 return;
             }
             
             if (password.length < 8) {
                 showNotification('كلمة المرور يجب أن تكون على الأقل 8 أحرف', 'error');
-                return;
-            }
-            
-            const sanitizedUsername = sanitizeUsername(username);
-            
-            const isAvailable = await isUsernameAvailable(sanitizedUsername);
-            if (!isAvailable) {
-                showNotification('المعرف غير متاح، الرجاء اختيار معرف آخر', 'error');
                 return;
             }
             
@@ -1437,18 +1538,27 @@
                 .then((userCredential) => {
                     const user = userCredential.user;
                     
-                    database.ref('users/' + user.uid).set({
-                        firstName: firstName,
-                        lastName: lastName,
-                        fullName: `${firstName} ${lastName}`,
-                        username: sanitizedUsername,
-                        email: email,
-                        createdAt: new Date().toISOString(),
-                        lastUsernameChange: 0
-                    });
-                    
-                    database.ref('usernames').child(sanitizedUsername).set(user.uid);
-                    
+                    // تأكيد توفر المعرف مرة أخرى قبل الحفظ لتجنب حالات السباق
+                    return database.ref('usernames').child(sanitizedUsername).once('value')
+                        .then(snapshot => {
+                            if (snapshot.exists()) {
+                                throw new Error('المعرف غير متاح بعد الآن، الرجاء المحاولة مرة أخرى');
+                            }
+                            
+                            return database.ref('users/' + user.uid).set({
+                                firstName: firstName,
+                                lastName: lastName,
+                                fullName: `${firstName} ${lastName}`,
+                                username: sanitizedUsername,
+                                email: email,
+                                createdAt: new Date().toISOString(),
+                                lastUsernameChange: 0
+                            }).then(() => {
+                                return database.ref('usernames').child(sanitizedUsername).set(user.uid);
+                            });
+                        });
+                })
+                .then(() => {
                     showNotification(`تم إنشاء حسابك بنجاح، ${firstName}!`, 'success');
                     updateUserInfo(user, {
                         firstName, 
@@ -1468,6 +1578,8 @@
                 .catch((error) => {
                     if (error.code === 'auth/email-already-in-use') {
                         showNotification('البريد الإلكتروني مستخدم بالفعل، الرجاء استخدام بريد آخر', 'error');
+                    } else if (error.message.includes('المعرف غير متاح')) {
+                        showNotification(error.message, 'error');
                     } else {
                         showNotification(`خطأ في إنشاء الحساب: ${error.message}`, 'error');
                     }
