@@ -793,16 +793,19 @@
             box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
         }
         
-        /* رسالة خطأ التحقق */
+        /* رسالة خطأ التحقق في الأعلى */
         .verification-message {
             background: #fff8f8;
             border: 1px solid var(--danger);
             border-radius: var(--radius);
             padding: 15px;
-            margin: 15px 0;
+            margin: 0 0 15px 0;
             text-align: center;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
             display: none;
+            position: relative;
+            top: 0;
+            width: 100%;
         }
         
         .verification-message h3 {
@@ -821,6 +824,32 @@
             font-size: 0.95rem;
             line-height: 1.6;
         }
+        
+        /* زر العودة في صفحة الأسئلة الشائعة */
+        .faq-back-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--primary);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 10;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .faq-back-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
     </style>
 </head>
 <body>
@@ -829,6 +858,17 @@
         <button class="back-button" id="backButton">
             <i class="fas fa-arrow-left"></i>
         </button>
+        
+        <!-- رسالة التحقق في الأعلى -->
+        <div class="verification-message" id="verificationMessage">
+            <h3><i class="fas fa-exclamation-triangle"></i> يجب تسجيل الدخول</h3>
+            <p>يجب تسجيل الدخول أولاً لبدء المحادثة مع فريق الدعم</p>
+            <div class="action-buttons">
+                <button id="loginRedirectBtn" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
+                </button>
+            </div>
+        </div>
         
         <!-- شاشة القائمة الرئيسية -->
         <div id="mainMenuScreen">
@@ -939,6 +979,10 @@
         
         <!-- صفحة الأسئلة الشائعة -->
         <div class="faq-container" id="faqScreen">
+            <button class="faq-back-btn" id="faqBackBtn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            
             <div class="faq-header">
                 <h2 class="faq-title">الأسئلة الشائعة</h2>
                 <p class="faq-subtitle">إجابات على أكثر الأسئلة شيوعاً من مستخدمينا</p>
@@ -1032,41 +1076,30 @@
             </button>
         </div>
         
-        <!-- رسالة التحقق -->
-        <div class="verification-message" id="verificationMessage">
-            <h3><i class="fas fa-exclamation-triangle"></i> يجب تسجيل الدخول</h3>
-            <p>يجب تسجيل الدخول أولاً لبدء المحادثة مع فريق الدعم</p>
-            <div class="action-buttons">
-                <button id="loginRedirectBtn" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
-                </button>
+        <!-- تأكيد تسجيل الدخول -->
+        <div class="login-confirmation" id="loginConfirmation">
+            <div class="confirmation-box">
+                <div class="confirmation-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="confirmation-message">
+                    يجب تسجيل الدخول أولاً للاستمرار في استخدام الخدمة
+                </div>
+                <div class="action-buttons">
+                    <button id="confirmLoginBtn" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
+                    </button>
+                    <button id="cancelLoginBtn" class="btn btn-outline">
+                        <i class="fas fa-times"></i> إلغاء
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <!-- تأكيد تسجيل الدخول -->
-    <div class="login-confirmation" id="loginConfirmation">
-        <div class="confirmation-box">
-            <div class="confirmation-icon">
-                <i class="fas fa-exclamation-circle"></i>
-            </div>
-            <div class="confirmation-message">
-                يجب تسجيل الدخول أولاً للاستمرار في استخدام الخدمة
-            </div>
-            <div class="action-buttons">
-                <button id="confirmLoginBtn" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
-                </button>
-                <button id="cancelLoginBtn" class="btn btn-outline">
-                    <i class="fas fa-times"></i> إلغاء
-                </button>
-            </div>
+        
+        <!-- إشعار النسخ -->
+        <div class="copy-notification" id="copyNotification">
+            <i class="fas fa-check-circle"></i> تم نسخ الرسالة إلى الحافظة
         </div>
-    </div>
-    
-    <!-- إشعار النسخ -->
-    <div class="copy-notification" id="copyNotification">
-        <i class="fas fa-check-circle"></i> تم نسخ الرسالة إلى الحافظة
     </div>
     
     <!-- إضافة Firebase SDK -->
@@ -1101,6 +1134,7 @@
         const emailBtn = document.getElementById('emailBtn');
         const faqScreen = document.getElementById('faqScreen');
         const backToMenuBtn = document.getElementById('backToMenuBtn');
+        const faqBackBtn = document.getElementById('faqBackBtn');
         
         // عناصر التحقق
         const verificationMessage = document.getElementById('verificationMessage');
@@ -1150,15 +1184,17 @@
         
         // زر الرجوع في شاشة الدردشة
         backBtn.addEventListener('click', () => {
-            // الرجوع للخلف فقط
             chatScreen.style.display = 'none';
             mainMenuScreen.style.display = 'flex';
         });
         
         // زر الصفحة الرئيسية في شاشة الدردشة
         homeBtn.addEventListener('click', () => {
-            // الذهاب إلى الصفحة الرئيسية
-            chatScreen.style.display = 'none';
+            window.location.href = 'index.html';
+        });
+        
+        // زر الرجوع في صفحة الأسئلة الشائعة
+        faqBackBtn.addEventListener('click', () => {
             faqScreen.style.display = 'none';
             mainMenuScreen.style.display = 'flex';
         });
@@ -1169,7 +1205,7 @@
                 // المستخدم مسجل، توجيه مباشر للدردشة
                 showChatScreen();
             } else {
-                // المستخدم غير مسجل، عرض رسالة التحقق
+                // المستخدم غير مسجل، عرض رسالة التحقق في الأعلى
                 verificationMessage.style.display = 'block';
             }
         });
@@ -1464,7 +1500,7 @@
         // تحديث الرسالة في Firebase
         function updateMessageInFirebase(msg) {
             if (!msg.id) return;
-            const messageRef = database.ref(`messages/${msg.id}`);
+            const messageRef = database.ref(`userChats/${currentUser.uid}/messages/${msg.id}`);
             messageRef.update({
                 text: msg.text
             });
@@ -1486,7 +1522,7 @@
         // حذف الرسالة من Firebase
         function deleteMessageFromFirebase(msg) {
             if (!msg.id) return;
-            const messageRef = database.ref(`messages/${msg.id}`);
+            const messageRef = database.ref(`userChats/${currentUser.uid}/messages/${msg.id}`);
             messageRef.remove();
         }
         
@@ -1506,8 +1542,8 @@
         function initChat() {
             messagesContainer.innerHTML = '';
             
-            // إنشاء مرجع للرسائل في Firebase
-            messagesRef = database.ref('messages');
+            // إنشاء مرجع للرسائل في Firebase خاصة بالمستخدم
+            messagesRef = database.ref('userChats/' + currentUser.uid + '/messages');
             
             // استماع للرسائل الجديدة
             messagesRef.on('child_added', snapshot => {
@@ -1531,6 +1567,14 @@
                 // المستخدم مسجل
                 currentUser = user;
                 userDisplayName = user.displayName || "مستخدم";
+                
+                // جلب بيانات إضافية للمستخدم من قاعدة البيانات
+                database.ref('users/' + user.uid).once('value').then(snapshot => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        userDisplayName = userData.name || userDisplayName;
+                    }
+                });
             } else {
                 // المستخدم غير مسجل
                 currentUser = null;
