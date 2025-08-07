@@ -176,237 +176,6 @@
             opacity: 0.9;
         }
         
-        /* شاشة التحقق */
-        #verificationScreen {
-            display: none;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-        
-        .verification-overlay {
-            padding: 20px 15px;
-            text-align: center;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="%23f0f5ff" stroke-width="1"/></svg>');
-            background-size: 30px;
-        }
-        
-        .verification-icon {
-            font-size: 3.5rem;
-            color: var(--accent);
-            margin: 15px 0;
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.05); opacity: 0.7; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        .verification-message {
-            font-size: 1.1rem;
-            color: var(--dark);
-            margin-bottom: 20px;
-            padding: 0 10px;
-            line-height: 1.6;
-            font-weight: 500;
-        }
-        
-        .verification-error {
-            background: #fff8f8;
-            border: 1px solid var(--danger);
-            border-radius: var(--radius);
-            padding: 15px;
-            margin: 15px 0;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-        }
-        
-        .verification-error h3 {
-            color: var(--danger);
-            margin-bottom: 12px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .verification-error p {
-            margin-bottom: 12px;
-            color: #5c6770;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            width: 100%;
-            text-decoration: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-        }
-        
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(67, 97, 238, 0.2);
-            border-top-color: var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .success-icon {
-            font-size: 3.5rem;
-            color: var(--success);
-            margin: 15px 0;
-            animation: scaleIn 0.5s ease-out;
-        }
-        
-        @keyframes scaleIn {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        .verification-success {
-            padding: 20px 15px;
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .user-info {
-            background: #f8f9fa;
-            border-radius: var(--radius);
-            padding: 15px;
-            margin: 15px 0;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
-            border: 1px solid #eef2f7;
-        }
-        
-        .user-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            margin: 0 auto 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 2rem;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-            background-size: cover;
-            background-position: center;
-            background-color: var(--primary);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .user-avatar::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: var(--gradient);
-            opacity: 0.7;
-            z-index: 1;
-        }
-        
-        .user-avatar i {
-            position: relative;
-            z-index: 2;
-        }
-        
-        .user-name {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: var(--dark);
-            margin-bottom: 8px;
-        }
-        
-        .user-email {
-            color: var(--gray);
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            direction: ltr;
-            text-align: center;
-        }
-        
-        .user-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 15px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.9rem;
-            margin-top: 8px;
-        }
-        
-        .status-verified {
-            background: rgba(46, 204, 113, 0.15);
-            color: #27ae60;
-            border: 1px solid rgba(46, 204, 113, 0.3);
-        }
-        
-        .status-pending {
-            background: rgba(243, 156, 18, 0.15);
-            color: #d35400;
-            border: 1px solid rgba(243, 156, 18, 0.3);
-        }
-        
         /* شاشة الدردشة */
         #chatScreen {
             display: none;
@@ -495,7 +264,11 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         
-        .back-btn:hover {
+        .home-btn {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .back-btn:hover, .home-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
@@ -785,6 +558,47 @@
             line-height: 1.6;
         }
         
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            width: 100%;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
+        }
+        
         /* تعديل الرسالة */
         .edit-message-container {
             display: flex;
@@ -833,7 +647,7 @@
             color: white;
         }
         
-        /* زر الرجوع في شاشة التحقق */
+        /* زر الرجوع في الشاشات */
         .back-button {
             position: absolute;
             top: 15px;
@@ -881,53 +695,38 @@
             to { bottom: 15px; opacity: 1; }
         }
         
-        /* شريط التحميل */
-        .progress-bar {
-            height: 4px;
-            background: rgba(67, 97, 238, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-            width: 100%;
-            margin-top: 5px;
-        }
-        
-        .progress {
-            height: 100%;
-            background: var(--primary);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        
         /* صفحة الأسئلة الشائعة */
         .faq-container {
-            padding: 20px;
+            padding: 20px 15px;
             background: white;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
-            margin: 20px;
+            margin: 15px;
             display: none;
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .faq-header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 2px solid #f0f4f9;
         }
         
         .faq-title {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: var(--dark);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .faq-subtitle {
             color: var(--gray);
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
         
         .faq-item {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border: 1px solid #eef2f7;
             border-radius: var(--radius);
             overflow: hidden;
@@ -940,9 +739,9 @@
         
         .faq-question {
             background: #f8fafd;
-            padding: 15px 20px;
+            padding: 12px 15px;
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: var(--dark);
             cursor: pointer;
             display: flex;
@@ -951,11 +750,12 @@
         }
         
         .faq-answer {
-            padding: 15px 20px;
+            padding: 12px 15px;
             background: white;
             color: var(--gray);
             line-height: 1.7;
             display: none;
+            font-size: 0.9rem;
         }
         
         .faq-answer.show {
@@ -965,6 +765,7 @@
         
         .faq-icon {
             transition: var(--transition);
+            font-size: 0.9rem;
         }
         
         .faq-item.active .faq-icon {
@@ -974,7 +775,7 @@
         .back-to-menu {
             display: block;
             margin: 20px auto;
-            padding: 12px 25px;
+            padding: 10px 20px;
             background: var(--gradient);
             color: white;
             border: none;
@@ -983,12 +784,42 @@
             cursor: pointer;
             transition: var(--transition);
             text-align: center;
-            width: 200px;
+            width: 180px;
+            font-size: 0.9rem;
         }
         
         .back-to-menu:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
+        }
+        
+        /* رسالة خطأ التحقق */
+        .verification-message {
+            background: #fff8f8;
+            border: 1px solid var(--danger);
+            border-radius: var(--radius);
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            display: none;
+        }
+        
+        .verification-message h3 {
+            color: var(--danger);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .verification-message p {
+            margin-bottom: 12px;
+            color: #5c6770;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
     </style>
 </head>
@@ -1054,62 +885,6 @@
             </div>
         </div>
         
-        <!-- شاشة التحقق (تظهر أولاً) -->
-        <div id="verificationScreen">
-            <div class="main-header">
-                <h1 class="page-title">نظام الدردشة المتكامل</h1>
-                <p class="page-subtitle">تواصل مع فريق الدعم الفني</p>
-            </div>
-            
-            <!-- شاشة التحقق من المستخدم -->
-            <div id="verificationOverlay" class="verification-overlay">
-                <div class="verification-icon">
-                    <i class="fas fa-comments"></i>
-                </div>
-                <div class="verification-message" id="verificationMessage">
-                    جارٍ التحقق من بياناتك وتحميل الدردشة...
-                </div>
-                
-                <div class="progress-bar">
-                    <div class="progress" id="progressBar"></div>
-                </div>
-                
-                <div id="loadingSpinner" class="spinner"></div>
-                
-                <div id="verificationError" class="verification-error" style="display: none;">
-                    <h3><i class="fas fa-exclamation-triangle"></i> حدث خطأ</h3>
-                    <p id="errorMessage"></p>
-                    <div class="action-buttons">
-                        <button id="retryButton" class="btn btn-primary">
-                            <i class="fas fa-redo"></i> المحاولة مرة أخرى
-                        </button>
-                        <button id="redirectButton" class="btn btn-outline">
-                            <i class="fas fa-sign-out-alt"></i> الانتقال إلى تسجيل الدخول
-                        </button>
-                    </div>
-                </div>
-                
-                <div id="verificationSuccess" class="verification-success" style="display: none;">
-                    <div class="success-icon">
-                        <i class="fas fa-check-circle"></i>
-                    </div>
-                    <div class="verification-message">
-                        تم التحقق بنجاح! جارٍ توجيهك إلى الدردشة...
-                    </div>
-                    <div class="user-info">
-                        <div class="user-avatar" id="userAvatarPreview">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="user-name" id="userName">محمد أحمد</div>
-                        <div class="user-email" id="userEmail">user@example.com</div>
-                        <div class="user-status status-verified">
-                            <i class="fas fa-check-circle"></i> حساب مفعل
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
         <!-- شاشة الدردشة (تظهر بعد التحقق) -->
         <div id="chatScreen">
             <div class="chat-header">
@@ -1122,8 +897,11 @@
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="user-name-chat" id="userNameChat">مستخدم</div>
-                    <button class="back-btn" id="backBtn">
-                        <i class="fas fa-home"></i> الرجوع
+                    <button class="back-btn" id="backBtn" title="الرجوع للخلف">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="back-btn home-btn" id="homeBtn" title="الصفحة الرئيسية">
+                        <i class="fas fa-home"></i>
                     </button>
                 </div>
             </div>
@@ -1224,14 +1002,10 @@
                         <i class="fas fa-chevron-down faq-icon"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>نحن نقبل طرق الدفع التالية:</p>
+                        <p>نحن نقبل طريقة الدفع التالية:</p>
                         <ul>
-                            <li>بطاقات الائتمان (فيزا، ماستركارد)</li>
-                            <li>حسابات البنوك المحلية</li>
-                            <li>حوالات ويسترن يونيون</li>
-                            <li>محافظ إلكترونية (PayPal، Payeer)</li>
+                            <li>الدفع عند الاستلام فقط</li>
                         </ul>
-                        <p>لمزيد من التفاصيل حول طرق الدفع، يمكنك زيارة صفحة "طرق الدفع" في الموقع.</p>
                     </div>
                 </div>
                 
@@ -1245,8 +1019,8 @@
                         <ul>
                             <li>الدردشة المباشرة عبر الموقع (متاحة 24/7)</li>
                             <li>البريد الإلكتروني: support@example.com</li>
-                            <li>واتساب: +964782305341</li>
-                            <li>الهاتف: +964782305341</li>
+                            <li>واتساب: +9647823053419</li>
+                            <li>الهاتف: +9647823053419</li>
                         </ul>
                         <p>متوسط وقت الرد خلال ساعة واحدة في أيام العمل الرسمية.</p>
                     </div>
@@ -1256,6 +1030,17 @@
             <button class="back-to-menu" id="backToMenuBtn">
                 <i class="fas fa-home"></i> العودة إلى القائمة الرئيسية
             </button>
+        </div>
+        
+        <!-- رسالة التحقق -->
+        <div class="verification-message" id="verificationMessage">
+            <h3><i class="fas fa-exclamation-triangle"></i> يجب تسجيل الدخول</h3>
+            <p>يجب تسجيل الدخول أولاً لبدء المحادثة مع فريق الدعم</p>
+            <div class="action-buttons">
+                <button id="loginRedirectBtn" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
+                </button>
+            </div>
         </div>
     </div>
     
@@ -1318,26 +1103,16 @@
         const backToMenuBtn = document.getElementById('backToMenuBtn');
         
         // عناصر التحقق
-        const verificationScreen = document.getElementById('verificationScreen');
-        const verificationOverlay = document.getElementById('verificationOverlay');
         const verificationMessage = document.getElementById('verificationMessage');
-        const verificationError = document.getElementById('verificationError');
-        const errorMessage = document.getElementById('errorMessage');
-        const retryButton = document.getElementById('retryButton');
-        const redirectButton = document.getElementById('redirectButton');
-        const verificationSuccess = document.getElementById('verificationSuccess');
-        const loadingSpinner = document.getElementById('loadingSpinner');
-        const userName = document.getElementById('userName');
-        const userEmail = document.getElementById('userEmail');
-        const userAvatarPreview = document.getElementById('userAvatarPreview');
+        const loginRedirectBtn = document.getElementById('loginRedirectBtn');
         const backButton = document.getElementById('backButton');
-        const progressBar = document.getElementById('progressBar');
         
         // عناصر الدردشة
         const chatScreen = document.getElementById('chatScreen');
         const userNameChat = document.getElementById('userNameChat');
         const userAvatar = document.getElementById('userAvatar');
         const backBtn = document.getElementById('backBtn');
+        const homeBtn = document.getElementById('homeBtn');
         const messagesContainer = document.getElementById('messagesContainer');
         const noMessages = document.getElementById('noMessages');
         const messageInput = document.getElementById('messageInput');
@@ -1365,9 +1140,6 @@
             if (chatScreen.style.display === 'flex') {
                 chatScreen.style.display = 'none';
                 mainMenuScreen.style.display = 'flex';
-            } else if (verificationScreen.style.display === 'block') {
-                verificationScreen.style.display = 'none';
-                mainMenuScreen.style.display = 'flex';
             } else if (faqScreen.style.display === 'block') {
                 faqScreen.style.display = 'none';
                 mainMenuScreen.style.display = 'flex';
@@ -1378,15 +1150,28 @@
         
         // زر الرجوع في شاشة الدردشة
         backBtn.addEventListener('click', () => {
+            // الرجوع للخلف فقط
             chatScreen.style.display = 'none';
+            mainMenuScreen.style.display = 'flex';
+        });
+        
+        // زر الصفحة الرئيسية في شاشة الدردشة
+        homeBtn.addEventListener('click', () => {
+            // الذهاب إلى الصفحة الرئيسية
+            chatScreen.style.display = 'none';
+            faqScreen.style.display = 'none';
             mainMenuScreen.style.display = 'flex';
         });
 
         // زر بدء المحادثة
         startChatBtn.addEventListener('click', () => {
-            mainMenuScreen.style.display = 'none';
-            verificationScreen.style.display = 'block';
-            verifyUser();
+            if (auth.currentUser) {
+                // المستخدم مسجل، توجيه مباشر للدردشة
+                showChatScreen();
+            } else {
+                // المستخدم غير مسجل، عرض رسالة التحقق
+                verificationMessage.style.display = 'block';
+            }
         });
         
         // زر الأسئلة الشائعة
@@ -1402,19 +1187,24 @@
             mainMenuScreen.style.display = 'flex';
         });
         
-        // زر واتساب - تم تحديث الرقم إلى +964782305341
+        // زر واتساب
         whatsappBtn.addEventListener('click', () => {
-            window.open('https://wa.me/964782305341', '_blank');
+            window.open('https://wa.me/9647823053419', '_blank');
         });
         
-        // زر الهاتف - تم تحديث الرقم إلى +964782305341
+        // زر الهاتف
         phoneBtn.addEventListener('click', () => {
-            window.open('tel:+964782305341', '_blank');
+            window.open('tel:+9647823053419', '_blank');
         });
         
         // زر الجيميل
         emailBtn.addEventListener('click', () => {
             window.location.href = 'mailto:kokabmazar@gmail.com?subject=استفسار%20عن%20الخدمة&body=مرحباً%20فريق%20الدعم،';
+        });
+        
+        // توجيه لتسجيل الدخول
+        loginRedirectBtn.addEventListener('click', () => {
+            window.location.href = 'account.html';
         });
 
         // تهيئة صفحة الأسئلة الشائعة
@@ -1441,67 +1231,11 @@
             });
         }
 
-        // التحقق من حالة تسجيل الدخول والبيانات
-        function verifyUser() {
-            verificationMessage.innerHTML = 'جارٍ التحقق من تسجيل الدخول والبيانات...';
-            verificationError.style.display = 'none';
-            verificationSuccess.style.display = 'none';
-            loadingSpinner.style.display = 'block';
-            
-            // محاكاة شريط التقدم
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += 10;
-                progressBar.style.width = progress + '%';
-                
-                if (progress >= 100) {
-                    clearInterval(progressInterval);
-                    progressBar.style.width = '0%';
-                }
-            }, 300);
-            
-            // تسجيل الدخول باستخدام حساب Google
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider)
-                .then((result) => {
-                    // تم تسجيل الدخول بنجاح
-                    const user = result.user;
-                    currentUser = user;
-                    
-                    // محاكاة جلب بيانات المستخدم
-                    setTimeout(() => {
-                        loadingSpinner.style.display = 'none';
-                        verificationSuccess.style.display = 'block';
-                        verificationMessage.innerHTML = 'تم التحقق بنجاح! جارٍ توجيهك...';
-                        
-                        // استخدام بيانات المستخدم الفعلية من حساب Google
-                        userDisplayName = user.displayName || "مستخدم";
-                        userEmail.textContent = user.email || 'غير متاح';
-                        userName.textContent = userDisplayName;
-                        userAvatarPreview.textContent = userDisplayName.charAt(0);
-                        
-                        // توجيه المستخدم بعد تأخير إلى شاشة الدردشة
-                        setTimeout(() => {
-                            showChatScreen();
-                        }, 2000);
-                    }, 2000);
-                })
-                .catch(error => {
-                    showVerificationError(error.message);
-                });
-        }
-        
-        // إظهار خطأ التحقق
-        function showVerificationError(message) {
-            loadingSpinner.style.display = 'none';
-            verificationError.style.display = 'block';
-            errorMessage.textContent = message;
-        }
-        
         // إظهار شاشة الدردشة
         function showChatScreen() {
-            verificationScreen.style.display = 'none';
             chatScreen.style.display = 'flex';
+            mainMenuScreen.style.display = 'none';
+            verificationMessage.style.display = 'none';
             
             // عرض معلومات المستخدم في شريط الدردشة
             userNameChat.textContent = userDisplayName;
@@ -1791,10 +1525,17 @@
             isFirstMessage = true;
         }
         
-        // إعداد مستمعي الأحداث للتحقق
-        retryButton.addEventListener('click', verifyUser);
-        redirectButton.addEventListener('click', () => {
-            loginConfirmation.style.display = 'flex';
+        // مستمع حالة المصادقة
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                // المستخدم مسجل
+                currentUser = user;
+                userDisplayName = user.displayName || "مستخدم";
+            } else {
+                // المستخدم غير مسجل
+                currentUser = null;
+                userDisplayName = "مستخدم";
+            }
         });
         
         // تأكيد الانتقال لتسجيل الدخول
@@ -1820,9 +1561,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             // إظهار القائمة الرئيسية فقط
             mainMenuScreen.style.display = 'flex';
-            verificationScreen.style.display = 'none';
             chatScreen.style.display = 'none';
             faqScreen.style.display = 'none';
+            verificationMessage.style.display = 'none';
         });
     </script>
 </body>
