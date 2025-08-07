@@ -176,6 +176,237 @@
             opacity: 0.9;
         }
         
+        /* شاشة التحقق */
+        #verificationScreen {
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        .verification-overlay {
+            padding: 20px 15px;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="%23f0f5ff" stroke-width="1"/></svg>');
+            background-size: 30px;
+        }
+        
+        .verification-icon {
+            font-size: 3.5rem;
+            color: var(--accent);
+            margin: 15px 0;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .verification-message {
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 20px;
+            padding: 0 10px;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+        
+        .verification-error {
+            background: #fff8f8;
+            border: 1px solid var(--danger);
+            border-radius: var(--radius);
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .verification-error h3 {
+            color: var(--danger);
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .verification-error p {
+            margin-bottom: 12px;
+            color: #5c6770;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            width: 100%;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary {
+            background: var(--gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(67, 97, 238, 0.2);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .success-icon {
+            font-size: 3.5rem;
+            color: var(--success);
+            margin: 15px 0;
+            animation: scaleIn 0.5s ease-out;
+        }
+        
+        @keyframes scaleIn {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .verification-success {
+            padding: 20px 15px;
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin: 15px 0;
+            text-align: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #eef2f7;
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+            background-size: cover;
+            background-position: center;
+            background-color: var(--primary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .user-avatar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--gradient);
+            opacity: 0.7;
+            z-index: 1;
+        }
+        
+        .user-avatar i {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .user-name {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+        
+        .user-email {
+            color: var(--gray);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            direction: ltr;
+            text-align: center;
+        }
+        
+        .user-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 15px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+        
+        .status-verified {
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+        }
+        
+        .status-pending {
+            background: rgba(243, 156, 18, 0.15);
+            color: #d35400;
+            border: 1px solid rgba(243, 156, 18, 0.3);
+        }
+        
         /* شاشة الدردشة */
         #chatScreen {
             display: none;
@@ -264,11 +495,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         
-        .home-btn {
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
-        .back-btn:hover, .home-btn:hover {
+        .back-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
@@ -558,47 +785,6 @@
             line-height: 1.6;
         }
         
-        .action-buttons {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            justify-content: center;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            border: none;
-            width: 100%;
-            text-decoration: none;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-primary {
-            background: var(--gradient);
-            color: white;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
-        }
-        
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--primary);
-            color: var(--primary);
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
-        }
-        
         /* تعديل الرسالة */
         .edit-message-container {
             display: flex;
@@ -647,7 +833,7 @@
             color: white;
         }
         
-        /* زر الرجوع في الشاشات */
+        /* زر الرجوع في شاشة التحقق */
         .back-button {
             position: absolute;
             top: 15px;
@@ -695,160 +881,96 @@
             to { bottom: 15px; opacity: 1; }
         }
         
-        /* صفحة الأسئلة الشائعة */
-        .faq-container {
-            padding: 20px 15px;
-            background: white;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin: 15px;
+        /* شريط التحميل */
+        .progress-bar {
+            height: 4px;
+            background: rgba(67, 97, 238, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* شاشة الأسئلة الشائعة */
+        #faqScreen {
             display: none;
-            max-height: 90vh;
-            overflow-y: auto;
+            flex-direction: column;
+            min-height: 100vh;
         }
         
         .faq-header {
+            background: var(--gradient);
+            color: white;
+            padding: 18px 15px;
             text-align: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #f0f4f9;
+            position: relative;
         }
         
-        .faq-title {
-            font-size: 1.5rem;
+        .faq-container {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .faq-section {
+            margin-bottom: 25px;
+        }
+        
+        .faq-section-title {
+            font-size: 1.4rem;
             color: var(--dark);
-            margin-bottom: 8px;
-        }
-        
-        .faq-subtitle {
-            color: var(--gray);
-            font-size: 0.9rem;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary);
+            font-weight: 700;
         }
         
         .faq-item {
-            margin-bottom: 15px;
-            border: 1px solid #eef2f7;
+            background: white;
             border-radius: var(--radius);
-            overflow: hidden;
-            transition: var(--transition);
-        }
-        
-        .faq-item:hover {
             box-shadow: var(--shadow);
+            margin-bottom: 15px;
+            overflow: hidden;
         }
         
         .faq-question {
-            background: #f8fafd;
-            padding: 12px 15px;
-            font-weight: 700;
-            font-size: 1rem;
-            color: var(--dark);
+            padding: 15px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e1e5eb;
             cursor: pointer;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        
+        .faq-question i {
+            transition: var(--transition);
         }
         
         .faq-answer {
-            padding: 12px 15px;
+            padding: 15px;
+            display: none;
             background: white;
             color: var(--gray);
             line-height: 1.7;
-            display: none;
-            font-size: 0.9rem;
+            border-top: 1px solid #f1f3f5;
         }
         
-        .faq-answer.show {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-        
-        .faq-icon {
-            transition: var(--transition);
-            font-size: 0.9rem;
-        }
-        
-        .faq-item.active .faq-icon {
+        .faq-item.active .faq-question i {
             transform: rotate(180deg);
         }
         
-        .back-to-menu {
+        .faq-item.active .faq-answer {
             display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background: var(--gradient);
-            color: white;
-            border: none;
-            border-radius: var(--radius);
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition);
-            text-align: center;
-            width: 180px;
-            font-size: 0.9rem;
-        }
-        
-        .back-to-menu:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
-        }
-        
-        /* رسالة خطأ التحقق في الأعلى */
-        .verification-message {
-            background: #fff8f8;
-            border: 1px solid var(--danger);
-            border-radius: var(--radius);
-            padding: 15px;
-            margin: 0 0 15px 0;
-            text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-            display: none;
-            position: relative;
-            top: 0;
-            width: 100%;
-        }
-        
-        .verification-message h3 {
-            color: var(--danger);
-            margin-bottom: 12px;
-            font-size: 1.2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .verification-message p {
-            margin-bottom: 12px;
-            color: #5c6770;
-            font-size: 0.95rem;
-            line-height: 1.6;
-        }
-        
-        /* زر العودة في صفحة الأسئلة الشائعة */
-        .faq-back-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: var(--primary);
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: var(--transition);
-            z-index: 10;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-        }
-        
-        .faq-back-btn:hover {
-            background: var(--secondary);
-            transform: translateY(-2px);
         }
     </style>
 </head>
@@ -858,17 +980,6 @@
         <button class="back-button" id="backButton">
             <i class="fas fa-arrow-left"></i>
         </button>
-        
-        <!-- رسالة التحقق في الأعلى -->
-        <div class="verification-message" id="verificationMessage">
-            <h3><i class="fas fa-exclamation-triangle"></i> يجب تسجيل الدخول</h3>
-            <p>يجب تسجيل الدخول أولاً لبدء المحادثة مع فريق الدعم</p>
-            <div class="action-buttons">
-                <button id="loginRedirectBtn" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
-                </button>
-            </div>
-        </div>
         
         <!-- شاشة القائمة الرئيسية -->
         <div id="mainMenuScreen">
@@ -925,6 +1036,62 @@
             </div>
         </div>
         
+        <!-- شاشة التحقق (تظهر أولاً) -->
+        <div id="verificationScreen">
+            <div class="main-header">
+                <h1 class="page-title">نظام الدردشة المتكامل</h1>
+                <p class="page-subtitle">تواصل مع فريق الدعم الفني</p>
+            </div>
+            
+            <!-- شاشة التحقق من المستخدم -->
+            <div id="verificationOverlay" class="verification-overlay">
+                <div class="verification-icon">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="verification-message" id="verificationMessage">
+                    جارٍ التحقق من بياناتك وتحميل الدردشة...
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress" id="progressBar"></div>
+                </div>
+                
+                <div id="loadingSpinner" class="spinner"></div>
+                
+                <div id="verificationError" class="verification-error" style="display: none;">
+                    <h3><i class="fas fa-exclamation-triangle"></i> يجب تسجيل الدخول</h3>
+                    <p id="errorMessage">يجب تسجيل الدخول أولاً لبدء المحادثة مع فريق الدعم</p>
+                    <div class="action-buttons">
+                        <button id="retryButton" class="btn btn-primary">
+                            <i class="fas fa-redo"></i> المحاولة مرة أخرى
+                        </button>
+                        <button id="redirectButton" class="btn btn-outline">
+                            <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="verificationSuccess" class="verification-success" style="display: none;">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="verification-message">
+                        تم التحقق بنجاح! جارٍ توجيهك إلى الدردشة...
+                    </div>
+                    <div class="user-info">
+                        <div class="user-avatar" id="userAvatarPreview">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="user-name" id="userName">جاري التحميل...</div>
+                        <div class="user-email" id="userEmail">جاري التحميل...</div>
+                        <div class="user-status status-verified">
+                            <i class="fas fa-check-circle"></i> حساب مفعل
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- شاشة الدردشة (تظهر بعد التحقق) -->
         <div id="chatScreen">
             <div class="chat-header">
@@ -937,11 +1104,8 @@
                         <i class="fas fa-user"></i>
                     </div>
                     <div class="user-name-chat" id="userNameChat">مستخدم</div>
-                    <button class="back-btn" id="backBtn" title="الرجوع للخلف">
-                        <i class="fas fa-arrow-left"></i>
-                    </button>
-                    <button class="back-btn home-btn" id="homeBtn" title="الصفحة الرئيسية">
-                        <i class="fas fa-home"></i>
+                    <button class="back-btn" id="backBtn">
+                        <i class="fas fa-arrow-left"></i> الرجوع
                     </button>
                 </div>
             </div>
@@ -977,129 +1141,149 @@
             </div>
         </div>
         
-        <!-- صفحة الأسئلة الشائعة -->
-        <div class="faq-container" id="faqScreen">
-            <button class="faq-back-btn" id="faqBackBtn">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            
+        <!-- شاشة الأسئلة الشائعة -->
+        <div id="faqScreen">
             <div class="faq-header">
-                <h2 class="faq-title">الأسئلة الشائعة</h2>
-                <p class="faq-subtitle">إجابات على أكثر الأسئلة شيوعاً من مستخدمينا</p>
+                <h1 class="page-title">الأسئلة الشائعة</h1>
+                <p class="page-subtitle">إجابات عن أكثر الأسئلة شيوعاً</p>
             </div>
             
-            <div class="faq-content">
-                <div class="faq-item">
-                    <div class="faq-question">
-                        <span>كيف يمكنني إنشاء حساب جديد؟</span>
-                        <i class="fas fa-chevron-down faq-icon"></i>
+            <div class="faq-container">
+                <div class="faq-section">
+                    <h3 class="faq-section-title">أسئلة عامة</h3>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>كيف يمكنني إنشاء حساب جديد؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>يمكنك إنشاء حساب جديد عن طريق الضغط على زر "تسجيل حساب جديد" في صفحة تسجيل الدخول. ستحتاج إلى إدخال بريدك الإلكتروني وكلمة مرور قوية لإنشاء الحساب.</p>
+                        </div>
                     </div>
-                    <div class="faq-answer">
-                        <p>لإنشاء حساب جديد، اتبع الخطوات التالية:</p>
-                        <ol>
-                            <li>اضغط على زر "تسجيل حساب جديد" في الصفحة الرئيسية</li>
-                            <li>املأ المعلومات المطلوبة (الاسم، البريد الإلكتروني، كلمة المرور)</li>
-                            <li>اضغط على زر "إنشاء حساب"</li>
-                            <li>سوف تصلك رسالة تفعيل على بريدك الإلكتروني</li>
-                            <li>اضغط على رابط التفعيل في الرسالة</li>
-                        </ol>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>هل يمكنني تغيير كلمة المرور؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>نعم، يمكنك تغيير كلمة المرور من خلال الذهاب إلى إعدادات الحساب واختيار "تغيير كلمة المرور". ستحتاج إلى إدخال كلمة المرور الحالية ثم كلمة المرور الجديدة.</p>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="faq-item">
-                    <div class="faq-question">
-                        <span>كيف يمكنني استعادة كلمة المرور؟</span>
-                        <i class="fas fa-chevron-down faq-icon"></i>
-                    </div>
-                    <div class="faq-answer">
-                        <p>لإعادة تعيين كلمة المرور:</p>
-                        <ol>
-                            <li>اضغط على "نسيت كلمة المرور" في صفحة تسجيل الدخول</li>
-                            <li>أدخل البريد الإلكتروني المرتبط بحسابك</li>
-                            <li>اضغط على زر "إرسال رابط التعيين"</li>
-                            <li>افتح الرسالة التي وصلتك على بريدك الإلكتروني</li>
-                            <li>اضغط على الرابط المرفق واتبع التعليمات</li>
-                        </ol>
-                    </div>
-                </div>
-                
-                <div class="faq-item">
-                    <div class="faq-question">
-                        <span>كيف يمكنني تحديث معلومات حسابي؟</span>
-                        <i class="fas fa-chevron-down faq-icon"></i>
-                    </div>
-                    <div class="faq-answer">
-                        <p>لتحديث معلومات حسابك:</p>
-                        <ol>
-                            <li>سجل الدخول إلى حسابك</li>
-                            <li>انتقل إلى "إعدادات الحساب"</li>
-                            <li>قم بتعديل المعلومات التي ترغب في تغييرها</li>
-                            <li>اضغط على زر "حفظ التغييرات"</li>
-                        </ol>
-                        <p>ملاحظة: بعض التغييرات قد تتطلب التحقق عبر البريد الإلكتروني.</p>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>هل الخدمة مجانية؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>نعم، الخدمة الأساسية مجانية تماماً. قد نقدم ميزات إضافية مدفوعة في المستقبل، لكن الوظائف الأساسية ستظل مجانية.</p>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="faq-item">
-                    <div class="faq-question">
-                        <span>ما هي طرق الدفع المتاحة؟</span>
-                        <i class="fas fa-chevron-down faq-icon"></i>
+                <div class="faq-section">
+                    <h3 class="faq-section-title">المشاكل الفنية</h3>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>لم أستطع تسجيل الدخول إلى حسابي، ماذا أفعل؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>إذا لم تستطع تسجيل الدخول، تأكد من أنك تستخدم البريد الإلكتروني وكلمة المرور الصحيحة. يمكنك استخدام خاصية "نسيت كلمة المرور" لإعادة تعيينها. إذا استمرت المشكلة، تواصل مع فريق الدعم.</p>
+                        </div>
                     </div>
-                    <div class="faq-answer">
-                        <p>نحن نقبل طريقة الدفع التالية:</p>
-                        <ul>
-                            <li>الدفع عند الاستلام فقط</li>
-                        </ul>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>لم يتم تحميل الصفحة بشكل صحيح، ما الحل؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>جرب الخطوات التالية:
+                                <ol>
+                                    <li>تحديث الصفحة</li>
+                                    <li>حذف ذاكرة التخزين المؤقت للمتصفح</li>
+                                    <li>المحاولة من متصفح آخر</li>
+                                    <li>تأكد من اتصالك بالإنترنت</li>
+                                </ol>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>لم أتلق رسالة التأكيد على البريد الإلكتروني</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>تحقق من مجلد الرسائل غير المرغوب فيها (Spam) في بريدك الإلكتروني. إذا لم تجد الرسالة، انتظر بضع دقائق ثم حاول إعادة إرسال رسالة التأكيد. إذا استمرت المشكلة، تواصل مع فريق الدعم.</p>
+                        </div>
                     </div>
                 </div>
                 
-                <div class="faq-item">
-                    <div class="faq-question">
-                        <span>كيف يمكنني التواصل مع الدعم الفني؟</span>
-                        <i class="fas fa-chevron-down faq-icon"></i>
+                <div class="faq-section">
+                    <h3 class="faq-section-title">حول الخدمة</h3>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>ما هي ساعات عمل الدعم الفني؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>فريق الدعم الفني متاح على مدار الساعة طوال أيام الأسبوع. ستتلقى الرد على استفساراتك خلال 24 ساعة كحد أقصى.</p>
+                        </div>
                     </div>
-                    <div class="faq-answer">
-                        <p>يمكنك التواصل مع فريق الدعم الفني بعدة طرق:</p>
-                        <ul>
-                            <li>الدردشة المباشرة عبر الموقع (متاحة 24/7)</li>
-                            <li>البريد الإلكتروني: support@example.com</li>
-                            <li>واتساب: +9647823053419</li>
-                            <li>الهاتف: +9647823053419</li>
-                        </ul>
-                        <p>متوسط وقت الرد خلال ساعة واحدة في أيام العمل الرسمية.</p>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>هل تدعم الخدمة اللغات الأخرى؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>حالياً، الخدمة متوفرة باللغة العربية فقط. نعمل على إضافة لغات أخرى في المستقبل القريب.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <span>كيف يمكنني الإبلاغ عن خطأ في النظام؟</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>يمكنك الإبلاغ عن الأخطاء من خلال الذهاب إلى صفحة "اتصل بنا" أو من خلال الدردشة المباشرة مع فريق الدعم. يرجى تقديم وصف مفصل للمشكلة.</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <button class="back-to-menu" id="backToMenuBtn">
-                <i class="fas fa-home"></i> العودة إلى القائمة الرئيسية
-            </button>
         </div>
-        
-        <!-- تأكيد تسجيل الدخول -->
-        <div class="login-confirmation" id="loginConfirmation">
-            <div class="confirmation-box">
-                <div class="confirmation-icon">
-                    <i class="fas fa-exclamation-circle"></i>
-                </div>
-                <div class="confirmation-message">
-                    يجب تسجيل الدخول أولاً للاستمرار في استخدام الخدمة
-                </div>
-                <div class="action-buttons">
-                    <button id="confirmLoginBtn" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
-                    </button>
-                    <button id="cancelLoginBtn" class="btn btn-outline">
-                        <i class="fas fa-times"></i> إلغاء
-                    </button>
-                </div>
+    </div>
+    
+    <!-- تأكيد تسجيل الدخول -->
+    <div class="login-confirmation" id="loginConfirmation">
+        <div class="confirmation-box">
+            <div class="confirmation-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div class="confirmation-message">
+                يجب تسجيل الدخول أولاً للاستمرار في استخدام الخدمة
+            </div>
+            <div class="action-buttons">
+                <button id="confirmLoginBtn" class="btn btn-primary">
+                    <i class="fas fa-sign-in-alt"></i> الانتقال إلى تسجيل الدخول
+                </button>
+                <button id="cancelLoginBtn" class="btn btn-outline">
+                    <i class="fas fa-times"></i> إلغاء
+                </button>
             </div>
         </div>
-        
-        <!-- إشعار النسخ -->
-        <div class="copy-notification" id="copyNotification">
-            <i class="fas fa-check-circle"></i> تم نسخ الرسالة إلى الحافظة
-        </div>
+    </div>
+    
+    <!-- إشعار النسخ -->
+    <div class="copy-notification" id="copyNotification">
+        <i class="fas fa-check-circle"></i> تم نسخ الرسالة إلى الحافظة
     </div>
     
     <!-- إضافة Firebase SDK -->
@@ -1133,20 +1317,28 @@
         const phoneBtn = document.getElementById('phoneBtn');
         const emailBtn = document.getElementById('emailBtn');
         const faqScreen = document.getElementById('faqScreen');
-        const backToMenuBtn = document.getElementById('backToMenuBtn');
-        const faqBackBtn = document.getElementById('faqBackBtn');
         
         // عناصر التحقق
+        const verificationScreen = document.getElementById('verificationScreen');
+        const verificationOverlay = document.getElementById('verificationOverlay');
         const verificationMessage = document.getElementById('verificationMessage');
-        const loginRedirectBtn = document.getElementById('loginRedirectBtn');
+        const verificationError = document.getElementById('verificationError');
+        const errorMessage = document.getElementById('errorMessage');
+        const retryButton = document.getElementById('retryButton');
+        const redirectButton = document.getElementById('redirectButton');
+        const verificationSuccess = document.getElementById('verificationSuccess');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const userAvatarPreview = document.getElementById('userAvatarPreview');
         const backButton = document.getElementById('backButton');
+        const progressBar = document.getElementById('progressBar');
         
         // عناصر الدردشة
         const chatScreen = document.getElementById('chatScreen');
         const userNameChat = document.getElementById('userNameChat');
         const userAvatar = document.getElementById('userAvatar');
         const backBtn = document.getElementById('backBtn');
-        const homeBtn = document.getElementById('homeBtn');
         const messagesContainer = document.getElementById('messagesContainer');
         const noMessages = document.getElementById('noMessages');
         const messageInput = document.getElementById('messageInput');
@@ -1163,18 +1355,22 @@
         // متغيرات المستخدم
         let currentUser = null;
         let userDisplayName = "مستخدم";
-        let userPhotoURL = null;
+        let userEmailAddress = "بريد غير معروف";
         let isFirstMessage = true;
         let replyingTo = null;
         let editingMessage = null;
         let messagesRef = null;
+        let chatInitialized = false;
 
         // زر الرجوع العام
         backButton.addEventListener('click', () => {
             if (chatScreen.style.display === 'flex') {
                 chatScreen.style.display = 'none';
                 mainMenuScreen.style.display = 'flex';
-            } else if (faqScreen.style.display === 'block') {
+            } else if (verificationScreen.style.display === 'block') {
+                verificationScreen.style.display = 'none';
+                mainMenuScreen.style.display = 'flex';
+            } else if (faqScreen.style.display === 'flex') {
                 faqScreen.style.display = 'none';
                 mainMenuScreen.style.display = 'flex';
             } else {
@@ -1187,40 +1383,19 @@
             chatScreen.style.display = 'none';
             mainMenuScreen.style.display = 'flex';
         });
-        
-        // زر الصفحة الرئيسية في شاشة الدردشة
-        homeBtn.addEventListener('click', () => {
-            window.location.href = 'index.html';
-        });
-        
-        // زر الرجوع في صفحة الأسئلة الشائعة
-        faqBackBtn.addEventListener('click', () => {
-            faqScreen.style.display = 'none';
-            mainMenuScreen.style.display = 'flex';
-        });
 
         // زر بدء المحادثة
         startChatBtn.addEventListener('click', () => {
-            if (auth.currentUser) {
-                // المستخدم مسجل، توجيه مباشر للدردشة
-                showChatScreen();
-            } else {
-                // المستخدم غير مسجل، عرض رسالة التحقق في الأعلى
-                verificationMessage.style.display = 'block';
-            }
+            mainMenuScreen.style.display = 'none';
+            verificationScreen.style.display = 'block';
+            verifyUser();
         });
         
         // زر الأسئلة الشائعة
         faqBtn.addEventListener('click', () => {
             mainMenuScreen.style.display = 'none';
-            faqScreen.style.display = 'block';
+            faqScreen.style.display = 'flex';
             initFAQ();
-        });
-        
-        // زر العودة من صفحة الأسئلة الشائعة
-        backToMenuBtn.addEventListener('click', () => {
-            faqScreen.style.display = 'none';
-            mainMenuScreen.style.display = 'flex';
         });
         
         // زر واتساب
@@ -1237,41 +1412,82 @@
         emailBtn.addEventListener('click', () => {
             window.location.href = 'mailto:kokabmazar@gmail.com?subject=استفسار%20عن%20الخدمة&body=مرحباً%20فريق%20الدعم،';
         });
-        
-        // توجيه لتسجيل الدخول
-        loginRedirectBtn.addEventListener('click', () => {
-            window.location.href = 'account.html';
-        });
 
-        // تهيئة صفحة الأسئلة الشائعة
-        function initFAQ() {
-            const faqItems = document.querySelectorAll('.faq-item');
+        // التحقق من حالة تسجيل الدخول والبيانات
+        function verifyUser() {
+            verificationMessage.innerHTML = 'جارٍ التحقق من تسجيل الدخول والبيانات...';
+            verificationError.style.display = 'none';
+            verificationSuccess.style.display = 'none';
+            loadingSpinner.style.display = 'block';
             
-            faqItems.forEach(item => {
-                const question = item.querySelector('.faq-question');
-                const answer = item.querySelector('.faq-answer');
+            // محاكاة شريط التقدم
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
                 
-                question.addEventListener('click', () => {
-                    // إغلاق جميع الإجابات الأخرى
-                    faqItems.forEach(otherItem => {
-                        if (otherItem !== item) {
-                            otherItem.classList.remove('active');
-                            otherItem.querySelector('.faq-answer').classList.remove('show');
-                        }
-                    });
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '0%';
+                }
+            }, 300);
+            
+            // التحقق من حالة المصادقة
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    // المستخدم مسجل
+                    currentUser = user;
                     
-                    // فتح/إغلاق الإجابة الحالية
-                    item.classList.toggle('active');
-                    answer.classList.toggle('show');
-                });
+                    // جلب بيانات المستخدم من قاعدة البيانات
+                    database.ref('users/' + user.uid).once('value').then(snapshot => {
+                        const userData = snapshot.val();
+                        
+                        if (userData) {
+                            userDisplayName = userData.name || user.displayName || "مستخدم";
+                            userEmailAddress = userData.email || user.email || "بريد غير معروف";
+                        } else {
+                            // استخدام بيانات من حساب Google إذا كانت متاحة
+                            userDisplayName = user.displayName || "مستخدم";
+                            userEmailAddress = user.email || "بريد غير معروف";
+                        }
+                        
+                        // تحديث شاشة التحقق الناجح
+                        setTimeout(() => {
+                            loadingSpinner.style.display = 'none';
+                            verificationSuccess.style.display = 'block';
+                            verificationMessage.innerHTML = 'تم التحقق بنجاح! جارٍ توجيهك...';
+                            
+                            // عرض بيانات المستخدم
+                            userName.textContent = userDisplayName;
+                            userEmail.textContent = userEmailAddress;
+                            userAvatarPreview.textContent = userDisplayName.charAt(0);
+                            
+                            // توجيه المستخدم بعد تأخير إلى شاشة الدردشة
+                            setTimeout(() => {
+                                showChatScreen();
+                            }, 2000);
+                        }, 1500);
+                    }).catch(error => {
+                        showVerificationError('خطأ في جلب بيانات المستخدم: ' + error.message);
+                    });
+                } else {
+                    // المستخدم غير مسجل
+                    showVerificationError('لم يتم تسجيل الدخول');
+                }
             });
         }
-
+        
+        // إظهار خطأ التحقق
+        function showVerificationError(message) {
+            loadingSpinner.style.display = 'none';
+            verificationError.style.display = 'block';
+            errorMessage.textContent = message;
+        }
+        
         // إظهار شاشة الدردشة
         function showChatScreen() {
+            verificationScreen.style.display = 'none';
             chatScreen.style.display = 'flex';
-            mainMenuScreen.style.display = 'none';
-            verificationMessage.style.display = 'none';
             
             // عرض معلومات المستخدم في شريط الدردشة
             userNameChat.textContent = userDisplayName;
@@ -1301,9 +1517,6 @@
                 userId: currentUser.uid
             };
             
-            // إضافة الرسالة إلى الشاشة
-            addMessageToUI(message);
-            
             // مسح حقل الإدخال وإعادة تعيين حالة الرد
             messageInput.value = '';
             replyingTo = null;
@@ -1323,6 +1536,7 @@
         // إرسال رسالة إلى Firebase
         function sendMessageToFirebase(message) {
             const newMessageRef = messagesRef.push();
+            message.id = newMessageRef.key; // إضافة معرف الرسالة
             newMessageRef.set(message);
         }
         
@@ -1339,15 +1553,12 @@
                 userName: 'فريق الدعم'
             };
             
-            // إضافة الرسالة إلى الشاشة
-            addMessageToUI(replyMessage);
-            
             // إرسال الرد إلى Firebase
             sendMessageToFirebase(replyMessage);
         }
         
         // إضافة رسالة إلى واجهة المستخدم
-        function addMessageToUI(msg, isNew = true) {
+        function addMessageToUI(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
             messageDiv.classList.add(`message-${msg.type}`);
@@ -1407,16 +1618,8 @@
                 <div class="message-time">${timeString}</div>
             `;
             
-            if (isNew) {
-                messagesContainer.appendChild(messageDiv);
-            } else {
-                const existingMessage = document.querySelector(`.message[data-id="${msg.id}"]`);
-                if (existingMessage) {
-                    existingMessage.replaceWith(messageDiv);
-                } else {
-                    messagesContainer.appendChild(messageDiv);
-                }
-            }
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
             
             // إضافة مستمعي الأحداث للأزرار
             const copyBtn = messageDiv.querySelector('.copy-btn');
@@ -1428,8 +1631,6 @@
             editBtn?.addEventListener('click', () => editMessage(msg));
             deleteBtn?.addEventListener('click', () => deleteMessage(msg));
             replyBtn?.addEventListener('click', () => replyToMessage(msg));
-            
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
         // نسخ رسالة
@@ -1540,7 +1741,11 @@
         
         // تهيئة الدردشة
         function initChat() {
+            if (chatInitialized) return;
+            chatInitialized = true;
+            
             messagesContainer.innerHTML = '';
+            noMessages.style.display = 'flex';
             
             // إنشاء مرجع للرسائل في Firebase خاصة بالمستخدم
             messagesRef = database.ref('userChats/' + currentUser.uid + '/messages');
@@ -1549,11 +1754,15 @@
             messagesRef.on('child_added', snapshot => {
                 const msg = snapshot.val();
                 msg.id = snapshot.key;
-                addMessageToUI(msg);
                 
-                // إخفاء رسالة "لا توجد رسائل" إذا كانت هناك رسائل
-                if (noMessages.style.display !== 'none') {
-                    noMessages.style.display = 'none';
+                // إضافة الرسالة فقط إذا لم تكن موجودة مسبقاً
+                if (!document.querySelector(`.message[data-id="${msg.id}"]`)) {
+                    addMessageToUI(msg);
+                    
+                    // إخفاء رسالة "لا توجد رسائل" إذا كانت هناك رسائل
+                    if (noMessages.style.display !== 'none') {
+                        noMessages.style.display = 'none';
+                    }
                 }
             });
             
@@ -1561,25 +1770,23 @@
             isFirstMessage = true;
         }
         
-        // مستمع حالة المصادقة
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                // المستخدم مسجل
-                currentUser = user;
-                userDisplayName = user.displayName || "مستخدم";
+        // تهيئة الأسئلة الشائعة
+        function initFAQ() {
+            const faqItems = document.querySelectorAll('.faq-item');
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
                 
-                // جلب بيانات إضافية للمستخدم من قاعدة البيانات
-                database.ref('users/' + user.uid).once('value').then(snapshot => {
-                    const userData = snapshot.val();
-                    if (userData) {
-                        userDisplayName = userData.name || userDisplayName;
-                    }
+                question.addEventListener('click', () => {
+                    item.classList.toggle('active');
                 });
-            } else {
-                // المستخدم غير مسجل
-                currentUser = null;
-                userDisplayName = "مستخدم";
-            }
+            });
+        }
+        
+        // إعداد مستمعي الأحداث للتحقق
+        retryButton.addEventListener('click', verifyUser);
+        redirectButton.addEventListener('click', () => {
+            loginConfirmation.style.display = 'flex';
         });
         
         // تأكيد الانتقال لتسجيل الدخول
@@ -1605,9 +1812,12 @@
         document.addEventListener('DOMContentLoaded', () => {
             // إظهار القائمة الرئيسية فقط
             mainMenuScreen.style.display = 'flex';
+            verificationScreen.style.display = 'none';
             chatScreen.style.display = 'none';
             faqScreen.style.display = 'none';
-            verificationMessage.style.display = 'none';
+            
+            // إعادة تعيين حالة المحادثة
+            chatInitialized = false;
         });
     </script>
 </body>
