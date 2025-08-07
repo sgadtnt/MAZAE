@@ -15,8 +15,8 @@
             --gray: #6c757d;
             --light: #f8f9fa;
             --dark: #1d3557;
-            --radius: 18px;
-            --shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            --radius: 16px;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             --transition: all 0.3s ease;
             --accent: #4895ef;
             --google-red: #DB4437;
@@ -33,50 +33,154 @@
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
             min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             color: #333;
             line-height: 1.6;
-            padding: 10px;
+            overflow-x: hidden;
         }
         
         .container {
             width: 100%;
-            max-width: 900px;
+            max-width: 100%;
             background: white;
-            border-radius: var(--radius);
             box-shadow: var(--shadow);
             overflow: hidden;
             position: relative;
-            height: 95vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            border: 1px solid rgba(0, 0, 0, 0.05);
+            border: none;
         }
         
-        /* شاشة التحقق */
-        header {
+        /* شاشة القائمة الرئيسية */
+        #mainMenuScreen {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        .main-header {
             background: var(--gradient);
             color: white;
-            padding: 20px 15px;
+            padding: 18px 15px;
             text-align: center;
-            border-radius: var(--radius) var(--radius) 0 0;
             position: relative;
         }
         
         .page-title {
-            font-size: 1.7rem;
+            font-size: 1.5rem;
             font-weight: 800;
             margin-bottom: 8px;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-            letter-spacing: -0.5px;
         }
         
         .page-subtitle {
-            font-size: 1rem;
+            font-size: 0.9rem;
             opacity: 0.9;
             font-weight: 400;
+        }
+        
+        .menu-container {
+            flex: 1;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        
+        .menu-card {
+            width: 100%;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #eef2f7;
+            transition: var(--transition);
+        }
+        
+        .menu-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .menu-icon {
+            font-size: 2.8rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .menu-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--dark);
+        }
+        
+        .menu-description {
+            color: var(--gray);
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        .menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .menu-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px;
+            border-radius: var(--radius);
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            border: none;
+            width: 100%;
+            text-decoration: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+            background: var(--gradient);
+            color: white;
+        }
+        
+        .menu-btn i {
+            font-size: 1.2rem;
+        }
+        
+        .contact-btn {
+            background: #25D366;
+        }
+        
+        .phone-btn {
+            background: #4361ee;
+        }
+        
+        .email-btn {
+            background: #DB4437;
+        }
+        
+        .menu-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0.9;
+        }
+        
+        /* شاشة التحقق */
+        #verificationScreen {
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
         }
         
         .verification-overlay {
@@ -91,7 +195,7 @@
         }
         
         .verification-icon {
-            font-size: 4rem;
+            font-size: 3.5rem;
             color: var(--accent);
             margin: 15px 0;
             animation: pulse 1.5s infinite;
@@ -99,15 +203,15 @@
         
         @keyframes pulse {
             0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.08); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 0.7; }
             100% { transform: scale(1); opacity: 1; }
         }
         
         .verification-message {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             color: var(--dark);
             margin-bottom: 20px;
-            padding: 0 15px;
+            padding: 0 10px;
             line-height: 1.6;
             font-weight: 500;
         }
@@ -119,13 +223,13 @@
             padding: 15px;
             margin: 15px 0;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
         }
         
         .verification-error h3 {
             color: var(--danger);
             margin-bottom: 12px;
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -135,13 +239,13 @@
         .verification-error p {
             margin-bottom: 12px;
             color: #5c6770;
-            font-size: 1rem;
+            font-size: 0.95rem;
             line-height: 1.6;
         }
         
         .action-buttons {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 10px;
             justify-content: center;
             margin-top: 20px;
@@ -152,16 +256,16 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            padding: 12px 20px;
+            padding: 14px;
             border-radius: 50px;
             font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
             transition: var(--transition);
             border: none;
-            min-width: 160px;
+            width: 100%;
             text-decoration: none;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         
         .btn-primary {
@@ -177,18 +281,18 @@
         }
         
         .btn:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 6px 15px rgba(67, 97, 238, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
         }
         
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(67, 97, 238, 0.2);
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(67, 97, 238, 0.2);
             border-top-color: var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 25px auto;
+            margin: 20px auto;
         }
         
         @keyframes spin {
@@ -197,9 +301,9 @@
         }
         
         .success-icon {
-            font-size: 4rem;
+            font-size: 3.5rem;
             color: var(--success);
-            margin: 20px 0;
+            margin: 15px 0;
             animation: scaleIn 0.5s ease-out;
         }
         
@@ -209,7 +313,7 @@
         }
         
         .verification-success {
-            padding: 25px 15px;
+            padding: 20px 15px;
             text-align: center;
             animation: fadeIn 0.8s ease-out;
         }
@@ -222,25 +326,25 @@
         .user-info {
             background: #f8f9fa;
             border-radius: var(--radius);
-            padding: 20px;
-            margin: 15px;
+            padding: 15px;
+            margin: 15px 0;
             text-align: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.06);
             border: 1px solid #eef2f7;
         }
         
         .user-avatar {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
-            margin: 0 auto 15px;
+            margin: 0 auto 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 2.5rem;
+            font-size: 2rem;
             font-weight: bold;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
             background-size: cover;
             background-position: center;
             background-color: var(--primary);
@@ -266,16 +370,16 @@
         }
         
         .user-name {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 800;
             color: var(--dark);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
         
         .user-email {
             color: var(--gray);
-            margin-bottom: 12px;
-            font-size: 1rem;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
             direction: ltr;
             text-align: center;
         }
@@ -287,7 +391,7 @@
             padding: 6px 15px;
             border-radius: 50px;
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.9rem;
             margin-top: 8px;
         }
         
@@ -307,7 +411,7 @@
         #chatScreen {
             display: none;
             flex-direction: column;
-            height: 100%;
+            height: 100vh;
         }
         
         .chat-header {
@@ -318,40 +422,40 @@
             justify-content: space-between;
             align-items: center;
             position: relative;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
             z-index: 10;
         }
         
         .logo {
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             font-weight: 800;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             letter-spacing: -0.5px;
         }
         
         .logo i {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             background: rgba(255, 255, 255, 0.2);
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         
         .user-info-chat {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         
         .user-avatar-chat {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.2);
             display: flex;
@@ -359,8 +463,8 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 1.1rem;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            font-size: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
             background-size: cover;
             background-position: center;
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -368,23 +472,27 @@
         
         .user-name-chat {
             font-weight: 700;
-            font-size: 1.1rem;
+            font-size: 1rem;
+            max-width: 100px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         
         .back-btn {
             background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
-            padding: 8px 15px;
+            padding: 6px 12px;
             border-radius: 50px;
             cursor: pointer;
             transition: var(--transition);
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            gap: 6px;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
         }
         
         .back-btn:hover {
@@ -403,40 +511,40 @@
         
         .support-header {
             background: var(--light);
-            padding: 12px 15px;
+            padding: 10px 15px;
             border-bottom: 1px solid #e1e5eb;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            gap: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             z-index: 5;
         }
         
         .support-avatar {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             background: var(--gradient);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.5rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            font-size: 1.3rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
         
         .support-info h3 {
-            font-size: 1.2rem;
-            margin-bottom: 3px;
+            font-size: 1.1rem;
+            margin-bottom: 2px;
             font-weight: 700;
         }
         
         .support-info p {
             color: var(--gray);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             font-weight: 500;
         }
         
@@ -451,11 +559,11 @@
         
         .messages-container {
             flex: 1;
-            padding: 15px;
+            padding: 12px 10px;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
             background: #fafbff;
             background-image: radial-gradient(#e0e7ff 1px, transparent 1px);
             background-size: 15px 15px;
@@ -463,17 +571,17 @@
         
         .message {
             max-width: 90%;
-            padding: 14px 18px;
+            padding: 12px 15px;
             border-radius: var(--radius);
             position: relative;
             animation: fadeIn 0.3s ease;
             line-height: 1.5;
-            font-size: 1rem;
-            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+            font-size: 0.95rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
@@ -495,12 +603,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
         
         .message-sender {
             font-weight: 700;
-            font-size: 1.05rem;
+            font-size: 0.95rem;
         }
         
         .message-user .message-sender {
@@ -509,7 +617,7 @@
         
         .message-actions {
             display: flex;
-            gap: 8px;
+            gap: 6px;
         }
         
         .message-action-btn {
@@ -517,11 +625,11 @@
             border: none;
             color: inherit;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             opacity: 0.8;
             transition: var(--transition);
-            width: 28px;
-            height: 28px;
+            width: 26px;
+            height: 26px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -535,9 +643,9 @@
         }
         
         .message-time {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             opacity: 0.8;
-            margin-top: 6px;
+            margin-top: 5px;
             text-align: right;
         }
         
@@ -557,34 +665,34 @@
         .reply-indicator {
             background: rgba(0, 0, 0, 0.05);
             border-left: 2px solid var(--primary);
-            padding: 8px;
+            padding: 6px 8px;
             border-radius: 6px;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
             opacity: 0.9;
         }
         
         .input-container {
-            padding: 15px;
+            padding: 12px 10px;
             background: white;
             border-top: 1px solid #e1e5eb;
             display: flex;
-            gap: 12px;
+            gap: 10px;
             align-items: center;
-            box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.05);
         }
         
         .message-input {
             flex: 1;
-            padding: 12px 15px;
+            padding: 10px 12px;
             border: 2px solid #e1e5eb;
             border-radius: var(--radius);
-            font-size: 1rem;
+            font-size: 0.95rem;
             transition: var(--transition);
             resize: none;
-            height: 60px;
+            height: 50px;
             font-family: inherit;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
         }
         
         .message-input:focus {
@@ -598,43 +706,43 @@
             color: white;
             border: none;
             border-radius: var(--radius);
-            width: 50px;
-            height: 50px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: var(--transition);
-            font-size: 1.2rem;
-            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.3);
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px rgba(67, 97, 238, 0.25);
         }
         
         .send-btn:hover {
             transform: scale(1.05) rotate(5deg);
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+            box-shadow: 0 3px 10px rgba(67, 97, 238, 0.35);
         }
         
         .no-messages {
             text-align: center;
             color: var(--gray);
-            padding: 30px;
+            padding: 25px 15px;
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 15px;
+            gap: 12px;
             opacity: 0.7;
         }
         
         .no-messages i {
-            font-size: 3rem;
+            font-size: 2.5rem;
             opacity: 0.3;
         }
         
         .no-messages p {
-            font-size: 1.1rem;
-            max-width: 500px;
+            font-size: 1rem;
+            max-width: 100%;
             line-height: 1.6;
         }
         
@@ -656,22 +764,23 @@
         .confirmation-box {
             background: white;
             border-radius: var(--radius);
-            padding: 25px 20px;
+            padding: 20px;
             text-align: center;
-            max-width: 450px;
-            width: 90%;
+            max-width: 90%;
+            width: 100%;
+            margin: 0 15px;
             box-shadow: var(--shadow);
         }
         
         .confirmation-icon {
-            font-size: 3rem;
+            font-size: 2.5rem;
             color: var(--primary);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         
         .confirmation-message {
-            font-size: 1.2rem;
-            margin-bottom: 25px;
+            font-size: 1.1rem;
+            margin-bottom: 20px;
             color: var(--dark);
             line-height: 1.6;
         }
@@ -680,25 +789,48 @@
         .edit-message-container {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 8px;
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            border-radius: var(--radius);
         }
         
         .edit-message-input {
             width: 100%;
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: var(--radius);
-            font-size: 1rem;
+            font-size: 0.95rem;
             resize: vertical;
-            min-height: 70px;
+            min-height: 60px;
             font-family: inherit;
         }
         
         .edit-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             justify-content: flex-end;
+        }
+        
+        .edit-btn-save, .edit-btn-cancel {
+            padding: 6px 15px;
+            border-radius: var(--radius);
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.9rem;
+        }
+        
+        .edit-btn-save {
+            background: var(--success);
+            color: white;
+        }
+        
+        .edit-btn-cancel {
+            background: var(--danger);
+            color: white;
         }
         
         /* زر الرجوع في شاشة التحقق */
@@ -708,18 +840,18 @@
             left: 15px;
             background: rgba(255, 255, 255, 0.2);
             border: none;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
             transition: var(--transition);
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
         
         .back-button:hover {
@@ -727,222 +859,136 @@
             transform: translateY(-2px);
         }
         
-        /* استجابات خاصة للشاشات الصغيرة جداً */
-        @media (max-width: 480px) {
-            .container {
-                height: 98vh;
-                border-radius: 0;
-            }
-            
-            header {
-                border-radius: 0;
-                padding: 15px 10px;
-            }
-            
-            .page-title {
-                font-size: 1.5rem;
-            }
-            
-            .page-subtitle {
-                font-size: 0.9rem;
-            }
-            
-            .verification-overlay {
-                padding: 15px 10px;
-            }
-            
-            .verification-icon {
-                font-size: 3.5rem;
-            }
-            
-            .verification-message {
-                font-size: 1.1rem;
-                padding: 0 10px;
-            }
-            
-            .verification-error {
-                padding: 12px;
-            }
-            
-            .verification-error h3 {
-                font-size: 1.1rem;
-            }
-            
-            .verification-error p {
-                font-size: 0.9rem;
-            }
-            
-            .action-buttons {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .btn {
-                width: 100%;
-                min-width: auto;
-                padding: 10px 15px;
-                font-size: 0.9rem;
-            }
-            
-            .user-info {
-                padding: 15px;
-                margin: 10px;
-            }
-            
-            .user-avatar {
-                width: 80px;
-                height: 80px;
-                font-size: 2rem;
-            }
-            
-            .user-name {
-                font-size: 1.3rem;
-            }
-            
-            .user-email {
-                font-size: 0.9rem;
-            }
-            
-            .user-status {
-                font-size: 0.9rem;
-            }
-            
-            .chat-header {
-                padding: 10px;
-            }
-            
-            .logo {
-                font-size: 1.1rem;
-            }
-            
-            .logo i {
-                width: 35px;
-                height: 35px;
-                font-size: 1.2rem;
-            }
-            
-            .user-name-chat {
-                font-size: 1rem;
-                max-width: 80px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            
-            .back-btn {
-                padding: 6px 12px;
-                font-size: 0.8rem;
-                gap: 5px;
-            }
-            
-            .support-header {
-                padding: 10px;
-                gap: 10px;
-            }
-            
-            .support-avatar {
-                width: 45px;
-                height: 45px;
-                font-size: 1.3rem;
-            }
-            
-            .support-info h3 {
-                font-size: 1.1rem;
-            }
-            
-            .support-info p {
-                font-size: 0.85rem;
-            }
-            
-            .messages-container {
-                padding: 10px;
-                gap: 12px;
-            }
-            
-            .message {
-                max-width: 95%;
-                padding: 12px 15px;
-                font-size: 0.95rem;
-            }
-            
-            .message-sender {
-                font-size: 0.95rem;
-            }
-            
-            .message-action-btn {
-                width: 26px;
-                height: 26px;
-                font-size: 0.85rem;
-            }
-            
-            .input-container {
-                padding: 10px;
-                gap: 10px;
-            }
-            
-            .message-input {
-                padding: 10px 12px;
-                height: 55px;
-                font-size: 0.95rem;
-            }
-            
-            .send-btn {
-                width: 45px;
-                height: 45px;
-                font-size: 1.1rem;
-            }
-            
-            .no-messages {
-                padding: 20px;
-            }
-            
-            .no-messages i {
-                font-size: 2.5rem;
-            }
-            
-            .no-messages p {
-                font-size: 1rem;
-            }
-            
-            .confirmation-box {
-                padding: 20px 15px;
-            }
-            
-            .confirmation-icon {
-                font-size: 2.5rem;
-            }
-            
-            .confirmation-message {
-                font-size: 1.1rem;
-            }
-            
-            .back-button {
-                top: 12px;
-                left: 12px;
-                width: 35px;
-                height: 35px;
-                font-size: 1.1rem;
-            }
+        /* رسالة النسخ */
+        .copy-notification {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: white;
+            padding: 10px 18px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            z-index: 1000;
+            display: none;
+            animation: slideUp 0.3s ease;
+            font-size: 0.9rem;
         }
         
-        /* استجابة خاصة للشاشات صغيرة جداً (أقل من 360px) */
-        @media (max-width: 360px) {
-            .user-name-chat {
-                display: none;
-            }
-            
-            .message-input {
-                font-size: 0.9rem;
-            }
-            
-            .btn {
-                padding: 8px 12px;
-                font-size: 0.85rem;
-            }
-            
-            .verification-message {
-                font-size: 1rem;
-            }
+        @keyframes slideUp {
+            from { bottom: -40px; opacity: 0; }
+            to { bottom: 15px; opacity: 1; }
+        }
+        
+        /* شريط التحميل */
+        .progress-bar {
+            height: 4px;
+            background: rgba(67, 97, 238, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        .progress {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        /* صفحة الأسئلة الشائعة */
+        .faq-container {
+            padding: 20px;
+            background: white;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin: 20px;
+            display: none;
+        }
+        
+        .faq-header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f4f9;
+        }
+        
+        .faq-title {
+            font-size: 1.8rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+        }
+        
+        .faq-subtitle {
+            color: var(--gray);
+            font-size: 1rem;
+        }
+        
+        .faq-item {
+            margin-bottom: 20px;
+            border: 1px solid #eef2f7;
+            border-radius: var(--radius);
+            overflow: hidden;
+            transition: var(--transition);
+        }
+        
+        .faq-item:hover {
+            box-shadow: var(--shadow);
+        }
+        
+        .faq-question {
+            background: #f8fafd;
+            padding: 15px 20px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--dark);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-answer {
+            padding: 15px 20px;
+            background: white;
+            color: var(--gray);
+            line-height: 1.7;
+            display: none;
+        }
+        
+        .faq-answer.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .faq-icon {
+            transition: var(--transition);
+        }
+        
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+        
+        .back-to-menu {
+            display: block;
+            margin: 20px auto;
+            padding: 12px 25px;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            width: 200px;
+        }
+        
+        .back-to-menu:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 12px rgba(67, 97, 238, 0.25);
         }
     </style>
 </head>
@@ -953,12 +999,67 @@
             <i class="fas fa-arrow-left"></i>
         </button>
         
+        <!-- شاشة القائمة الرئيسية -->
+        <div id="mainMenuScreen">
+            <div class="main-header">
+                <h1 class="page-title">مركز الدعم الفني</h1>
+                <p class="page-subtitle">اختر طريقة التواصل المناسبة لك</p>
+            </div>
+            
+            <div class="menu-container">
+                <div class="menu-card">
+                    <div class="menu-icon">
+                        <i class="fas fa-comments"></i>
+                    </div>
+                    <h3 class="menu-title">الدردشة المباشرة</h3>
+                    <p class="menu-description">تواصل مع فريق الدعم الفني عبر الدردشة المباشرة لحل مشاكلك بشكل فوري</p>
+                    <div class="menu-buttons">
+                        <button class="menu-btn" id="startChatBtn">
+                            <i class="fas fa-headset"></i> بدأ محادثة
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="menu-card">
+                    <div class="menu-icon">
+                        <i class="fas fa-question-circle"></i>
+                    </div>
+                    <h3 class="menu-title">الأسئلة الشائعة</h3>
+                    <p class="menu-description">استعرض الأسئلة الشائعة التي قد توفر لك الحلول دون الحاجة للتواصل مع الدعم</p>
+                    <div class="menu-buttons">
+                        <button class="menu-btn" id="faqBtn">
+                            <i class="fas fa-book-open"></i> عرض الأسئلة
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="menu-card">
+                    <div class="menu-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <h3 class="menu-title">تواصل معنا مباشرة</h3>
+                    <p class="menu-description">لديك خيارات متعددة للتواصل مع فريق الدعم الفني عبر وسائل التواصل المفضلة لديك</p>
+                    <div class="menu-buttons">
+                        <button class="menu-btn contact-btn" id="whatsappBtn">
+                            <i class="fab fa-whatsapp"></i> واتساب
+                        </button>
+                        <button class="menu-btn phone-btn" id="phoneBtn">
+                            <i class="fas fa-phone"></i> هاتف
+                        </button>
+                        <button class="menu-btn email-btn" id="emailBtn">
+                            <i class="fas fa-envelope"></i> جيميل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- شاشة التحقق (تظهر أولاً) -->
         <div id="verificationScreen">
-            <header>
+            <div class="main-header">
                 <h1 class="page-title">نظام الدردشة المتكامل</h1>
                 <p class="page-subtitle">تواصل مع فريق الدعم الفني</p>
-            </header>
+            </div>
             
             <!-- شاشة التحقق من المستخدم -->
             <div id="verificationOverlay" class="verification-overlay">
@@ -967,6 +1068,10 @@
                 </div>
                 <div class="verification-message" id="verificationMessage">
                     جارٍ التحقق من بياناتك وتحميل الدردشة...
+                </div>
+                
+                <div class="progress-bar">
+                    <div class="progress" id="progressBar"></div>
                 </div>
                 
                 <div id="loadingSpinner" class="spinner"></div>
@@ -1053,6 +1158,105 @@
                 </div>
             </div>
         </div>
+        
+        <!-- صفحة الأسئلة الشائعة -->
+        <div class="faq-container" id="faqScreen">
+            <div class="faq-header">
+                <h2 class="faq-title">الأسئلة الشائعة</h2>
+                <p class="faq-subtitle">إجابات على أكثر الأسئلة شيوعاً من مستخدمينا</p>
+            </div>
+            
+            <div class="faq-content">
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>كيف يمكنني إنشاء حساب جديد؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>لإنشاء حساب جديد، اتبع الخطوات التالية:</p>
+                        <ol>
+                            <li>اضغط على زر "تسجيل حساب جديد" في الصفحة الرئيسية</li>
+                            <li>املأ المعلومات المطلوبة (الاسم، البريد الإلكتروني، كلمة المرور)</li>
+                            <li>اضغط على زر "إنشاء حساب"</li>
+                            <li>سوف تصلك رسالة تفعيل على بريدك الإلكتروني</li>
+                            <li>اضغط على رابط التفعيل في الرسالة</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>كيف يمكنني استعادة كلمة المرور؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>لإعادة تعيين كلمة المرور:</p>
+                        <ol>
+                            <li>اضغط على "نسيت كلمة المرور" في صفحة تسجيل الدخول</li>
+                            <li>أدخل البريد الإلكتروني المرتبط بحسابك</li>
+                            <li>اضغط على زر "إرسال رابط التعيين"</li>
+                            <li>افتح الرسالة التي وصلتك على بريدك الإلكتروني</li>
+                            <li>اضغط على الرابط المرفق واتبع التعليمات</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>كيف يمكنني تحديث معلومات حسابي؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>لتحديث معلومات حسابك:</p>
+                        <ol>
+                            <li>سجل الدخول إلى حسابك</li>
+                            <li>انتقل إلى "إعدادات الحساب"</li>
+                            <li>قم بتعديل المعلومات التي ترغب في تغييرها</li>
+                            <li>اضغط على زر "حفظ التغييرات"</li>
+                        </ol>
+                        <p>ملاحظة: بعض التغييرات قد تتطلب التحقق عبر البريد الإلكتروني.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>ما هي طرق الدفع المتاحة؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>نحن نقبل طرق الدفع التالية:</p>
+                        <ul>
+                            <li>بطاقات الائتمان (فيزا، ماستركارد)</li>
+                            <li>حسابات البنوك المحلية</li>
+                            <li>حوالات ويسترن يونيون</li>
+                            <li>محافظ إلكترونية (PayPal، Payeer)</li>
+                        </ul>
+                        <p>لمزيد من التفاصيل حول طرق الدفع، يمكنك زيارة صفحة "طرق الدفع" في الموقع.</p>
+                    </div>
+                </div>
+                
+                <div class="faq-item">
+                    <div class="faq-question">
+                        <span>كيف يمكنني التواصل مع الدعم الفني؟</span>
+                        <i class="fas fa-chevron-down faq-icon"></i>
+                    </div>
+                    <div class="faq-answer">
+                        <p>يمكنك التواصل مع فريق الدعم الفني بعدة طرق:</p>
+                        <ul>
+                            <li>الدردشة المباشرة عبر الموقع (متاحة 24/7)</li>
+                            <li>البريد الإلكتروني: support@example.com</li>
+                            <li>واتساب: +964782305341</li>
+                            <li>الهاتف: +964782305341</li>
+                        </ul>
+                        <p>متوسط وقت الرد خلال ساعة واحدة في أيام العمل الرسمية.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="back-to-menu" id="backToMenuBtn">
+                <i class="fas fa-home"></i> العودة إلى القائمة الرئيسية
+            </button>
+        </div>
     </div>
     
     <!-- تأكيد تسجيل الدخول -->
@@ -1075,27 +1279,18 @@
         </div>
     </div>
     
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import the functions you need from the SDKs you need
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { 
-            getAuth, 
-            onAuthStateChanged, 
-            signOut 
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-        import { 
-            getDatabase, 
-            ref, 
-            get,
-            set,
-            push,
-            onValue,
-            update,
-            remove
-        } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-        // Firebase configuration
+    <!-- إشعار النسخ -->
+    <div class="copy-notification" id="copyNotification">
+        <i class="fas fa-check-circle"></i> تم نسخ الرسالة إلى الحافظة
+    </div>
+    
+    <!-- إضافة Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
+    <script>
+        // تهيئة Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAG4EKrB3iLEV2hsB8b08ShpSO6PXDnGjg",
             authDomain: "zio3-8ffdd.firebaseapp.com",
@@ -1108,10 +1303,20 @@
         };
 
         // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const database = getDatabase(app);
+        const app = firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
 
+        // عناصر القائمة الرئيسية
+        const mainMenuScreen = document.getElementById('mainMenuScreen');
+        const startChatBtn = document.getElementById('startChatBtn');
+        const faqBtn = document.getElementById('faqBtn');
+        const whatsappBtn = document.getElementById('whatsappBtn');
+        const phoneBtn = document.getElementById('phoneBtn');
+        const emailBtn = document.getElementById('emailBtn');
+        const faqScreen = document.getElementById('faqScreen');
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        
         // عناصر التحقق
         const verificationScreen = document.getElementById('verificationScreen');
         const verificationOverlay = document.getElementById('verificationOverlay');
@@ -1126,6 +1331,7 @@
         const userEmail = document.getElementById('userEmail');
         const userAvatarPreview = document.getElementById('userAvatarPreview');
         const backButton = document.getElementById('backButton');
+        const progressBar = document.getElementById('progressBar');
         
         // عناصر الدردشة
         const chatScreen = document.getElementById('chatScreen');
@@ -1142,6 +1348,9 @@
         const confirmLoginBtn = document.getElementById('confirmLoginBtn');
         const cancelLoginBtn = document.getElementById('cancelLoginBtn');
         
+        // إشعار النسخ
+        const copyNotification = document.getElementById('copyNotification');
+        
         // متغيرات المستخدم
         let currentUser = null;
         let userDisplayName = "مستخدم";
@@ -1149,126 +1358,154 @@
         let isFirstMessage = true;
         let replyingTo = null;
         let editingMessage = null;
+        let messagesRef = null;
 
         // زر الرجوع العام
         backButton.addEventListener('click', () => {
-            window.location.href = 'index.html';
+            if (chatScreen.style.display === 'flex') {
+                chatScreen.style.display = 'none';
+                mainMenuScreen.style.display = 'flex';
+            } else if (verificationScreen.style.display === 'block') {
+                verificationScreen.style.display = 'none';
+                mainMenuScreen.style.display = 'flex';
+            } else if (faqScreen.style.display === 'block') {
+                faqScreen.style.display = 'none';
+                mainMenuScreen.style.display = 'flex';
+            } else {
+                window.location.href = 'index.html';
+            }
         });
         
         // زر الرجوع في شاشة الدردشة
         backBtn.addEventListener('click', () => {
-            window.location.href = 'index.html';
+            chatScreen.style.display = 'none';
+            mainMenuScreen.style.display = 'flex';
         });
 
+        // زر بدء المحادثة
+        startChatBtn.addEventListener('click', () => {
+            mainMenuScreen.style.display = 'none';
+            verificationScreen.style.display = 'block';
+            verifyUser();
+        });
+        
+        // زر الأسئلة الشائعة
+        faqBtn.addEventListener('click', () => {
+            mainMenuScreen.style.display = 'none';
+            faqScreen.style.display = 'block';
+            initFAQ();
+        });
+        
+        // زر العودة من صفحة الأسئلة الشائعة
+        backToMenuBtn.addEventListener('click', () => {
+            faqScreen.style.display = 'none';
+            mainMenuScreen.style.display = 'flex';
+        });
+        
+        // زر واتساب - تم تحديث الرقم إلى +964782305341
+        whatsappBtn.addEventListener('click', () => {
+            window.open('https://wa.me/964782305341', '_blank');
+        });
+        
+        // زر الهاتف - تم تحديث الرقم إلى +964782305341
+        phoneBtn.addEventListener('click', () => {
+            window.open('tel:+964782305341', '_blank');
+        });
+        
+        // زر الجيميل
+        emailBtn.addEventListener('click', () => {
+            window.location.href = 'mailto:kokabmazar@gmail.com?subject=استفسار%20عن%20الخدمة&body=مرحباً%20فريق%20الدعم،';
+        });
+
+        // تهيئة صفحة الأسئلة الشائعة
+        function initFAQ() {
+            const faqItems = document.querySelectorAll('.faq-item');
+            
+            faqItems.forEach(item => {
+                const question = item.querySelector('.faq-question');
+                const answer = item.querySelector('.faq-answer');
+                
+                question.addEventListener('click', () => {
+                    // إغلاق جميع الإجابات الأخرى
+                    faqItems.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            otherItem.classList.remove('active');
+                            otherItem.querySelector('.faq-answer').classList.remove('show');
+                        }
+                    });
+                    
+                    // فتح/إغلاق الإجابة الحالية
+                    item.classList.toggle('active');
+                    answer.classList.toggle('show');
+                });
+            });
+        }
+
         // التحقق من حالة تسجيل الدخول والبيانات
-        async function verifyUser() {
-            try {
-                verificationMessage.innerHTML = 'جارٍ التحقق من تسجيل الدخول والبيانات...';
-                verificationError.style.display = 'none';
-                verificationSuccess.style.display = 'none';
-                loadingSpinner.style.display = 'block';
+        function verifyUser() {
+            verificationMessage.innerHTML = 'جارٍ التحقق من تسجيل الدخول والبيانات...';
+            verificationError.style.display = 'none';
+            verificationSuccess.style.display = 'none';
+            loadingSpinner.style.display = 'block';
+            
+            // محاكاة شريط التقدم
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
                 
-                // الانتظار قليلاً لإظهار الرسالة
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                const user = auth.currentUser;
-                
-                if (!user) {
-                    throw new Error('لم تقم بتسجيل الدخول');
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    progressBar.style.width = '0%';
                 }
-                
-                verificationMessage.innerHTML = 'جارٍ التحقق من بيانات المستخدم...';
-                
-                // التحقق من وجود بيانات المستخدم في قاعدة البيانات
-                const userRef = ref(database, `users/${user.uid}`);
-                const snapshot = await get(userRef);
-                
-                let userData = null;
-                if (snapshot.exists()) {
-                    userData = snapshot.val();
-                }
-                
-                // التحقق ناجح - إظهار البيانات وتوجيه المستخدم
-                verificationSuccess.style.display = 'block';
-                verificationMessage.innerHTML = 'تم التحقق بنجاح! جارٍ توجيهك...';
-                loadingSpinner.style.display = 'none';
-                
-                // تحديد الاسم حسب أولوية المصادر
-                if (userData && userData.fullName) {
-                    userDisplayName = userData.fullName;
-                } else if (user.displayName) {
-                    userDisplayName = user.displayName;
-                } else if (userData && userData.name) {
-                    userDisplayName = userData.name;
-                } else if (user.email) {
-                    userDisplayName = user.email.split('@')[0];
-                } else {
-                    userDisplayName = "مستخدم";
-                }
-                
-                // تحديد صورة المستخدم
-                if (user.photoURL) {
-                    userPhotoURL = user.photoURL;
-                    userAvatarPreview.style.backgroundImage = `url('${user.photoURL}')`;
-                    userAvatarPreview.innerHTML = '';
-                } else if (userData && userData.photoURL) {
-                    userPhotoURL = userData.photoURL;
-                    userAvatarPreview.style.backgroundImage = `url('${userData.photoURL}')`;
-                    userAvatarPreview.innerHTML = '';
-                } else {
-                    userAvatarPreview.style.backgroundImage = '';
-                    userAvatarPreview.innerHTML = '<i class="fas fa-user"></i>';
-                }
-                
-                userName.textContent = userDisplayName;
-                userEmail.textContent = user.email || 'غير معروف';
-                
-                // توجيه المستخدم بعد تأخير إلى شاشة الدردشة
-                setTimeout(() => {
-                    showChatScreen(user);
-                }, 2000);
-                
-            } catch (error) {
-                showVerificationError(error.message);
-            }
+            }, 300);
+            
+            // تسجيل الدخول باستخدام حساب Google
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    // تم تسجيل الدخول بنجاح
+                    const user = result.user;
+                    currentUser = user;
+                    
+                    // محاكاة جلب بيانات المستخدم
+                    setTimeout(() => {
+                        loadingSpinner.style.display = 'none';
+                        verificationSuccess.style.display = 'block';
+                        verificationMessage.innerHTML = 'تم التحقق بنجاح! جارٍ توجيهك...';
+                        
+                        // استخدام بيانات المستخدم الفعلية من حساب Google
+                        userDisplayName = user.displayName || "مستخدم";
+                        userEmail.textContent = user.email || 'غير متاح';
+                        userName.textContent = userDisplayName;
+                        userAvatarPreview.textContent = userDisplayName.charAt(0);
+                        
+                        // توجيه المستخدم بعد تأخير إلى شاشة الدردشة
+                        setTimeout(() => {
+                            showChatScreen();
+                        }, 2000);
+                    }, 2000);
+                })
+                .catch(error => {
+                    showVerificationError(error.message);
+                });
         }
         
-        // عرض رسالة خطأ التحقق
+        // إظهار خطأ التحقق
         function showVerificationError(message) {
             loadingSpinner.style.display = 'none';
-            
-            let title = 'حدث خطأ';
-            let description = message;
-            
-            if (message === 'لم تقم بتسجيل الدخول') {
-                title = 'تسجيل الدخول مطلوب';
-                description = 'يرجى تسجيل الدخول للوصول إلى هذه الصفحة.';
-            } else if (message === 'لم يتم العثور على بيانات المستخدم') {
-                title = 'بيانات غير مكتملة';
-                description = 'يرجى إكمال بياناتك في صفحة الملف الشخصي.';
-            }
-            
-            errorMessage.innerHTML = `<strong>${title}</strong><br>${description}`;
             verificationError.style.display = 'block';
-            verificationMessage.innerHTML = 'فشل عملية التحقق';
+            errorMessage.textContent = message;
         }
         
         // إظهار شاشة الدردشة
-        function showChatScreen(user) {
+        function showChatScreen() {
             verificationScreen.style.display = 'none';
             chatScreen.style.display = 'flex';
             
             // عرض معلومات المستخدم في شريط الدردشة
             userNameChat.textContent = userDisplayName;
-            
-            // تحديث صورة المستخدم
-            if (userPhotoURL) {
-                userAvatar.style.backgroundImage = `url('${userPhotoURL}')`;
-                userAvatar.innerHTML = '';
-            } else {
-                userAvatar.style.backgroundImage = '';
-                userAvatar.textContent = userDisplayName.charAt(0);
-            }
+            userAvatar.textContent = userDisplayName.charAt(0);
             
             // تهيئة الدردشة
             initChat();
@@ -1276,45 +1513,33 @@
         
         // إرسال رسالة
         function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message) return;
+            const messageText = messageInput.value.trim();
+            if (!messageText) return;
             
             // إخفاء رسالة "لا توجد رسائل"
             if (noMessages.style.display !== 'none') {
                 noMessages.style.display = 'none';
             }
             
-            // إضافة الرسالة إلى الشاشة
-            addMessageToUI({
-                text: message,
+            // إنشاء كائن الرسالة
+            const message = {
+                text: messageText,
                 type: 'user',
                 timestamp: Date.now(),
                 userName: userDisplayName,
-                replyTo: replyingTo
-            }, true);
-            
-            // إرسال الرسالة إلى Firebase
-            const messagesRef = ref(database, 'messages');
-            const newMessageRef = push(messagesRef);
-            
-            const messageData = {
-                userId: currentUser.uid,
-                userName: userDisplayName,
-                text: message,
-                timestamp: Date.now(),
-                type: 'user'
+                replyTo: replyingTo,
+                userId: currentUser.uid
             };
             
-            // إضافة معلومات الرد إذا كان هناك رد
-            if (replyingTo) {
-                messageData.replyTo = replyingTo;
-            }
-            
-            set(newMessageRef, messageData);
+            // إضافة الرسالة إلى الشاشة
+            addMessageToUI(message);
             
             // مسح حقل الإدخال وإعادة تعيين حالة الرد
             messageInput.value = '';
             replyingTo = null;
+            
+            // إرسال الرسالة إلى Firebase
+            sendMessageToFirebase(message);
             
             // إرسال رد تلقائي فقط عند أول رسالة
             if (isFirstMessage) {
@@ -1325,40 +1550,34 @@
             }
         }
         
+        // إرسال رسالة إلى Firebase
+        function sendMessageToFirebase(message) {
+            const newMessageRef = messagesRef.push();
+            newMessageRef.set(message);
+        }
+        
         // إرسال رد تلقائي من الدعم
         function sendAutoReply() {
-            const replies = [
-                "شكراً لتواصلك معنا. كيف يمكننا مساعدتك؟",
-                "تم استلام رسالتك، وسيتم الرد عليك قريباً.",
-                "نحن هنا لمساعدتك. هل يمكنك توضيح مشكلتك أكثر؟",
-                "شكراً لرسالتك. أحد أعضاء فريق الدعم سيرد عليك قريباً."
-            ];
+            // الرد التلقائي الأول فقط
+            const reply = "شكراً لتواصلك معنا. كيف يمكننا مساعدتك؟";
             
-            const randomReply = replies[Math.floor(Math.random() * replies.length)];
-            
-            // إضافة الرسالة إلى الشاشة
-            addMessageToUI({
-                text: randomReply,
+            // إنشاء كائن الرسالة للدعم
+            const replyMessage = {
+                text: reply,
                 type: 'support',
                 timestamp: Date.now(),
                 userName: 'فريق الدعم'
-            }, true);
+            };
             
-            // إرسال الرسالة إلى Firebase
-            const messagesRef = ref(database, 'messages');
-            const newMessageRef = push(messagesRef);
+            // إضافة الرسالة إلى الشاشة
+            addMessageToUI(replyMessage);
             
-            set(newMessageRef, {
-                userId: 'support',
-                userName: 'فريق الدعم',
-                text: randomReply,
-                timestamp: Date.now(),
-                type: 'support'
-            });
+            // إرسال الرد إلى Firebase
+            sendMessageToFirebase(replyMessage);
         }
         
         // إضافة رسالة إلى واجهة المستخدم
-        function addMessageToUI(msg, isNew = false) {
+        function addMessageToUI(msg, isNew = true) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
             messageDiv.classList.add(`message-${msg.type}`);
@@ -1376,15 +1595,30 @@
                 `;
             }
             
+            // إعدادات الأزرار حسب نوع الرسالة
             let actionsSection = '';
             if (msg.type === 'user') {
                 actionsSection = `
                     <div class="message-actions">
+                        <button class="message-action-btn copy-btn" title="نسخ">
+                            <i class="fas fa-copy"></i>
+                        </button>
                         <button class="message-action-btn edit-btn" title="تعديل">
                             <i class="fas fa-edit"></i>
                         </button>
                         <button class="message-action-btn delete-btn" title="حذف">
                             <i class="fas fa-trash"></i>
+                        </button>
+                        <button class="message-action-btn reply-btn" title="رد">
+                            <i class="fas fa-reply"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                actionsSection = `
+                    <div class="message-actions">
+                        <button class="message-action-btn copy-btn" title="نسخ">
+                            <i class="fas fa-copy"></i>
                         </button>
                         <button class="message-action-btn reply-btn" title="رد">
                             <i class="fas fa-reply"></i>
@@ -1415,17 +1649,27 @@
             }
             
             // إضافة مستمعي الأحداث للأزرار
-            if (msg.type === 'user') {
-                const editBtn = messageDiv.querySelector('.edit-btn');
-                const deleteBtn = messageDiv.querySelector('.delete-btn');
-                const replyBtn = messageDiv.querySelector('.reply-btn');
-                
-                editBtn?.addEventListener('click', () => editMessage(msg));
-                deleteBtn?.addEventListener('click', () => deleteMessage(msg));
-                replyBtn?.addEventListener('click', () => replyToMessage(msg));
-            }
+            const copyBtn = messageDiv.querySelector('.copy-btn');
+            const editBtn = messageDiv.querySelector('.edit-btn');
+            const deleteBtn = messageDiv.querySelector('.delete-btn');
+            const replyBtn = messageDiv.querySelector('.reply-btn');
+            
+            copyBtn?.addEventListener('click', () => copyMessage(msg));
+            editBtn?.addEventListener('click', () => editMessage(msg));
+            deleteBtn?.addEventListener('click', () => deleteMessage(msg));
+            replyBtn?.addEventListener('click', () => replyToMessage(msg));
             
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // نسخ رسالة
+        function copyMessage(msg) {
+            navigator.clipboard.writeText(msg.text).then(() => {
+                copyNotification.style.display = 'block';
+                setTimeout(() => {
+                    copyNotification.style.display = 'none';
+                }, 2000);
+            });
         }
         
         // تعديل رسالة
@@ -1445,11 +1689,11 @@
             editActions.classList.add('edit-actions');
             
             const saveBtn = document.createElement('button');
-            saveBtn.classList.add('btn', 'btn-primary');
+            saveBtn.classList.add('edit-btn-save');
             saveBtn.innerHTML = '<i class="fas fa-save"></i> حفظ';
             
             const cancelBtn = document.createElement('button');
-            cancelBtn.classList.add('btn', 'btn-outline');
+            cancelBtn.classList.add('edit-btn-cancel');
             cancelBtn.innerHTML = '<i class="fas fa-times"></i> إلغاء';
             
             editActions.appendChild(saveBtn);
@@ -1469,7 +1713,11 @@
             saveBtn.addEventListener('click', () => {
                 const newText = editInput.value.trim();
                 if (newText && newText !== msg.text) {
-                    updateMessage(msg.id, newText);
+                    msg.text = newText;
+                    messageElement.querySelector('.message-content').textContent = newText;
+                    
+                    // تحديث الرسالة في Firebase
+                    updateMessageInFirebase(msg);
                 }
                 editContainer.remove();
             });
@@ -1479,21 +1727,33 @@
             });
         }
         
-        // تحديث الرسالة في قاعدة البيانات
-        function updateMessage(messageId, newText) {
-            const messageRef = ref(database, `messages/${messageId}`);
-            update(messageRef, {
-                text: newText,
-                edited: true
+        // تحديث الرسالة في Firebase
+        function updateMessageInFirebase(msg) {
+            if (!msg.id) return;
+            const messageRef = database.ref(`messages/${msg.id}`);
+            messageRef.update({
+                text: msg.text
             });
         }
         
         // حذف رسالة
         function deleteMessage(msg) {
             if (confirm('هل أنت متأكد من رغبتك في حذف هذه الرسالة؟')) {
-                const messageRef = ref(database, `messages/${msg.id}`);
-                remove(messageRef);
+                const messageElement = document.querySelector(`.message[data-id="${msg.id}"]`);
+                if (messageElement) {
+                    messageElement.remove();
+                    
+                    // حذف الرسالة من Firebase
+                    deleteMessageFromFirebase(msg);
+                }
             }
+        }
+        
+        // حذف الرسالة من Firebase
+        function deleteMessageFromFirebase(msg) {
+            if (!msg.id) return;
+            const messageRef = database.ref(`messages/${msg.id}`);
+            messageRef.remove();
         }
         
         // الرد على رسالة
@@ -1510,44 +1770,25 @@
         
         // تهيئة الدردشة
         function initChat() {
-            // تحميل الرسائل السابقة
-            const messagesRef = ref(database, 'messages');
+            messagesContainer.innerHTML = '';
             
-            onValue(messagesRef, (snapshot) => {
-                messagesContainer.innerHTML = '';
-                noMessages.style.display = 'none';
+            // إنشاء مرجع للرسائل في Firebase
+            messagesRef = database.ref('messages');
+            
+            // استماع للرسائل الجديدة
+            messagesRef.on('child_added', snapshot => {
+                const msg = snapshot.val();
+                msg.id = snapshot.key;
+                addMessageToUI(msg);
                 
-                if (!snapshot.exists()) {
-                    noMessages.style.display = 'flex';
-                    return;
-                }
-                
-                const messages = [];
-                snapshot.forEach((childSnapshot) => {
-                    messages.push({
-                        id: childSnapshot.key,
-                        ...childSnapshot.val()
-                    });
-                });
-                
-                // ترتيب الرسائل حسب الوقت
-                messages.sort((a, b) => a.timestamp - b.timestamp);
-                
-                // عرض الرسائل
-                messages.forEach(msg => {
-                    if (msg.userId === currentUser.uid || msg.userId === 'support') {
-                        addMessageToUI(msg);
-                    }
-                });
-                
-                // تحديث حالة أول رسالة
-                if (messages.length > 0) {
-                    const userMessages = messages.filter(msg => msg.userId === currentUser.uid);
-                    if (userMessages.length > 0) {
-                        isFirstMessage = false;
-                    }
+                // إخفاء رسالة "لا توجد رسائل" إذا كانت هناك رسائل
+                if (noMessages.style.display !== 'none') {
+                    noMessages.style.display = 'none';
                 }
             });
+            
+            // تحديث حالة أول رسالة
+            isFirstMessage = true;
         }
         
         // إعداد مستمعي الأحداث للتحقق
@@ -1558,13 +1799,7 @@
         
         // تأكيد الانتقال لتسجيل الدخول
         confirmLoginBtn.addEventListener('click', () => {
-            if (auth.currentUser) {
-                signOut(auth).then(() => {
-                    window.location.href = 'account.html';
-                });
-            } else {
-                window.location.href = 'account.html';
-            }
+            window.location.href = 'account.html';
         });
         
         // إلغاء الانتقال لتسجيل الدخول
@@ -1581,17 +1816,13 @@
             }
         });
         
-        // التحقق عند تحميل الصفحة
+        // تهيئة الصفحة عند التحميل
         document.addEventListener('DOMContentLoaded', () => {
-            // الاستماع لتغير حالة المصادقة
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    currentUser = user;
-                    verifyUser();
-                } else {
-                    window.location.href = 'account.html';
-                }
-            });
+            // إظهار القائمة الرئيسية فقط
+            mainMenuScreen.style.display = 'flex';
+            verificationScreen.style.display = 'none';
+            chatScreen.style.display = 'none';
+            faqScreen.style.display = 'none';
         });
     </script>
 </body>
