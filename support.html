@@ -2,8 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>نظام الدردشة المتكامل مع الحظر</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الدردشة للعميل</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
@@ -22,6 +22,11 @@
             --accent: #4895ef;
             --google-red: #DB4437;
             --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+            --color-background-light: #f0f2f5;
+            --color-text-dark: #212121;
+            --color-border-medium-blue: #d0d0d0;
+            --color-admin-message: #e3f2fd;
+            --color-user-message: #f5f5f5;
         }
         
         * {
@@ -32,27 +37,14 @@
         }
         
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa, #e4e7f1);
             color: #333;
+            min-height: 100vh;
             line-height: 1.6;
             overflow-x: hidden;
         }
         
-        .container {
-            width: 100%;
-            max-width: 100%;
-            background: white;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            position: relative;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            border: none;
-        }
-        
-        /* شاشة القائمة الرئيسية */
+        /* تنسيقات شاشة القائمة الرئيسية */
         #mainMenuScreen {
             display: flex;
             flex-direction: column;
@@ -94,6 +86,7 @@
         
         .menu-card {
             width: 100%;
+            max-width: 500px;
             background: white;
             border-radius: var(--radius);
             box-shadow: var(--shadow);
@@ -623,33 +616,6 @@
             color: rgba(255, 255, 255, 0.95);
         }
         
-        .message-actions {
-            display: flex;
-            gap: 6px;
-        }
-        
-        .message-action-btn {
-            background: none;
-            border: none;
-            color: inherit;
-            cursor: pointer;
-            font-size: 0.85rem;
-            opacity: 0.8;
-            transition: var(--transition);
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .message-action-btn:hover {
-            opacity: 1;
-            transform: scale(1.1);
-            background: rgba(255, 255, 255, 0.2);
-        }
-        
         .message-time {
             font-size: 0.75rem;
             opacity: 0.8;
@@ -668,16 +634,6 @@
         .message-content {
             word-wrap: break-word;
             line-height: 1.6;
-        }
-        
-        .reply-indicator {
-            background: rgba(0, 0, 0, 0.05);
-            border-left: 2px solid var(--primary);
-            padding: 6px 8px;
-            border-radius: 6px;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-            opacity: 0.9;
         }
         
         .input-container {
@@ -754,45 +710,6 @@
             line-height: 1.6;
         }
         
-        /* تأكيد تسجيل الدخول */
-        .login-confirmation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            display: none;
-        }
-        
-        .confirmation-box {
-            background: white;
-            border-radius: var(--radius);
-            padding: 20px;
-            text-align: center;
-            max-width: 90%;
-            width: 100%;
-            margin: 0 15px;
-            box-shadow: var(--shadow);
-        }
-        
-        .confirmation-icon {
-            font-size: 2.5rem;
-            color: var(--primary);
-            margin-bottom: 15px;
-        }
-        
-        .confirmation-message {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            color: var(--dark);
-            line-height: 1.6;
-        }
-        
         /* طبقة الحظر */
         .banned-overlay {
             position: absolute;
@@ -842,15 +759,43 @@
             box-shadow: 0 2px 8px rgba(67, 97, 238, 0.25) !important;
         }
         
-        .message-deleted {
-            background: #f8f9fa !important;
-            border: 1px dashed #e1e5eb !important;
-            color: var(--gray) !important;
-            opacity: 0.7;
+        /* تأكيد تسجيل الدخول */
+        .login-confirmation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
         }
         
-        .message-deleted .message-content {
-            font-style: italic;
+        .confirmation-box {
+            background: white;
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            max-width: 90%;
+            width: 100%;
+            margin: 0 15px;
+            box-shadow: var(--shadow);
+        }
+        
+        .confirmation-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .confirmation-message {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            line-height: 1.6;
         }
         
         /* واجهة الحظر في منطقة الرسائل */
@@ -881,6 +826,25 @@
             color: var(--gray);
             max-width: 80%;
             line-height: 1.7;
+        }
+        
+        .ban-reason {
+            background: #ffebee;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 15px 0;
+            max-width: 90%;
+            border: 1px solid #ffcdd2;
+            font-size: 0.95rem;
+        }
+        
+        .ban-reason-title {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #c62828;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         
         /* تحسينات للشاشات الصغيرة */
@@ -926,25 +890,6 @@
             .banned-messages-view h3 {
                 font-size: 1.3rem;
             }
-        }
-        
-        .ban-reason {
-            background: #ffebee;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 15px 0;
-            max-width: 90%;
-            border: 1px solid #ffcdd2;
-            font-size: 0.95rem;
-        }
-        
-        .ban-reason-title {
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: #c62828;
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
     </style>
 </head>
@@ -1230,7 +1175,7 @@
         let isUserBanned = false;
         let userRef = null;
         let banRef = null;
-
+        
         // زر الرجوع العام
         backButton.addEventListener('click', () => {
             if (chatScreen.style.display === 'flex') {
@@ -1279,7 +1224,7 @@
         contactAdminBtn.addEventListener('click', () => {
             window.open('https://wa.me/9647823053419', '_blank');
         });
-
+        
         // التحقق من حالة تسجيل الدخول والبيانات
         function verifyUser() {
             verificationMessage.innerHTML = 'جارٍ التحقق من تسجيل الدخول والبيانات...';
@@ -1300,13 +1245,20 @@
                         const userData = snapshot.val();
                         
                         if (userData) {
+                            // استخدام الاسم الكامل إذا كان متاحاً
                             userDisplayName = userData.name || user.displayName || "مستخدم";
-                            userEmailAddress = userData.email || user.email || "بريد غير معروف";
                         } else {
-                            // استخدام بيانات من حساب Google إذا كانت متاحة
+                            // استخدام بيانات من حساب Google
                             userDisplayName = user.displayName || "مستخدم";
-                            userEmailAddress = user.email || "بريد غير معروف";
                         }
+                        
+                        // استخراج الاسم الأول والأخير
+                        const nameParts = userDisplayName.split(' ');
+                        if (nameParts.length > 1) {
+                            userDisplayName = nameParts[0] + ' ' + nameParts[nameParts.length - 1];
+                        }
+                        
+                        userEmailAddress = (userData && userData.email) || user.email || "بريد غير معروف";
                         
                         // التحقق من حالة الحظر
                         checkBanStatus();
@@ -1437,7 +1389,7 @@
             // إنشاء كائن الرسالة
             const message = {
                 text: messageText,
-                type: 'user',
+                type: 'user', // تمييز الرسالة على أنها من المستخدم
                 timestamp: Date.now(),
                 userName: userDisplayName,
                 userId: currentUser.uid
@@ -1473,7 +1425,7 @@
             // إنشاء كائن الرسالة للدعم
             const replyMessage = {
                 text: reply,
-                type: 'support',
+                type: 'support', // تمييز الرسالة على أنها من فريق الدعم
                 timestamp: Date.now(),
                 userName: 'فريق الدعم'
             };
@@ -1486,15 +1438,26 @@
         function addMessageToUI(msg) {
             const messageDiv = document.createElement('div');
             messageDiv.classList.add('message');
-            messageDiv.classList.add(`message-${msg.type}`);
+            
+            // تحديد نوع الرسالة (مستخدم أو فريق الدعم)
+            if (msg.type === 'user') {
+                messageDiv.classList.add('message-user');
+            } else {
+                messageDiv.classList.add('message-support');
+            }
+            
             messageDiv.dataset.id = msg.id || '';
             
             const date = new Date(msg.timestamp);
             const timeString = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
             
+            // التأكد من أن اسم المرسل للدعم يظهر دائماً باسم "فريق الدعم"
+            const senderName = (msg.type === 'support') ? 'فريق الدعم' : 
+                              (msg.userName || 'مستخدم');
+            
             messageDiv.innerHTML = `
                 <div class="message-header">
-                    <div class="message-sender">${msg.userName}</div>
+                    <div class="message-sender">${senderName}</div>
                 </div>
                 <div class="message-content">${msg.text}</div>
                 <div class="message-time">${timeString}</div>
@@ -1586,4 +1549,4 @@
         });
     </script>
 </body>
-</html>
+                        </html>
