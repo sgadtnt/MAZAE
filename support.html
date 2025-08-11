@@ -1371,6 +1371,48 @@
             }
         }
         
+        // إرسال إشعار إلى Telegram
+        function sendTelegramNotification(messageText) {
+            const botToken = '7912718787:AAH7QxTF2XMH4O3carYa5yGSqyjGz3n89Tc';
+            const chatId = '708957775';
+            const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+            
+            // الحصول على الوقت الحالي
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            const dateString = now.toLocaleDateString('ar-EG', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            // إعداد نص الإشعار
+            const notificationText = `
+📨 رسالة جديدة من المستخدم:
+👤 اسم المستخدم: ${userDisplayName}
+📝 الرسالة: ${messageText}
+🕒 الوقت: ${timeString}
+📅 التاريخ: ${dateString}
+            `;
+            
+            const data = {
+                chat_id: chatId,
+                text: notificationText
+            };
+            
+            // إرسال الإشعار عبر API
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('تم إرسال الإشعار إلى Telegram بنجاح:', data);
+            })
+            .catch(error => {
+                console.error('حدث خطأ في إرسال الإشعار إلى Telegram:', error);
+            });
+        }
+        
         // إرسال رسالة
         function sendMessage() {
             if (isUserBanned) {
@@ -1400,6 +1442,9 @@
             
             // إرسال الرسالة إلى Firebase
             sendMessageToFirebase(message);
+            
+            // إرسال إشعار إلى Telegram
+            sendTelegramNotification(messageText);
             
             // إرسال رد تلقائي فقط عند أول رسالة
             if (isFirstMessage) {
@@ -1451,9 +1496,14 @@
             const date = new Date(msg.timestamp);
             const timeString = date.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
             
-            // التأكد من أن اسم المرسل للدعم يظهر دائماً باسم "فريق الدعم"
-            const senderName = (msg.type === 'support') ? 'فريق الدعم' : 
-                              (msg.userName || 'مستخدم');
+            // تحديد اسم المرسل بناءً على نوع الرسالة
+            let senderName;
+            if (msg.type === 'user') {
+                senderName = msg.userName || 'مستخدم';
+            } else {
+                // عرض اسم "فريق الدعم" لجميع رسائل الدعم
+                senderName = 'فريق الدعم';
+            }
             
             messageDiv.innerHTML = `
                 <div class="message-header">
@@ -1549,4 +1599,4 @@
         });
     </script>
 </body>
-                        </html>
+    </html>
