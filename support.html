@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <style>
+        /* الحفاظ على الأنماط السابقة مع إضافة أنماط جديدة */
         :root {
             --primary: #4361ee;
             --secondary: #3f37c9;
@@ -42,6 +43,36 @@
             min-height: 100vh;
             line-height: 1.6;
             overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* زر الرجوع */
+        .back-button {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            z-index: 1000;
+            background: var(--gradient);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .back-button:hover {
+            transform: scale(1.1);
         }
         
         /* تنسيقات شاشة القائمة الرئيسية */
@@ -847,6 +878,186 @@
             gap: 8px;
         }
         
+        /* إضافة شاشة المحادثات السابقة */
+        #chatsListScreen {
+            display: none;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        .chats-container {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .chat-item {
+            background: white;
+            border-radius: var(--radius);
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow);
+            border: 1px solid #eef2f7;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .chat-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+        
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+        
+        .chat-info {
+            flex: 1;
+        }
+        
+        .chat-title {
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--dark);
+        }
+        
+        .chat-status {
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .status-open {
+            color: var(--success);
+        }
+        
+        .status-closed {
+            color: var(--danger);
+        }
+        
+        .chat-preview {
+            color: var(--gray);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 100%;
+        }
+        
+        .chat-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--gray);
+        }
+        
+        .new-chat-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+            z-index: 100;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .new-chat-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        /* مؤقت المحادثة المغلقة */
+        .chat-timer {
+            text-align: center;
+            padding: 10px;
+            background: #fff8e1;
+            border-radius: var(--radius);
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: #d35400;
+            display: none;
+        }
+        
+        .timer-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        /* زر إغلاق المحادثة */
+        .close-chat-btn {
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+            box-shadow: 0 2px 6px rgba(231, 76, 60, 0.3);
+        }
+        
+        .close-chat-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        /* زر حذف المحادثة */
+        .delete-chat-btn {
+            background: #f8f9fa;
+            color: var(--danger);
+            border: 1px solid #ffcdd2;
+            border-radius: 50px;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: var(--transition);
+            position: absolute;
+            top: 10px;
+            left: 10px;
+        }
+        
+        .delete-chat-btn:hover {
+            background: #ffebee;
+            transform: translateY(-2px);
+        }
+        
         /* تحسينات للشاشات الصغيرة */
         @media (max-width: 480px) {
             .menu-card {
@@ -890,6 +1101,11 @@
             .banned-messages-view h3 {
                 font-size: 1.3rem;
             }
+            
+            .close-chat-btn {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+            }
         }
     </style>
 </head>
@@ -916,7 +1132,20 @@
                     <p class="menu-description">تواصل مع فريق الدعم الفني عبر الدردشة المباشرة لحل مشاكلك بشكل فوري</p>
                     <div class="menu-buttons">
                         <button class="menu-btn" id="startChatBtn">
-                            <i class="fas fa-headset"></i> بدأ محادثة
+                            <i class="fas fa-headset"></i> بدأ محادثة جديدة
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="menu-card">
+                    <div class="menu-icon">
+                        <i class="fas fa-comment-alt"></i>
+                    </div>
+                    <h3 class="menu-title">عرض المحادثات</h3>
+                    <p class="menu-description">عرض المحادثات السابقة والجارية مع فريق الدعم</p>
+                    <div class="menu-buttons">
+                        <button class="menu-btn" id="viewChatsBtn">
+                            <i class="fas fa-comments"></i> عرض المحادثات
                         </button>
                     </div>
                 </div>
@@ -1007,6 +1236,22 @@
             </div>
         </div>
         
+        <!-- شاشة قائمة المحادثات -->
+        <div id="chatsListScreen">
+            <div class="main-header">
+                <h1 class="page-title">المحادثات السابقة</h1>
+                <p class="page-subtitle">عرض جميع المحادثات مع فريق الدعم</p>
+            </div>
+            
+            <div class="chats-container" id="chatsContainer">
+                <!-- سيتم ملء المحادثات هنا ديناميكياً -->
+            </div>
+            
+            <div class="new-chat-btn" id="newChatBtn">
+                <i class="fas fa-plus"></i>
+            </div>
+        </div>
+        
         <!-- شاشة الدردشة -->
         <div id="chatScreen">
             <div class="banned-overlay" id="bannedOverlay">
@@ -1043,6 +1288,9 @@
                     <button class="back-btn" id="backBtn">
                         <i class="fas fa-arrow-left"></i> الرجوع
                     </button>
+                    <button class="close-chat-btn" id="closeChatBtn">
+                        <i class="fas fa-times-circle"></i> إغلاق المحادثة
+                    </button>
                 </div>
             </div>
             
@@ -1055,9 +1303,13 @@
                         <h3>فريق الدعم الفني</h3>
                         <p>
                             <span class="status-dot"></span>
-                            <span>متصل الآن</span>
+                            <span id="supportStatus">متصل الآن</span>
                         </p>
                     </div>
+                </div>
+                
+                <div class="chat-timer" id="chatTimer">
+                    المحادثة مغلقة. سيتم حذفها بعد: <span class="timer-value" id="countdownTimer">24:00:00</span>
                 </div>
                 
                 <div class="messages-container" id="messagesContainer">
@@ -1123,6 +1375,7 @@
         // عناصر القائمة الرئيسية
         const mainMenuScreen = document.getElementById('mainMenuScreen');
         const startChatBtn = document.getElementById('startChatBtn');
+        const viewChatsBtn = document.getElementById('viewChatsBtn');
         const faqBtn = document.getElementById('faqBtn');
         const whatsappBtn = document.getElementById('whatsappBtn');
         const phoneBtn = document.getElementById('phoneBtn');
@@ -1144,6 +1397,11 @@
         const userStatus = document.getElementById('userStatus');
         const backButton = document.getElementById('backButton');
         
+        // عناصر قائمة المحادثات
+        const chatsListScreen = document.getElementById('chatsListScreen');
+        const chatsContainer = document.getElementById('chatsContainer');
+        const newChatBtn = document.getElementById('newChatBtn');
+        
         // عناصر الدردشة
         const chatScreen = document.getElementById('chatScreen');
         const userNameChat = document.getElementById('userNameChat');
@@ -1159,11 +1417,10 @@
         const contactAdminBtn = document.getElementById('contactAdminBtn');
         const banReasonContainer = document.getElementById('banReasonContainer');
         const banReasonText = document.getElementById('banReasonText');
-        
-        // تأكيد تسجيل الدخول
-        const loginConfirmation = document.getElementById('loginConfirmation');
-        const confirmLoginBtn = document.getElementById('confirmLoginBtn');
-        const cancelLoginBtn = document.getElementById('cancelLoginBtn');
+        const chatTimer = document.getElementById('chatTimer');
+        const countdownTimer = document.getElementById('countdownTimer');
+        const supportStatus = document.getElementById('supportStatus');
+        const closeChatBtn = document.getElementById('closeChatBtn');
         
         // متغيرات المستخدم
         let currentUser = null;
@@ -1175,14 +1432,23 @@
         let isUserBanned = false;
         let userRef = null;
         let banRef = null;
+        let chatRef = null;
+        let chatId = null;
+        let chatClosedAt = null;
+        let countdownInterval = null;
+        let isChatClosed = false;
         
         // زر الرجوع العام
         backButton.addEventListener('click', () => {
             if (chatScreen.style.display === 'flex') {
                 chatScreen.style.display = 'none';
-                mainMenuScreen.style.display = 'flex';
+                chatsListScreen.style.display = 'flex';
+                loadChatsList();
             } else if (verificationScreen.style.display === 'block') {
                 verificationScreen.style.display = 'none';
+                mainMenuScreen.style.display = 'flex';
+            } else if (chatsListScreen.style.display === 'flex') {
+                chatsListScreen.style.display = 'none';
                 mainMenuScreen.style.display = 'flex';
             }
         });
@@ -1190,12 +1456,27 @@
         // زر الرجوع في شاشة الدردشة
         backBtn.addEventListener('click', () => {
             chatScreen.style.display = 'none';
-            mainMenuScreen.style.display = 'flex';
+            chatsListScreen.style.display = 'flex';
+            loadChatsList();
         });
 
-        // زر بدء المحادثة
+        // زر بدء محادثة جديدة
         startChatBtn.addEventListener('click', () => {
             mainMenuScreen.style.display = 'none';
+            verificationScreen.style.display = 'block';
+            verifyUser();
+        });
+        
+        // زر عرض المحادثات
+        viewChatsBtn.addEventListener('click', () => {
+            mainMenuScreen.style.display = 'none';
+            chatsListScreen.style.display = 'flex';
+            loadChatsList();
+        });
+        
+        // زر بدء محادثة جديدة من شاشة المحادثات
+        newChatBtn.addEventListener('click', () => {
+            chatsListScreen.style.display = 'none';
             verificationScreen.style.display = 'block';
             verifyUser();
         });
@@ -1224,6 +1505,159 @@
         contactAdminBtn.addEventListener('click', () => {
             window.open('https://wa.me/9647823053419', '_blank');
         });
+        
+        // زر إغلاق المحادثة
+        closeChatBtn.addEventListener('click', closeCurrentChat);
+        
+        // تحميل قائمة المحادثات
+        function loadChatsList() {
+            chatsContainer.innerHTML = '<div class="spinner"></div>';
+            
+            auth.onAuthStateChanged(user => {
+                if (!user) {
+                    loginConfirmation.style.display = 'flex';
+                    return;
+                }
+                
+                currentUser = user;
+                
+                database.ref('supportChats').orderByChild('userId').equalTo(user.uid).once('value')
+                .then(snapshot => {
+                    chatsContainer.innerHTML = '';
+                    
+                    if (!snapshot.exists()) {
+                        chatsContainer.innerHTML = `
+                            <div class="no-messages">
+                                <i class="fas fa-comments"></i>
+                                <p>لا توجد محادثات سابقة</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    const chats = [];
+                    const now = Date.now();
+                    const twentyFourHours = 24 * 60 * 60 * 1000;
+                    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+                    
+                    snapshot.forEach(chatSnapshot => {
+                        const chat = chatSnapshot.val();
+                        chat.id = chatSnapshot.key;
+                        
+                        // التحقق من الإغلاق التلقائي بعد 24 ساعة من عدم النشاط
+                        if (chat.status === 'open' && now - chat.lastMessageTime > twentyFourHours) {
+                            // تحديث حالة المحادثة إلى مغلقة
+                            database.ref(`supportChats/${chat.id}`).update({
+                                status: 'closed',
+                                closedAt: now
+                            });
+                            chat.status = 'closed';
+                            chat.closedAt = now;
+                        }
+                        
+                        // تجاهل المحادثات المغلقة لأكثر من 7 أيام
+                        if (chat.status === 'closed' && now - chat.closedAt > sevenDays) {
+                            return;
+                        }
+                        
+                        chats.push(chat);
+                    });
+                    
+                    // ترتيب المحادثات من الأحدث إلى الأقدم
+                    chats.sort((a, b) => b.createdAt - a.createdAt);
+                    
+                    chats.forEach(chat => {
+                        const chatItem = document.createElement('div');
+                        chatItem.className = 'chat-item';
+                        chatItem.dataset.id = chat.id;
+                        
+                        const lastMessage = chat.lastMessage || 'لا توجد رسائل بعد';
+                        const status = chat.status || 'open';
+                        const createdAt = new Date(chat.createdAt).toLocaleDateString('ar-EG');
+                        
+                        chatItem.innerHTML = `
+                            <button class="delete-chat-btn" data-id="${chat.id}">
+                                <i class="fas fa-trash-alt"></i> حذف
+                            </button>
+                            <div class="chat-header-info">
+                                <div class="chat-avatar">${userDisplayName.charAt(0)}</div>
+                                <div class="chat-info">
+                                    <div class="chat-title">محادثة الدعم</div>
+                                    <div class="chat-status ${status === 'open' ? 'status-open' : 'status-closed'}">
+                                        <i class="fas fa-circle"></i>
+                                        ${status === 'open' ? 'مفتوحة' : 'مغلقة'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-preview">${lastMessage}</div>
+                            <div class="chat-meta">
+                                <span>تاريخ البدء: ${createdAt}</span>
+                                <span>${chat.messages ? Object.keys(chat.messages).length : 0} رسالة</span>
+                            </div>
+                        `;
+                        
+                        chatItem.addEventListener('click', () => {
+                            openChat(chat.id);
+                        });
+                        
+                        // إضافة مستمع لحذف المحادثة
+                        const deleteBtn = chatItem.querySelector('.delete-chat-btn');
+                        deleteBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            deleteChat(chat.id);
+                        });
+                        
+                        chatsContainer.appendChild(chatItem);
+                    });
+                })
+                .catch(error => {
+                    chatsContainer.innerHTML = `<div class="verification-error">خطأ في تحميل المحادثات: ${error.message}</div>`;
+                });
+            });
+        }
+        
+        // حذف محادثة
+        function deleteChat(chatId) {
+            if (confirm('هل أنت متأكد أنك تريد حذف هذه المحادثة؟')) {
+                database.ref(`supportChats/${chatId}`).remove()
+                .then(() => {
+                    loadChatsList();
+                })
+                .catch(error => {
+                    alert('حدث خطأ أثناء حذف المحادثة: ' + error.message);
+                });
+            }
+        }
+        
+        // إغلاق المحادثة الحالية
+        function closeCurrentChat() {
+            if (!chatId) return;
+            
+            if (confirm('هل أنت متأكد أنك تريد إغلاق هذه المحادثة؟')) {
+                // تحديث المحادثة في Firebase
+                database.ref(`supportChats/${chatId}`).update({
+                    status: 'closed',
+                    closedAt: Date.now()
+                })
+                .then(() => {
+                    // إظهار رسالة ثم توجيه إلى قائمة المحادثات
+                    alert('تم إغلاق المحادثة بنجاح');
+                    chatScreen.style.display = 'none';
+                    chatsListScreen.style.display = 'flex';
+                    loadChatsList();
+                })
+                .catch(error => {
+                    alert('حدث خطأ أثناء إغلاق المحادثة: ' + error.message);
+                });
+            }
+        }
+        
+        // فتح محادثة
+        function openChat(chatId) {
+            chatsListScreen.style.display = 'none';
+            chatScreen.style.display = 'flex';
+            initChat(chatId);
+        }
         
         // التحقق من حالة تسجيل الدخول والبيانات
         function verifyUser() {
@@ -1275,19 +1709,44 @@
         
         // التحقق من حالة الحظر
         function checkBanStatus() {
-            banRef = database.ref(`supportChats/${currentUser.uid}/isBlocked`);
+            banRef = database.ref(`users/${currentUser.uid}/isBlocked`);
             
             banRef.on('value', snapshot => {
                 isUserBanned = snapshot.exists() ? snapshot.val() : false;
                 
                 // التحقق من سبب الحظر
                 if (isUserBanned) {
-                    const banReasonRef = database.ref(`supportChats/${currentUser.uid}/banReason`);
+                    const banReasonRef = database.ref(`users/${currentUser.uid}/banReason`);
                     banReasonRef.once('value').then(snap => {
                         const reason = snap.val() || 'غير محدد';
                         banReasonText.textContent = reason;
                         banReasonContainer.style.display = 'block';
                     });
+                }
+                
+                // التحقق من عدد المحادثات النشطة
+                checkActiveChatsCount();
+            });
+        }
+        
+        // التحقق من عدد المحادثات النشطة
+        function checkActiveChatsCount() {
+            database.ref('supportChats').orderByChild('userId').equalTo(currentUser.uid).once('value')
+            .then(snapshot => {
+                let activeChatsCount = 0;
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach(chatSnapshot => {
+                        const chat = chatSnapshot.val();
+                        if (chat.status === 'open') {
+                            activeChatsCount++;
+                        }
+                    });
+                }
+                
+                if (activeChatsCount >= 3) {
+                    showVerificationError('لقد وصلت للحد الأقصى من المحادثات، الرجاء إغلاق محادثة قبل فتح أخرى.');
+                    return;
                 }
                 
                 // تحديث شاشة التحقق الناجح
@@ -1312,9 +1771,37 @@
                     
                     // توجيه المستخدم بعد تأخير إلى شاشة الدردشة
                     setTimeout(() => {
-                        showChatScreen();
+                        createNewChat();
                     }, 2000);
                 }, 1500);
+            })
+            .catch(error => {
+                showVerificationError('خطأ في جلب عدد المحادثات: ' + error.message);
+            });
+        }
+        
+        // إنشاء محادثة جديدة
+        function createNewChat() {
+            const newChatRef = database.ref('supportChats').push();
+            chatId = newChatRef.key;
+            
+            const chatData = {
+                id: chatId,
+                userId: currentUser.uid,
+                userName: userDisplayName,
+                userEmail: userEmailAddress,
+                status: 'open',
+                createdAt: Date.now(),
+                lastMessage: '',
+                lastMessageTime: Date.now()
+            };
+            
+            newChatRef.set(chatData)
+            .then(() => {
+                showChatScreen();
+            })
+            .catch(error => {
+                showVerificationError('خطأ في إنشاء المحادثة: ' + error.message);
             });
         }
         
@@ -1358,16 +1845,11 @@
                 inputContainer.style.display = 'none';
             } else {
                 bannedOverlay.style.display = 'none';
-                messageInput.disabled = false;
-                sendBtn.disabled = false;
                 // إظهار منطقة الإدخال
                 inputContainer.style.display = 'flex';
                 
-                // تهيئة الدردشة فقط إذا لم تكن مهيأة بعد
-                if (!chatInitialized) {
-                    initChat();
-                    chatInitialized = true;
-                }
+                // تهيئة الدردشة
+                initChat(chatId);
             }
         }
         
@@ -1415,8 +1897,8 @@
         
         // إرسال رسالة
         function sendMessage() {
-            if (isUserBanned) {
-                alert('تم حظرك من إرسال الرسائل. الرجاء التواصل مع الإدارة.');
+            if (isUserBanned || isChatClosed) {
+                alert('لا يمكن إرسال رسائل في المحادثات المغلقة أو إذا كنت محظوراً');
                 return;
             }
             
@@ -1457,15 +1939,21 @@
         
         // إرسال رسالة إلى Firebase
         function sendMessageToFirebase(message) {
-            const newMessageRef = database.ref('supportChats/' + currentUser.uid + '/messages').push();
+            const newMessageRef = database.ref(`supportChats/${chatId}/messages`).push();
             message.id = newMessageRef.key; // إضافة معرف الرسالة
             newMessageRef.set(message);
+            
+            // تحديث آخر رسالة في المحادثة
+            database.ref(`supportChats/${chatId}`).update({
+                lastMessage: message.text,
+                lastMessageTime: Date.now()
+            });
         }
         
         // إرسال رد تلقائي من الدعم
         function sendAutoReply() {
             // الرد التلقائي الأول فقط
-            const reply = "شكراً لتواصلك معنا. كيف يمكننا مساعدتك؟";
+            const reply = "شكراً لتواصلك معنا. كيف يمكننا مساعدتك اليوم؟";
             
             // إنشاء كائن الرسالة للدعم
             const replyMessage = {
@@ -1517,15 +2005,82 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
         
+        // تحديث المؤقت التنازلي
+        function updateCountdown() {
+            if (!chatClosedAt) return;
+            
+            const now = Date.now();
+            const timeLeft = chatClosedAt + (7 * 24 * 60 * 60 * 1000) - now;
+            
+            if (timeLeft <= 0) {
+                // حذف المحادثة بعد انتهاء الوقت
+                database.ref(`supportChats/${chatId}`).remove();
+                alert('تم حذف المحادثة المغلقة بعد 7 أيام');
+                chatScreen.style.display = 'none';
+                chatsListScreen.style.display = 'flex';
+                loadChatsList();
+                return;
+            }
+            
+            const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            
+            countdownTimer.textContent = `${days} أيام ${hours} ساعات ${minutes} دقائق`;
+        }
+        
         // تهيئة الدردشة
-        function initChat() {
-            if (chatInitialized || isUserBanned) return;
+        function initChat(chatId) {
+            this.chatId = chatId;
             chatInitialized = true;
             
             messagesContainer.innerHTML = '';
             noMessages.style.display = 'flex';
             
-            messagesRef = database.ref('supportChats/' + currentUser.uid + '/messages');
+            // إعادة تعيين متغيرات الرسالة
+            isFirstMessage = true;
+            
+            // تحميل بيانات المحادثة
+            chatRef = database.ref(`supportChats/${chatId}`);
+            
+            chatRef.on('value', snapshot => {
+                const chatData = snapshot.val();
+                if (!chatData) return;
+                
+                // تحديث حالة المحادثة
+                const status = chatData.status || 'open';
+                chatClosedAt = chatData.closedAt || null;
+                isChatClosed = status === 'closed';
+                
+                // تحديث واجهة المستخدم بناءً على حالة المحادثة
+                if (isChatClosed) {
+                    chatTimer.style.display = 'block';
+                    messageInput.disabled = true;
+                    sendBtn.disabled = true;
+                    messageInput.placeholder = 'المحادثة مغلقة - لا يمكن إرسال رسائل جديدة';
+                    
+                    // بدء أو تحديث المؤقت التنازلي
+                    if (chatClosedAt) {
+                        if (!countdownInterval) {
+                            countdownInterval = setInterval(updateCountdown, 60000); // تحديث كل دقيقة
+                        }
+                        updateCountdown();
+                    }
+                } else {
+                    chatTimer.style.display = 'none';
+                    messageInput.disabled = false;
+                    sendBtn.disabled = false;
+                    messageInput.placeholder = 'اكتب رسالتك هنا...';
+                    
+                    // إيقاف المؤقت التنازلي إذا كان يعمل
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
+                }
+            });
+            
+            messagesRef = database.ref(`supportChats/${chatId}/messages`);
             
             // استماع للرسائل الجديدة
             messagesRef.on('child_added', snapshot => {
@@ -1557,9 +2112,6 @@
                     }
                 }
             });
-            
-            // تحديث حالة أول رسالة
-            isFirstMessage = true;
         }
         
         // إعداد مستمعي الأحداث للتحقق
@@ -1593,6 +2145,7 @@
             mainMenuScreen.style.display = 'flex';
             verificationScreen.style.display = 'none';
             chatScreen.style.display = 'none';
+            chatsListScreen.style.display = 'none';
             
             // إعادة تعيين حالة المحادثة
             chatInitialized = false;
