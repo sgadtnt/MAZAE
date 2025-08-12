@@ -39,6 +39,7 @@
         const generalSettingsRef = dbRef(db, "settings"); // To get store name/logo
         const categoriesRef = dbRef(db, "categories"); // To get categories for multi-select
         const adminLogsRef = dbRef(db, "adminLogs");
+        const adminErrorsRef = dbRef(db, "adminErrors"); // New reference for error logging
 
         // Global data storage for frontend
         window.adminData = {
@@ -100,6 +101,7 @@
             } catch (error) {
                 console.error("Error loading categories:", error);
                 showNotification('حدث خطأ أثناء تحميل الفئات.', 'error');
+                logAdminError('LOAD_CATEGORIES_ERROR', error);
             }
         }
 
@@ -157,7 +159,7 @@
 
                     // Internal Banners
                     document.getElementById('internalBannersToggle').checked = settings.internalBanners?.enabled || false;
-                    renderInternalBanners(settings.internalBanners?.banners || {});
+                    renderInternalBanners(settings.internalBanners?.banners || []);
                     toggleSectionInputs('internalBanners', settings.internalBanners?.enabled || false);
 
                     // Customer Reviews
@@ -172,25 +174,43 @@
                     document.getElementById('socialInstagram').value = settings.footerSettings?.socialMedia?.instagram || '';
                     document.getElementById('socialTwitter').value = settings.footerSettings?.socialMedia?.twitter || '';
                     document.getElementById('socialLinkedIn').value = settings.footerSettings?.socialMedia?.linkedin || '';
-                    renderCustomFooterLinks(settings.footerSettings?.customLinks || {});
+                    renderCustomFooterLinks(settings.footerSettings?.customLinks || []);
 
                     showNotification('تم تحميل إعدادات الصفحة الرئيسية بنجاح.', 'info');
                 });
             } catch (error) {
                 console.error("Error loading homepage settings:", error);
                 showNotification('حدث خطأ أثناء تحميل إعدادات الصفحة الرئيسية.', 'error');
+                logAdminError('LOAD_HOMEPAGE_SETTINGS_ERROR', error);
             }
         }
 
         // Function to save homepage settings
         async function saveHomepageSettings() {
+            // Show loading indicator
+            const saveBtn = document.getElementById('saveHomepageSettingsBtn');
+            const originalBtnText = saveBtn.innerHTML;
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ...';
+            saveBtn.disabled = true;
+            
             showNotification('جاري حفظ إعدادات الصفحة الرئيسية...', 'info');
 
             try {
                 const oldSettings = { ...window.adminData.homepageSettings }; // Clone for logging
 
-                // Main Banner
+                // Validate required fields
                 const mainBannerEnabled = document.getElementById('mainBannerToggle').checked;
+                if (mainBannerEnabled) {
+                    const bannerImageUrl = document.getElementById('mainBannerImageUrl').value.trim();
+                    if (!bannerImageUrl) {
+                        showNotification('يرجى إدخال رابط صورة البانر الرئيسي', 'error');
+                        saveBtn.innerHTML = originalBtnText;
+                        saveBtn.disabled = false;
+                        return;
+                    }
+                }
+
+                // Main Banner
                 const mainBanner = {
                     enabled: mainBannerEnabled,
                     imageUrl: document.getElementById('mainBannerImageUrl').value.trim(),
@@ -218,16 +238,18 @@
                 // Internal Banners (collect from dynamic elements)
                 const internalBannersEnabled = document.getElementById('internalBannersToggle').checked;
                 const internalBannersContainer = document.getElementById('internalBannersContainer');
-                const internalBanners = {};
+                const internalBanners = [];
                 Array.from(internalBannersContainer.children).forEach(bannerDiv => {
-                    const id = bannerDiv.dataset.id;
-                    internalBanners[id] = {
+                    if (bannerDiv.classList.contains('no-content-message')) return;
+                    
+                    internalBanners.push({
+                        id: bannerDiv.dataset.id || crypto.randomUUID(),
                         imageUrl: bannerDiv.querySelector('[data-field="imageUrl"]').value.trim(),
                         title: bannerDiv.querySelector('[data-field="title"]').value.trim(),
                         description: bannerDiv.querySelector('[data-field="description"]').value.trim(),
                         ctaText: bannerDiv.querySelector('[data-field="ctaText"]').value.trim(),
                         ctaUrl: bannerDiv.querySelector('[data-field="ctaUrl"]').value.trim()
-                    };
+                    });
                 });
 
                 // Customer Reviews
@@ -247,13 +269,15 @@
 
                 // Custom Footer Links (collect from dynamic elements)
                 const customLinksContainer = document.getElementById('customFooterLinksContainer');
-                const customLinks = {};
+                const customLinks = [];
                 Array.from(customLinksContainer.children).forEach(linkDiv => {
-                    const id = linkDiv.dataset.id;
-                    customLinks[id] = {
+                    if (linkDiv.classList.contains('no-content-message')) return;
+                    
+                    customLinks.push({
+                        id: linkDiv.dataset.id || crypto.randomUUID(),
                         text: linkDiv.querySelector('[data-field="text"]').value.trim(),
                         url: linkDiv.querySelector('[data-field="url"]').value.trim()
-                    };
+                    });
                 });
 
                 const newSettings = {
@@ -285,15 +309,33 @@
                 await set(dbRef(db, `adminLogs/${Date.now()}`), {
                     action: 'UPDATE_HOMEPAGE_SETTINGS',
                     adminId: window.adminData.currentUser.uid,
-                    oldSettings: oldSettings,
-                    newSettings: newSettings,
                     timestamp: new Date().toISOString()
                 });
                 manageAdminLogsSize(10);
 
             } catch (error) {
                 console.error("Error saving homepage settings:", error);
-                showNotification('حدث خطأ أثناء حفظ إعدادات الصفحة الرئيسية.', 'error');
+                showNotification(`حدث خطأ أثناء حفظ الإعدادات: ${error.message}`, 'error');
+                logAdminError('SAVE_HOMEPAGE_SETTINGS_ERROR', error);
+            } finally {
+                // Restore button state
+                saveBtn.innerHTML = originalBtnText;
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Log errors to Firebase
+        async function logAdminError(action, error) {
+            try {
+                await set(dbRef(db, `adminErrors/${Date.now()}`), {
+                    action: action,
+                    adminId: window.adminData.currentUser.uid,
+                    error: error.message,
+                    stack: error.stack,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (logError) {
+                console.error("Failed to log admin error:", logError);
             }
         }
 
@@ -324,16 +366,15 @@
             const container = document.getElementById('internalBannersContainer');
             container.innerHTML = ''; // Clear existing banners
 
-            if (Object.keys(banners).length === 0) {
+            if (!banners || banners.length === 0) {
                 container.innerHTML = `<p class="no-content-message">لا توجد بانرات داخلية مضافة.</p>`;
                 return;
             }
 
-            for (const id in banners) {
-                const banner = banners[id];
+            banners.forEach((banner, index) => {
                 const bannerDiv = document.createElement('div');
                 bannerDiv.className = 'dynamic-item-card';
-                bannerDiv.dataset.id = id;
+                bannerDiv.dataset.id = banner.id || `banner-${index}`;
                 bannerDiv.innerHTML = `
                     <div class="form-group">
                         <label>رابط الصورة:</label>
@@ -355,12 +396,12 @@
                         <label>رابط زر الإجراء (CTA):</label>
                         <input type="url" data-field="ctaUrl" value="${banner.ctaUrl || ''}" placeholder="https://example.com/products">
                     </div>
-                    <button type="button" class="btn btn-danger remove-item-btn" data-id="${id}">
+                    <button type="button" class="btn btn-danger remove-item-btn" data-id="${bannerDiv.dataset.id}">
                         <i class="fas fa-trash"></i> حذف البانر
                     </button>
                 `;
                 container.appendChild(bannerDiv);
-            }
+            });
 
             // Add event listeners to new remove buttons
             container.querySelectorAll('.remove-item-btn').forEach(button => {
@@ -376,11 +417,7 @@
         }
 
         function addInternalBanner() {
-            const newId = crypto.randomUUID();
             const container = document.getElementById('internalBannersContainer');
-            const newBanner = {
-                imageUrl: '', title: '', description: '', ctaText: '', ctaUrl: ''
-            };
             
             // If "no content" message is present, remove it
             const noContentMsg = container.querySelector('.no-content-message');
@@ -390,29 +427,29 @@
 
             const bannerDiv = document.createElement('div');
             bannerDiv.className = 'dynamic-item-card';
-            bannerDiv.dataset.id = newId;
+            bannerDiv.dataset.id = crypto.randomUUID();
             bannerDiv.innerHTML = `
                 <div class="form-group">
                     <label>رابط الصورة:</label>
-                    <input type="url" data-field="imageUrl" value="${newBanner.imageUrl}" placeholder="https://example.com/banner.png">
+                    <input type="url" data-field="imageUrl" value="" placeholder="https://example.com/banner.png">
                 </div>
                 <div class="form-group">
                     <label>العنوان:</label>
-                    <input type="text" data-field="title" value="${newBanner.title}" placeholder="عنوان البانر">
+                    <input type="text" data-field="title" value="" placeholder="عنوان البانر">
                 </div>
                 <div class="form-group">
                     <label>الوصف:</label>
-                    <input type="text" data-field="description" value="${newBanner.description}" placeholder="وصف قصير للبانر">
+                    <input type="text" data-field="description" value="" placeholder="وصف قصير للبانر">
                 </div>
                 <div class="form-group">
                     <label>نص زر الإجراء (CTA):</label>
-                    <input type="text" data-field="ctaText" value="${newBanner.ctaText}" placeholder="مثال: تسوق الآن">
+                    <input type="text" data-field="ctaText" value="" placeholder="مثال: تسوق الآن">
                 </div>
                 <div class="form-group">
                     <label>رابط زر الإجراء (CTA):</label>
-                    <input type="url" data-field="ctaUrl" value="${newBanner.ctaUrl}" placeholder="https://example.com/products">
+                    <input type="url" data-field="ctaUrl" value="" placeholder="https://example.com/products">
                 </div>
-                <button type="button" class="btn btn-danger remove-item-btn" data-id="${newId}">
+                <button type="button" class="btn btn-danger remove-item-btn" data-id="${bannerDiv.dataset.id}">
                     <i class="fas fa-trash"></i> حذف البانر
                 </button>
             `;
@@ -430,26 +467,29 @@
         }
 
         async function removeInternalBanner(id) {
-            const currentBanners = window.adminData.homepageSettings.internalBanners?.banners || {};
-            if (currentBanners[id]) {
-                const oldBanner = currentBanners[id];
-                delete currentBanners[id];
-                try {
-                    await update(dbRef(db, `homepageSettings/internalBanners/banners`), currentBanners);
-                    showNotification('تم حذف البانر بنجاح!', 'success');
-                    // Log admin activity
-                    await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                        action: 'DELETE_INTERNAL_BANNER',
-                        adminId: window.adminData.currentUser.uid,
-                        bannerId: id,
-                        bannerData: oldBanner,
-                        timestamp: new Date().toISOString()
-                    });
-                    manageAdminLogsSize(10);
-                } catch (error) {
-                    console.error("Error removing internal banner:", error);
-                    showNotification('حدث خطأ أثناء حذف البانر.', 'error');
-                }
+            try {
+                const currentSettings = window.adminData.homepageSettings;
+                const banners = currentSettings.internalBanners?.banners || [];
+                const updatedBanners = banners.filter(banner => banner.id !== id);
+                
+                await update(homepageSettingsRef, {
+                    'internalBanners/banners': updatedBanners
+                });
+                
+                showNotification('تم حذف البانر بنجاح!', 'success');
+                
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'DELETE_INTERNAL_BANNER',
+                    adminId: window.adminData.currentUser.uid,
+                    bannerId: id,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10);
+            } catch (error) {
+                console.error("Error removing internal banner:", error);
+                showNotification('حدث خطأ أثناء حذف البانر.', 'error');
+                logAdminError('REMOVE_INTERNAL_BANNER_ERROR', error);
             }
         }
 
@@ -458,16 +498,15 @@
             const container = document.getElementById('customFooterLinksContainer');
             container.innerHTML = ''; // Clear existing links
 
-            if (Object.keys(links).length === 0) {
+            if (!links || links.length === 0) {
                 container.innerHTML = `<p class="no-content-message">لا توجد روابط مخصصة مضافة.</p>`;
                 return;
             }
 
-            for (const id in links) {
-                const link = links[id];
+            links.forEach((link, index) => {
                 const linkDiv = document.createElement('div');
                 linkDiv.className = 'dynamic-item-card';
-                linkDiv.dataset.id = id;
+                linkDiv.dataset.id = link.id || `link-${index}`;
                 linkDiv.innerHTML = `
                     <div class="form-group">
                         <label>نص الرابط:</label>
@@ -477,12 +516,12 @@
                         <label>رابط URL:</label>
                         <input type="url" data-field="url" value="${link.url || ''}" placeholder="https://example.com/privacy">
                     </div>
-                    <button type="button" class="btn btn-danger remove-item-btn" data-id="${id}">
+                    <button type="button" class="btn btn-danger remove-item-btn" data-id="${linkDiv.dataset.id}">
                         <i class="fas fa-trash"></i> حذف الرابط
                     </button>
                 `;
                 container.appendChild(linkDiv);
-            }
+            });
 
             // Add event listeners to new remove buttons
             container.querySelectorAll('.remove-item-btn').forEach(button => {
@@ -498,11 +537,7 @@
         }
 
         function addCustomFooterLink() {
-            const newId = crypto.randomUUID();
             const container = document.getElementById('customFooterLinksContainer');
-            const newLink = {
-                text: '', url: ''
-            };
 
             // If "no content" message is present, remove it
             const noContentMsg = container.querySelector('.no-content-message');
@@ -512,17 +547,17 @@
 
             const linkDiv = document.createElement('div');
             linkDiv.className = 'dynamic-item-card';
-            linkDiv.dataset.id = newId;
+            linkDiv.dataset.id = crypto.randomUUID();
             linkDiv.innerHTML = `
                 <div class="form-group">
                     <label>نص الرابط:</label>
-                    <input type="text" data-field="text" value="${newLink.text}" placeholder="مثال: سياسة الخصوصية">
+                    <input type="text" data-field="text" value="" placeholder="مثال: سياسة الخصوصية">
                 </div>
                 <div class="form-group">
                     <label>رابط URL:</label>
-                    <input type="url" data-field="url" value="${newLink.url}" placeholder="https://example.com/privacy">
+                    <input type="url" data-field="url" value="" placeholder="https://example.com/privacy">
                 </div>
-                <button type="button" class="btn btn-danger remove-item-btn" data-id="${newId}">
+                <button type="button" class="btn btn-danger remove-item-btn" data-id="${linkDiv.dataset.id}">
                     <i class="fas fa-trash"></i> حذف الرابط
                 </button>
             `;
@@ -540,26 +575,29 @@
         }
 
         async function removeCustomFooterLink(id) {
-            const currentLinks = window.adminData.homepageSettings.footerSettings?.customLinks || {};
-            if (currentLinks[id]) {
-                const oldLink = currentLinks[id];
-                delete currentLinks[id];
-                try {
-                    await update(dbRef(db, `homepageSettings/footerSettings/customLinks`), currentLinks);
-                    showNotification('تم حذف الرابط بنجاح!', 'success');
-                    // Log admin activity
-                    await set(dbRef(db, `adminLogs/${Date.now()}`), {
-                        action: 'DELETE_CUSTOM_FOOTER_LINK',
-                        adminId: window.adminData.currentUser.uid,
-                        linkId: id,
-                        linkData: oldLink,
-                        timestamp: new Date().toISOString()
-                    });
-                    manageAdminLogsSize(10);
-                } catch (error) {
-                    console.error("Error removing custom footer link:", error);
-                    showNotification('حدث خطأ أثناء حذف الرابط.', 'error');
-                }
+            try {
+                const currentSettings = window.adminData.homepageSettings;
+                const links = currentSettings.footerSettings?.customLinks || [];
+                const updatedLinks = links.filter(link => link.id !== id);
+                
+                await update(homepageSettingsRef, {
+                    'footerSettings/customLinks': updatedLinks
+                });
+                
+                showNotification('تم حذف الرابط بنجاح!', 'success');
+                
+                // Log admin activity
+                await set(dbRef(db, `adminLogs/${Date.now()}`), {
+                    action: 'DELETE_CUSTOM_FOOTER_LINK',
+                    adminId: window.adminData.currentUser.uid,
+                    linkId: id,
+                    timestamp: new Date().toISOString()
+                });
+                manageAdminLogsSize(10);
+            } catch (error) {
+                console.error("Error removing custom footer link:", error);
+                showNotification('حدث خطأ أثناء حذف الرابط.', 'error');
+                logAdminError('REMOVE_CUSTOM_LINK_ERROR', error);
             }
         }
 
@@ -601,15 +639,11 @@
             }
         }
 
-        // Function to toggle sidebar visibility
-        function toggleSidebar() {
-            const sidebar = document.getElementById('adminSidebar');
-            const overlay = document.getElementById('sidebarOverlay');
-            const body = document.body;
-
-            sidebar.classList.toggle('open');
-            overlay.classList.toggle('active');
-            body.classList.toggle('sidebar-open'); // To prevent body scroll
+        // Function to handle back button
+        function handleBack() {
+            history.back(); // Go back to the previous page
+            // Alternatively, you can redirect to a specific page:
+            // window.location.href = 'admin.html';
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -644,20 +678,8 @@
             // Add event listener for save button
             document.getElementById('saveHomepageSettingsBtn').addEventListener('click', saveHomepageSettings);
 
-            // Add event listeners for sidebar toggle
-            document.getElementById('menuToggleBtn').addEventListener('click', toggleSidebar);
-            document.getElementById('sidebarOverlay').addEventListener('click', toggleSidebar);
-
-            // Set active navigation link in sidebar
-            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
-            const currentPath = window.location.pathname.split('/').pop();
-            navItems.forEach(item => {
-                if (item.getAttribute('href') === currentPath) {
-                    item.classList.add('active');
-                } else {
-                    item.classList.remove('active');
-                }
-            });
+            // Add event listener for back button
+            document.getElementById('backButton').addEventListener('click', handleBack);
 
             // Add logout event listener to the sidebar button
             document.getElementById('logoutBtn').addEventListener('click', handleLogout);
@@ -846,8 +868,8 @@
             position: relative; /* For hamburger button positioning */
         }
 
-        /* Hamburger Menu Button */
-        .menu-toggle-btn {
+        /* Back Button */
+        .back-button {
             position: absolute;
             top: 20px;
             left: 20px; /* Position on the left for RTL */
@@ -855,16 +877,20 @@
             color: white;
             border: none;
             border-radius: var(--radius);
-            padding: 0.8rem 1rem;
-            font-size: 1.2rem;
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
             cursor: pointer;
             z-index: 1001; /* Above main content */
             box-shadow: var(--shadow);
             transition: background-color 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        .menu-toggle-btn:hover {
+        .back-button:hover {
             background-color: #151B6B;
+            transform: translateY(-2px);
         }
 
         /* Overlay for when sidebar is open */
@@ -1220,6 +1246,15 @@
             min-width: 100px; /* Ensure buttons are not too small */
         }
 
+        /* Loading spinner */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
 
         /* Responsive adjustments */
         @media (max-width: 992px) {
@@ -1279,9 +1314,9 @@
                 padding: 0.7rem 1.2rem;
                 font-size: 0.9rem;
             }
-            .menu-toggle-btn {
-                padding: 0.6rem 0.8rem;
-                font-size: 1rem;
+            .back-button {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
             }
             .custom-modal-content {
                 padding: 1.5rem;
@@ -1361,6 +1396,10 @@
                 padding: 0.6rem 1rem;
                 font-size: 0.8rem;
             }
+            .back-button {
+                padding: 0.6rem 1rem;
+                font-size: 0.8rem;
+            }
             .notification {
                 top: 10px;
                 font-size: 0.7rem;
@@ -1421,9 +1460,9 @@
 
         <!-- Main Content Area -->
         <main class="admin-main-content">
-            <!-- Hamburger Menu Button -->
-            <button id="menuToggleBtn" class="menu-toggle-btn">
-                <i class="fas fa-bars"></i>
+            <!-- Back Button -->
+            <button id="backButton" class="back-button">
+                <i class="fas fa-arrow-right"></i> رجوع
             </button>
 
             <section class="settings-section-card">
@@ -1444,7 +1483,7 @@
                         </div>
                         <div class="form-group">
                             <label for="mainBannerImageUrl">رابط الصورة:</label>
-                            <input type="url" id="mainBannerImageUrl" placeholder="https://example.com/main-banner.png">
+                            <input type="url" id="mainBannerImageUrl" placeholder="https://example.com/main-banner.png" required>
                         </div>
                         <div class="form-group">
                             <label for="mainBannerTitle">العنوان:</label>
